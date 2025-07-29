@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:mydiet
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  
+  h2:
+    console:
+      enabled: true
+
+claude:
+  api:
+    key: ${CLAUDE_API_KEY:your-api-key-here}
+    base-url: https://api.anthropic.com/v1
+    model: claude-3-sonnet-20240229
+
+logging:
+  level:
+    com: DEBUG
+    org.springframework.web: DEBUG

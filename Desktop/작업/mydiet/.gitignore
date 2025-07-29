@@ -1,0 +1,5 @@
+*.log
+*.class
+/target/
+/.idea/
+.env
