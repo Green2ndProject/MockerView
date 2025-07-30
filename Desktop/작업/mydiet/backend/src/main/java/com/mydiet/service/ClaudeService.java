@@ -32,56 +32,84 @@ public class ClaudeService {
     private ClaudeApiClient claudeApiClient;
 
     public String generateResponse(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        LocalDate today = LocalDate.now();
+        System.out.println("=== Claude 응답 생성 시작 - 사용자 ID: " + userId + " ===");
+        
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            System.out.println("사용자 정보: " + user.getNickname() + ", 감정모드: " + user.getEmotionMode());
+            
+            LocalDate today = LocalDate.now();
 
-        List<MealLog> meals = mealLogRepository.findByUserIdAndDate(userId, today);
-        List<EmotionLog> emotions = emotionLogRepository.findByUserIdAndDate(userId, today);
-        List<WorkoutLog> workouts = workoutLogRepository.findByUserIdAndDate(userId, today);
+            List<MealLog> meals = mealLogRepository.findByUserIdAndDate(userId, today);
+            List<EmotionLog> emotions = emotionLogRepository.findByUserIdAndDate(userId, today);
+            List<WorkoutLog> workouts = workoutLogRepository.findByUserIdAndDate(userId, today);
 
-        String prompt = buildPrompt(user, meals, emotions, workouts);
-        String response = claudeApiClient.askClaude(prompt);
+            System.out.println("오늘 데이터 - 식단: " + meals.size() + "개, 감정: " + emotions.size() + "개, 운동: " + workouts.size() + "개");
 
-        ClaudeResponse log = new ClaudeResponse();
-        log.setUser(user);
-        log.setType("daily");
-        log.setContent(response);
-        log.setCreatedAt(LocalDateTime.now());
-        claudeResponseRepository.save(log);
+            String prompt = buildPrompt(user, meals, emotions, workouts);
+            System.out.println("생성된 프롬프트: " + prompt);
+            
+            String response = claudeApiClient.askClaude(prompt);
+            System.out.println("Claude 응답: " + response);
 
-        return response;
+            try {
+                ClaudeResponse log = new ClaudeResponse();
+                log.setUser(user);
+                log.setType("daily");
+                log.setContent(response);
+                log.setCreatedAt(LocalDateTime.now());
+                claudeResponseRepository.save(log);
+                System.out.println("Claude 응답 저장 완료");
+            } catch (Exception e) {
+                System.err.println("Claude 응답 저장 실패: " + e.getMessage());
+            }
+
+            return response;
+        } catch (Exception e) {
+            System.err.println("Claude 서비스 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "오늘도 화이팅! 💪 목표를 향해 달려가세요!";
+        }
     }
 
     private String buildPrompt(User user, List<MealLog> meals, List<EmotionLog> emotions, List<WorkoutLog> workouts) {
         StringBuilder prompt = new StringBuilder();
     
-        prompt.append("유저 닉네임: ").append(user.getNickname()).append("\n");
+        prompt.append("당신은 다이어트 AI 코치입니다. 다음 정보를 바탕으로 한국어로 짧고 동기부여가 되는 한 문장을 만들어주세요.\n\n");
+        prompt.append("사용자: ").append(user.getNickname()).append("\n");
         prompt.append("목표 체중: ").append(user.getWeightGoal()).append("kg\n");
-        prompt.append("감정 모드: ").append(user.getEmotionMode()).append("\n\n");
-    
-        prompt.append("🥗 오늘 먹은 음식:\n");
-        if (meals.isEmpty()) prompt.append("- 없음\n");
-        for (MealLog meal : meals) {
-            prompt.append("- ").append(meal.getDescription())
-                  .append(" (예상 칼로리: ").append(meal.getCaloriesEstimate()).append(" kcal)\n");
+        prompt.append("코치 스타일: ").append(user.getEmotionMode()).append("\n\n");
+        
+        if (meals.isEmpty()) {
+            prompt.append("오늘 아직 식단 기록이 없습니다.\n");
+        } else {
+            prompt.append("오늘 식단: ");
+            int totalCalories = 0;
+            for (MealLog meal : meals) {
+                prompt.append(meal.getDescription());
+                if (meal.getCaloriesEstimate() != null) {
+                    totalCalories += meal.getCaloriesEstimate();
+                }
+                prompt.append(", ");
+            }
+            prompt.append("(총 ").append(totalCalories).append("kcal)\n");
         }
-    
-        prompt.append("\n😵 오늘 감정:\n");
-        if (emotions.isEmpty()) prompt.append("- 없음\n");
-        for (EmotionLog emo : emotions) {
-            prompt.append("- ").append(emo.getMood()).append(": ").append(emo.getNote()).append("\n");
+        
+        if (workouts.isEmpty()) {
+            prompt.append("오늘 아직 운동 기록이 없습니다.\n");
+        } else {
+            prompt.append("오늘 운동: ");
+            for (WorkoutLog workout : workouts) {
+                prompt.append(workout.getType()).append(" ");
+                prompt.append(workout.getDuration()).append("분, ");
+            }
+            prompt.append("\n");
         }
-    
-        prompt.append("\n🏃 운동 기록:\n");
-        if (workouts.isEmpty()) prompt.append("- 없음\n");
-        for (WorkoutLog w : workouts) {
-            prompt.append("- ").append(w.getType()).append(" ").append(w.getDuration())
-                  .append("분 (칼로리: ").append(w.getCaloriesBurned()).append(" kcal)\n");
-        }
-    
-        prompt.append("\n\n이 유저에게 감정 모드에 맞춰 한 마디 해줘. 짧고 강렬하게.\n");
-        prompt.append("응답 형식: 단 한 문장, 감정 담긴 스타일로\n");
+        
+        prompt.append("\n위 정보를 바탕으로 ").append(user.getEmotionMode()).append(" 스타일로 동기부여하는 한 문장을 만들어주세요.");
+        prompt.append("반말로, 이모지 포함해서 답변해주세요.");
     
         return prompt.toString();
     }

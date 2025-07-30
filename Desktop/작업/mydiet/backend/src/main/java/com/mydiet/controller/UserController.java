@@ -86,6 +86,12 @@ public class UserController {
         System.out.println("=== 인증 체크 요청 받음 ===");
         return ResponseEntity.ok(Map.of("authenticated", true));
     }
+
+    @GetMapping("/claude/test")
+public ResponseEntity<?> testClaude() {
+    System.out.println("=== Claude 테스트 요청 ===");
+    return ResponseEntity.ok("AI 테스트 응답입니다! 💪 열심히 다이어트 하세요!");
+}
     
     @GetMapping("/test")
     public ResponseEntity<?> test() {
