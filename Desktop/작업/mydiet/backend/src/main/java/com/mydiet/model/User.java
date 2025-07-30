@@ -1,69 +1,42 @@
-package com.mydiet.mydiet.model;
+package com.mydiet.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class User {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username; // 로그인용 아이디
-    
-    @Column(nullable = false)
-    private String password; // 비밀번호
-    
-    @Column(nullable = false)
-    private String nickname; // 표시용 닉네임
-    
-    @Column(nullable = false, unique = true)
+    private String nickname;
     private String email;
-
     private Double weightGoal;
-    private Double currentWeight;
-    private Integer height;
-    private Integer age;
-    
-    @Enumerated(EnumType.STRING)
-    private Gender gender;
-    
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private EmotionMode emotionMode = EmotionMode.FRIENDLY;
+    private String emotionMode; // 예: 무자비, 츤데레, 다정함
 
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    // 기본 생성자
+    public User() {}
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
-    public enum Gender {
-        MALE, FEMALE
-    }
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
     
-    public enum EmotionMode {
-        RUTHLESS("무자비"), 
-        TSUNDERE("츤데레"), 
-        FRIENDLY("다정함"), 
-        MOTIVATIONAL("동기부여"), 
-        SARCASTIC("비꼬기");
-        
-        private final String korean;
-        
-        EmotionMode(String korean) {
-            this.korean = korean;
-        }
-        
-        public String getKorean() {
-            return korean;
-        }
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    
+    public Double getWeightGoal() { return weightGoal; }
+    public void setWeightGoal(Double weightGoal) { this.weightGoal = weightGoal; }
+    
+    public String getEmotionMode() { return emotionMode; }
+    public void setEmotionMode(String emotionMode) { this.emotionMode = emotionMode; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
