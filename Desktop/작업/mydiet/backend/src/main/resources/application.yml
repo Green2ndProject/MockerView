@@ -22,8 +22,8 @@ spring:
 
 claude:
   api-key: ${ANTHROPIC_API_KEY}
-    base-url: https://api.anthropic.com/v1
-    model: claude-3-haiku-20240307
+  base-url: https://api.anthropic.com/v1
+  model: claude-3-haiku-20240307
 
 logging:
   level:
