@@ -1,51 +1,44 @@
-package com.mydiet.mydiet.model;
+package com.mydiet.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "meal_logs")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class MealLog {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     private String description;
+    private String photoUrl; // optional
     private Integer caloriesEstimate;
+
+    private LocalDate date;
+
+    // 기본 생성자
+    public MealLog() {}
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
-    @Enumerated(EnumType.STRING)
-    private MealType mealType;
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
     
-    @Builder.Default
-    private LocalDate date = LocalDate.now();
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
     
-    public enum MealType {
-        BREAKFAST("아침"), LUNCH("점심"), DINNER("저녁"), SNACK("간식");
-        
-        private final String korean;
-        
-        MealType(String korean) {
-            this.korean = korean;
-        }
-        
-        public String getKorean() {
-            return korean;
-        }
-    }
+    public Integer getCaloriesEstimate() { return caloriesEstimate; }
+    public void setCaloriesEstimate(Integer caloriesEstimate) { this.caloriesEstimate = caloriesEstimate; }
+    
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 }
