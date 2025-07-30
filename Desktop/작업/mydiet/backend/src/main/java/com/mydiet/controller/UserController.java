@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -23,12 +24,19 @@ public class UserController {
         System.out.println("Request: " + request);
         
         try {
+            String email = (String) request.get("email");
+            
+            if (userRepository.findByEmail(email).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "이미 존재하는 이메일입니다."));
+            }
+            
             User user = new User();
             user.setNickname((String) request.get("nickname"));
-            user.setEmail((String) request.get("email"));
+            user.setEmail(email);
             user.setWeightGoal(Double.parseDouble(request.get("targetWeight").toString()));
-            user.setEmotionMode("무자비"); // 기본값
+            user.setEmotionMode((String) request.get("emotionMode"));
             user.setCreatedAt(LocalDateTime.now());
+
             
             System.out.println("사용자 생성 중: " + user.getNickname());
             
@@ -40,6 +48,36 @@ public class UserController {
             System.err.println("회원가입 에러: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/auth/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, Object> request) {
+        System.out.println("=== 로그인 요청 받음 ===");
+        
+        try {
+            String email = (String) request.get("email");
+            String password = (String) request.get("password");
+            
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                System.out.println("로그인 성공 - 사용자: " + user.getNickname());
+                
+                return ResponseEntity.ok(Map.of(
+                    "success", true, 
+                    "userId", user.getId(),
+                    "nickname", user.getNickname(),
+                    "email", user.getEmail(),
+                    "emotionMode", user.getEmotionMode()
+                ));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "존재하지 않는 이메일입니다."));
+            }
+        } catch (Exception e) {
+            System.err.println("로그인 에러: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "로그인에 실패했습니다."));
         }
     }
 

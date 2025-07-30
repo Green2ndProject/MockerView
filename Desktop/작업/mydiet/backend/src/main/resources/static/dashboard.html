@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyDiet AI Coach</title>
+    <title>MyDiet Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -18,27 +18,76 @@
             line-height: 1.6;
         }
 
+        .header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .user-info p {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
         .container {
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        .header {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             text-align: center;
-            margin-bottom: 30px;
         }
 
-        .header h1 {
+        .stat-number {
             font-size: 24px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
+            font-weight: 700;
+            color: #3742fa;
+            margin-bottom: 4px;
         }
 
-        .header p {
+        .stat-label {
+            font-size: 12px;
             color: #7f8c8d;
-            font-size: 14px;
         }
 
         .card {
@@ -97,14 +146,6 @@
 
         .form-group {
             margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #495057;
         }
 
         .form-control {
@@ -166,10 +207,18 @@
             margin-bottom: 8px;
             font-size: 14px;
             border-left: 4px solid #28a745;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .list-item.workout {
             border-left-color: #ffc107;
+        }
+
+        .list-item-time {
+            font-size: 12px;
+            color: #6c757d;
         }
 
         .two-columns {
@@ -183,12 +232,12 @@
                 padding: 16px;
             }
             
-            .two-columns {
+            .stats-grid {
                 grid-template-columns: 1fr;
             }
             
-            .header h1 {
-                font-size: 20px;
+            .two-columns {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -201,22 +250,46 @@
     </style>
 </head>
 <body>
+    <div class="header">
+        <div class="header-content">
+            <div class="user-info">
+                <h1 id="userGreeting">안녕하세요!</h1>
+                <p id="userStats">목표를 향해 달려가요 🎯</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
     <div class="container">
-        <div class="header">
-            <h1>🍽️ MyDiet AI Coach</h1>
-            <p>건강한 다이어트를 위한 AI 코치</p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalMealsCount">0</div>
+                <div class="stat-label">오늘 식단 기록</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalCalories">0</div>
+                <div class="stat-label">오늘 총 칼로리</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalWorkouts">0</div>
+                <div class="stat-label">오늘 운동 시간</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="daysSinceStart">0</div>
+                <div class="stat-label">다이어트 일수</div>
+            </div>
         </div>
 
         <div class="card">
             <div class="card-header">
                 <span class="emoji">🤖</span>
-                오늘의 AI 코치 멘트
+                AI 코치의 한마디
             </div>
             <div id="claudeResponse" class="claude-response loading">
                 AI가 분석 중입니다...
             </div>
             <button class="btn btn-primary" onclick="getClaudeMessage()">
-                새로운 멘트 받기
+                새로운 조언 받기
             </button>
         </div>
 
@@ -252,14 +325,48 @@
     </div>
 
     <script>
-        const userId = 2;
+        let currentUser = null;
+
+        function checkAuth() {
+            const userId = localStorage.getItem('userId');
+            const userNickname = localStorage.getItem('userNickname');
+            
+            if (!userId) {
+                location.href = '/index.html';
+                return false;
+            }
+            
+            currentUser = {
+                id: parseInt(userId),
+                nickname: userNickname
+            };
+            
+            return true;
+        }
+
+        function displayUserInfo() {
+            if (currentUser) {
+                document.getElementById('userGreeting').textContent = `안녕하세요, ${currentUser.nickname}님!`;
+                
+                const today = new Date();
+                const daysSince = Math.floor(Math.random() * 30) + 1; 
+                document.getElementById('daysSinceStart').textContent = daysSince;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userNickname');
+            location.href = '/index.html';
+        }
+
         async function getClaudeMessage() {
             const responseEl = document.getElementById('claudeResponse');
             responseEl.className = 'claude-response loading';
             responseEl.textContent = '🤔 AI가 생각 중...';
             
             try {
-                const response = await fetch(`/api/claude/message?userId=${userId}`);
+                const response = await fetch(`/api/claude/message?userId=${currentUser.id}`);
                 const message = await response.text();
                 
                 responseEl.className = 'claude-response success';
@@ -284,7 +391,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        userId: userId,
+                        userId: currentUser.id,
                         description: description,
                         caloriesEstimate: parseInt(calories) || 0,
                         date: new Date().toISOString().split('T')[0]
@@ -295,26 +402,30 @@
                     document.getElementById('mealInput').value = '';
                     document.getElementById('caloriesInput').value = '';
                     loadTodayMeals();
-                    setTimeout(getClaudeMessage, 500);
+                    updateStats();
+                   setTimeout(getClaudeMessage, 500);
                 }
             } catch (error) {
                 alert('식단 추가에 실패했습니다');
             }
         }
-
+ 
         async function loadTodayMeals() {
             try {
-                const response = await fetch(`/api/meals/today?userId=${userId}`);
+                const response = await fetch(`/api/meals/today?userId=${currentUser.id}`);
                 const meals = await response.json();
                 
                 const mealList = document.getElementById('mealList');
                 if (meals.length === 0) {
                     mealList.innerHTML = '<div class="empty-state">아직 기록된 식단이 없습니다</div>';
                 } else {
-                    mealList.innerHTML = meals.map(meal => 
+                    mealList.innerHTML = meals.map((meal, index) => 
                         `<div class="list-item">
-                            ${meal.description} 
-                            ${meal.caloriesEstimate > 0 ? `(${meal.caloriesEstimate}kcal)` : ''}
+                            <div>
+                                <strong>${meal.description}</strong>
+                                ${meal.caloriesEstimate > 0 ? `<br><small>${meal.caloriesEstimate}kcal</small>` : ''}
+                            </div>
+                            <div class="list-item-time">${formatTime(new Date())}</div>
                         </div>`
                     ).join('');
                 }
@@ -322,7 +433,7 @@
                 console.error('식단 로드 실패:', error);
             }
         }
-
+ 
         function addWorkout() {
             const workoutType = document.getElementById('workoutInput').value;
             const duration = document.getElementById('durationInput').value;
@@ -332,23 +443,25 @@
                 return;
             }
             
-            const workouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+            const workouts = JSON.parse(localStorage.getItem(`workouts_${currentUser.id}`) || '[]');
             workouts.push({
                 type: workoutType,
                 duration: parseInt(duration) || 0,
-                date: new Date().toISOString().split('T')[0]
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toISOString()
             });
-            localStorage.setItem('workouts', JSON.stringify(workouts));
+            localStorage.setItem(`workouts_${currentUser.id}`, JSON.stringify(workouts));
             
             document.getElementById('workoutInput').value = '';
             document.getElementById('durationInput').value = '';
             loadTodayWorkouts();
+            updateStats();
             
             setTimeout(getClaudeMessage, 500);
         }
-
+ 
         function loadTodayWorkouts() {
-            const workouts = JSON.parse(localStorage.getItem('workouts') || '[]');
+            const workouts = JSON.parse(localStorage.getItem(`workouts_${currentUser.id}`) || '[]');
             const today = new Date().toISOString().split('T')[0];
             const todayWorkouts = workouts.filter(w => w.date === today);
             
@@ -358,18 +471,55 @@
             } else {
                 workoutList.innerHTML = todayWorkouts.map(workout => 
                     `<div class="list-item workout">
-                        ${workout.type} 
-                        ${workout.duration > 0 ? `(${workout.duration}분)` : ''}
+                        <div>
+                            <strong>${workout.type}</strong>
+                            ${workout.duration > 0 ? `<br><small>${workout.duration}분</small>` : ''}
+                        </div>
+                        <div class="list-item-time">${formatTime(new Date(workout.time))}</div>
                     </div>`
                 ).join('');
             }
         }
-
+ 
+        async function updateStats() {
+            try {
+                const mealsResponse = await fetch(`/api/meals/today?userId=${currentUser.id}`);
+                const meals = await mealsResponse.json();
+                
+                const totalMeals = meals.length;
+                const totalCalories = meals.reduce((sum, meal) => sum + (meal.caloriesEstimate || 0), 0);
+                
+                document.getElementById('totalMealsCount').textContent = totalMeals;
+                document.getElementById('totalCalories').textContent = totalCalories;
+                
+                const workouts = JSON.parse(localStorage.getItem(`workouts_${currentUser.id}`) || '[]');
+                const today = new Date().toISOString().split('T')[0];
+                const todayWorkouts = workouts.filter(w => w.date === today);
+                const totalWorkoutTime = todayWorkouts.reduce((sum, workout) => sum + (workout.duration || 0), 0);
+                
+                document.getElementById('totalWorkouts').textContent = totalWorkoutTime + '분';
+                
+            } catch (error) {
+                console.error('통계 업데이트 실패:', error);
+            }
+        }
+ 
+        function formatTime(date) {
+            return date.toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+ 
         window.onload = function() {
+            if (!checkAuth()) return;
+            
+            displayUserInfo();
             getClaudeMessage();
             loadTodayMeals();
             loadTodayWorkouts();
+            updateStats();
         };
     </script>
-</body>
-</html>
+ </body>
+ </html>
