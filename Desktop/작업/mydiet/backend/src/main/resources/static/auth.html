@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDiet - 로그인</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #334155;
+        }
+        
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .auth-container h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .auth-container p {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        
+        .form-tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 30px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: #4f46e5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .link-btn {
+            background: none;
+            border: none;
+            color: #4f46e5;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+        
+        .link-btn:hover {
+            color: #4338ca;
+        }
+        
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1><i class="fas fa-apple-alt"></i> MyDiet</h1>
+        <p>당신의 다이어트 여정을 시작하세요</p>
+
+        <div class="form-tabs">
+            <button class="tab-btn active" onclick="switchTab('login')">로그인</button>
+            <button class="tab-btn" onclick="switchTab('register')">회원가입</button>
+        </div>
+
+        <div id="alertArea"></div>
+
+        <!-- 로그인 폼 -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label>아이디</label>
+                <input type="text" id="loginUsername" class="form-control" placeholder="아이디를 입력하세요" required>
+            </div>
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="비밀번호를 입력하세요" required>
+            </div>
+            <button type="submit" class="btn">
+                <i class="fas fa-sign-in-alt"></i> 로그인
+            </button>
+        </form>
+
+        <!-- 회원가입 폼 -->
+        <form id="registerForm" class="hidden">
+            <div class="form-group">
+                <label>아이디</label>
+                <input type="text" id="registerUsername" class="form-control" placeholder="사용할 아이디를 입력하세요" required>
+            </div>
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="registerPassword" class="form-control" placeholder="비밀번호를 입력하세요" required>
+            </div>
+            <div class="form-group">
+                <label>비밀번호 확인</label>
+                <input type="password" id="confirmPassword" class="form-control" placeholder="비밀번호를 다시 입력하세요" required>
+            </div>
+            <div class="form-group">
+                <label>닉네임</label>
+                <input type="text" id="registerNickname" class="form-control" placeholder="표시될 닉네임을 입력하세요" required>
+            </div>
+            <div class="form-group">
+                <label>이메일</label>
+                <input type="email" id="registerEmail" class="form-control" placeholder="이메일을 입력하세요" required>
+            </div>
+            <button type="submit" class="btn">
+                <i class="fas fa-user-plus"></i> 회원가입
+            </button>
+        </form>
+
+        <button class="link-btn" onclick="window.location.href='/admin.html'">
+            <i class="fas fa-cog"></i> 관리자 로그인
+        </button>
+    </div>
+
+    <script>
+        let currentTab = 'login';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 이미 로그인되어 있는지 확인
+            checkCurrentUser();
+
+            // 폼 이벤트 리스너
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+        });
+
+        async function checkCurrentUser() {
+            try {
+                const response = await fetch('/api/auth/me');
+                const result = await response.json();
+                
+                if (result.authenticated) {
+                    // 이미 로그인된 경우 메인 페이지로 이동
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                // 로그인 안된 상태로 유지
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 탭 버튼 스타일 변경
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 폼 표시/숨김
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+            }
+            
+            // 알림 메시지 초기화
+            document.getElementById('alertArea').innerHTML = '';
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!username || !password) {
+                showAlert('모든 필드를 입력해주세요.', 'danger');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('로그인 중 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const nickname = document.getElementById('registerNickname').value;
+            const email = document.getElementById('registerEmail').value;
+            
+            if (!username || !password || !nickname || !email) {
+                showAlert('모든 필드를 입력해주세요.', 'danger');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showAlert('비밀번호가 일치하지 않습니다.', 'danger');
+                return;
+            }
+            
+            if (password.length < 4) {
+                showAlert('비밀번호는 4자 이상이어야 합니다.', 'danger');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, nickname, email })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(result.message, 'success');
+                    // 회원가입 성공 시 로그인 탭으로 전환
+                    setTimeout(() => {
+                        switchTab('login');
+                        document.getElementById('loginUsername').value = username;
+                    }, 1500);
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                showAlert('회원가입 중 오류가 발생했습니다.', 'danger');
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertArea = document.getElementById('alertArea');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            
+            alertArea.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <i class="fas ${icon}"></i> ${message}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

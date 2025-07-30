@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDiet - 관리자</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            color: #334155;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-card h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .login-card p {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+        
+        .nav-buttons {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .nav-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0 10px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+        
+        .nav-btn.secondary {
+            background: #6b7280;
+        }
+        
+        .nav-btn.secondary:hover {
+            background: #4b5563;
+        }
+        
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .alert-danger {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-row {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .logout-btn {
+                position: static;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <h1><i class="fas fa-shield-alt"></i> 관리자 로그인</h1>
+            <p>관리자 페이지에 접근하려면 비밀번호를 입력하세요</p>
+            
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="비밀번호를 입력하세요">
+            </div>
+            
+            <button class="btn" onclick="attemptLogin()" style="width: 100%; margin-top: 20px;">
+                <i class="fas fa-sign-in-alt"></i> 로그인
+            </button>
+            
+            <div style="margin-top: 20px;">
+                <a href="/" class="nav-btn secondary">
+                    <i class="fas fa-home"></i> 메인으로 돌아가기
+                </a>
+            </div>
+            
+            <div id="loginError" class="alert alert-danger hidden" style="margin-top: 20px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- 관리자 메인 화면 -->
+    <div id="adminScreen" class="hidden">
+        <div class="container">
+            <div class="header">
+                <h1><i class="fas fa-cog"></i> 관리자 패널</h1>
+                <p>시스템 관리 및 데이터 관리</p>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> 로그아웃
+                </button>
+            </div>
+
+            <div class="nav-buttons">
+                <a href="/" class="nav-btn secondary">메인 페이지</a>
+                <a href="/show.html" class="nav-btn secondary">통계 보기</a>
+                <a href="/admin.html" class="nav-btn">관리자</a>
+            </div>
+
+            <div class="admin-grid">
+                <div class="card">
+                    <h3><i class="fas fa-database"></i> 시스템 상태</h3>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalUsers">0</div>
+                            <div class="stat-label">총 사용자</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalMealsAll">0</div>
+                            <div class="stat-label">총 식사 기록</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalWorkoutsAll">0</div>
+                            <div class="stat-label">총 운동 기록</div>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="loadSystemStats()">
+                        <i class="fas fa-sync-alt"></i> 새로고침
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-users"></i> 사용자 관리</h3>
+                    <div class="form-group">
+                        <label>닉네임</label>
+                        <input type="text" id="userNickname" class="form-control" placeholder="새 사용자 닉네임">
+                    </div>
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" id="userEmail" class="form-control" placeholder="user@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>목표 체중 (kg)</label>
+                        <input type="number" id="userWeight" class="form-control" placeholder="65">
+                    </div>
+                    <button class="btn btn-success" onclick="createUser()">
+                        <i class="fas fa-user-plus"></i> 사용자 추가
+                    </button>
+                    <button class="btn" onclick="loadUsers()">
+                        <i class="fas fa-list"></i> 사용자 목록 보기
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-trash-alt"></i> 데이터 관리</h3>
+                    <p style="color: #ef4444; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        주의: 이 작업은 되돌릴 수 없습니다.
+                    </p>
+                    <button class="btn btn-warning" onclick="clearTodayData()">
+                        <i class="fas fa-calendar-day"></i> 오늘 데이터 삭제
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllMeals()">
+                        <i class="fas fa-utensils"></i> 모든 식사 기록 삭제
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllWorkouts()">
+                        <i class="fas fa-dumbbell"></i> 모든 운동 기록 삭제
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-robot"></i> AI 설정</h3>
+                    <div class="form-group">
+                        <label>Claude API 키 상태</label>
+                        <div id="apiKeyStatus" style="padding: 10px; border-radius: 6px; background: #f3f4f6;">
+                            확인 중...
+                        </div>
+                    </div>
+                    <button class="btn" onclick="testClaudeAPI()">
+                        <i class="fas fa-vial"></i> API 테스트
+                    </button>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>테스트 메시지</label>
+                        <input type="text" id="testMessage" class="form-control" placeholder="테스트할 메시지 입력">
+                    </div>
+                    <button class="btn btn-success" onclick="sendTestMessage()">
+                        <i class="fas fa-paper-plane"></i> 메시지 전송
+                    </button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 30px;">
+                <h3><i class="fas fa-list"></i> 전체 사용자 목록</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>닉네임</th>
+                            <th>이메일</th>
+                            <th>목표 체중</th>
+                            <th>가입일</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="messageArea"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            
+            // Enter 키로 로그인
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    attemptLogin();
+                }
+            });
+        });
+
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/admin/check');
+                const result = await response.json();
+                
+                if (result.authenticated) {
+                    showAdminScreen();
+                } else {
+                    showLoginScreen();
+                }
+            } catch (error) {
+                showLoginScreen();
+            }
+        }
+
+        async function attemptLogin() {
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (!password) {
+                showLoginError('비밀번호를 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAdminScreen();
+                } else {
+                    showLoginError(result.message);
+                }
+            } catch (error) {
+                showLoginError('로그인 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('/api/admin/logout', { method: 'POST' });
+                showLoginScreen();
+            } catch (error) {
+                console.error('로그아웃 실패:', error);
+                showLoginScreen();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('adminScreen').classList.add('hidden');
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function showAdminScreen() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminScreen').classList.remove('hidden');
+            
+            // 관리자 화면 로드 시 데이터 로드
+            loadSystemStats();
+            loadUsers();
+            checkApiStatus();
+        }
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        async function loadSystemStats() {
+            try {
+                const [usersRes, mealsRes, workoutsRes] = await Promise.all([
+                    fetch('/api/users'),
+                    fetch(`/api/meals/today?userId=1`),
+                    fetch(`/api/workouts/today?userId=1`)
+                ]);
+
+                const users = await usersRes.json();
+                const meals = mealsRes.ok ? await mealsRes.json() : [];
+                const workouts = workoutsRes.ok ? await workoutsRes.json() : [];
+
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('totalMealsAll').textContent = meals.length;
+                document.getElementById('totalWorkoutsAll').textContent = workouts.length;
+            } catch (error) {
+                showMessage('시스템 상태 로드 실패: ' + error.message, 'danger');
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                const users = await response.json();
+                
+                const tableBody = document.getElementById('usersTable');
+                tableBody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.nickname}</td>
+                        <td>${user.email}</td>
+                        <td>${user.weightGoal || '-'} kg</td>
+                        <td>${formatDate(user.createdAt)}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteUser(${user.id})" style="padding: 5px 10px; font-size: 0.8rem;">
+                                <i class="fas fa-trash"></i> 삭제
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showMessage('사용자 목록 로드 실패: ' + error.message, 'danger');
+            }
+        }
+
+        async function createUser() {
+            const nickname = document.getElementById('userNickname').value;
+            const email = document.getElementById('userEmail').value;
+            const weight = document.getElementById('userWeight').value;
+
+            if (!nickname || !email) {
+                showMessage('닉네임과 이메일을 입력해주세요.', 'danger');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nickname: nickname,
+                        email: email,
+                        weightGoal: weight ? parseFloat(weight) : null,
+                        emotionMode: 'FRIENDLY'
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('userNickname').value = '';
+                    document.getElementById('userEmail').value = '';
+                    document.getElementById('userWeight').value = '';
+                    loadUsers();
+                    loadSystemStats();
+                    showMessage('사용자가 성공적으로 추가되었습니다.', 'success');
+                } else {
+                    showMessage('사용자 추가 실패: ' + await response.text(), 'danger');
+                }
+            } catch (error) {
+                showMessage('사용자 추가 실패: ' + error.message, 'danger');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('정말로 이 사용자를 삭제하시겠습니까?')) return;
+
+            try {
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    loadUsers();
+                    loadSystemStats();
+                    showMessage('사용자가 삭제되었습니다.', 'success');
+                } else {
+                    showMessage('사용자 삭제 실패', 'danger');
+                }
+            } catch (error) {
+                showMessage('사용자 삭제 실패: ' + error.message, 'danger');
+            }
+        }
+
+        async function clearTodayData() {
+            if (!confirm('오늘의 모든 식사와 운동 데이터를 삭제하시겠습니까?')) return;
+            showMessage('기능 구현 예정입니다.', 'warning');
+        }
+
+        async function clearAllMeals() {
+            if (!confirm('모든 식사 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+            showMessage('기능 구현 예정입니다.', 'warning');
+        }
+
+        async function clearAllWorkouts() {
+            if (!confirm('모든 운동 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+            showMessage('기능 구현 예정입니다.', 'warning');
+        }
+
+        async function checkApiStatus() {
+            const statusEl = document.getElementById('apiKeyStatus');
+            try {
+                const response = await fetch('/api/claude/test-connection');
+                const result = await response.text();
+                
+                if (result.includes('✅')) {
+                    statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> API 연결 정상';
+                    statusEl.style.background = '#dcfce7';
+                } else {
+                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> API 연결 문제';
+                    statusEl.style.background = '#fef3c7';
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<i class="fas fa-times-circle" style="color: #ef4444;"></i> API 연결 실패';
+                statusEl.style.background = '#fef2f2';
+            }
+        }
+
+        async function testClaudeAPI() {
+            try {
+                const response = await fetch('/api/claude/test-connection');
+                const result = await response.text();
+                showMessage('API 테스트 결과: ' + result, result.includes('✅') ? 'success' : 'danger');
+            } catch (error) {
+                showMessage('API 테스트 실패: ' + error.message, 'danger');
+            }
+        }
+
+        async function sendTestMessage() {
+            const message = document.getElementById('testMessage').value;
+            if (!message) {
+                showMessage('테스트 메시지를 입력해주세요.', 'danger');
+                return;
+            }
+            
+            showMessage('테스트 메시지가 전송되었습니다: ' + message, 'success');
+            document.getElementById('testMessage').value = '';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('messageArea');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertClass}`;
+            alertDiv.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i> ${message}`;
+            
+            messageArea.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

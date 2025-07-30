@@ -19,13 +19,24 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String nickname;
+    private String username; // 로그인용 아이디
+    
+    @Column(nullable = false)
+    private String password; // 비밀번호
+    
+    @Column(nullable = false)
+    private String nickname; // 표시용 닉네임
     
     @Column(nullable = false, unique = true)
     private String email;
 
     private Double weightGoal;
     private Double currentWeight;
+    private Integer height;
+    private Integer age;
+    
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
     
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -33,6 +44,10 @@ public class User {
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    public enum Gender {
+        MALE, FEMALE
+    }
     
     public enum EmotionMode {
         RUTHLESS("무자비"), 
