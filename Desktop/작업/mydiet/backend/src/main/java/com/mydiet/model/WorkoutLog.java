@@ -1,52 +1,44 @@
-package com.mydiet.mydiet.model;
+package com.mydiet.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "workout_logs")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class WorkoutLog {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    private WorkoutType type;
-    
+    private String type; // 걷기, 뛰기 등
     private Integer duration; // 분 단위
     private Integer caloriesBurned;
 
-    @Builder.Default
-    private LocalDate date = LocalDate.now();
+    private LocalDate date;
+
+    // 기본 생성자
+    public WorkoutLog() {}
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
     
-    public enum WorkoutType {
-        WALKING("걷기"), RUNNING("뛰기"), CYCLING("자전거"), 
-        SWIMMING("수영"), WEIGHT_TRAINING("웨이트"), YOGA("요가");
-        
-        private final String korean;
-        
-        WorkoutType(String korean) {
-            this.korean = korean;
-        }
-        
-        public String getKorean() {
-            return korean;
-        }
-    }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    
+    public Integer getDuration() { return duration; }
+    public void setDuration(Integer duration) { this.duration = duration; }
+    
+    public Integer getCaloriesBurned() { return caloriesBurned; }
+    public void setCaloriesBurned(Integer caloriesBurned) { this.caloriesBurned = caloriesBurned; }
+    
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 }
