@@ -185,15 +185,27 @@
     </div>
 
     <script>
+        function checkAdminAuth() {
+            const adminAuth = localStorage.getItem('adminAuth');
+            if (!adminAuth) {
+                location.href = '/admin-login.html';
+                return false;
+            }
+            return true;
+        }
+    
         async function loadAdminData() {
             try {
+                const statsResponse = await fetch('/api/admin/stats');
+                const stats = await statsResponse.json();
+                
+                document.getElementById('totalUsers').textContent = stats.totalUsers;
+                document.getElementById('totalMeals').textContent = stats.totalMeals;
+                document.getElementById('totalClaudeResponses').textContent = stats.totalClaudeResponses;
+                document.getElementById('activeToday').textContent = stats.activeToday;
+                
                 const usersResponse = await fetch('/api/admin/users');
                 const users = await usersResponse.json();
-                
-                document.getElementById('totalUsers').textContent = users.length;
-                document.getElementById('totalMeals').textContent = '0'; 
-                document.getElementById('totalClaudeResponses').textContent = '0'; 
-                document.getElementById('activeToday').textContent = '1'; 
                 
                 const tbody = document.getElementById('userTableBody');
                 if (users.length === 0) {
@@ -202,10 +214,10 @@
                     tbody.innerHTML = users.map(user => `
                         <tr>
                             <td>${user.id}</td>
-                            <td>${user.nickname}</td>
+                            <td>${user.nickname || 'N/A'}</td>
                             <td>${user.email}</td>
-                            <td>${user.weightGoal}kg</td>
-                            <td><span class="badge badge-success">${user.emotionMode}</span></td>
+                            <td>${user.weightGoal || 'N/A'}kg</td>
+                            <td><span class="badge badge-success">${user.emotionMode || '기본'}</span></td>
                             <td>${new Date(user.createdAt).toLocaleDateString('ko-KR')}</td>
                             <td><span class="badge badge-success">활성</span></td>
                         </tr>
@@ -217,85 +229,58 @@
                     '<tr><td colspan="7" style="text-align: center; color: red;">데이터 로드 실패</td></tr>';
             }
         }
-
-        window.onload = loadAdminData;
-
-                async function loadAdminData() {
-                    try {
-                        const usersResponse = await fetch('/api/admin/users');
-                        const users = await usersResponse.json();
-                        
-                        let totalMeals = 0;
-                        let totalClaudeResponses = 0;
-                        let activeToday = 0;
-                        
-                        for (let user of users) {
-                            try {
-                                const mealsResponse = await fetch(`/api/meals/today?userId=${user.id}`);
-                                const meals = await mealsResponse.json();
-                                totalMeals += meals.length;
-                                
-                                if (meals.length > 0) {
-                                    activeToday++;
-                                }
-                            } catch (e) {
-                                console.log(`사용자 ${user.id} 데이터 로드 실패`);
-                            }
-                        }
-                        
-                        document.getElementById('totalUsers').textContent = users.length;
-                        document.getElementById('totalMeals').textContent = totalMeals;
-                        document.getElementById('totalClaudeResponses').textContent = Math.floor(Math.random() * 50) + 10; // 임시
-                        document.getElementById('activeToday').textContent = activeToday;
-                        
-                        const tbody = document.getElementById('userTableBody');
-                        if (users.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">사용자가 없습니다</td></tr>';
-                        } else {
-                            tbody.innerHTML = users.map(user => `
-                                <tr>
-                                    <td>${user.id}</td>
-                                    <td>${user.nickname || 'N/A'}</td>
-                                    <td>${user.email}</td>
-                                    <td>${user.weightGoal || 'N/A'}kg</td>
-                                    <td><span class="badge badge-success">${user.emotionMode || '기본'}</span></td>
-                                    <td>${new Date(user.createdAt).toLocaleDateString('ko-KR')}</td>
-                                    <td><span class="badge badge-success">활성</span></td>
-                                </tr>
-                            `).join('');
-                        }
-                    } catch (error) {
-                        console.error('관리자 데이터 로드 실패:', error);
-                        document.getElementById('userTableBody').innerHTML = 
-                            '<tr><td colspan="7" style="text-align: center; color: red;">데이터 로드 실패</td></tr>';
-                    }
-                }
+    
+        function addLogoutButton() {
+            const header = document.querySelector('.header .container');
+            const buttonContainer = document.createElement('div');
             
-                function addBackButton() {
-                    const header = document.querySelector('.header .container');
-                    const backBtn = document.createElement('button');
-                    backBtn.innerHTML = '← 메인으로';
-                    backBtn.style.cssText = `
-                        background: #3742fa;
-                        color: white;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 14px;
-                    `;
-                    backBtn.onclick = () => location.href = '/index.html';
-                    
-                    header.style.display = 'flex';
-                    header.style.justifyContent = 'space-between';
-                    header.style.alignItems = 'center';
-                    header.appendChild(backBtn);
-                }
+            const backBtn = document.createElement('button');
+            backBtn.innerHTML = '← 메인으로';
+            backBtn.style.cssText = `
+                background: #3742fa;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-right: 10px;
+            `;
+            backBtn.onclick = () => location.href = '/index.html';
             
-                window.onload = function() {
-                    addBackButton();
-                    loadAdminData();
-                };
+            const logoutBtn = document.createElement('button');
+            logoutBtn.innerHTML = '🚪 로그아웃';
+            logoutBtn.style.cssText = `
+                background: #e74c3c;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+            `;
+            logoutBtn.onclick = () => {
+                localStorage.removeItem('adminAuth');
+                location.href = '/admin-login.html';
+            };
+            
+            buttonContainer.appendChild(backBtn);
+            buttonContainer.appendChild(logoutBtn);
+            
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.alignItems = 'center';
+            header.appendChild(buttonContainer);
+        }
+    
+        window.onload = function() {
+            if (!checkAdminAuth()) return;
+            
+            addLogoutButton();
+            loadAdminData();
+            
+            setInterval(loadAdminData, 5000);
+        };
     </script>
 </body>
 </html>
