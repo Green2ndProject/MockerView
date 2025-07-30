@@ -1,4 +1,4 @@
-package com.mydiet.service;
+package com.mydiet.mydiet.service;
 
 import com.mydiet.config.ClaudeApiClient;
 import com.mydiet.model.MealLog;

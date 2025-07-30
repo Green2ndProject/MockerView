@@ -1,4 +1,4 @@
-package com.mydiet.repository;
+package com.mydiet.mydiet.repository;
 
 import com.mydiet.model.WorkoutLog;
 import org.springframework.data.jpa.repository.JpaRepository;

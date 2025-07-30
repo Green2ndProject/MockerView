@@ -1,4 +1,4 @@
-package com.mydiet.controller;
+package com.mydiet.mydiet.controller;
 
 import com.mydiet.service.ClaudeService;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.mydiet.config;
+package com.mydiet.mydiet.config;
 
 import com.mydiet.model.User;
 import com.mydiet.repository.UserRepository;

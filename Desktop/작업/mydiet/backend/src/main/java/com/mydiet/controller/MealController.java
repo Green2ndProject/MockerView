@@ -1,4 +1,4 @@
-package com.mydiet.controller;
+package com.mydiet.mydiet.controller;
 
 import com.mydiet.model.MealLog;
 import com.mydiet.model.User;

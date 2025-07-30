@@ -1,4 +1,4 @@
-package com.mydiet.model;
+package com.mydiet.mydiet.model;
 
 import jakarta.persistence.*;
 import lombok.Data;

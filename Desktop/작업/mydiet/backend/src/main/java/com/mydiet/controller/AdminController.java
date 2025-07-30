@@ -1,4 +1,4 @@
-package com.mydiet.controller;
+package com.mydiet.mydiet.controller;
 
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;

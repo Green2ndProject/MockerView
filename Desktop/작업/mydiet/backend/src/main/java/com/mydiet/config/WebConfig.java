@@ -1,4 +1,4 @@
-package com.mydiet.config;
+package com.mydiet.mydiet.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
