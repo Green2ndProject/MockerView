@@ -2,4 +2,5 @@
 *.class
 /target/
 /.idea/
-.env
+.env.env
+backend/build/
