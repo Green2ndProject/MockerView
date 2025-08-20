@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - 커뮤니티</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <h1>커뮤니티</h1>
+            </a>
+            <nav class="nav">
+                <a href="login.html" class="btn btn-outline btn-sm">로그인</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container" style="max-width: 500px;">
+            <div class="page-header">
+                <h1>회원가입</h1>
+                <p>커뮤니티에 가입하여 다양한 사람들과 소통하세요</p>
+            </div>
+
+            <div class="card">
+                <form id="register-form">
+                    <div class="error-banner hidden" id="error-banner">
+                        <p id="error-message"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">이메일</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="이메일을 입력하세요" required>
+                        <div class="error-message hidden" id="email-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">비밀번호</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
+                        <div class="error-message hidden" id="password-error"></div>
+                        <small class="text-muted">8자 이상 입력해주세요</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword" class="form-label">비밀번호 확인</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="비밀번호를 다시 입력하세요" required>
+                        <div class="error-message hidden" id="confirmPassword-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company" class="form-label">회사명</label>
+                        <input type="text" id="company" name="company" class="form-control" placeholder="회사명을 입력하세요" required>
+                        <div class="error-message hidden" id="company-error"></div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="department" class="form-label">부서</label>
+                            <select id="department" name="department" class="form-control" required>
+                                <option value="">부서를 선택하세요</option>
+                                <option value="개발팀">개발팀</option>
+                                <option value="기획팀">기획팀</option>
+                                <option value="디자인팀">디자인팀</option>
+                                <option value="마케팅팀">마케팅팀</option>
+                                <option value="영업팀">영업팀</option>
+                                <option value="인사팀">인사팀</option>
+                                <option value="재무팀">재무팀</option>
+                                <option value="운영팀">운영팀</option>
+                            </select>
+                            <div class="error-message hidden" id="department-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jobRole" class="form-label">직급</label>
+                            <select id="jobRole" name="jobRole" class="form-control" required>
+                                <option value="">직급을 선택하세요</option>
+                                <option value="신입">신입</option>
+                                <option value="주니어">주니어</option>
+                                <option value="시니어">시니어</option>
+                                <option value="리드">리드</option>
+                                <option value="매니저">매니저</option>
+                                <option value="디렉터">디렉터</option>
+                                <option value="임원">임원</option>
+                                <option value="기타">기타</option>
+                            </select>
+                            <div class="error-message hidden" id="jobRole-error"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="card" style="background: #f8f9fa; padding: 15px;">
+                            <p class="text-muted text-sm">
+                                생성될 닉네임: <strong id="nickname-preview">회사명-###</strong>
+                                <br>
+                                <small>(숫자는 자동으로 생성됩니다)</small>
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-full" id="submit-btn">회원가입</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p>이미 계정이 있으신가요? <a href="login.html">로그인</a></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/utils/constants.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/auth.js"></script>
+    <script src="js/api/apiClient.js"></script>
+    <script src="js/pages/register.js"></script>
+</body>
+</html>

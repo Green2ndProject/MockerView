@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - 커뮤니티</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <h1>커뮤니티</h1>
+            </a>
+            <nav class="nav" id="navigation">
+                <div class="nav-user">
+                    <span class="user-nickname" id="user-nickname">관리자</span>
+                    <a href="my-page.html" class="btn btn-outline btn-sm">마이페이지</a>
+                    <a href="bookmarks.html" class="btn btn-outline btn-sm">북마크</a>
+                    <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>관리자 페이지</h1>
+                <p>게시글과 댓글을 관리할 수 있습니다</p>
+            </div>
+
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="posts">게시글 관리</button>
+                <button class="admin-tab" data-tab="comments">댓글 관리</button>
+            </div>
+
+            <div class="tab-content">
+                <div id="posts-section" class="tab-pane active">
+                    <div class="section-header">
+                        <h2>게시글 관리</h2>
+                        <div class="admin-stats">
+                            총 <span id="posts-total">0</span>개
+                        </div>
+                    </div>
+
+                    <div class="loading" id="posts-loading">
+                        <div class="spinner"></div>
+                        <p>게시글을 불러오는 중...</p>
+                    </div>
+
+                    <div class="error-banner hidden" id="posts-error">
+                        <p id="posts-error-message"></p>
+                        <button class="btn btn-sm btn-primary" id="posts-retry-btn">다시 시도</button>
+                    </div>
+
+                    <div class="admin-table-container hidden" id="posts-content">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>제목</th>
+                                    <th>작성자</th>
+                                    <th>작성일</th>
+                                    <th>좋아요</th>
+                                    <th>댓글</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="posts-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="comments-section" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>댓글 관리</h2>
+                        <div class="admin-stats">
+                            총 <span id="comments-total">0</span>개
+                        </div>
+                    </div>
+
+                    <div class="loading" id="comments-loading">
+                        <div class="spinner"></div>
+                        <p>댓글을 불러오는 중...</p>
+                    </div>
+
+                    <div class="error-banner hidden" id="comments-error">
+                        <p id="comments-error-message"></p>
+                        <button class="btn btn-sm btn-primary" id="comments-retry-btn">다시 시도</button>
+                    </div>
+
+                    <div class="admin-table-container hidden" id="comments-content">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>내용</th>
+                                    <th>게시글</th>
+                                    <th>작성자</th>
+                                    <th>작성일</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comments-tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal hidden" id="delete-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="delete-modal-title">삭제 확인</h3>
+            </div>
+            <div class="modal-body">
+                <p id="delete-modal-message">정말로 삭제하시겠습니까?</p>
+                <p class="text-muted text-sm">삭제된 내용은 복구할 수 없습니다.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="delete-cancel-btn">취소</button>
+                <button class="btn btn-danger" id="delete-confirm-btn">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils/constants.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/auth.js"></script>
+    <script src="js/api/apiClient.js"></script>
+    <script src="js/pages/admin.js"></script>
+</body>
+</html>

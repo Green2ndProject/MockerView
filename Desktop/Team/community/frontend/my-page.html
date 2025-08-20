@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - 커뮤니티</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <h1>커뮤니티</h1>
+            </a>
+            <nav class="nav" id="navigation">
+                <div class="nav-user">
+                    <span class="user-nickname" id="user-nickname"></span>
+                    <a href="my-page.html" class="btn btn-outline btn-sm">마이페이지</a>
+                    <a href="bookmarks.html" class="btn btn-outline btn-sm">북마크</a>
+                    <a href="create-post.html" class="btn btn-primary btn-sm">글쓰기</a>
+                    <a href="admin.html" class="btn btn-secondary btn-sm hidden" id="admin-link">관리자</a>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">로그아웃</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>마이페이지</h1>
+                <p>내 활동과 쪽지를 관리할 수 있습니다</p>
+            </div>
+
+            <div class="my-page-tabs">
+                <button class="tab-btn active" data-tab="posts">내 게시글</button>
+                <button class="tab-btn" data-tab="comments">내 댓글</button>
+                <button class="tab-btn" data-tab="messages">쪽지함</button>
+                <button class="tab-btn" data-tab="stats">통계</button>
+            </div>
+
+            <div class="tab-content">
+                <div id="posts-tab" class="tab-pane active">
+                    <div class="section-header">
+                        <h2>내 게시글</h2>
+                    </div>
+                    <div id="my-posts-list">
+                        <div class="loading">로딩 중...</div>
+                    </div>
+                </div>
+
+                <div id="comments-tab" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>내 댓글</h2>
+                    </div>
+                    <div id="my-comments-list">
+                        <div class="loading">로딩 중...</div>
+                    </div>
+                </div>
+
+                <div id="messages-tab" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>쪽지함</h2>
+                    </div>
+
+                    <div class="message-tabs">
+                        <button class="message-tab-btn active" data-message-tab="received">받은 쪽지</button>
+                        <button class="message-tab-btn" data-message-tab="sent">보낸 쪽지</button>
+                    </div>
+
+                    <div id="received-messages" class="message-list">
+                        <div class="loading">로딩 중...</div>
+                    </div>
+
+                    <div id="sent-messages" class="message-list hidden">
+                        <div class="loading">로딩 중...</div>
+                    </div>
+                </div>
+
+                <div id="stats-tab" class="tab-pane hidden">
+                    <div class="section-header">
+                        <h2>내 활동 통계</h2>
+                    </div>
+                    <div id="my-stats">
+                        <div class="loading">로딩 중...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/utils/constants.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/auth.js"></script>
+    <script src="js/api/apiClient.js"></script>
+    <script src="js/pages/myPage.js"></script>
+</body>
+</html>
