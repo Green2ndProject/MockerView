@@ -14,10 +14,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import jakarta.servlet.http.HttpSession;
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -37,7 +35,7 @@ public class SessionWebController {
                             HttpSession httpSession) {
         
         try {
-            log.info("Loading session room - sessionId: {}, userId: {}, userName: {}", sessionId, userId, userName);
+            log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}", sessionId, userId, userName);
             
             Session session = sessionService.findById(sessionId);
             if (session == null) {
@@ -45,30 +43,31 @@ public class SessionWebController {
                 return "error";
             }
             
-            User user = userRepository.findById(userId).orElse(null);
-            if (user == null) {
-                // 테스트 사용자 생성
-                user = User.builder()
-                    .id(userId)
-                    .username("testuser" + userId)
-                    .name(userName)
-                    .email("test@example.com")
-                    .role(User.UserRole.STUDENT)
-                    .build();
+            User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
+            
+            boolean isHost = session.getHost() != null && session.getHost().getId().equals(userId);
+            
+            if (isHost && !user.getRole().equals(User.UserRole.HOST)) {
+                log.info("사용자 {}를 HOST로 역할 변경", userId);
+                user.setRole(User.UserRole.HOST);
+                userRepository.save(user);
             }
             
             model.addAttribute("sessionId", sessionId);
             model.addAttribute("sessionTitle", session.getTitle() != null ? session.getTitle() : "모의면접 세션");
             model.addAttribute("userId", userId);
-            model.addAttribute("userName", userName);
+            model.addAttribute("userName", user.getName());
             model.addAttribute("currentUser", user);
-            model.addAttribute("isHost", session.getHost() != null && session.getHost().getId().equals(userId));
+            model.addAttribute("isHost", isHost);
             
-            log.info("Session room loaded successfully for session: {}", sessionId);
+            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}", 
+                user.getName(), user.getRole(), isHost);
+            
             return "session/session";
             
         } catch (Exception e) {
-            log.error("Error loading session room - sessionId: {}, userId: {}: ", sessionId, userId, e);
+            log.error("세션 로드 오류 - sessionId: {}, userId: {}: ", sessionId, userId, e);
             model.addAttribute("error", "세션을 불러올 수 없습니다: " + e.getMessage());
             return "error";
         }
@@ -77,7 +76,7 @@ public class SessionWebController {
     @GetMapping("/list")
     public String sessionList(Model model, HttpSession httpSession) {
         try {
-            log.info("Loading session list...");
+            log.info("세션 목록 로드 중...");
             
             List<Session> sessions = sessionService.getAllSessions();
             model.addAttribute("sessions", sessions);
@@ -88,13 +87,16 @@ public class SessionWebController {
             if (userId != null && userName != null) {
                 User currentUser = userRepository.findById(userId).orElse(null);
                 model.addAttribute("currentUser", currentUser);
+                model.addAttribute("isLoggedIn", true);
+            } else {
+                model.addAttribute("isLoggedIn", false);
             }
             
-            log.info("Session list loaded successfully");
+            log.info("세션 목록 로드 완료 - {}개 세션", sessions.size());
             return "session/list";
             
         } catch (Exception e) {
-            log.error("Error loading session list: ", e);
+            log.error("세션 목록 로드 오류: ", e);
             model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
             return "session/list";
         }
