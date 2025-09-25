@@ -66,26 +66,22 @@ class MockerViewWebSocket {
         }
     }
 
-    sendQuestion(questionId, questionText, orderNo) {
+    sendQuestion(questionText, orderNo) {
         if (this.connected) {
             this.stompClient.send(`/app/session/${this.sessionId}/question`, {}, JSON.stringify({
-                sessionId: this.sessionId,
-                questionId: questionId,
                 questionText: questionText,
                 orderNo: orderNo
             }));
         }
     }
 
-    submitAnswer(questionId, answerText, score) {
+    submitAnswer(questionId, answerText) {
         if (this.connected) {
             this.stompClient.send(`/app/session/${this.sessionId}/answer`, {}, JSON.stringify({
-                sessionId: this.sessionId,
-                questionId: questionId,
+                questionId: parseInt(questionId),
                 userId: this.userId,
                 userName: this.userName,
-                answerText: answerText,
-                score: score
+                answerText: answerText
             }));
         }
     }
@@ -132,7 +128,7 @@ class MockerViewWebSocket {
         console.log('New question:', message);
         this.displayQuestion(message.questionText, message.orderNo);
         
-        const questionIdInput = document.getElementById('questionId');
+        const questionIdInput = document.getElementById('currentQuestionId');
         if (questionIdInput) {
             questionIdInput.value = message.questionId || '';
         }
@@ -160,7 +156,7 @@ class MockerViewWebSocket {
         const participantsList = document.getElementById('participants-list');
         if (participantsList && participants && Array.isArray(participants)) {
             participantsList.innerHTML = participants.map(name => 
-                `<li class="list-group-item">${name}</li>`
+                `<li>${name}</li>`
             ).join('');
         }
     }
@@ -173,18 +169,14 @@ class MockerViewWebSocket {
     }
 
     displayQuestion(questionText, orderNo) {
+        const questionTextElement = document.getElementById('current-question-text');
+        if (questionTextElement) {
+            questionTextElement.textContent = questionText;
+        }
+        
         const questionDiv = document.getElementById('current-question');
         if (questionDiv) {
-            questionDiv.innerHTML = `
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5>질문 ${orderNo}</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">${questionText}</p>
-                    </div>
-                </div>
-            `;
+            questionDiv.className = 'current-question active-question';
         }
     }
 
@@ -192,25 +184,21 @@ class MockerViewWebSocket {
         const answersDiv = document.getElementById('answers-list');
         if (answersDiv) {
             const answerElement = document.createElement('div');
-            answerElement.className = 'answer-card mb-3';
+            answerElement.className = 'answer-item';
             answerElement.id = `answer-${answer.answerId}`;
             answerElement.innerHTML = `
-                <div class="card border-primary">
-                    <div class="card-header">
-                        <h6 class="mb-0">${answer.userName}</h6>
-                        <small class="text-muted">${new Date().toLocaleTimeString()}</small>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">${answer.answerText}</p>
-                        <div class="ai-feedback-placeholder">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                <span class="visually-hidden">AI 피드백 생성 중...</span>
-                            </div>
-                            <span class="ms-2 text-muted">AI 피드백 생성 중...</span>
-                        </div>
-                        ${this.getUserRole() === 'HOST' || this.getUserRole() === 'REVIEWER' ? this.getInterviewerFeedbackForm(answer.answerId) : ''}
+                <div class="answer-header">
+                    <div class="answer-user">${answer.userName}</div>
+                    <div class="answer-time">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="answer-text">${answer.answerText}</div>
+                <div class="ai-feedback-placeholder">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        AI 피드백 생성 중...
                     </div>
                 </div>
+                ${this.getUserRole() === 'HOST' || this.getUserRole() === 'REVIEWER' ? this.getInterviewerFeedbackForm(answer.answerId) : ''}
             `;
             answersDiv.appendChild(answerElement);
             
@@ -222,26 +210,16 @@ class MockerViewWebSocket {
 
     getInterviewerFeedbackForm(answerId) {
         return `
-            <div class="interviewer-feedback-form mt-3 border-top pt-3">
-                <h6 class="text-warning">면접관 피드백</h6>
+            <div class="feedback-form">
+                <div class="feedback-form-title">면접관 피드백</div>
                 <div class="row">
-                    <div class="col-md-6">
-                        <label class="form-label">점수 (1-10)</label>
-                        <select class="form-select form-select-sm score-input">
-                            <option value="">선택</option>
-                            ${Array.from({length: 10}, (_, i) => `<option value="${i+1}">${i+1}점</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <button class="btn btn-warning btn-sm submit-feedback-btn" data-answer-id="${answerId}">
-                            피드백 제출
-                        </button>
-                    </div>
+                    <select class="score-input">
+                        <option value="">점수 선택</option>
+                        ${Array.from({length: 10}, (_, i) => `<option value="${i+1}">${i+1}점</option>`).join('')}
+                    </select>
+                    <button class="btn btn-warning submit-feedback-btn" data-answer-id="${answerId}">제출</button>
                 </div>
-                <div class="mt-2">
-                    <label class="form-label">코멘트</label>
-                    <textarea class="form-control form-control-sm comment-input" rows="2" placeholder="피드백을 입력하세요..."></textarea>
-                </div>
+                <textarea class="comment-input" placeholder="피드백을 입력하세요..."></textarea>
             </div>
         `;
     }
@@ -273,7 +251,7 @@ class MockerViewWebSocket {
                 scoreInput.value = '';
                 commentInput.value = '';
                 
-                const feedbackForm = answerElement.querySelector('.interviewer-feedback-form');
+                const feedbackForm = answerElement.querySelector('.feedback-form');
                 feedbackForm.innerHTML = '<div class="text-success">피드백이 제출되었습니다.</div>';
             });
         }
@@ -285,19 +263,31 @@ class MockerViewWebSocket {
             const placeholder = answerElement.querySelector('.ai-feedback-placeholder');
             if (placeholder) {
                 placeholder.innerHTML = `
-                    <div class="ai-feedback mt-2 p-2 bg-light rounded">
-                        <h6 class="text-primary mb-2">🤖 AI 피드백</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>요약:</strong> ${feedback.summary}<br>
-                                <strong class="text-success">강점:</strong> ${feedback.strengths}
+                    <div class="ai-feedback">
+                        <div class="ai-feedback-title">🤖 AI 피드백</div>
+                        <div class="feedback-content">
+                            <div class="feedback-section">
+                                <strong>📋 요약:</strong>
+                                <p>${feedback.summary}</p>
                             </div>
-                            <div class="col-md-6">
-                                <strong class="text-warning">약점:</strong> ${feedback.weaknesses}<br>
-                                <strong class="text-info">개선방안:</strong> ${feedback.improvement}
+                            <div class="feedback-section">
+                                <strong class="text-success">✅ 강점:</strong>
+                                <p>${feedback.strengths}</p>
+                            </div>
+                            <div class="feedback-section">
+                                <strong class="text-warning">⚠️ 개선점:</strong>
+                                <p>${feedback.weaknesses}</p>
+                            </div>
+                            <div class="feedback-section">
+                                <strong class="text-info">💡 제안사항:</strong>
+                                <p>${feedback.improvement}</p>
+                            </div>
+                            <div class="feedback-meta">
+                                <small class="text-muted">
+                                    ${feedback.model} | ${new Date().toLocaleTimeString()}
+                                </small>
                             </div>
                         </div>
-                        <small class="text-muted">${feedback.model} - ${new Date().toLocaleTimeString()}</small>
                     </div>
                 `;
             }
@@ -307,25 +297,21 @@ class MockerViewWebSocket {
     displayInterviewerFeedback(feedback) {
         const answerElement = document.getElementById(`answer-${feedback.answerId}`);
         if (answerElement) {
-            const existingInterviewerFeedback = answerElement.querySelector('.interviewer-feedback-result');
+            const existingInterviewerFeedback = answerElement.querySelector('.interviewer-feedback');
             if (existingInterviewerFeedback) {
                 existingInterviewerFeedback.remove();
             }
             
             const feedbackHtml = `
-                <div class="interviewer-feedback-result mt-2 p-2 bg-warning bg-opacity-25 rounded">
-                    <h6 class="text-warning mb-2">👨‍💼 면접관 피드백 - ${feedback.reviewerName}</h6>
-                    <div>
-                        <strong>점수:</strong> <span class="badge bg-warning text-dark">${feedback.score}/10</span>
-                    </div>
-                    <div class="mt-1">
-                        <strong>코멘트:</strong> ${feedback.comment}
-                    </div>
-                    <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                <div class="interviewer-feedback">
+                    <div class="interviewer-feedback-title">👨‍💼 면접관 피드백 - ${feedback.reviewerName}</div>
+                    <div><strong>점수:</strong> <span class="score-badge">${feedback.score}/10</span></div>
+                    <div><strong>코멘트:</strong> ${feedback.comment}</div>
+                    <div class="text-muted">${new Date().toLocaleTimeString()}</div>
                 </div>
             `;
             
-            answerElement.querySelector('.card-body').insertAdjacentHTML('beforeend', feedbackHtml);
+            answerElement.insertAdjacentHTML('beforeend', feedbackHtml);
         }
     }
 
@@ -335,21 +321,20 @@ class MockerViewWebSocket {
     }
 
     showNotification(message) {
-        const toast = document.createElement('div');
-        toast.className = 'toast position-fixed top-0 end-0 m-3';
-        toast.innerHTML = `
-            <div class="toast-body">
-                ${message}
-            </div>
-        `;
-        document.body.appendChild(toast);
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
         
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-        
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 5000);
+        const container = document.getElementById('toast-container');
+        if (container) {
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                if (container.contains(notification)) {
+                    container.removeChild(notification);
+                }
+            }, 3000);
+        }
     }
 
     disconnect() {
@@ -375,23 +360,41 @@ function initializeWebSocket(sessionId, userId, userName) {
 }
 
 function submitAnswer() {
-    const questionId = document.getElementById('questionId').value;
+    const questionId = document.getElementById('currentQuestionId').value;
     const answerText = document.getElementById('answerText').value;
     
-    if (answerText.trim() && mockerViewWS) {
-        mockerViewWS.submitAnswer(questionId, answerText, null);
+    if (!answerText.trim()) {
+        alert('답변을 입력해주세요.');
+        return;
+    }
+    
+    if (!questionId) {
+        alert('현재 답변할 질문이 없습니다.');
+        return;
+    }
+    
+    if (mockerViewWS && mockerViewWS.connected) {
+        mockerViewWS.submitAnswer(questionId, answerText);
         document.getElementById('answerText').value = '';
+    } else {
+        alert('WebSocket이 연결되지 않았습니다.');
     }
 }
 
 function sendQuestion() {
-    const questionId = document.getElementById('newQuestionId').value;
     const questionText = document.getElementById('newQuestionText').value;
     const orderNo = document.getElementById('newQuestionOrder').value;
     
-    if (questionText.trim() && mockerViewWS) {
-        mockerViewWS.sendQuestion(questionId, questionText, parseInt(orderNo));
+    if (!questionText.trim()) {
+        alert('질문을 입력해주세요.');
+        return;
+    }
+    
+    if (mockerViewWS && mockerViewWS.connected) {
+        mockerViewWS.sendQuestion(questionText, parseInt(orderNo) || 1);
         document.getElementById('newQuestionText').value = '';
         document.getElementById('newQuestionOrder').value = '';
+    } else {
+        alert('WebSocket이 연결되지 않았습니다.');
     }
 }
