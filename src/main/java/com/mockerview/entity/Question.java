@@ -38,6 +38,10 @@ public class Question {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "questioner_id")
+    private User questioner;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Answer> answers = new ArrayList<>();

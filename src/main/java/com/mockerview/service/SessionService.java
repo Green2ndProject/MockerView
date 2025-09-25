@@ -68,14 +68,18 @@ public class SessionService {
         }
     }
 
-    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo) {
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId) {
         try {
             Session session = findById(sessionId);
+            
+            User questioner = userRepository.findById(questionerId)
+                .orElseThrow(() -> new RuntimeException("Questioner not found: " + questionerId));
             
             Question question = Question.builder()
                 .session(session)
                 .text(questionText)
                 .orderNo(orderNo != null ? orderNo : 1)
+                .questioner(questioner)
                 .build();
             
             Question saved = questionRepository.save(question);
@@ -87,6 +91,10 @@ public class SessionService {
             log.error("Error saving question: ", e);
             throw new RuntimeException("질문 저장 실패", e);
         }
+    }
+
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo) {
+        return saveQuestion(sessionId, questionText, orderNo, 1L);
     }
 
     @Transactional(readOnly = true)

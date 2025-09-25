@@ -29,7 +29,8 @@ public class SessionWebSocketController {
         try {
             log.info("질문 수신 - sessionId: {}, 질문: {}", sessionId, message.getQuestionText());
             
-            Long questionId = sessionService.saveQuestion(sessionId, message.getQuestionText(), message.getOrderNo());
+            Long questionerId = message.getQuestionerId() != null ? message.getQuestionerId() : 1L;
+            Long questionId = sessionService.saveQuestion(sessionId, message.getQuestionText(), message.getOrderNo(), questionerId);
             
             message.setQuestionId(questionId);
             message.setTimestamp(LocalDateTime.now());
