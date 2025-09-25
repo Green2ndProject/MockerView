@@ -62,7 +62,7 @@ public class SessionWebController {
             log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}", 
                 user.getName(), user.getRole(), isHost);
             
-            return "session/session";
+                return "session/session";
             
         } catch (Exception e) {
             log.error("세션 로드 오류 - sessionId: {}, userId: {}: ", sessionId, userId, e);
