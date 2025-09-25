@@ -2,8 +2,6 @@ package com.mockerview.controller.web;
 
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
-import com.mockerview.entity.Question;
-import com.mockerview.entity.Answer;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +87,7 @@ public class SessionWebController {
                 model.addAttribute("currentUser", currentUser);
                 model.addAttribute("isLoggedIn", true);
             } else {
+                model.addAttribute("currentUser", null);
                 model.addAttribute("isLoggedIn", false);
             }
             

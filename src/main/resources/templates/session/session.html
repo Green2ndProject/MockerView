@@ -3,281 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MockerView - Session Room</title>
-    <link rel="stylesheet" href="/css/session.css">
-    <style>
-        .current-question {
-            background: #ffffff;
-            border: 2px solid #3b82f6;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .question-title {
-            color: #1d4ed8;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: #ffffff;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-success {
-            background: #10b981;
-            color: #ffffff;
-        }
-        
-        .btn-success:hover {
-            background: #059669;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
-            margin-bottom: 12px;
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        input[type="number"] {
-            width: 80px;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-right: 8px;
-        }
-        
-        .card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .card-header {
-            background: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 20px;
-            font-weight: 600;
-            font-size: 16px;
-            border-radius: 8px 8px 0 0;
-        }
-        
-        .card-body {
-            padding: 20px;
-        }
-    </style>
+    <title>세션 목록 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
 </head>
 <body>
-    <input type="hidden" id="sessionId" th:value="${sessionId}" />
-    <input type="hidden" id="userId" th:value="${userId}" />
-    <input type="hidden" id="userName" th:value="${userName}" />
-    <input type="hidden" id="userRole" th:value="${currentUser.role}" />
-    <input type="hidden" id="currentQuestionId" />
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">
+                    Mockerview
+                </a>
+                <div class="navbar-nav">
+                    <a class="nav-link active" href="/session/list">세션 관리</a>
+                    <div th:if="${currentUser != null}">
+                        <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+                        <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+                    </div>
+                    <div th:if="${currentUser == null}">
+                        <a class="nav-link" th:href="@{/auth/login}">로그인</a>
+                        <a class="nav-link" th:href="@{/auth/register}">회원가입</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-    <div class="container">
-        <div class="sidebar">
-            <div class="card">
-                <div class="card-header">
-                    참가자
-                    <span class="text-muted" th:text="${isHost ? ' (면접관)' : ' (응시자)'}"></span>
-                </div>
-                <div class="card-body">
-                    <div id="participants-list"></div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">세션 정보</div>
-                <div class="card-body">
-                    <strong th:text="${sessionTitle}">세션 제목</strong>
-                    <div id="session-stats" class="text-muted"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="main-content">
-            <div id="current-question-display" class="current-question">
-                <div class="question-title">현재 질문</div>
-                <div id="current-question-text">질문이 아직 없습니다.</div>
-            </div>
-            
-            <div th:if="${isHost}">
-                <div class="card">
-                    <div class="card-header">질문 관리</div>
-                    <div class="card-body">
-                        <textarea id="newQuestionText" placeholder="새 질문을 입력하세요..." style="min-height: 120px;"></textarea>
-                        <div class="row">
-                            <input type="number" id="newQuestionOrder" placeholder="순서" min="1">
-                            <button onclick="sendQuestion()" class="btn btn-success">질문 전송</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">면접 통제</div>
-                    <div class="card-body">
-                        <button onclick="startSession()" class="btn btn-success" style="margin-right: 8px;">면접 시작</button>
-                        <button onclick="endSession()" class="btn btn-warning">면접 종료</button>
-                        <div style="margin-top: 15px;">
-                            <p class="text-muted">면접관 권한으로 세션을 관리할 수 있습니다.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div th:if="${!isHost}">
-                <div class="card">
-                    <div class="card-header">답변 작성</div>
-                    <div class="card-body">
-                        <textarea id="answerText" placeholder="답변을 신중하게 작성해주세요..." style="min-height: 150px;"></textarea>
-                        <button onclick="submitAnswer()" class="btn btn-primary btn-full">답변 제출</button>
-                        <div style="margin-top: 12px;">
-                            <p class="text-muted">면접관이 질문을 전송하면 위 영역에서 답변해주세요.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">면접 상태</div>
-                    <div class="card-body">
-                        <div id="interview-status">
-                            <p class="text-info">면접관의 질문을 기다리고 있습니다...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="feedback-panel">
-            <div class="card">
-                <div class="card-header">답변 목록</div>
-                <div class="card-body scrollable">
-                    <div id="answers-list"></div>
-                </div>
-            </div>
-            
-            <div class="card" th:if="${isHost}">
-                <div class="card-header">면접관 피드백</div>
-                <div class="card-body">
-                    <div id="reviewer-feedback-form" style="display: none;">
-                        <select id="answerSelect">
-                            <option value="">답변 선택</option>
-                        </select>
-                        <div style="margin: 10px 0;">
-                            <label>점수 (1-10):</label>
-                            <input type="number" id="reviewerScore" min="1" max="10" style="width: 60px;">
-                        </div>
-                        <textarea id="reviewerComment" placeholder="면접관 코멘트를 입력하세요..." style="min-height: 80px;"></textarea>
-                        <button onclick="submitReviewerFeedback()" class="btn btn-warning">피드백 제출</button>
-                    </div>
-                    <p class="text-muted" id="no-answers-msg">답변이 등록되면 피드백을 작성할 수 있습니다.</p>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">AI 피드백</div>
-                <div class="card-body scrollable">
-                    <div id="ai-feedback-list">
-                        <p class="text-muted">답변을 제출하면 AI 피드백이 여기에 표시됩니다.</p>
-                    </div>
-                </div>
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>실시간 모의면접 세션</h1>
+                <button class="btn btn-primary">
+                    + 새 세션 생성
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="/webjars/sockjs-client/1.5.1/sockjs.min.js"></script>
-    <script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
-    <script src="/js/session.js"></script>
-    
-    <script th:inline="javascript">
-        window.sessionConfig = {
-            sessionId: [[${sessionId}]],
-            userId: [[${userId}]], 
-            userName: [[${userName}]]
-        };
+    <div class="container">
+        <div th:if="${error}" class="alert alert-error">
+            <strong>오류:</strong> <span th:text="${error}">에러 메시지</span>
+        </div>
         
-        function loadExistingQuestions(sessionId) {
-            fetch(`/api/session/${sessionId}/questions`)
-                .then(response => response.json())
-                .then(questions => {
-                    if (questions && questions.length > 0) {
-                        const latestQuestion = questions[questions.length - 1];
-                        document.getElementById('current-question-text').textContent = latestQuestion.text;
-                        document.getElementById('currentQuestionId').value = latestQuestion.id;
-                    }
-                })
-                .catch(error => console.error('Failed to load questions:', error));
-        }
-        
-        function loadExistingAnswers(sessionId) {
-            fetch(`/api/session/${sessionId}/answers`)
-                .then(response => response.json())
-                .then(answers => {
-                    if (answers && answers.length > 0) {
-                        const answersList = document.getElementById('answers-list');
-                        answersList.innerHTML = '';
-                        answers.forEach(answer => {
-                            const answerDiv = document.createElement('div');
-                            answerDiv.className = 'answer-item';
-                            answerDiv.innerHTML = `
-                                <div class="answer-header">
-                                    <span class="answer-user">${answer.user?.name || '사용자'}</span>
-                                    <span class="answer-time">${new Date(answer.createdAt).toLocaleString()}</span>
-                                </div>
-                                <div class="answer-text">${answer.text}</div>
-                                ${answer.score ? `<div class="score-badge">점수: ${answer.score}/10</div>` : ''}
-                            `;
-                            answersList.appendChild(answerDiv);
-                        });
-                        
-                        const answerSelect = document.getElementById('answerSelect');
-                        if (answerSelect) {
-                            answerSelect.innerHTML = '<option value="">답변 선택</option>';
-                            answers.forEach(answer => {
-                                const option = document.createElement('option');
-                                option.value = answer.id;
-                                option.textContent = `${answer.user?.name || '사용자'} - ${answer.text.substring(0, 30)}...`;
-                                answerSelect.appendChild(option);
-                            });
-                            document.getElementById('reviewer-feedback-form').style.display = 'block';
-                            document.getElementById('no-answers-msg').style.display = 'none';
-                        }
-                    }
-                })
-                .catch(error => console.error('Failed to load answers:', error));
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const config = window.sessionConfig;
-            initializeWebSocket(config.sessionId, config.userId, config.userName);
+        <div th:if="${success}" class="alert alert-success">
+            <span th:text="${success}">성공 메시지</span>
+        </div>
+
+        <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
+            <div th:each="sessionItem : ${sessions}" class="session-card">
+                <div class="session-header">
+                    <div>
+                        <h3 class="session-title" th:text="${sessionItem.title ?: '모의면접 세션'}">모의면접 세션</h3>
+                        <div class="session-meta">
+                            <span class="badge" th:classappend="${sessionItem.status == 'RUNNING' ? 'badge-live' : (sessionItem.status == 'ENDED' ? 'badge-ended' : 'badge-waiting')}" th:text="${sessionItem.status ?: 'PLANNED'}">PLANNED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session-meta" th:if="${sessionItem.host != null}">
+                    <span>호스트: </span>
+                    <span th:text="${sessionItem.host.name ?: sessionItem.host.username ?: '알 수 없음'}">호스트명</span>
+                </div>
+                
+                <div class="session-meta" th:if="${sessionItem.createdAt != null}">
+                    <span>생성일: </span>
+                    <span th:text="${#temporals.format(sessionItem.createdAt, 'yyyy-MM-dd HH:mm')}">2025-09-23 10:00</span>
+                </div>
+                
+                <div style="margin-top: 1rem;">
+                    <a th:href="@{/session/{id}(id=${sessionItem.id}, userId=1, userName='면접관')}" 
+                        class="btn btn-success" style="margin-right: 8px;">
+                        면접관으로 참가
+                    </a>
+                    <a th:href="@{/session/{id}(id=${sessionItem.id}, userId=2, userName='학생')}" 
+                        class="btn btn-primary">
+                        학생으로 참가
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${sessions == null or sessions.empty}" style="text-align: center; padding: 4rem 0;">
+            <h3 style="color: var(--gray-600); margin-bottom: 1rem;">현재 진행 중인 세션이 없습니다</h3>
+            <p style="color: var(--gray-500); margin-bottom: 2rem;">새로운 세션을 생성하거나 기존 세션이 열릴 때까지 기다려주세요.</p>
             
-            loadExistingQuestions(config.sessionId);
-            loadExistingAnswers(config.sessionId);
-        });
-    </script>
+            <div class="card" style="max-width: 500px; margin: 0 auto; text-align: left;">
+                <div class="card-body">
+                    <h4>테스트 세션</h4>
+                    <p style="color: var(--gray-600); margin: 0.5rem 0;">개발 테스트용 모의면접 세션입니다.</p>
+                    <a href="/session/1?userId=1&userName=면접관" class="btn btn-success" style="margin-right: 8px;">면접관으로 테스트</a>
+                    <a href="/session/1?userId=2&userName=학생" class="btn btn-primary">학생으로 테스트</a>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <button onclick="location.reload()" class="btn btn-secondary">새로고침</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

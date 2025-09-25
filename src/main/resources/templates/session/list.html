@@ -15,8 +15,14 @@
                 </a>
                 <div class="navbar-nav">
                     <a class="nav-link active" href="/session/list">세션 관리</a>
-                    <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+                    <div th:if="${currentUser != null}">
+                        <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+                        <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+                    </div>
+                    <div th:if="${currentUser == null}">
+                        <a class="nav-link" th:href="@{/auth/login}">로그인</a>
+                        <a class="nav-link" th:href="@{/auth/register}">회원가입</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,10 +69,16 @@
                     <span th:text="${#temporals.format(sessionItem.createdAt, 'yyyy-MM-dd HH:mm')}">2025-09-23 10:00</span>
                 </div>
                 
-                <a th:href="@{/session/{id}(id=${sessionItem.id}, userId=1, userName='테스트사용자')}" 
-                   class="btn btn-primary btn-full" style="margin-top: 1rem;">
-                    세션 참가
-                </a>
+                <div style="margin-top: 1rem;">
+                    <a th:href="@{/session/{id}(id=${sessionItem.id}, userId=1, userName='면접관')}" 
+                        class="btn btn-success" style="margin-right: 8px;">
+                        면접관으로 참가
+                    </a>
+                    <a th:href="@{/session/{id}(id=${sessionItem.id}, userId=2, userName='학생')}" 
+                        class="btn btn-primary">
+                        학생으로 참가
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -78,7 +90,8 @@
                 <div class="card-body">
                     <h4>테스트 세션</h4>
                     <p style="color: var(--gray-600); margin: 0.5rem 0;">개발 테스트용 모의면접 세션입니다.</p>
-                    <a href="/session/1?userId=1&userName=테스트사용자" class="btn btn-primary">테스트 세션 참가</a>
+                    <a href="/session/1?userId=1&userName=면접관" class="btn btn-success" style="margin-right: 8px;">면접관으로 테스트</a>
+                    <a href="/session/1?userId=2&userName=학생" class="btn btn-primary">학생으로 테스트</a>
                 </div>
             </div>
             
