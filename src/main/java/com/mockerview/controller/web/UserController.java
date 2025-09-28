@@ -1,5 +1,6 @@
 package com.mockerview.controller.web;
 
+import com.mockerview.dto.RegisterDTO;
 import com.mockerview.entity.User;
 import com.mockerview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,25 +56,27 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestParam String username,
-                            @RequestParam String password,
-                            @RequestParam String name,
-                            @RequestParam String email,
-                            @RequestParam String role,
+    public String register(@ModelAttribute RegisterDTO registerDTO,
                             RedirectAttributes redirectAttributes) {
         
+        String username = registerDTO.getUsername();
+        String password = registerDTO.getPassword();
+        String name     = registerDTO.getName();
+        String email    = registerDTO.getEmail();
+        String role     = registerDTO.getRole();
+
         if (userRepository.findByUsername(username).isPresent()) {
             redirectAttributes.addFlashAttribute("error", "이미 존재하는 아이디입니다.");
             return "redirect:/auth/register";
         }
         
         User user = User.builder()
-                .username(username)
-                .password(passwordEncoder.encode(password))
-                .name(name)
-                .email(email)
-                .role(User.UserRole.valueOf(role))
-                .build();
+                        .username(username)
+                        .password(passwordEncoder.encode(password))
+                        .name(name)
+                        .email(email)
+                        .role(User.UserRole.valueOf(role))
+                        .build();
         
         userRepository.save(user);
         redirectAttributes.addFlashAttribute("success", "회원가입이 완료되었습니다.");
