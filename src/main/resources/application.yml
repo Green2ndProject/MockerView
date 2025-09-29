@@ -3,7 +3,7 @@ spring:
     name: mockerview
 
   profiles:
-    active: dev
+    active: dev-school
 
   jpa:
     hibernate:
