@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MockerView - 점수판</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .ranking-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        .ranking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .rank-badge {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: var(--font-size-sm);
+            color: white;
+        }
+        .rank-1 { background: #ef4444; }
+        .rank-2 { background: var(--secondary-blue); }
+        .rank-3 { background: var(--success); }
+        .rank-other { background: var(--gray-500); }
+        .user-info {
+            margin-left: 20px;
+        }
+        .user-name {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+        .user-role {
+            color: var(--gray-600);
+            font-size: var(--font-size-sm);
+        }
+        .score-section {
+            text-align: right;
+        }
+        .total-score {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.25rem;
+        }
+        .score-breakdown {
+            font-size: var(--font-size-sm);
+            color: var(--gray-600);
+        }
+        .stats-row {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        .stat-label {
+            font-size: var(--font-size-xs);
+            color: var(--gray-600);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
+                    <a class="nav-link active">점수판</a>
+                    <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>면접 결과 점수판</h1>
+                <a th:href="@{/session/{id}(id=${session.id}, userId=1, userName='테스트사용자')}" class="btn btn-secondary">
+                    세션으로 돌아가기
+                </a>
+            </div>
+            <p style="color: var(--gray-600); margin-top: 0.5rem;" th:text="${session.title}">세션 제목</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" th:text="${userScores.size()}">0</span>
+                <div class="stat-label">참가자</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalQuestions}">0</span>
+                <div class="stat-label">질문 수</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${session.status}">완료</span>
+                <div class="stat-label">세션 상태</div>
+            </div>
+        </div>
+
+        <div class="ranking-container">
+            <div th:each="userScore, iterStat : ${userScores}" class="ranking-card">
+                <div class="rank-badge" 
+                     th:classappend="${iterStat.index == 0 ? 'rank-1' : (iterStat.index == 1 ? 'rank-2' : (iterStat.index == 2 ? 'rank-3' : 'rank-other'))}"
+                     th:text="${iterStat.index + 1}">1</div>
+                
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div class="user-info">
+                        <div class="user-name" th:text="${userScore.user.name}">사용자명</div>
+                        <div class="user-role">
+                            <span th:if="${userScore.user.role.name() == 'STUDENT'}">면접자</span>
+                            <span th:if="${userScore.user.role.name() == 'HOST'}">면접관</span>
+                            <span th:text="' • ' + ${userScore.user.email}"></span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 2rem; align-items: center;">
+                        <div class="stats-row">
+                            <div style="display: flex; gap: 2rem;">
+                                <div class="stat-item">
+                                    <div class="stat-number" th:text="${userScore.answerCount}">0</div>
+                                    <div class="stat-label">답변</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" style="color: var(--success);" th:text="${userScore.avgAiScore}">0</div>
+                                    <div class="stat-label">AI</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" style="color: var(--warning);" th:text="${userScore.avgInterviewerScore}">0</div>
+                                    <div class="stat-label">면접관</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="score-section">
+                            <div class="total-score" th:text="${userScore.totalScore}">0.0</div>
+                            <div class="score-breakdown">총점 / 10</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${userScores.empty}" style="text-align: center; padding: 4rem 0;">
+            <h3 style="color: var(--gray-500);">아직 점수 데이터가 없습니다.</h3>
+            <p style="color: var(--gray-500);">면접이 진행되면 점수판이 업데이트됩니다.</p>
+        </div>
+    </div>
+</body>
+</html>
