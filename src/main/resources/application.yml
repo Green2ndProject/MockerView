@@ -44,7 +44,7 @@ openai:
     url: https://api.openai.com/v1/chat/completions
 
 ---
-# 개발(Oracle)
+# 개발(Oracle) - 로컬
 spring:
   config:
     activate:
@@ -61,6 +61,33 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.OracleDialect
+
+---
+# 개발(Oracle) - 학원 서버
+# spring:
+#   config:
+#     activate:
+#       on-profile: dev-school
+  
+#   datasource:
+#     url: jdbc:oracle:thin:@192.168.0.73:1521/XEPDB1
+#     username: mockerview
+#     password: mockerview
+#     driver-class-name: oracle.jdbc.OracleDriver
+  
+#   jpa:
+#     hibernate:
+#       ddl-auto: update
+#     show-sql: true
+#     properties:
+#       hibernate:
+#         format_sql: true
+#         dialect: org.hibernate.dialect.OracleDialect
+
+# logging:
+#   level:
+#     com.mockerview: DEBUG
+#     org.springframework.web.socket: DEBUG
 
 ---
 # 운영(PostgreSQL)
