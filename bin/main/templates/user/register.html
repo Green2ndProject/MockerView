@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>회원가입 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h1>Mockerview</h1>
+                <p>AI 모의면접 코치 플랫폼</p>
+            </div>
+            
+            <form th:action="@{/auth/register}" method="post" id="registerForm">
+                <div th:if="${error}" class="alert alert-error">
+                    <span th:text="${error}"></span>
+                </div>
+                
+                <div class="form-group">
+                    <input type="text" class="form-control" name="username" placeholder="아이디 (4자 이상)" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" class="form-control" name="password" placeholder="비밀번호 (6자 이상)" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" class="form-control" name="confirmPassword" placeholder="비밀번호 확인" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="text" class="form-control" name="name" placeholder="이름을 입력하세요" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="email" class="form-control" name="email" placeholder="이메일을 입력하세요" required>
+                </div>
+                
+                <div class="form-group">
+                    <select class="form-select" name="role" required>
+                        <option value="">역할을 선택하세요</option>
+                        <option value="STUDENT">면접자 (학생/취준생)</option>
+                        <option value="HOST">면접관 (강사/멘토)</option>
+                        <option value="REVIEWER">리뷰어 (평가 전문가)</option>
+                    </select>
+                    <small style="color: var(--gray-500); font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+                        면접자: 모의면접에 참여하여 질문에 답변<br>
+                        면접관: 세션을 생성하고 질문을 출제하며 피드백 제공<br>
+                        리뷰어: 답변에 대한 평가와 피드백 제공
+                    </small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">회원가입</button>
+            </form>
+            
+            <div class="auth-link">
+                <p>이미 계정이 있으신가요? <a th:href="@{/auth/login}">로그인</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const username = document.querySelector('input[name="username"]').value;
+            const password = document.querySelector('input[name="password"]').value;
+            const confirmPassword = document.querySelector('input[name="confirmPassword"]').value;
+            const name = document.querySelector('input[name="name"]').value;
+            const email = document.querySelector('input[name="email"]').value;
+            const role = document.querySelector('select[name="role"]').value;
+            
+            if (username.length < 4) {
+                e.preventDefault();
+                alert('아이디는 4자 이상이어야 합니다.');
+                return;
+            }
+            
+            if (password.length < 6) {
+                e.preventDefault();
+                alert('비밀번호는 6자 이상이어야 합니다.');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+            
+            if (!name.trim() || !email.trim() || !role) {
+                e.preventDefault();
+                alert('모든 필드를 입력해주세요.');
+                return;
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('올바른 이메일 형식을 입력해주세요.');
+                return;
+            }
+        });
+    </script>
+</body>
+</html>
