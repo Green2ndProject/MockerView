@@ -31,7 +31,11 @@
       <div class="container">
         <div class="page-title">
           <h1>실시간 모의면접 세션</h1>
-          <button class="btn btn-primary" onclick="createNewSession()">
+          <button
+            th:if="${currentUser != null && userRoleString  == 'HOST'}"
+            class="btn btn-primary"
+            onclick="createNewSession()"
+          >
             + 새 세션 생성
           </button>
         </div>
@@ -86,6 +90,7 @@
 
           <div style="margin-top: 1rem">
             <a
+              th:if="${currentUser != null && userRoleString  == 'HOST'}"
               th:href="@{/session/{id}(id=${sessionItem.id}, userId=1, userName='면접관')}"
               class="btn btn-success"
               style="margin-right: 8px"
@@ -93,6 +98,7 @@
               면접관으로 참가
             </a>
             <a
+              th:if="${currentUser != null && userRoleString  != 'HOST'}"
               th:href="@{/session/{id}(id=${sessionItem.id}, userId=2, userName='학생')}"
               class="btn btn-primary"
             >
