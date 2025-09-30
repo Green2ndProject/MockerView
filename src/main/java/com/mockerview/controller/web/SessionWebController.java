@@ -2,6 +2,7 @@ package com.mockerview.controller.web;
 
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
+import com.mockerview.entity.User.UserRole;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
@@ -81,11 +82,13 @@ public class SessionWebController {
             
             Long userId = (Long) httpSession.getAttribute("userId");
             String userName = (String) httpSession.getAttribute("userName");
+            UserRole userRole = (UserRole) httpSession.getAttribute("userRole");
             
-            if (userId != null && userName != null) {
+            if (userId != null && userName != null && userRole != null) {
                 User currentUser = userRepository.findById(userId).orElse(null);
                 model.addAttribute("currentUser", currentUser);
                 model.addAttribute("isLoggedIn", true);
+                model.addAttribute("userRoleString", userRole.name()); 
             } else {
                 model.addAttribute("currentUser", null);
                 model.addAttribute("isLoggedIn", false);

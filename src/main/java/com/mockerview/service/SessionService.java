@@ -68,7 +68,7 @@ public class SessionService {
         }
     }
 
-    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId) {
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId,  Integer timer ) {
         try {
             Session session = findById(sessionId);
             
@@ -80,6 +80,7 @@ public class SessionService {
                 .text(questionText)
                 .orderNo(orderNo != null ? orderNo : 1)
                 .questioner(questioner)
+                .timer(timer)
                 .build();
             
             Question saved = questionRepository.save(question);
@@ -93,9 +94,10 @@ public class SessionService {
         }
     }
 
-    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo) {
-        return saveQuestion(sessionId, questionText, orderNo, 1L);
-    }
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Integer timer) {
+ 
+    return saveQuestion(sessionId, questionText, orderNo, 1L, timer); 
+}
 
     @Transactional(readOnly = true)
     public SessionStatusMessage getSessionStatus(Long sessionId) {

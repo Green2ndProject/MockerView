@@ -27,18 +27,35 @@ public class SessionWebSocketController {
     @SendTo("/topic/session/{sessionId}/question")
     public QuestionMessage handleQuestion(@DestinationVariable Long sessionId, QuestionMessage message) {
         try {
-            log.info("질문 수신 - sessionId: {}, 질문: {}", sessionId, message.getQuestionText());
-            
-            Long questionerId = message.getQuestionerId() != null ? message.getQuestionerId() : 1L;
-            Long questionId = sessionService.saveQuestion(sessionId, message.getQuestionText(), message.getOrderNo(), questionerId);
-            
-            message.setQuestionId(questionId);
-            message.setTimestamp(LocalDateTime.now());
-            
-            log.info("질문 저장 완료 - questionId: {}", questionId);
-            return message;
-            
-        } catch (Exception e) {
+        log.info("질문 수신 - sessionId: {}, 질문: {}, Timer: {}", sessionId, message.getQuestionText(), message.getTimer());
+        
+        // 1. 클라이언트에서 받은 timer 값을 임시 변수에 저장합니다.
+        Integer receivedTimer = message.getTimer();
+        
+        Long questionerId = message.getQuestionerId() != null ? message.getQuestionerId() : 1L;
+        
+        // 2. 서비스 레이어에서 DB 저장 시 timer 값을 함께 전달합니다.
+        Long questionId = sessionService.saveQuestion(
+            sessionId, 
+            message.getQuestionText(), 
+            message.getOrderNo(), 
+            questionerId, 
+            receivedTimer
+        ); 
+        
+        message.setQuestionId(questionId);
+        message.setTimestamp(LocalDateTime.now());
+        
+        // ⭐️ 3. 혹시 모를 상황에 대비해 timer 값을 다시 설정하여 복구합니다.
+        // (이 코드는 1번 로그 결과가 'Timer: null'일 경우에만 의미가 있습니다.)
+        if (message.getTimer() == null && receivedTimer != null) {
+             message.setTimer(receivedTimer);
+        }
+        
+        log.info("질문 저장 완료 - questionId: {}", questionId);
+        return message; // 4. timer 값이 포함된 객체를 브로드캐스팅
+        
+    } catch (Exception e) {
             log.error("질문 처리 오류: ", e);
             throw new RuntimeException("질문 처리 실패", e);
         }
