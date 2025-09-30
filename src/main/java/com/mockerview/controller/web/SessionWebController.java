@@ -1,5 +1,7 @@
 package com.mockerview.controller.web;
 
+import com.mockerview.entity.Answer;
+import com.mockerview.entity.Question;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.repository.UserRepository;
@@ -8,13 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/session")
@@ -25,15 +26,52 @@ public class SessionWebController {
     private final SessionService sessionService;
     private final UserRepository userRepository;
 
+    @GetMapping("/{sessionId}/join")
+    public String joinSession(@PathVariable Long sessionId,
+                                @RequestParam String role,
+                                HttpSession httpSession) {
+        
+        Long userId = (Long) httpSession.getAttribute("userId");
+        
+        if (userId == null) {
+            log.warn("비로그인 사용자 세션 접근 시도");
+            return "redirect:/auth/login";
+        }
+        
+        User.UserRole selectedRole;
+        try {
+            selectedRole = User.UserRole.valueOf(role);
+        } catch (IllegalArgumentException e) {
+            selectedRole = User.UserRole.STUDENT;
+        }
+        
+        httpSession.setAttribute("sessionRole", selectedRole);
+        log.info("세션 역할 설정 - userId: {}, role: {}", userId, selectedRole);
+        
+        return "redirect:/session/" + sessionId;
+    }
+
     @GetMapping("/{sessionId}")
     public String sessionRoom(@PathVariable Long sessionId, 
-                            @RequestParam(defaultValue = "1") Long userId,
-                            @RequestParam(defaultValue = "테스트사용자") String userName,
                             Model model,
                             HttpSession httpSession) {
         
+        Long userId = (Long) httpSession.getAttribute("userId");
+        String userName = (String) httpSession.getAttribute("userName");
+        User.UserRole sessionRole = (User.UserRole) httpSession.getAttribute("sessionRole");
+        
+        if (userId == null) {
+            log.warn("비로그인 사용자 세션 접근 시도");
+            return "redirect:/auth/login";
+        }
+        
+        if (sessionRole == null) {
+            sessionRole = User.UserRole.STUDENT;
+        }
+        
         try {
-            log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}", sessionId, userId, userName);
+            log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}", 
+                sessionId, userId, userName, sessionRole);
             
             Session session = sessionService.findById(sessionId);
             if (session == null) {
@@ -44,13 +82,7 @@ public class SessionWebController {
             User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
             
-            boolean isHost = session.getHost() != null && session.getHost().getId().equals(userId);
-            
-            if (isHost && !user.getRole().equals(User.UserRole.HOST)) {
-                log.info("사용자 {}를 HOST로 역할 변경", userId);
-                user.setRole(User.UserRole.HOST);
-                userRepository.save(user);
-            }
+            boolean isHost = sessionRole.equals(User.UserRole.HOST);
             
             model.addAttribute("sessionId", sessionId);
             model.addAttribute("sessionTitle", session.getTitle() != null ? session.getTitle() : "모의면접 세션");
@@ -60,9 +92,9 @@ public class SessionWebController {
             model.addAttribute("isHost", isHost);
             
             log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}", 
-                user.getName(), user.getRole(), isHost);
+                user.getName(), sessionRole, isHost);
             
-                return "session/session";
+            return "session/session";
             
         } catch (Exception e) {
             log.error("세션 로드 오류 - sessionId: {}, userId: {}: ", sessionId, userId, e);
@@ -98,6 +130,59 @@ public class SessionWebController {
             log.error("세션 목록 로드 오류: ", e);
             model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
             return "session/list";
+        }
+    }
+
+    @PostMapping("/create")
+    public String createSession(@RequestParam String title, 
+                                HttpSession httpSession) {
+        try {
+            Long hostId = (Long) httpSession.getAttribute("userId");
+            
+            if (hostId == null) {
+                return "redirect:/auth/login";
+            }
+            
+            log.info("세션 생성 요청 - title: {}, hostId: {}", title, hostId);
+            sessionService.createSession(title, hostId);
+            log.info("세션 생성 완료");
+            return "redirect:/session/list?success=세션이 생성되었습니다";
+        } catch (Exception e) {
+            log.error("세션 생성 오류: ", e);
+            return "redirect:/session/list?error=" + e.getMessage();
+        }
+    }
+
+    @GetMapping("/detail/{id}")
+    public String sessionDetail(@PathVariable Long id, Model model, HttpSession httpSession) {
+        try {
+            Session sess = sessionService.findById(id);
+            List<Question> questions = sessionService.getSessionQuestions(id);
+            List<Answer> answers = sessionService.getSessionAnswers(id);
+            
+            Map<Long, List<Answer>> answersByQuestion = answers.stream()
+                .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
+            
+            Long userId = (Long) httpSession.getAttribute("userId");
+            User currentUser = userId != null ? userRepository.findById(userId).orElse(null) : null;
+            
+            int totalAnswerCount = answers.size();
+            int answeredQuestionCount = answersByQuestion.size();
+            
+            model.addAttribute("interviewSession", sess);
+            model.addAttribute("questions", questions);
+            model.addAttribute("answersByQuestion", answersByQuestion);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("totalAnswerCount", totalAnswerCount);
+            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+            
+            log.info("세션 상세 로드 완료 - sessionId: {}", id);
+            
+            return "session/detail";
+            
+        } catch (Exception e) {
+            log.error("세션 상세 조회 오류: ", e);
+            return "redirect:/session/list";
         }
     }
 }

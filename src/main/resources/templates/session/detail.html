@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세션 결과 - Mockerview</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .results-header {
+            background: white;
+            color: black;
+            padding: 3rem 0;
+            text-align: center;
+        }
+        .results-header h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .session-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        .results-container {
+            max-width: 1200px;
+            margin: -2rem auto 4rem;
+            padding: 0 1rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .qa-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+        }
+        .qa-item {
+            border-left: 3px solid #667eea;
+            padding-left: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .question-text {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 1rem;
+        }
+        .answer-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .answer-author {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .answer-score {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .answer-text {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        .feedback-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .feedback-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+        }
+        .feedback-card {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 6px;
+            padding: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+        .feedback-card.ai {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .feedback-author-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #ea580c;
+            margin-bottom: 0.5rem;
+        }
+        .feedback-card.ai .feedback-author-tag {
+            color: #2563eb;
+        }
+        .feedback-text {
+            font-size: 0.875rem;
+            color: #374151;
+            line-height: 1.6;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <div th:if="${currentUser != null}">
+                        <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+                        <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="results-header">
+        <h1 th:text="${interviewSession.title}">모의면접 세션</h1>
+        <div class="session-meta">
+            <span th:text="${#temporals.format(interviewSession.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
+            <span>호스트: <span th:text="${interviewSession.host?.name}">면접관</span></span>
+            <span th:text="${interviewSession.status}">ENDED</span>
+        </div>
+    </div>
+
+    <div class="results-container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" th:text="${#lists.size(questions)}">0</span>
+                <div class="stat-label">질문 개수</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalAnswerCount}">0</span>
+                <div class="stat-label">답변 개수</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${answeredQuestionCount}">0</span>
+                <div class="stat-label">답변된 질문</div>
+            </div>
+        </div>
+
+        <div class="qa-section">
+            <h2 class="section-title">질문별 답변 및 피드백</h2>
+            
+            <div th:if="${questions.empty}" class="empty-state">
+                <p>아직 질문이 없습니다</p>
+            </div>
+
+            <div th:each="question : ${questions}" class="qa-item">
+                <div class="question-text" th:text="${'Q' + question.orderNo + '. ' + question.text}">질문 내용</div>
+                
+                <div class="answer-group">
+                    <div th:if="${answersByQuestion.get(question.id) == null or answersByQuestion.get(question.id).isEmpty()}" 
+                        class="empty-state" style="padding: 1rem;">
+                        <p style="color: #9ca3af; font-size: 0.875rem;">아직 답변이 없습니다</p>
+                    </div>
+                    
+                    <div th:each="answer : ${answersByQuestion.get(question.id)}" class="answer-card">
+                        <div class="answer-header">
+                            <span class="answer-author" th:text="${answer.user?.name ?: '익명'}">답변자</span>
+                            <span class="answer-score" th:if="${answer.score != null}" 
+                                th:text="${'점수: ' + answer.score}">점수: 0</span>
+                        </div>
+                        <div class="answer-text" th:text="${answer.text}">답변 내용</div>
+                        
+                        <div class="feedback-section" th:if="${answer.feedbacks != null and !answer.feedbacks.isEmpty()}">
+                            <div class="feedback-title">받은 피드백</div>
+                            <div th:each="feedback : ${answer.feedbacks}" 
+                                th:class="${feedback.feedbackType == 'AI' ? 'feedback-card ai' : 'feedback-card'}">
+                                <div class="feedback-author-tag" 
+                                    th:text="${feedback.feedbackType == 'AI' ? 'AI 코치' : (feedback.reviewer != null ? feedback.reviewer.name + ' (면접관)' : 'AI')}">피드백 작성자</div>
+                                <div class="feedback-text" th:text="${feedback.summary}">피드백 내용</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-secondary" onclick="history.back()">뒤로가기</button>
+            <a th:href="@{/session/list}" class="btn btn-primary" style="text-decoration: none;">세션 목록</a>
+        </div>
+    </div>
+</body>
+</html>

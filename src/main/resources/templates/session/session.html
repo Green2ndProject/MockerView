@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="'면접 진행 - ' + ${sessionTitle}">면접 진행 - MockerView</title>
+    <title th:text="'면접 진행 - ' + ${sessionTitle}">면접 진행</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/session.css">
 </head>
@@ -14,8 +14,8 @@
                 <a class="navbar-brand" href="/session/list">Mockerview</a>
                 <div class="navbar-nav">
                     <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
-                    <span class="nav-text" th:text="'사용자: ' + ${userName}">사용자: 테스트</span>
-                    <span class="nav-text" th:text="'역할: ' + ${currentUser.role}">역할: STUDENT</span>
+                    <span class="nav-text" th:text="'사용자: ' + ${userName}">사용자</span>
+                    <span class="nav-text" th:text="'역할: ' + ${currentUser.role}">역할</span>
                 </div>
             </div>
         </div>
@@ -24,10 +24,18 @@
     <div class="page-header">
         <div class="container">
             <div class="page-title">
-                <h1 th:text="${sessionTitle}">모의면접 세션</h1>
+                <h1 th:text="${sessionTitle}">세션</h1>
                 <div class="session-status">
                     <span class="badge badge-live">진행 중</span>
                     <span id="session-stats">질문: 0개 | 답변: 0개</span>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <a th:href="@{/session/scoreboard/{id}(id=${sessionId})}" class="btn btn-primary">
+                        스코어보드 보기
+                    </a>
+                    <a th:href="@{/session/detail/{id}(id=${sessionId})}" class="btn btn-secondary">
+                        상세 결과 보기
+                    </a>
                 </div>
             </div>
         </div>
@@ -43,7 +51,7 @@
                     </div>
                     <input type="hidden" id="currentQuestionId" value="">
 
-                    <div th:if="${isHost}" class="question-form">
+                    <div class="question-form" th:style="${isHost} ? 'display: block;' : 'display: none;'" id="question-form">
                         <h4>새 질문 출제</h4>
                         <div class="form-row">
                             <input type="text" id="newQuestionText" placeholder="질문을 입력하세요..." class="form-control">
@@ -53,7 +61,7 @@
                     </div>
                 </div>
 
-                <div class="answer-section" th:if="${!isHost}">
+                <div class="answer-section" id="answer-section" th:style="${!isHost} ? 'display: block;' : 'display: none;'">
                     <h3>답변 작성</h3>
                     <div class="answer-form">
                         <textarea id="answerText" placeholder="답변을 입력하세요..." class="form-control" rows="4"></textarea>
@@ -72,7 +80,6 @@
                 <div class="participants-section">
                     <h4>참가자 목록</h4>
                     <ul id="participants-list" class="participants-list">
-                        <li th:text="${userName}">현재 사용자</li>
                     </ul>
                 </div>
 
@@ -85,33 +92,30 @@
         </div>
     </div>
 
-    <input type="hidden" id="sessionId" th:value="${sessionId}">
-    <input type="hidden" id="userId" th:value="${userId}">
-    <input type="hidden" id="userName" th:value="${userName}">
-    <input type="hidden" id="userRole" th:value="${currentUser.role}">
-
     <div id="toast-container" class="toast-container"></div>
 
     <script src="/webjars/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
-    <script src="/js/mockerview-websocket.js"></script>
     <script th:inline="javascript">
+        const SESSION_DATA = {
+            sessionId: /*[[${sessionId}]]*/ 1,
+            userId: /*[[${userId}]]*/ 1,
+            userName: /*[[${userName}]]*/ '사용자',
+            isHost: /*[[${isHost}]]*/ false
+        };
+        
+        console.log('세션 데이터:', SESSION_DATA);
+    </script>
+    <script src="/js/mockerview-websocket.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (typeof SockJS === 'undefined') {
-                console.error('SockJS 라이브러리가 로드되지 않았습니다.');
-                return;
-            }
-            if (typeof Stomp === 'undefined') {
-                console.error('Stomp 라이브러리가 로드되지 않았습니다.');
+            if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+                console.error('WebSocket 라이브러리 로드 실패');
                 return;
             }
             
-            const sessionId = /*[[${sessionId}]]*/ 1;
-            const userId = /*[[${userId}]]*/ 1;
-            const userName = /*[[${userName}]]*/ '테스트사용자';
-            
-            console.log('WebSocket 초기화 시작:', sessionId, userId, userName);
-            initializeWebSocket(sessionId, userId, userName);
+            console.log('WebSocket 초기화:', SESSION_DATA);
+            initializeWebSocket(SESSION_DATA.sessionId, SESSION_DATA.userId, SESSION_DATA.userName);
         });
     </script>
 </body>

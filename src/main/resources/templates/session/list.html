@@ -85,20 +85,11 @@
           </div>
 
           <div style="margin-top: 1rem">
-            <a
-              th:href="@{/session/{id}(id=${sessionItem.id}, userId=1, userName='면접관')}"
-              class="btn btn-success"
-              style="margin-right: 8px"
-            >
-              면접관으로 참가
-            </a>
-            <a
-              th:href="@{/session/{id}(id=${sessionItem.id}, userId=2, userName='학생')}"
-              class="btn btn-primary"
-            >
-              학생으로 참가
-            </a>
-          </div>
+            <a th:href="@{/session/{id}/join(id=${sessionItem.id}, role='HOST')}" 
+                class="btn btn-success" 
+                style="margin-right: 8px">면접관으로 참가</a>
+            <a th:href="@{/session/{id}/join(id=${sessionItem.id}, role='STUDENT')}" 
+                class="btn btn-primary">학생으로 참가</a>
         </div>
       </div>
 
@@ -122,13 +113,13 @@
             <p style="color: var(--gray-600); margin: 0.5rem 0">
               개발 테스트용 모의면접 세션입니다.
             </p>
-            <a
-              href="/session/1?userId=1&userName=면접관"
+            
+              href="/session/1/join?role=HOST"
               class="btn btn-success"
               style="margin-right: 8px"
               >면접관으로 테스트</a
             >
-            <a href="/session/1?userId=2&userName=학생" class="btn btn-primary"
+            <a href="/session/1/join?role=STUDENT" class="btn btn-primary"
               >학생으로 테스트</a
             >
           </div>
@@ -214,13 +205,7 @@
             titleInput.name = "title";
             titleInput.value = title.trim();
 
-            const hostInput = document.createElement("input");
-            hostInput.type = "hidden";
-            hostInput.name = "hostId";
-            hostInput.value = "1";
-
             form.appendChild(titleInput);
-            form.appendChild(hostInput);
             document.body.appendChild(form);
             form.submit();
           } else {
