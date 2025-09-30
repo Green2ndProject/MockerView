@@ -157,4 +157,25 @@ public class SessionService {
     public List<Answer> getSessionAnswers(Long sessionId) {
         return answerRepository.findByQuestionSessionIdOrderByCreatedAt(sessionId);
     }
+
+    public Session createSession(String title, Long hostId) {
+        try {
+            User host = userRepository.findById(hostId)
+                .orElseThrow(() -> new RuntimeException("Host not found: " + hostId));
+            
+            Session session = Session.builder()
+                .title(title)
+                .host(host)
+                .status(Session.SessionStatus.PLANNED)
+                .createdAt(LocalDateTime.now())
+                .build();
+            
+            Session saved = sessionRepository.save(session);
+            log.info("Session created with ID: {}", saved.getId());
+            return saved;
+        } catch (Exception e) {
+            log.error("Error creating session: ", e);
+            throw new RuntimeException("세션 생성 실패", e);
+        }
+    }
 }

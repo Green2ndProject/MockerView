@@ -25,4 +25,7 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     
     @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId ORDER BY a.createdAt ASC")
     List<Answer> findByQuestionSessionIdOrderByCreatedAt(@Param("sessionId") Long sessionId);
+
+    @Query("SELECT a FROM Answer a WHERE a.user.id = :userId ORDER BY a.createdAt DESC")
+    List<Answer> findByUserId(@Param("userId") Long userId);
 }
