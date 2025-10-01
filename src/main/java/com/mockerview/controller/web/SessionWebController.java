@@ -115,19 +115,18 @@ public class SessionWebController {
                 // ID가 null인 문제를 우회하고, JWT에 확실히 존재하는 username을 사용합니다.
                 String username = customUserDetails.getUsername(); 
 
-                // UserRepository에 findByUsername 메서드가 정의되어 있어야 합니다.
-                User currentUser = userRepository.findByUsername(username).orElse(null); 
+                String userRoleString = customUserDetails.getAuthorities().stream()
+                .findFirst() 
+                .map(a -> a.getAuthority().replace("ROLE_", "")) 
+                .orElse(null);
 
-                if (currentUser != null) {
-                    model.addAttribute("currentUser", currentUser);
-                    model.addAttribute("isLoggedIn", true);
-                } else {
-                    // 사용자 이름은 있지만 DB에서 사용자를 못 찾은 경우
-                    model.addAttribute("currentUser", null);
-                    model.addAttribute("isLoggedIn", false);
-                }
-            } else {
-                // 비로그인 (customUserDetails가 null)인 경우
+                model.addAttribute("currentUser", username);
+                model.addAttribute("isLoggedIn", true);
+                model.addAttribute("userRoleString", userRoleString);
+
+                log.info("세션 목록 로드 완료 - {}개 세션. 현재 사용자: {}", sessions.size(), username);
+            }else{
+
                 model.addAttribute("currentUser", null);
                 model.addAttribute("isLoggedIn", false);
             }
