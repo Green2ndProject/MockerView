@@ -11,6 +11,7 @@ import com.mockerview.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // ✅ 추가
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -55,9 +56,9 @@ public class UserController {
         
         String username = registerDTO.getUsername();
         String password = registerDTO.getPassword();
-        String name     = registerDTO.getName();
-        String email    = registerDTO.getEmail();
-        String role     = registerDTO.getRole();
+        String name = registerDTO.getName();
+        String email = registerDTO.getEmail();
+        String role = registerDTO.getRole();
 
         if (userRepository.findByUsername(username).isPresent()) {
             redirectAttributes.addFlashAttribute("error", "이미 존재하는 아이디입니다.");
@@ -77,24 +78,29 @@ public class UserController {
         return "redirect:/auth/login";
     }
 
+    /**
+     * ✅ 최적화: @AuthenticationPrincipal을 사용하여 DB 재조회 (username -> User) 과정을 ID 기반으로 변경
+     */
     @GetMapping("/mypage")
-    public String mypage(Authentication authentication, Model model) {
+    // Authentication 대신 @AuthenticationPrincipal로 CustomUserDetails를 바로 주입받습니다.
+    public String mypage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         
-        if(authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)){
+        // 비로그인 사용자 처리
+        if (userDetails == null) {
             return "redirect:/auth/login";
         }
         
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        // 💡 userDetails에서 ID를 바로 가져옵니다. (DB 재조회 최소화)
+        Long userId = userDetails.getUserId();
 
-        String username = userDetails.getUsername();
-
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        // 💡 ID를 사용하여 DB에서 User 엔티티를 조회합니다. (최적화된 DB 조회)
+        Optional<User> userOpt = userRepository.findById(userId);
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            Long userId = user.getId();
         
             try {
+                // 이하는 ID를 사용한 로직은 그대로 유지합니다.
                 List<Session> hostedSessions = sessionRepository.findByHostId(userId);
                 List<Answer> userAnswers = answerRepository.findByUserId(userId);
                 
@@ -129,27 +135,35 @@ public class UserController {
             }
         }
 
+        // userDetails는 있지만 DB에서 사용자를 찾지 못한 경우
         return "redirect:/auth/login";
     }
 
+    /**
+     * ✅ 최적화: @AuthenticationPrincipal을 사용하여 DB 재조회 (username -> User) 과정을 ID 기반으로 변경
+     */
     @PostMapping("/mypage/update")
     public String updateProfile(@RequestParam String name,
                                 @RequestParam String email,
                                 @RequestParam(required = false) String password,
-                                Authentication authentication,
+                                // 💡 @AuthenticationPrincipal로 DTO를 바로 받습니다.
+                                @AuthenticationPrincipal CustomUserDetails userDetails, 
                                 RedirectAttributes redirectAttributes) {
         
-        if(authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)){
+        if (userDetails == null) {
             return "redirect:/auth/login";
         }
         
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        String username = userDetails.getUsername();
+        // 💡 userDetails에서 ID를 바로 가져옵니다.
+        Long userId = userDetails.getUserId();
         
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        // 💡 ID를 사용하여 DB에서 User 엔티티를 조회합니다.
+        Optional<User> userOpt = userRepository.findById(userId);
+        
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             
+            // ... (업데이트 로직은 동일)
             User updatedUser = user.toBuilder()
                     .name(name)
                     .email(email)
@@ -163,6 +177,9 @@ public class UserController {
             
             userRepository.save(updatedUser);
             redirectAttributes.addFlashAttribute("success", "프로필이 업데이트되었습니다.");
+        } else {
+            // ID는 있지만 DB에서 사용자를 못 찾은 경우
+            redirectAttributes.addFlashAttribute("error", "사용자 정보를 찾을 수 없습니다.");
         }
         
         return "redirect:/auth/mypage";
