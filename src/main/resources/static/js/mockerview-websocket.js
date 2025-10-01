@@ -5,6 +5,10 @@ class MockerViewWebSocket {
     this.userName = userName;
     this.stompClient = null;
     this.connected = false;
+
+    //타이머 상태관리용
+    this.timerInterval = null; // setInterval ID를 저장할 변수
+    this.currentSeconds = 0; // 현재 남은 초(second)를 저장할 변수
   }
 
   connect() {
@@ -104,6 +108,41 @@ class MockerViewWebSocket {
           timer: parseInt(timer) || 30,
         })
       );
+    }
+  }
+
+  // 타이머 함수
+  // 타이머 중지 메서드
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  // 타이머 화면 표시 갱신 메서드
+  updateTimerDisplay() {
+    const sessionTimerElement = document.getElementById("session-timer");
+    if (sessionTimerElement) {
+      const totalSeconds = this.currentSeconds;
+
+      //텍스트 내용 갱신
+      const minutes = Math.floor(totalSeconds / 60)
+        .toString()
+        .padStart(2, "0");
+      const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+      sessionTimerElement.textContent = `${minutes}:${seconds}`;
+
+      //시각적 강조 처리
+      if (totalSeconds > 10) {
+        sessionTimerElement.classList.remove("time-critical", "timer-ended");
+      } else if (totalSeconds > 0) {
+        sessionTimerElement.classList.add("time-critical");
+        sessionTimerElement.classList.remove("timer-ended");
+      } else {
+        sessionTimerElement.classList.add("timer-ended");
+        sessionTimerElement.classList.remove("time-critical");
+      }
     }
   }
 
@@ -226,22 +265,32 @@ class MockerViewWebSocket {
     if (questionTextElement) {
       questionTextElement.textContent = questionText;
     }
-    const sessionTimerElement = document.getElementById("session-timer");
-    if (sessionTimerElement && timer !== undefined && timer !== null) {
-      const totalSeconds = parseInt(timer, 10);
-
-      const minutes = Math.floor(totalSeconds / 60)
-        .toString()
-        .padStart(2, "0");
-      const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-
-      sessionTimerElement.textContent = `${minutes}:${seconds}`;
-      console.log(`[DEBUG] 타이머 화면 갱신: ${minutes}:${seconds}`);
-    }
 
     const questionDiv = document.getElementById("current-question");
     if (questionDiv) {
       questionDiv.className = "current-question active-question";
+    }
+
+    this.stopTimer();
+
+    const durationSeconds = parseInt(timer) || 30;
+    this.currentSeconds = durationSeconds;
+
+    if (this.currentSeconds > 0) {
+      this.updateTimerDisplay();
+
+      this.timerInterval = setInterval(() => {
+        if (this.currentSeconds > 0) {
+          this.currentSeconds--;
+          this.updateTimerDisplay();
+        } else {
+          this.stopTimer();
+          this.showNotification("📢 답변 시간이 종료되었습니다!");
+        }
+      }, 1000);
+    } else {
+      this.currentSeconds = 0;
+      this.updateTimerDisplay();
     }
   }
 
