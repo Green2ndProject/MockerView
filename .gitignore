@@ -29,6 +29,6 @@ Thumbs.db
 # 임시 파일
 *.tmp
 *.temp
-
+bin/
 # Spring Boot
 target/
