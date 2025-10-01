@@ -1,11 +1,12 @@
 spring:
   application:
     name: mockerview
+
   jwt:
     secret: 0y0KPgwYtmYq1AoSfRRJav2/ImhCV6ueHW0Le+MEeCQ=  
 
   profiles:
-    active: dev
+    active: dev-school
 
   jpa:
     hibernate:
@@ -68,6 +69,33 @@ spring:
         dialect: org.hibernate.dialect.OracleDialect
 
 ---
+# 개발(Oracle) - 학원 서버
+spring:
+  config:
+    activate:
+      on-profile: dev-school
+
+  datasource:
+    url: jdbc:oracle:thin:@192.168.0.73:1521/XEPDB1
+    username: mockerview
+    password: mockerview
+    driver-class-name: oracle.jdbc.OracleDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.OracleDialect
+
+logging:
+  level:
+    com.mockerview: DEBUG
+    org.springframework.web.socket: DEBUG
+
+---
 # 운영(PostgreSQL)
 spring:
   config:
@@ -96,5 +124,3 @@ logging:
     com.mockerview: INFO
     org.springframework.web.socket: INFO
     root: INFO
-   
-  
