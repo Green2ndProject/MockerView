@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockerview - AI 모의면접 플랫폼</title>
+    <link rel="stylesheet" th:href="@{/css/index.css}">
+</head>
+<style>
+    .btn-out {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #667eea;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+    
+    .btn-out:hover {
+        background: white;
+        color: #667eea;
+    }
+    
+    .btn-pri {
+        display: inline-block;
+        padding: 12px 24px;
+        border: 2px solid #667eea;
+        color: #667eea;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-pri:hover {
+        background: #667eea;
+        color: white;
+    }
+</style>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="logo" href="/">Mockerview</a>
+            <div class="nav-menu">
+                <a href="#features">특징</a>
+                <a href="#how">사용방법</a>
+                <a th:href="@{/auth/login}" class="btn-out">로그인</a>
+                <a th:href="@{/auth/register}" class="btn-pri">시작하기</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>AI 기반<br>실시간 모의면접</h1>
+                    <p>혼자가 아닌 함께, AI와 면접관의 피드백으로 성장하세요</p>
+                    <div class="hero-buttons">
+                        <a th:href="@{/auth/register}" class="btn-primary">무료로 시작하기</a>
+                        <a href="#features" class="btn-outline">더 알아보기</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="visual-card card-1">
+                        <div class="icon">💬</div>
+                        <div class="text">실시간 협업</div>
+                    </div>
+                    <div class="visual-card card-2">
+                        <div class="icon">🤖</div>
+                        <div class="text">AI 피드백</div>
+                    </div>
+                    <div class="visual-card card-3">
+                        <div class="icon">📊</div>
+                        <div class="text">성장 추적</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2>핵심 기능</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>실시간 협업</h3>
+                    <p>여러 명이 동시에 참여하여 실제 면접 환경을 재현합니다</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI 피드백</h3>
+                    <p>GPT 기반 답변 분석으로 강점과 약점을 파악합니다</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>성장 추적</h3>
+                    <p>모든 세션 기록을 저장하여 발전 과정을 확인합니다</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how" class="how">
+        <div class="container">
+            <h2>사용 방법</h2>
+            <div class="step-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>세션 생성</h3>
+                    <p>면접 세션을 만들고 참여자를 초대하세요</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>면접 진행</h3>
+                    <p>질문을 출제하고 답변을 실시간으로 공유하세요</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>피드백 확인</h3>
+                    <p>AI와 면접관의 피드백으로 실력을 향상시키세요</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2>지금 바로 시작하세요</h2>
+            <p>면접 준비, 더 이상 혼자 고민하지 마세요</p>
+            <a th:href="@{/auth/register}" class="btn-white">무료로 시작하기</a>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <h5>Mockerview</h5>
+                    <p>AI 기반 실시간 모의면접 플랫폼</p>
+                </div>
+                <div class="footer-right">
+                    <p>&copy; 2025 Mockerview. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script th:src="@{/js/index.js}"></script>
+</body>
+</html>
