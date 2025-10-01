@@ -2,6 +2,9 @@ spring:
   application:
     name: mockerview
 
+  jwt:
+    secret: 0y0KPgwYtmYq1AoSfRRJav2/ImhCV6ueHW0Le+MEeCQ=  
+
   profiles:
     active: dev-school
 
@@ -36,6 +39,10 @@ logging:
   level:
     com.mockerview: DEBUG
     org.springframework.web.socket: DEBUG
+    org.springframework.security: DEBUG 
+    org.springframework.aop: DEBUG
+    org.springframework.core: DEBUG
+
 
 openai:
   api:
@@ -43,14 +50,15 @@ openai:
     url: https://api.openai.com/v1/chat/completions
 
 ---
-# 개발(Oracle) - 로컬
+# 개발(Oracle)
 spring:
   config:
     activate:
       on-profile: dev
 
   datasource:
-    url: jdbc:oracle:thin:@localhost/XEPDB1
+    url: jdbc:oracle:thin:@192.168.0.73:1521/XEPDB1
+    # url: jdbc:oracle:thin:@localhost/XEPDB1
     username: mockerview
     password: mockerview
     driver-class-name: oracle.jdbc.OracleDriver
