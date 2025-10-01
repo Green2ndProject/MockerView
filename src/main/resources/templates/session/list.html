@@ -10,6 +10,27 @@
   <body>
     <nav class="navbar">
       <div class="container">
+        <div class="search-container">
+          <form class="search-form" method="get" action="/session/list">
+            <input
+              type="text"
+              id="keyword"
+              name="keyword"
+              class="search-input"
+              placeholder="세션 제목 또는 호스트명으로 검색"
+              th:value="${searchDTO?.keyword}"
+            />
+            <button type="submit" class="btn-search">검색</button>
+            <button type="button" class="btn-reset" onclick="resetSearch()">
+              초기화
+            </button>
+          </form>
+        </div>
+
+        <div class="search-result-info" th:if="${sessions != null}">
+          검색 결과: <strong th:text="${#lists.size(sessions)}">0</strong>개의
+          세션
+        </div>
         <div class="navbar-content">
           <a class="navbar-brand" href="/session/list"> Mockerview </a>
           <div class="navbar-nav">
