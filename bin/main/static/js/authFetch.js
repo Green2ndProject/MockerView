@@ -14,7 +14,7 @@ export function authFetch(url, options = {}) {
     // 3. 토큰이 존재하면 Authorization 헤더에 추가합니다.
     if (token) {
         // 서버에서 'Bearer eyJ...' 형식으로 보냈으므로, 그대로 사용합니다.
-        options.headers['Authorization'] = token; 
+        options.headers['Authorization'] = `Bearer ${token}`; 
     }
 
     // 4. Content-Type이 설정되지 않았다면 JSON 기본값으로 설정합니다.
