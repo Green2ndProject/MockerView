@@ -38,6 +38,9 @@ public class Question {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "timer")
+    private Integer timer; 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "questioner_id")
     private User questioner;
