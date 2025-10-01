@@ -42,5 +42,6 @@ public class Answer {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Feedback> feedbacks = new ArrayList<>();
 }

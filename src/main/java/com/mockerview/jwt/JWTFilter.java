@@ -44,11 +44,7 @@ public class JWTFilter extends OncePerRequestFilter{
         String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-          // 토큰이 없는 건 정상적인 상황일 수 있으므로 (로그인 이전, 정적 파일 요청 등)
-          // System.out.println("token null"); 같은 혼동을 주는 출력 대신 log.debug()를 사용하거나 제거합니다.
-        
           token = authorizationHeader.substring(7);
-          
         }
 
         if(token == null){
