@@ -118,8 +118,8 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
     return (web) -> web.ignoring().requestMatchers(
-        "/error", // 👈 에러 경로를 완전히 무시
-        "/favicon.ico" // 👈 (선택 사항) favicon도 확실하게 무시 가능
+        "/error", // 에러 경로를 완전히 무시
+        "/favicon.ico" // (선택 사항) favicon도 확실하게 무시 가능
     );
 }
 }

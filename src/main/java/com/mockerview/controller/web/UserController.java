@@ -44,28 +44,6 @@ public class UserController {
         return "user/login";
     }
 
-    // @PostMapping("/login")
-    // public String login(@RequestParam String username, 
-    //                    @RequestParam String password,
-    //                    HttpSession session,
-    //                    RedirectAttributes redirectAttributes) {
-        
-    //     Optional<User> userOpt = userRepository.findByUsername(username);
-        
-    //     if (userOpt.isPresent()) {
-    //         User user = userOpt.get();
-    //         if (user.getPassword() != null && passwordEncoder.matches(password, user.getPassword())) {
-    //             session.setAttribute("userId", user.getId());
-    //             session.setAttribute("userName", user.getName());
-    //             session.setAttribute("userRole", user.getRole());
-    //             return "redirect:/session/list";
-    //         }
-    //     }
-        
-    //     redirectAttributes.addFlashAttribute("error", "아이디 또는 비밀번호가 잘못되었습니다.");
-    //     return "redirect:/auth/login";
-    // }
-
     @GetMapping("/register")
     public String registerForm() {
         return "user/register";
@@ -99,28 +77,6 @@ public class UserController {
         return "redirect:/auth/login";
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/auth/login";
-    }
-
-    // @GetMapping("/mypage")
-    // public String mypage(HttpSession session, Model model) {
-    //     Long userId = (Long) session.getAttribute("userId");
-    //     if (userId == null) {
-    //         return "redirect:/auth/login";
-    //     }
-        
-    //     Optional<User> userOpt = userRepository.findById(userId);
-    //     if (userOpt.isPresent()) {
-    //         model.addAttribute("user", userOpt.get());
-    //         return "user/mypage";
-    //     }
-        
-    //     return "redirect:/auth/login";
-    // }
-
     @GetMapping("/mypage")
     public String mypage(Authentication authentication, Model model) {
         
@@ -135,66 +91,62 @@ public class UserController {
         Optional<User> userOpt = userRepository.findByUsername(username);
 
         if (userOpt.isPresent()) {
-            model.addAttribute("user", userOpt.get());
-            return "user/mypage";
+            User user = userOpt.get();
+            Long userId = user.getId();
         
-        // try {
-        //     Optional<User> userOpt = userRepository.findById(userId);
-        //     if (userOpt.isPresent()) {
-        //         User user = userOpt.get();
+            try {
+                List<Session> hostedSessions = sessionRepository.findByHostId(userId);
+                List<Answer> userAnswers = answerRepository.findByUserId(userId);
                 
-        //         List<Session> hostedSessions = sessionRepository.findByHostId(userId);
-        //         List<Answer> userAnswers = answerRepository.findByUserId(userId);
+                long participatedSessionCount = 0;
+                long answerCount = 0;
                 
-        //         long participatedSessionCount = 0;
-        //         long answerCount = 0;
+                if (userAnswers != null && !userAnswers.isEmpty()) {
+                    answerCount = userAnswers.size();
+                    try {
+                        participatedSessionCount = userAnswers.stream()
+                            .filter(a -> a.getQuestion() != null && a.getQuestion().getSession() != null)
+                            .map(a -> a.getQuestion().getSession().getId())
+                            .distinct()
+                            .count();
+                    } catch (Exception e) {
+                        log.error("세션 카운트 중 오류: ", e);
+                        participatedSessionCount = 0;
+                    }
+                }
                 
-        //         if (userAnswers != null && !userAnswers.isEmpty()) {
-        //             answerCount = userAnswers.size();
-        //             try {
-        //                 participatedSessionCount = userAnswers.stream()
-        //                     .filter(a -> a.getQuestion() != null && a.getQuestion().getSession() != null)
-        //                     .map(a -> a.getQuestion().getSession().getId())
-        //                     .distinct()
-        //                     .count();
-        //             } catch (Exception e) {
-        //                 log.error("세션 카운트 중 오류: ", e);
-        //                 participatedSessionCount = 0;
-        //             }
-        //         }
+                model.addAttribute("user", user);
+                model.addAttribute("hostedSessions", hostedSessions != null ? hostedSessions : List.of());
+                model.addAttribute("participatedSessionCount", participatedSessionCount);
+                model.addAttribute("answerCount", answerCount);
                 
-        //         model.addAttribute("user", user);
-        //         model.addAttribute("hostedSessions", hostedSessions != null ? hostedSessions : List.of());
-        //         model.addAttribute("participatedSessionCount", participatedSessionCount);
-        //         model.addAttribute("answerCount", answerCount);
+                return "user/mypage";
                 
-        //         return "user/mypage";
-        //     }
-            
-        //     return "redirect:/auth/login";
-            
-        // } catch (Exception e) {
-        //     log.error("마이페이지 로드 오류: ", e);
-        //     model.addAttribute("error", "페이지를 불러올 수 없습니다.");
-        //     return "redirect:/session/list";
+            } catch (Exception e) {
+                log.error("마이페이지 로드 오류: ", e);
+                model.addAttribute("error", "페이지를 불러올 수 없습니다.");
+                return "redirect:/session/list";
+            }
         }
 
-        return "redirect:/session/list";
+        return "redirect:/auth/login";
     }
 
     @PostMapping("/mypage/update")
     public String updateProfile(@RequestParam String name,
                                 @RequestParam String email,
                                 @RequestParam(required = false) String password,
-                                HttpSession session,
+                                Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
         
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
+        if(authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)){
             return "redirect:/auth/login";
         }
         
-        Optional<User> userOpt = userRepository.findById(userId);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        String username = userDetails.getUsername();
+        
+        Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             
@@ -210,7 +162,6 @@ public class UserController {
             }
             
             userRepository.save(updatedUser);
-            session.setAttribute("userName", updatedUser.getName());
             redirectAttributes.addFlashAttribute("success", "프로필이 업데이트되었습니다.");
         }
         
