@@ -114,53 +114,19 @@
                     'password': password})
             })
             .then(response => {
-                
-                //const fullToken = response.headers.get('Authorization');
+                if(response.ok) {
+                    return response.json();
+                }
 
-                // if (response.ok && fullToken) {
-
-                //     let pureToken = fullToken;
-                    
-                //     if(fullToken.startsWith('Bearer ')){
-                //         pureToken = fullToken.substring(7);
-                //     }
-                    
-                //     localStorage.setItem('jwt_token', pureToken);
-                //     alert("로그인 성공");
-                //     //console.log('JWT Token:', token);
-
-                //     return authFetch('/', { method: 'GET' })
-                //         .then(() => {
-                //             window.location.href = '/'; 
-                //         })
-                //         .catch(error => {
-                //             console.error('Home fetch error:', error);
-                //             alert('페이지 로드 실패. 다시 로그인하세요.');
-                //         });
-                    
-                        
-                   
-                    
-
-            //     }else if(response.status === 401){
-            //         alert("아이디 또는 비밀번호를 다시 확인해주세요");
-
-            //         return Promise.reject(new Error("Unauthorized"));
-            //     }else{
-            //         return response.text().then(text => {
-            //         console.error('Server Error Body:', text);
-            //         return Promise.reject(new Error(`Login Failed with status: ${response.status} - ${text}`));
-            //         });
-            //     }
-
-            if(response.ok){
-                console.log('로그인 성공, 쿠키 자동 저장됨');
-                window.location.href='/';
-            }
+                throw new Error('Login failed with status : '+ response.status);
             })
             .then(data => {
-                //alert('로그인 성공');
-                console.log('Server response data : ', data);
+                if(data.success && data.redirectUrl){
+
+                    window.location.href = data.redirectUrl;
+                }else{
+                    alert("로그인 실패: 서버 응답 형식 오류");
+                }
 
                 //window.location.href='/';
             })
