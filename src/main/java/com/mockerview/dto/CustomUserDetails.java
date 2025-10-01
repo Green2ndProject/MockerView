@@ -24,7 +24,7 @@ public class CustomUserDetails implements UserDetails {
 
         // role은 enum객체, String 으로 변환
         String roleString = user.getRole().name();
-        collection.add(new SimpleGrantedAuthority(roleString));
+        collection.add(new SimpleGrantedAuthority("ROLE_"+user.getRole().toString()));
 
         return collection;
     }

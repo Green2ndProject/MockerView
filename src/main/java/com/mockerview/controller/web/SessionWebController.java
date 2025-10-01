@@ -1,11 +1,15 @@
 package com.mockerview.controller.web;
 
+import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,16 +83,33 @@ public class SessionWebController {
             List<Session> sessions = sessionService.getAllSessions();
             model.addAttribute("sessions", sessions);
             
-            Long userId = (Long) httpSession.getAttribute("userId");
-            String userName = (String) httpSession.getAttribute("userName");
+            // Long userId = (Long) httpSession.getAttribute("userId");
+            // String userName = (String) httpSession.getAttribute("userName");
             
-            if (userId != null && userName != null) {
-                User currentUser = userRepository.findById(userId).orElse(null);
-                model.addAttribute("currentUser", currentUser);
+            // if (userId != null && userName != null) {
+            //     User currentUser = userRepository.findById(userId).orElse(null);
+            //     model.addAttribute("currentUser", currentUser);
+            //     model.addAttribute("isLoggedIn", true);
+            // } else {
+            //     model.addAttribute("currentUser", null);
+            //     model.addAttribute("isLoggedIn", false);
+            // }
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if(authentication != null && authentication.getPrincipal() instanceof CustomUserDetails){
+
+                CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+
+                String username = customUserDetails.getUsername();
+
+                model.addAttribute("currentUser", username);
                 model.addAttribute("isLoggedIn", true);
-            } else {
+
+                log.info("세션 목록 로드 완료 - {}개 세션. 현재 사용자: {}", sessions.size(), username);
+            }else{
                 model.addAttribute("currentUser", null);
                 model.addAttribute("isLoggedIn", false);
+                log.info("세션 목록 로드 완료 - {}개 세션. 비로그인 상태.", sessions.size());
             }
             
             log.info("세션 목록 로드 완료 - {}개 세션", sessions.size());

@@ -85,6 +85,8 @@
     </div>
 
     <script>
+    import {authFetch} from './authFetch.js';
+
         document.getElementById('loginForm').addEventListener('submit', function(e) {
 
             e.preventDefault();
@@ -97,35 +99,44 @@
                 return;
             }
 
-            const loginData = {
-                username : username,
-                password : password
-            }
-
-            fetch('/auth/login', {
+            authFetch('/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type' : 'application/json'
                 },
-                body: JSON.stringify(loginData)
+                body: JSON.stringify({
+                    "username" : username,
+                    "password" : password})
             })
             .then(response => {
                 
                 const token = response.headers.get('Authorization');
 
                 if(response.ok && token){
-                    alert("로그인 성공");
-                    console.log('JWT Token:', token);
+                    //alert("로그인 성공");
+                    //console.log('JWT Token:', token);
 
                     localStorage.setItem('jwt_token',token);
 
-                    window.location.href='/';
+                    return response.json();
+                    
 
                 }else if(response.status === 401){
                     alert("아이디 또는 비밀번호를 다시 확인해주세요");
+
+                    return Promise.reject(new Error("Unauthorized"));
                 }else{
-                    
+                    return response.text().then(text => {
+                    console.error('Server Error Body:', text);
+                    return Promise.reject(new Error(`Login Failed with status: ${response.status} - ${text}`));
+                    });
                 }
+            })
+            .then(data => {
+                alert('로그인 성공');
+                console.log('Server response data : ', data);
+
+                window.location.href='/';
             })
             .catch( error => {
                 console.error('fetch error:',error);

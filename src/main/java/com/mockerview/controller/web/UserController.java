@@ -1,9 +1,11 @@
 package com.mockerview.controller.web;
 
+import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.dto.RegisterDTO;
 import com.mockerview.entity.User;
 import com.mockerview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,8 +13,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Optional;
 
+@Slf4j
 @Controller
 @RequestMapping("/auth")
 public class UserController {
@@ -25,30 +30,31 @@ public class UserController {
 
     @GetMapping("/login")
     public String loginForm() {
+        log.info("로그인폼 controller 진입 성공!");
         return "user/login";
     }
 
-    @PostMapping("/login")
-    public String login(@RequestParam String username, 
-                       @RequestParam String password,
-                       HttpSession session,
-                       RedirectAttributes redirectAttributes) {
+    // @PostMapping("/login")
+    // public String login(@RequestParam String username, 
+    //                    @RequestParam String password,
+    //                    HttpSession session,
+    //                    RedirectAttributes redirectAttributes) {
         
-        Optional<User> userOpt = userRepository.findByUsername(username);
+    //     Optional<User> userOpt = userRepository.findByUsername(username);
         
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            if (user.getPassword() != null && passwordEncoder.matches(password, user.getPassword())) {
-                session.setAttribute("userId", user.getId());
-                session.setAttribute("userName", user.getName());
-                session.setAttribute("userRole", user.getRole());
-                return "redirect:/session/list";
-            }
-        }
+    //     if (userOpt.isPresent()) {
+    //         User user = userOpt.get();
+    //         if (user.getPassword() != null && passwordEncoder.matches(password, user.getPassword())) {
+    //             session.setAttribute("userId", user.getId());
+    //             session.setAttribute("userName", user.getName());
+    //             session.setAttribute("userRole", user.getRole());
+    //             return "redirect:/session/list";
+    //         }
+    //     }
         
-        redirectAttributes.addFlashAttribute("error", "아이디 또는 비밀번호가 잘못되었습니다.");
-        return "redirect:/auth/login";
-    }
+    //     redirectAttributes.addFlashAttribute("error", "아이디 또는 비밀번호가 잘못되었습니다.");
+    //     return "redirect:/auth/login";
+    // }
 
     @GetMapping("/register")
     public String registerForm() {
@@ -89,14 +95,35 @@ public class UserController {
         return "redirect:/auth/login";
     }
 
+    // @GetMapping("/mypage")
+    // public String mypage(HttpSession session, Model model) {
+    //     Long userId = (Long) session.getAttribute("userId");
+    //     if (userId == null) {
+    //         return "redirect:/auth/login";
+    //     }
+        
+    //     Optional<User> userOpt = userRepository.findById(userId);
+    //     if (userOpt.isPresent()) {
+    //         model.addAttribute("user", userOpt.get());
+    //         return "user/mypage";
+    //     }
+        
+    //     return "redirect:/auth/login";
+    // }
+
     @GetMapping("/mypage")
-    public String mypage(HttpSession session, Model model) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
+    public String mypage(Authentication authentication, Model model) {
+        
+        if(authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails)){
             return "redirect:/auth/login";
         }
         
-        Optional<User> userOpt = userRepository.findById(userId);
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        String username = userDetails.getUsername();
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+
         if (userOpt.isPresent()) {
             model.addAttribute("user", userOpt.get());
             return "user/mypage";

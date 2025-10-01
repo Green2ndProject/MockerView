@@ -1,4 +1,4 @@
-]package com.mockerview.dto;
+package com.mockerview.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
