@@ -42,6 +42,42 @@ public class SessionService {
         }
     }
 
+    
+    @Transactional(readOnly = true)
+    public List<Session> searchSessions(String keyword, String status, String sortBy, String sortOrder) {
+        try {
+            log.info("Searching sessions - keyword: {}, status: {}, sortBy: {}, sortOrder: {}", 
+                keyword, status, sortBy, sortOrder);
+            List<Session> sessions = sessionRepository.searchSessions(keyword, status, sortBy, sortOrder);
+            log.info("Search result: {} sessions", sessions.size());
+            return sessions;
+        } catch (Exception e) {
+            log.error("Error searching sessions: ", e);
+            throw new RuntimeException("세션 검색 실패", e);
+        }
+    }
+
+    public Session createSession(String title, Long hostId) {
+        try {
+            User host = userRepository.findById(hostId)
+                .orElseThrow(() -> new RuntimeException("Host not found: " + hostId));
+            
+            Session session = Session.builder()
+                .title(title)
+                .host(host)
+                .status(Session.SessionStatus.PLANNED)
+                .createdAt(LocalDateTime.now())
+                .build();
+            
+            Session saved = sessionRepository.save(session);
+            log.info("Session created with ID: {}", saved.getId());
+            return saved;
+        } catch (Exception e) {
+            log.error("Error creating session: ", e);
+            throw new RuntimeException("세션 생성 실패", e);
+        }
+    }
+
     public Long saveAnswer(AnswerMessage message) {
         try {
             User user = userRepository.findById(message.getUserId())
