@@ -1,7 +1,12 @@
 package com.mockerview.controller.web;
 
+import com.mockerview.entity.Answer;
+import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
+import com.mockerview.repository.AnswerRepository;
+import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -10,10 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
 @RequestMapping("/auth")
+@Slf4j
 public class UserController {
 
     @Autowired
@@ -21,6 +28,12 @@ public class UserController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private SessionRepository sessionRepository;
+    
+    @Autowired
+    private AnswerRepository answerRepository;
 
     @GetMapping("/login")
     public String loginForm() {
@@ -93,13 +106,46 @@ public class UserController {
             return "redirect:/auth/login";
         }
         
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            model.addAttribute("user", userOpt.get());
-            return "user/mypage";
+        try {
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                
+                List<Session> hostedSessions = sessionRepository.findByHostId(userId);
+                List<Answer> userAnswers = answerRepository.findByUserId(userId);
+                
+                long participatedSessionCount = 0;
+                long answerCount = 0;
+                
+                if (userAnswers != null && !userAnswers.isEmpty()) {
+                    answerCount = userAnswers.size();
+                    try {
+                        participatedSessionCount = userAnswers.stream()
+                            .filter(a -> a.getQuestion() != null && a.getQuestion().getSession() != null)
+                            .map(a -> a.getQuestion().getSession().getId())
+                            .distinct()
+                            .count();
+                    } catch (Exception e) {
+                        log.error("세션 카운트 중 오류: ", e);
+                        participatedSessionCount = 0;
+                    }
+                }
+                
+                model.addAttribute("user", user);
+                model.addAttribute("hostedSessions", hostedSessions != null ? hostedSessions : List.of());
+                model.addAttribute("participatedSessionCount", participatedSessionCount);
+                model.addAttribute("answerCount", answerCount);
+                
+                return "user/mypage";
+            }
+            
+            return "redirect:/auth/login";
+            
+        } catch (Exception e) {
+            log.error("마이페이지 로드 오류: ", e);
+            model.addAttribute("error", "페이지를 불러올 수 없습니다.");
+            return "redirect:/session/list";
         }
-        
-        return "redirect:/auth/login";
     }
 
     @PostMapping("/mypage/update")
