@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>내 활동 통계 - MockerView</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 0;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            color: #6b7280;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            color: #667eea;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        body {
+            background: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .stats-header {
+            background: #667eea;
+            color: white;
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .stats-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+
+        .answer-list {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .answer-item {
+            border-left: 3px solid #667eea;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            background: #f9fafb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .answer-item:hover {
+            background: #f0f4ff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .answer-date {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .answer-question {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .answer-scores {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .score-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .score-badge.ai {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .score-badge.interviewer {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0.5rem;
+        }
+
+        .close-btn:hover {
+            color: #374151;
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-item {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border-left: 3px solid #667eea;
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-type {
+            font-weight: 600;
+        }
+
+        .feedback-type.ai {
+            color: #1e40af;
+        }
+
+        .feedback-type.interviewer {
+            color: #92400e;
+        }
+
+        .feedback-score {
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .feedback-score.ai {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .feedback-score.interviewer {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .feedback-content {
+            color: #374151;
+            line-height: 1.6;
+            margin-top: 0.5rem;
+        }
+
+        .my-answer-text {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #374151;
+            line-height: 1.6;
+            border: 1px solid #e2e8f0;
+        }
+
+        .question-text {
+            background: #fef7e1;
+            padding: 1rem;
+            border-radius: 6px;
+            color: #92400e;
+            font-weight: 500;
+            border: 1px solid #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                    <a class="nav-link" href="/auth/logout">로그아웃</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="stats-header">
+        <div class="container">
+            <h1>내 활동 통계</h1>
+            <p th:text="${user.name} + '님의 면접 활동 분석'">사용자님의 면접 활동 분석</p>
+            <div class="export-buttons">
+                <a href="/auth/mypage/stats/export-csv" class="btn btn-secondary">CSV 다운로드</a>
+                <button onclick="exportPDF()" class="btn btn-secondary">PDF 다운로드</button>
+                <a href="/auth/mypage" class="btn btn-primary">마이페이지로</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="stats-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalAnswers}">0</span>
+                <div class="stat-label">총 답변 수</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${aiFeedbackCount}">0</span>
+                <div class="stat-label">AI 피드백</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${interviewerFeedbackCount}">0</span>
+                <div class="stat-label">면접관 피드백</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${avgAiScore}">0.0</span>
+                <div class="stat-label">AI 평균 점수</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            <div class="chart-container">
+                <h3 class="chart-title">월별 답변 추이</h3>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">피드백 비율</h3>
+                <canvas id="feedbackChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h3 class="chart-title">점수 비교</h3>
+            <canvas id="scoreChart"></canvas>
+        </div>
+
+        <div class="answer-list">
+            <h3 class="chart-title">최근 답변 내역</h3>
+            <div th:each="answer : ${myAnswers}" 
+                class="answer-item" 
+                th:attr="data-answer-id=${answer.id}"
+                th:onclick="'openAnswerModal(' + ${answer.id} + ')'">
+                <div class="answer-date" th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</div>
+                <div class="answer-question" th:text="'Q. ' + ${answer.question.text}">질문</div>
+                <div class="answer-scores">
+                    <span th:each="feedback : ${answer.feedbacks}"
+                        th:class="${feedback.feedbackType.toString() == 'AI' ? 'score-badge ai' : 'score-badge interviewer'}"
+                        th:if="${feedback.score != null}">
+                        <span th:text="${feedback.feedbackType.toString() == 'AI' ? 'AI' : '면접관'}"></span>: 
+                        <span th:text="${feedback.score}">0</span>/10
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="answerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">답변 상세 정보</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="modal-section">
+                <h4>질문</h4>
+                <div id="modalQuestion" class="question-text"></div>
+            </div>
+            
+            <div class="modal-section">
+                <h4>내 답변</h4>
+                <div id="modalAnswer" class="my-answer-text"></div>
+            </div>
+            
+            <div class="modal-section">
+                <h4>받은 피드백</h4>
+                <div id="modalFeedbacks"></div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        var answersByMonth = /*[[${answersByMonth}]]*/ {};
+        var aiFeedbackCount = /*[[${aiFeedbackCount}]]*/ 0;
+        var interviewerFeedbackCount = /*[[${interviewerFeedbackCount}]]*/ 0;
+        var avgAiScore = parseFloat(/*[[${avgAiScore}]]*/ '0');
+        var avgInterviewerScore = parseFloat(/*[[${avgInterviewerScore}]]*/ '0');
+        var myAnswersData = /*[[${myAnswers}]]*/ [];
+
+        var months = Object.keys(answersByMonth).sort();
+        var counts = months.map(function(m) { return answersByMonth[m]; });
+
+        if (document.getElementById('monthlyChart') && typeof Chart !== 'undefined') {
+            new Chart(document.getElementById('monthlyChart'), {
+                type: 'line',
+                data: {
+                    labels: months.length > 0 ? months : ['데이터 없음'],
+                    datasets: [{
+                        label: '답변 수',
+                        data: counts.length > 0 ? counts : [0],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        if (document.getElementById('feedbackChart') && typeof Chart !== 'undefined') {
+            var totalFeedback = aiFeedbackCount + interviewerFeedbackCount;
+            new Chart(document.getElementById('feedbackChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['AI 피드백', '면접관 피드백'],
+                    datasets: [{
+                        data: totalFeedback > 0 ? [aiFeedbackCount, interviewerFeedbackCount] : [1, 1],
+                        backgroundColor: ['#667eea', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        if (document.getElementById('scoreChart') && typeof Chart !== 'undefined') {
+            new Chart(document.getElementById('scoreChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['AI 평균', '면접관 평균'],
+                    datasets: [{
+                        label: '평균 점수',
+                        data: [avgAiScore, avgInterviewerScore],
+                        backgroundColor: ['#667eea', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10
+                        }
+                    }
+                }
+            });
+        }
+
+        function openAnswerModal(answerId) {
+            var answer = myAnswersData.find(function(a) {
+                return a.id == answerId;
+            });
+            
+            if (!answer) return;
+
+            document.getElementById('modalQuestion').textContent = answer.question.text;
+            document.getElementById('modalAnswer').textContent = answer.text;
+
+            var feedbacksContainer = document.getElementById('modalFeedbacks');
+            feedbacksContainer.innerHTML = '';
+
+            if (answer.feedbacks && answer.feedbacks.length > 0) {
+                answer.feedbacks.forEach(function(feedback) {
+                    var feedbackDiv = document.createElement('div');
+                    feedbackDiv.className = 'feedback-item';
+                    
+                    var feedbackType = feedback.feedbackType === 'AI' ? 'AI' : '면접관';
+                    var typeClass = feedback.feedbackType === 'AI' ? 'ai' : 'interviewer';
+                    
+                    feedbackDiv.innerHTML = 
+                        '<div class="feedback-header">' +
+                            '<span class="feedback-type ' + typeClass + '">' + feedbackType + ' 피드백</span>' +
+                            (feedback.score ? '<span class="feedback-score ' + typeClass + '">' + feedback.score + '/10</span>' : '') +
+                        '</div>' +
+                        '<div class="feedback-content">' + (feedback.summary || '피드백 내용이 없습니다.') + '</div>';
+                    
+                    feedbacksContainer.appendChild(feedbackDiv);
+                });
+            } else {
+                feedbacksContainer.innerHTML = '<p>아직 피드백이 없습니다.</p>';
+            }
+
+            document.getElementById('answerModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('answerModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById('answerModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        function exportPDF() {
+            if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+                alert('PDF 라이브러리가 로드되지 않았습니다.');
+                return;
+            }
+            
+            var content = document.getElementById('stats-content');
+            
+            html2canvas(content).then(function(canvas) {
+                var imgData = canvas.toDataURL('image/png');
+                var pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                var pdfWidth = pdf.internal.pageSize.getWidth();
+                var pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save('interview_stats.pdf');
+            }).catch(function(error) {
+                console.error('PDF 생성 오류:', error);
+                alert('PDF 생성 중 오류가 발생했습니다.');
+            });
+        }
+        /*]]>*/
+    </script>
+</body>
+</html>

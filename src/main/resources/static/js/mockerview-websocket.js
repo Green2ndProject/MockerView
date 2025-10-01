@@ -5,29 +5,52 @@ class MockerViewWebSocket {
     this.userName = userName;
     this.stompClient = null;
     this.connected = false;
-
-    //타이머 상태관리용
-    this.timerInterval = null; // setInterval ID를 저장할 변수
-    this.currentSeconds = 0; // 현재 남은 초(second)를 저장할 변수
+    this.timerInterval = null;
+    this.currentSeconds = 0;
   }
 
   connect() {
-    const socket = new SockJS("/ws");
+    const token = this.getTokenFromCookie();
+    
+    if (!token) {
+      console.error('토큰을 찾을 수 없습니다!');
+      alert('인증 토큰이 없습니다. 다시 로그인해주세요.');
+      return;
+    }
+    
+    console.log('토큰 전송:', token.substring(0, 20) + '...');
+    
+    const socket = new SockJS("/ws?token=" + encodeURIComponent(token));
     this.stompClient = Stomp.over(socket);
 
     this.stompClient.connect(
       {},
       (frame) => {
-        console.log("Connected: " + frame);
+        console.log("WebSocket 연결 성공");
         this.connected = true;
-
         this.subscribeToTopics();
         this.joinSession();
       },
       (error) => {
-        console.error("Connection error: ", error);
+        console.error("WebSocket 연결 실패:", error);
+        alert('WebSocket 연결에 실패했습니다. 다시 로그인해주세요.');
       }
     );
+  }
+
+  getTokenFromCookie() {
+    const cookies = document.cookie.split(';');
+    console.log('현재 쿠키:', document.cookie);
+    
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'Authorization') {
+        console.log('✅ Authorization 발견');
+        return value;
+      }
+    }
+    console.error('❌ Authorization 쿠키를 찾을 수 없습니다');
+    return null;
   }
 
   subscribeToTopics() {
@@ -103,6 +126,7 @@ class MockerViewWebSocket {
         `/app/session/${this.sessionId}/question`,
         {},
         JSON.stringify({
+          sessionId: this.sessionId,
           questionText: questionText,
           orderNo: orderNo,
           timer: parseInt(timer) || 30,
@@ -111,8 +135,6 @@ class MockerViewWebSocket {
     }
   }
 
-  // 타이머 함수
-  // 타이머 중지 메서드
   stopTimer() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
@@ -120,20 +142,14 @@ class MockerViewWebSocket {
     }
   }
 
-  // 타이머 화면 표시 갱신 메서드
   updateTimerDisplay() {
     const sessionTimerElement = document.getElementById("session-timer");
     if (sessionTimerElement) {
       const totalSeconds = this.currentSeconds;
-
-      //텍스트 내용 갱신
-      const minutes = Math.floor(totalSeconds / 60)
-        .toString()
-        .padStart(2, "0");
+      const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
       const seconds = (totalSeconds % 60).toString().padStart(2, "0");
       sessionTimerElement.textContent = `${minutes}:${seconds}`;
 
-      //시각적 강조 처리
       if (totalSeconds > 10) {
         sessionTimerElement.classList.remove("time-critical", "timer-ended");
       } else if (totalSeconds > 0) {
@@ -152,6 +168,7 @@ class MockerViewWebSocket {
         `/app/session/${this.sessionId}/answer`,
         {},
         JSON.stringify({
+          sessionId: this.sessionId,
           questionId: parseInt(questionId),
           userId: this.userId,
           userName: this.userName,
@@ -167,6 +184,7 @@ class MockerViewWebSocket {
         `/app/session/${this.sessionId}/interviewer-feedback`,
         {},
         JSON.stringify({
+          sessionId: this.sessionId,
           answerId: answerId,
           reviewerId: this.userId,
           reviewerName: this.userName,
@@ -196,10 +214,7 @@ class MockerViewWebSocket {
       this.updateParticipantsList(message.participants);
     }
 
-    if (
-      message.questionCount !== undefined &&
-      message.answerCount !== undefined
-    ) {
+    if (message.questionCount !== undefined && message.answerCount !== undefined) {
       this.updateSessionStats(message.questionCount, message.answerCount);
     }
 
@@ -235,16 +250,22 @@ class MockerViewWebSocket {
   handleInterviewerFeedback(message) {
     console.log("Interviewer feedback:", message);
     this.displayInterviewerFeedback(message);
-    this.showNotification(
-      `${message.reviewerName}님이 면접관 피드백을 주었습니다.`
-    );
+    this.showNotification(`${message.reviewerName}님이 면접관 피드백을 주었습니다.`);
   }
 
   updateParticipantsList(participants) {
     const participantsList = document.getElementById("participants-list");
     if (participantsList && participants && Array.isArray(participants)) {
       participantsList.innerHTML = participants
-        .map((name) => `<li>${name}</li>`)
+        .map((participant) => `
+          <li class="participant-item">
+            <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
+            <div class="participant-info">
+              <div class="participant-name">${participant}</div>
+              <div class="participant-status">온라인</div>
+            </div>
+          </li>
+        `)
         .join("");
     }
   }
@@ -252,23 +273,34 @@ class MockerViewWebSocket {
   updateSessionStats(questionCount, answerCount) {
     const statsDiv = document.getElementById("session-stats");
     if (statsDiv) {
-      statsDiv.innerHTML = `질문: ${questionCount || 0}개 | 답변: ${
-        answerCount || 0
-      }개`;
+      statsDiv.innerHTML = `질문 ${questionCount || 0}개 • 답변 ${answerCount || 0}개`;
+    }
+
+    const questionCountSpan = document.getElementById("question-count");
+    if (questionCountSpan) {
+      questionCountSpan.textContent = `질문 ${questionCount || 0}개`;
+    }
+
+    const answerCountSpan = document.getElementById("answer-count");
+    if (answerCountSpan) {
+      answerCountSpan.textContent = `${answerCount || 0}개`;
     }
   }
 
   displayQuestion(questionText, orderNo, timer) {
-    const questionTextElement = document.getElementById(
-      "current-question-text"
-    );
+    const questionTextElement = document.getElementById("current-question-text");
     if (questionTextElement) {
       questionTextElement.textContent = questionText;
     }
 
     const questionDiv = document.getElementById("current-question");
     if (questionDiv) {
-      questionDiv.className = "current-question active-question";
+      questionDiv.classList.add("has-question");
+    }
+
+    const questionNumber = document.getElementById("question-number");
+    if (questionNumber) {
+      questionNumber.textContent = `Q${orderNo || 1}`;
     }
 
     this.stopTimer();
@@ -285,7 +317,7 @@ class MockerViewWebSocket {
           this.updateTimerDisplay();
         } else {
           this.stopTimer();
-          this.showNotification("📢 답변 시간이 종료되었습니다!");
+          this.showNotification("답변 시간이 종료되었습니다!");
         }
       }, 1000);
     } else {
@@ -297,28 +329,33 @@ class MockerViewWebSocket {
   displayAnswer(answer) {
     const answersDiv = document.getElementById("answers-list");
     if (answersDiv) {
+      const emptyState = answersDiv.querySelector(".empty-state");
+      if (emptyState) {
+        emptyState.remove();
+      }
+
       const answerElement = document.createElement("div");
       answerElement.className = "answer-item";
       answerElement.id = `answer-${answer.answerId}`;
       answerElement.innerHTML = `
-                <div class="answer-header">
-                    <div class="answer-user">${answer.userName}</div>
-                    <div class="answer-time">${new Date().toLocaleTimeString()}</div>
-                </div>
-                <div class="answer-text">${answer.answerText}</div>
-                <div class="ai-feedback-placeholder">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        AI 피드백 생성 중...
-                    </div>
-                </div>
-                ${
-                  this.getUserRole() === "HOST" ||
-                  this.getUserRole() === "REVIEWER"
-                    ? this.getInterviewerFeedbackForm(answer.answerId)
-                    : ""
-                }
-            `;
+        <div class="answer-header">
+          <div class="answer-user">
+            <div class="answer-user-avatar">${answer.userName.charAt(0).toUpperCase()}</div>
+            <span class="answer-user-name">${answer.userName}</span>
+          </div>
+          <div class="answer-time">${new Date().toLocaleTimeString()}</div>
+        </div>
+        <div class="answer-text">${answer.answerText}</div>
+        <div class="ai-feedback-placeholder">
+          <div class="loading">
+            <div class="spinner"></div>
+            AI 피드백 생성 중...
+          </div>
+        </div>
+        ${this.getUserRole() === "HOST" || this.getUserRole() === "REVIEWER" 
+          ? this.getInterviewerFeedbackForm(answer.answerId) 
+          : ""}
+      `;
       answersDiv.appendChild(answerElement);
 
       if (this.getUserRole() === "HOST" || this.getUserRole() === "REVIEWER") {
@@ -329,22 +366,20 @@ class MockerViewWebSocket {
 
   getInterviewerFeedbackForm(answerId) {
     return `
-            <div class="feedback-form">
-                <div class="feedback-form-title">면접관 피드백</div>
-                <div class="row">
-                    <select class="score-input">
-                        <option value="">점수 선택</option>
-                        ${Array.from(
-                          { length: 10 },
-                          (_, i) =>
-                            `<option value="${i + 1}">${i + 1}점</option>`
-                        ).join("")}
-                    </select>
-                    <button class="btn btn-warning submit-feedback-btn" data-answer-id="${answerId}">제출</button>
-                </div>
-                <textarea class="comment-input" placeholder="피드백을 입력하세요..."></textarea>
-            </div>
-        `;
+      <div class="feedback-form">
+        <div class="feedback-form-title">면접관 피드백</div>
+        <div class="row">
+          <select class="score-input">
+            <option value="">점수 선택</option>
+            ${Array.from({ length: 10 }, (_, i) => 
+              `<option value="${i + 1}">${i + 1}점</option>`
+            ).join("")}
+          </select>
+          <button class="btn btn-warning submit-feedback-btn" data-answer-id="${answerId}">제출</button>
+        </div>
+        <textarea class="comment-input" placeholder="피드백을 입력하세요..."></textarea>
+      </div>
+    `;
   }
 
   attachFeedbackFormHandlers(answerId) {
@@ -375,87 +410,75 @@ class MockerViewWebSocket {
         commentInput.value = "";
 
         const feedbackForm = answerElement.querySelector(".feedback-form");
-        feedbackForm.innerHTML =
-          '<div class="text-success">피드백이 제출되었습니다.</div>';
+        feedbackForm.innerHTML = '<div class="text-success">피드백이 제출되었습니다.</div>';
       });
     }
   }
 
   displayAIFeedback(feedback) {
-    const answerElement = document.getElementById(
-      `answer-${feedback.answerId}`
-    );
+    const answerElement = document.getElementById(`answer-${feedback.answerId}`);
     if (answerElement) {
-      const placeholder = answerElement.querySelector(
-        ".ai-feedback-placeholder"
-      );
+      const placeholder = answerElement.querySelector(".ai-feedback-placeholder");
       if (placeholder) {
         placeholder.innerHTML = `
-                    <div class="ai-feedback">
-                        <div class="ai-feedback-title">🤖 AI 피드백</div>
-                        <div class="feedback-content">
-                            <div class="feedback-section">
-                                <strong>📋 요약:</strong>
-                                <p>${feedback.summary}</p>
-                            </div>
-                            <div class="feedback-section">
-                                <strong class="text-success">✅ 강점:</strong>
-                                <p>${feedback.strengths}</p>
-                            </div>
-                            <div class="feedback-section">
-                                <strong class="text-warning">⚠️ 개선점:</strong>
-                                <p>${feedback.weaknesses}</p>
-                            </div>
-                            <div class="feedback-section">
-                                <strong class="text-info">💡 제안사항:</strong>
-                                <p>${feedback.improvement}</p>
-                            </div>
-                            <div class="feedback-meta">
-                                <small class="text-muted">
-                                    ${
-                                      feedback.model
-                                    } | ${new Date().toLocaleTimeString()}
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                `;
+          <div class="feedback-item">
+            <div class="feedback-header">
+              <span class="feedback-icon">🤖</span>
+              <span class="feedback-title">AI 피드백</span>
+            </div>
+            <div class="feedback-content">
+              <div class="feedback-section">
+                <strong>요약:</strong>
+                <p>${feedback.summary}</p>
+              </div>
+              <div class="feedback-section">
+                <strong class="text-success">강점:</strong>
+                <p>${feedback.strengths}</p>
+              </div>
+              <div class="feedback-section">
+                <strong class="text-warning">개선점:</strong>
+                <p>${feedback.weaknesses}</p>
+              </div>
+              <div class="feedback-section">
+                <strong class="text-info">제안사항:</strong>
+                <p>${feedback.improvement}</p>
+              </div>
+              <div class="feedback-meta">
+                <small class="text-muted">
+                  ${feedback.model} | ${new Date().toLocaleTimeString()}
+                </small>
+              </div>
+            </div>
+          </div>
+        `;
       }
     }
   }
 
   displayInterviewerFeedback(feedback) {
-    const answerElement = document.getElementById(
-      `answer-${feedback.answerId}`
-    );
+    const answerElement = document.getElementById(`answer-${feedback.answerId}`);
     if (answerElement) {
-      const existingInterviewerFeedback = answerElement.querySelector(
-        ".interviewer-feedback"
-      );
+      const existingInterviewerFeedback = answerElement.querySelector(".interviewer-feedback");
       if (existingInterviewerFeedback) {
         existingInterviewerFeedback.remove();
       }
 
       const feedbackHtml = `
-                <div class="interviewer-feedback">
-                    <div class="interviewer-feedback-title">👨‍💼 면접관 피드백 - ${
-                      feedback.reviewerName
-                    }</div>
-                    <div><strong>점수:</strong> <span class="score-badge">${
-                      feedback.score
-                    }/10</span></div>
-                    <div><strong>코멘트:</strong> ${feedback.comment}</div>
-                    <div class="text-muted">${new Date().toLocaleTimeString()}</div>
-                </div>
-            `;
+        <div class="interviewer-feedback">
+          <div class="interviewer-feedback-title">면접관 피드백 - ${feedback.reviewerName}</div>
+          <div><strong>점수:</strong> <span class="score-badge">${feedback.score}/10</span></div>
+          <div><strong>코멘트:</strong> ${feedback.comment}</div>
+          <div class="text-muted">${new Date().toLocaleTimeString()}</div>
+        </div>
+      `;
 
       answerElement.insertAdjacentHTML("beforeend", feedbackHtml);
     }
   }
 
   getUserRole() {
-    const userRoleInput = document.getElementById("userRole");
-    return userRoleInput ? userRoleInput.value : "STUDENT";
+    const sessionRoleInput = document.getElementById("sessionRole");
+    return sessionRoleInput ? sessionRoleInput.value : "STUDENT";
   }
 
   showNotification(message) {
@@ -536,8 +559,8 @@ function sendQuestion() {
       parseInt(timerOrder) || 30
     );
     document.getElementById("newQuestionText").value = "";
-    document.getElementById("newQuestionOrder").value = "";
-    document.getElementById("newTimerOrder").value = "";
+    document.getElementById("newQuestionOrder").value = "1";
+    document.getElementById("newTimerOrder").value = "60";
   } else {
     alert("WebSocket이 연결되지 않았습니다.");
   }

@@ -6,7 +6,7 @@ spring:
     secret: 0y0KPgwYtmYq1AoSfRRJav2/ImhCV6ueHW0Le+MEeCQ=
 
   profiles:
-    active: dev-school
+    active: dev
 
   jpa:
     hibernate:
@@ -56,8 +56,7 @@ spring:
       on-profile: dev
 
   datasource:
-    # url: jdbc:oracle:thin:@localhost/XEPDB1
-    url: jdbc:oracle:thin:@192.168.0.73:1521/XEPDB1
+    url: jdbc:oracle:thin:@localhost/XEPDB1
     username: mockerview
     password: mockerview
     driver-class-name: oracle.jdbc.OracleDriver

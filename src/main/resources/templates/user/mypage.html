@@ -88,6 +88,9 @@
                 <span th:if="${user.role.name() == 'HOST'}">면접관</span>
                 <span th:text="' • ' + ${user.email}"></span>
             </div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="/auth/mypage/stats" class="btn btn-primary">내 활동 통계 보기</a>
+            </div>
         </div>
     </div>
 

@@ -10,6 +10,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.User;
 import com.mockerview.entity.User.UserRole;
+import com.mockerview.repository.UserRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,9 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 public class JWTFilter extends OncePerRequestFilter{
 
   private final JWTUtil jwtUtil;
+  private final UserRepository userRepository;
 
-  public JWTFilter(JWTUtil jwtUtil){
+  public JWTFilter(JWTUtil jwtUtil, UserRepository userRepository){
     this.jwtUtil = jwtUtil;
+    this.userRepository = userRepository;
   }
 
   @Override
@@ -51,7 +54,8 @@ public class JWTFilter extends OncePerRequestFilter{
           Cookie[] cookies = request.getCookies();
           if(cookies != null){
             for(Cookie cookie : cookies){
-              if("jwtToken".equals(cookie.getName())){
+              // 수정했음... jwtToken -> Authorization으로 변경 (통일성을 위해서ㅠㅠ)
+              if("Authorization".equals(cookie.getName())){
                 token = cookie.getValue();
                 log.info("authorization now. Token extracted from Cookie: {}", token);
                 break;
@@ -73,15 +77,10 @@ public class JWTFilter extends OncePerRequestFilter{
           return;
         }
 
-        String username   = jwtUtil.getUsername(token);
-        String roleString = jwtUtil.getRole(token);
-        String enumRoleName = roleString.startsWith("ROLE_") ? roleString.substring(5) : roleString;
-        UserRole roleEnum = UserRole.valueOf(enumRoleName);
-
-        User user = new User();
-        user.setUsername(username);
-        user.setRole(roleEnum);
-        user.setPassword("temppass");
+        String username = jwtUtil.getUsername(token);
+        
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
@@ -114,12 +113,8 @@ public class JWTFilter extends OncePerRequestFilter{
         log.warn("[JWTFilter] Bypass! Static resource is skipping JWT validation: {}", uri); 
         return true;
     }
-   
+    
     log.info("[JWTFilter] Checking URI: {}", request.getRequestURI()); 
     return false;
   }
 }
-
-
-
-

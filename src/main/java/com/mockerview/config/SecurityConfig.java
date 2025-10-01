@@ -2,7 +2,6 @@ package com.mockerview.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -21,6 +20,7 @@ import com.mockerview.jwt.JWTFilter;
 import com.mockerview.jwt.JWTLogoutHandler;
 import com.mockerview.jwt.JWTUtil;
 import com.mockerview.jwt.LoginFilter;
+import com.mockerview.repository.UserRepository;
 import com.mockerview.service.CustomUserDetailsService;
 
 @Configuration
@@ -30,13 +30,16 @@ public class SecurityConfig {
     private final JWTLogoutHandler jwtLogoutHandler;
     private final JWTUtil jwtUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final UserRepository userRepository;
 
     public SecurityConfig(JWTUtil jwtUtil, 
-                          AuthenticationConfiguration authenticationConfiguration,
-                          JWTLogoutHandler jwtLogoutHandler) throws Exception {
+                        AuthenticationConfiguration authenticationConfiguration,
+                        JWTLogoutHandler jwtLogoutHandler,
+                        UserRepository userRepository) throws Exception {
         this.jwtUtil = jwtUtil;
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtLogoutHandler = jwtLogoutHandler;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -63,7 +66,7 @@ public class SecurityConfig {
 
     @Bean
     public JWTFilter jwtFilter() {
-        return new JWTFilter(jwtUtil);
+        return new JWTFilter(jwtUtil, userRepository);
     }
 
     @Bean
