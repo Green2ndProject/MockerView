@@ -123,22 +123,17 @@ public class SessionWebController {
 
                 String username = customUserDetails.getUsername();
 
+                String userRoleString = customUserDetails.getAuthorities().stream()
+                .findFirst() 
+                .map(a -> a.getAuthority().replace("ROLE_", "")) 
+                .orElse(null);
+
                 model.addAttribute("currentUser", username);
                 model.addAttribute("isLoggedIn", true);
+                model.addAttribute("userRoleString", userRoleString);
 
                 log.info("세션 목록 로드 완료 - {}개 세션. 현재 사용자: {}", sessions.size(), username);
             }else{
-
-            // Long userId = (Long) httpSession.getAttribute("userId");
-            // String userName = (String) httpSession.getAttribute("userName");
-            // UserRole userRole = (UserRole) httpSession.getAttribute("userRole");
-            
-            // if (userId != null && userName != null && userRole != null) {
-            //     User currentUser = userRepository.findById(userId).orElse(null);
-            //     model.addAttribute("currentUser", currentUser);
-            //     model.addAttribute("isLoggedIn", true);
-            //     model.addAttribute("userRoleString", userRole.name()); 
-            // } else {
 
                 model.addAttribute("currentUser", null);
                 model.addAttribute("isLoggedIn", false);
