@@ -68,7 +68,7 @@ public class SessionService {
         }
     }
 
-    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId) {
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId,  Integer timer ) {
         try {
             Session session = findById(sessionId);
             
@@ -80,6 +80,7 @@ public class SessionService {
                 .text(questionText)
                 .orderNo(orderNo != null ? orderNo : 1)
                 .questioner(questioner)
+                .timer(timer)
                 .build();
             
             Question saved = questionRepository.save(question);
@@ -93,9 +94,10 @@ public class SessionService {
         }
     }
 
-    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo) {
-        return saveQuestion(sessionId, questionText, orderNo, 1L);
-    }
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Integer timer) {
+ 
+    return saveQuestion(sessionId, questionText, orderNo, 1L, timer); 
+}
 
     @Transactional(readOnly = true)
     public SessionStatusMessage getSessionStatus(Long sessionId) {
@@ -156,5 +158,26 @@ public class SessionService {
     @Transactional(readOnly = true)
     public List<Answer> getSessionAnswers(Long sessionId) {
         return answerRepository.findByQuestionSessionIdOrderByCreatedAt(sessionId);
+    }
+
+    public Session createSession(String title, Long hostId) {
+        try {
+            User host = userRepository.findById(hostId)
+                .orElseThrow(() -> new RuntimeException("Host not found: " + hostId));
+            
+            Session session = Session.builder()
+                .title(title)
+                .host(host)
+                .status(Session.SessionStatus.PLANNED)
+                .createdAt(LocalDateTime.now())
+                .build();
+            
+            Session saved = sessionRepository.save(session);
+            log.info("Session created with ID: {}", saved.getId());
+            return saved;
+        } catch (Exception e) {
+            log.error("Error creating session: ", e);
+            throw new RuntimeException("세션 생성 실패", e);
+        }
     }
 }

@@ -39,4 +39,9 @@ public class User {
     public enum UserRole {
         STUDENT, HOST, REVIEWER
     }
+
+    public boolean isPresent() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isPresent'");
+    }
 }
