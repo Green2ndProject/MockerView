@@ -85,12 +85,12 @@ public class LoginFilter extends GenericFilterBean {
                 unsuccessfulAuthentication(req, res, e);
                 return; // 실패했으니 여기서 필터 체인 종료
             } catch (Exception e) {
-              System.err.println("🚨 JSON Parsing Error or other Exception: " + e.getMessage()); // 🚨 이 로그를 추가하세요.
-              res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-              res.setContentType("application/json;charset=UTF-8"); // 클라이언트 JSON 파싱 에러 방지
-              res.getWriter().write("{\"error\": \"JSON Parsing Error\"}");
-              res.getWriter().flush();
-              return;
+              System.err.println("🚨 JSON Parsing Error or other Exception: " + e.getMessage()); // 이 로그 추가염
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                res.setContentType("application/json;charset=UTF-8"); // 클라이언트 JSON 파싱 에러 방지
+                res.getWriter().write("{\"error\": \"JSON Parsing Error\"}");
+                res.getWriter().flush();
+                return;
             }
         }
         
@@ -111,10 +111,11 @@ public class LoginFilter extends GenericFilterBean {
         String role = auth.getAuthority();
         String token = jwtUtil.createJwt(username, role, 1000 * 60 * 60 * 3L);
 
-        Cookie cookie = new Cookie("jwtToken", token);
+        // 수정함: JavaScript에서 쿠키를 읽을 수 있도록 HttpOnly를 false로 변경해씀
+        Cookie cookie = new Cookie("Authorization", token);
         cookie.setMaxAge(3*60*60);
         cookie.setPath("/");
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false); // true -> false로 변경! JavaScript에서 쿠키 읽어야댐
 
         response.addCookie(cookie);
 

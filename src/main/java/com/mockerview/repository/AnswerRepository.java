@@ -28,4 +28,11 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
 
     @Query("SELECT a FROM Answer a WHERE a.user.id = :userId ORDER BY a.createdAt DESC")
     List<Answer> findByUserId(@Param("userId") Long userId);
+    
+    @Query("SELECT DISTINCT a FROM Answer a " +
+            "LEFT JOIN FETCH a.feedbacks f " +
+            "LEFT JOIN FETCH a.question q " +
+            "WHERE a.user.id = :userId " +
+            "ORDER BY a.createdAt DESC")
+    List<Answer> findByUserIdWithFeedbacks(@Param("userId") Long userId);
 }

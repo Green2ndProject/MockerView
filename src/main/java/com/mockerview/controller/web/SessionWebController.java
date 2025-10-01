@@ -8,10 +8,11 @@ import com.mockerview.entity.User;
 import com.mockerview.entity.User.UserRole;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.SessionService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,136 +26,154 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class SessionWebController {
-
+    
     private final SessionService sessionService;
     private final UserRepository userRepository;
 
-    /** 세션 참가: 역할 설정 후 세션 방으로 리다이렉트 */
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+            return null;
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElse(null);
+    }
+
     @GetMapping("/{sessionId}/join")
     public String joinSession(@PathVariable Long sessionId,
-                              @RequestParam String role,
-                              @AuthenticationPrincipal CustomUserDetails customUserDetails, // JWT 사용자 정보
-                              HttpSession httpSession) { // 세션 역할 저장용
-
-        if (customUserDetails == null) {
+                                @RequestParam String role,
+                                Model model) {
+        
+        User currentUser = getCurrentUser();
+        
+        if (currentUser == null) {
+            log.warn("비로그인 사용자 세션 접근 시도");
             return "redirect:/auth/login";
         }
-
-        Long userId = customUserDetails.getUserId();
-
+        
         User.UserRole selectedRole;
         try {
-            selectedRole = User.UserRole.valueOf(role.toUpperCase());
+            selectedRole = User.UserRole.valueOf(role);
         } catch (IllegalArgumentException e) {
             selectedRole = User.UserRole.STUDENT;
         }
-
-        httpSession.setAttribute("sessionRole", selectedRole);
-        return "redirect:/session/" + sessionId;
+        
+        model.addAttribute("selectedRole", selectedRole);
+        log.info("세션 역할 설정 - userId: {}, role: {}", currentUser.getId(), selectedRole);
+        
+        return "redirect:/session/" + sessionId + "?role=" + selectedRole.name();
     }
 
-    /** 세션 방 접속 (실제 모의면접 화면) */
     @GetMapping("/{sessionId}")
-    public String sessionRoom(@PathVariable Long sessionId,
-                              Model model,
-                              @AuthenticationPrincipal CustomUserDetails customUserDetails, // JWT 사용자 정보
-                              HttpSession httpSession) { // 세션 역할 로드용
-
-        if (customUserDetails == null) {
+    public String sessionRoom(@PathVariable Long sessionId, 
+                            @RequestParam(required = false) String role,
+                            Model model) {
+        
+        User currentUser = getCurrentUser();
+        
+        if (currentUser == null) {
+            log.warn("비로그인 사용자 세션 접근 시도");
             return "redirect:/auth/login";
         }
-
-        Long userId = customUserDetails.getUserId();
-        User.UserRole sessionRole = (User.UserRole) httpSession.getAttribute("sessionRole");
-
-        if (sessionRole == null) {
-            sessionRole = User.UserRole.STUDENT;
+        
+        User.UserRole sessionRole = User.UserRole.STUDENT;
+        if (role != null) {
+            try {
+                sessionRole = User.UserRole.valueOf(role);
+            } catch (IllegalArgumentException e) {
+                log.warn("잘못된 역할 파라미터: {}", role);
+            }
         }
-
+        
         try {
+            log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}", 
+                sessionId, currentUser.getId(), currentUser.getName(), sessionRole);
+            
             Session session = sessionService.findById(sessionId);
             if (session == null) {
                 model.addAttribute("error", "세션을 찾을 수 없습니다.");
                 return "error";
             }
-
-            // DB에서 전체 사용자 엔티티 로드
-            User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
-
+            
             boolean isHost = sessionRole.equals(User.UserRole.HOST);
-
+            
             model.addAttribute("sessionId", sessionId);
             model.addAttribute("sessionTitle", session.getTitle() != null ? session.getTitle() : "모의면접 세션");
-            model.addAttribute("userId", userId);
-            model.addAttribute("userName", user.getName());
-            model.addAttribute("currentUser", user);
+            model.addAttribute("userId", currentUser.getId());
+            model.addAttribute("userName", currentUser.getName());
+            model.addAttribute("currentUser", currentUser);
             model.addAttribute("isHost", isHost);
-
+            
+            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}", 
+                currentUser.getName(), sessionRole, isHost);
+            
             return "session/session";
-
+            
         } catch (Exception e) {
-            log.error("세션 로드 오류: ", e);
+            log.error("세션 로드 오류 - sessionId: {}, userId: {}: ", sessionId, currentUser.getId(), e);
             model.addAttribute("error", "세션을 불러올 수 없습니다: " + e.getMessage());
             return "error";
         }
     }
 
-    /** 세션 목록 조회 */
     @GetMapping("/list")
-    public String sessionList(Model model, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
-            try {
-            // 1. 모든 세션 목록 조회 (로그인 여부와 관계없이)
-            List<Session> sessions = sessionService.getAllSessions();
+    public String sessionList(@RequestParam(required = false) String keyword,
+                            @RequestParam(required = false) String status,
+                            @RequestParam(required = false) String sortBy,
+                            @RequestParam(required = false) String sortOrder,
+                            Model model) {
+        try {
+            log.info("세션 목록 로드 중...");
+            
+            List<Session> sessions;
+            if (keyword != null || status != null) {
+                sessions = sessionService.searchSessions(
+                    keyword, 
+                    status, 
+                    sortBy != null ? sortBy : "createdAt", 
+                    sortOrder != null ? sortOrder : "DESC"
+                );
+            } else {
+                sessions = sessionService.getAllSessions();
+            }
+            
             model.addAttribute("sessions", sessions);
+            model.addAttribute("keyword", keyword);
 
-            // 2. 로그인 사용자 정보 처리
-            if (customUserDetails != null) {
-
-                // ✅ 수정 로직: ID 대신 username을 사용하여 DB에서 User 엔티티를 조회합니다.
-                // ID가 null인 문제를 우회하고, JWT에 확실히 존재하는 username을 사용합니다.
-                String username = customUserDetails.getUsername(); 
-
-                String userRoleString = customUserDetails.getAuthorities().stream()
-                .findFirst() 
-                .map(a -> a.getAuthority().replace("ROLE_", "")) 
-                .orElse(null);
-
-                model.addAttribute("currentUser", username);
+            User currentUser = getCurrentUser();
+            
+            if (currentUser != null) {
+                model.addAttribute("currentUser", currentUser);
                 model.addAttribute("isLoggedIn", true);
-                model.addAttribute("userRoleString", userRoleString);
-
-                log.info("세션 목록 로드 완료 - {}개 세션. 현재 사용자: {}", sessions.size(), username);
-            }else{
-
+                log.info("세션 목록 로드 완료 - {}개 세션. 현재 사용자: {}", sessions.size(), currentUser.getUsername());
+            } else {
                 model.addAttribute("currentUser", null);
                 model.addAttribute("isLoggedIn", false);
+                log.info("세션 목록 로드 완료 - {}개 세션. 비로그인 상태.", sessions.size());
             }
-
+            
             return "session/list";
-
+            
         } catch (Exception e) {
             log.error("세션 목록 로드 오류: ", e);
             model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
-            model.addAttribute("sessions", List.of());
-            model.addAttribute("searchDTO", searchDTO);
             return "session/list";
         }
     }
 
-    /** 세션 생성 */
     @PostMapping("/create")
-    public String createSession(@RequestParam String title,
-                                @AuthenticationPrincipal CustomUserDetails customUserDetails) { // 호스트 ID 획득
-
+    public String createSession(@RequestParam String title) {
         try {
-            if (customUserDetails == null) {
+            User currentUser = getCurrentUser();
+            
+            if (currentUser == null) {
                 return "redirect:/auth/login";
             }
-
-            Long hostId = customUserDetails.getUserId();
-
-            sessionService.createSession(title, hostId);
+            
+            log.info("세션 생성 요청 - title: {}, hostId: {}", title, currentUser.getId());
+            sessionService.createSession(title, currentUser.getId());
+            log.info("세션 생성 완료");
             return "redirect:/session/list?success=세션이 생성되었습니다";
         } catch (Exception e) {
             log.error("세션 생성 오류: ", e);
@@ -162,35 +181,32 @@ public class SessionWebController {
         }
     }
 
-    /** 세션 상세 정보 조회 */
     @GetMapping("/detail/{id}")
-    public String sessionDetail(@PathVariable Long id,
-                                Model model,
-                                @AuthenticationPrincipal CustomUserDetails customUserDetails) { // 로그인 상태 확인용
-
+    public String sessionDetail(@PathVariable Long id, Model model) {
         try {
             Session sess = sessionService.findById(id);
             List<Question> questions = sessionService.getSessionQuestions(id);
             List<Answer> answers = sessionService.getSessionAnswers(id);
-
+            
             Map<Long, List<Answer>> answersByQuestion = answers.stream()
                 .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
-
-            User currentUser = null;
-            if (customUserDetails != null) {
-                Long userId = customUserDetails.getUserId();
-                currentUser = userRepository.findById(userId).orElse(null);
-            }
-
+            
+            User currentUser = getCurrentUser();
+            
+            int totalAnswerCount = answers.size();
+            int answeredQuestionCount = answersByQuestion.size();
+            
             model.addAttribute("interviewSession", sess);
             model.addAttribute("questions", questions);
             model.addAttribute("answersByQuestion", answersByQuestion);
             model.addAttribute("currentUser", currentUser);
-            model.addAttribute("totalAnswerCount", answers.size());
-            model.addAttribute("answeredQuestionCount", answersByQuestion.size());
-
+            model.addAttribute("totalAnswerCount", totalAnswerCount);
+            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+            
+            log.info("세션 상세 로드 완료 - sessionId: {}", id);
+            
             return "session/detail";
-
+            
         } catch (Exception e) {
             log.error("세션 상세 조회 오류: ", e);
             return "redirect:/session/list";

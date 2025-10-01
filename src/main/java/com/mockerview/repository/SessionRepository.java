@@ -29,4 +29,17 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     
     @Query("SELECT COUNT(DISTINCT s.host.id) FROM Session s WHERE s.id = :sessionId")
     Long countBySessionId(@Param("sessionId") Long sessionId);
+
+    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
+            "AND (:status IS NULL OR :status = '' OR s.status = :status) " +
+            "ORDER BY " +
+            "CASE WHEN :sortBy = 'createdAt' AND :sortOrder = 'ASC' THEN s.createdAt END ASC, " +
+            "CASE WHEN :sortBy = 'createdAt' AND :sortOrder = 'DESC' THEN s.createdAt END DESC, " +
+            "CASE WHEN :sortBy = 'title' AND :sortOrder = 'ASC' THEN s.title END ASC, " +
+            "CASE WHEN :sortBy = 'title' AND :sortOrder = 'DESC' THEN s.title END DESC")
+    List<Session> searchSessions(@Param("keyword") String keyword, 
+                                @Param("status") String status, 
+                                @Param("sortBy") String sortBy, 
+                                @Param("sortOrder") String sortOrder);
 }
