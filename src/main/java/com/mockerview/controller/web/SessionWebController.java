@@ -1,5 +1,6 @@
 package com.mockerview.controller.web;
 
+import com.mockerview.dto.SessionSearchDTO;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.repository.UserRepository;
@@ -9,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -72,12 +75,28 @@ public class SessionWebController {
     }
 
     @GetMapping("/list")
-    public String sessionList(Model model, HttpSession httpSession) {
+    public String sessionList(@ModelAttribute SessionSearchDTO searchDTO, Model model, HttpSession httpSession) {
         try {
-            log.info("세션 목록 로드 중...");
+            log.info("세션 목록 로드 중... 검색조건: {}", searchDTO);
             
-            List<Session> sessions = sessionService.getAllSessions();
+            List<Session> sessions;
+            
+            if (searchDTO.getKeyword() != null || searchDTO.getStatus() != null || 
+                searchDTO.getSortBy() != null || searchDTO.getSortOrder() != null) {
+                sessions = sessionService.searchSessions(
+                    searchDTO.getKeyword(),
+                    searchDTO.getStatus(),
+                    searchDTO.getSortBy(),
+                    searchDTO.getSortOrder()
+                );
+                log.info("검색 실행 - 결과: {}개", sessions.size());
+            } else {
+                sessions = sessionService.getAllSessions();
+                log.info("전체 목록 조회 - 결과: {}개", sessions.size());
+            }
+            
             model.addAttribute("sessions", sessions);
+            model.addAttribute("searchDTO", searchDTO);
             
             Long userId = (Long) httpSession.getAttribute("userId");
             String userName = (String) httpSession.getAttribute("userName");
@@ -97,7 +116,24 @@ public class SessionWebController {
         } catch (Exception e) {
             log.error("세션 목록 로드 오류: ", e);
             model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
+            model.addAttribute("sessions", List.of());
+            model.addAttribute("searchDTO", searchDTO);
             return "session/list";
+        }
+    }
+
+    @PostMapping("/create")
+    public String createSession(@RequestParam String title, 
+                                @RequestParam Long hostId,
+                                HttpSession httpSession) {
+        try {
+            log.info("세션 생성 요청 - title: {}, hostId: {}", title, hostId);
+            sessionService.createSession(title, hostId);
+            log.info("세션 생성 완료");
+            return "redirect:/session/list?success=세션이 생성되었습니다";
+        } catch (Exception e) {
+            log.error("세션 생성 오류: ", e);
+            return "redirect:/session/list?error=" + e.getMessage();
         }
     }
 }
