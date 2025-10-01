@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="/css/common.css">
 </head>
 <body>
-<!--
     <div class="auth-container">
         <div class="auth-card">
             <div class="auth-logo">
@@ -15,7 +14,7 @@
                 <p>AI 모의면접 코치 플랫폼</p>
             </div>
             
-            <form th:action="@{/auth/login}" method="post" id="loginForm">
+            <div id="loginForm">
                 <div th:if="${error}" class="alert alert-error">
                     <span th:text="${error}"></span>
                 </div>
@@ -25,54 +24,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <input type="text" class="form-control" name="username" placeholder="아이디를 입력하세요" required>
+                    <input type="text" class="form-control" id="username" placeholder="아이디를 입력하세요" required>
                 </div>
                 
                 <div class="form-group">
-                    <input type="password" class="form-control" name="password" placeholder="비밀번호를 입력하세요" required>
+                    <input type="password" class="form-control" id="password" placeholder="비밀번호를 입력하세요" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-full">로그인</button>
-            </form>
-            
-            <div class="auth-divider">
-                <span>또는</span>
+                <button type="button" class="btn btn-primary btn-full" id="loginButton">로그인</button>
             </div>
-            
-            <div class="auth-link">
-                <p>계정이 없으신가요? <a th:href="@{/auth/register}">회원가입</a></p>
-            </div>
-        </div>
-    </div>
--->
-
-
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-logo">
-                <h1>Mockerview</h1>
-                <p>AI 모의면접 코치 플랫폼</p>
-            </div>
-            
-            <form th:action="@{/auth/login}" method="post" id="loginForm">
-                <div th:if="${error}" class="alert alert-error">
-                    <span th:text="${error}"></span>
-                </div>
-                
-                <div th:if="${success}" class="alert alert-success">
-                    <span th:text="${success}"></span>
-                </div>
-                
-                <div class="form-group">
-                    <input type="text" class="form-control" name="username" placeholder="아이디를 입력하세요" required>
-                </div>
-                
-                <div class="form-group">
-                    <input type="password" class="form-control" name="password" placeholder="비밀번호를 입력하세요" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-full" id="loginButton">로그인</button>
-            </form>
             
             <div class="auth-divider">
                 <span>또는</span>
@@ -84,57 +44,60 @@
         </div>
     </div>
 
-    <script src="/js/authFetch.js" type="module"></script> 
-    <script type="module">
-    import {authFetch} from '/js/authFetch.js';
-   
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
-
-        //const loginButton = document.getElementById('loginButton');
-        const loginForm = document.getElementById('loginForm');
-        loginForm.addEventListener('submit', function(e) {             
-
-            e.preventDefault();
-
-            const username = document.querySelector('input[name="username"]').value;
-            const password = document.querySelector('input[name="password"]').value;
+        const loginButton = document.getElementById('loginButton');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        
+        loginButton.addEventListener('click', async function() {
+            const username = usernameInput.value;
+            const password = passwordInput.value;
             
             if (!username.trim() || !password.trim()) {
                 alert('아이디와 비밀번호를 모두 입력해주세요.');
                 return;
             }
 
-            authFetch('/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type' : 'application/json'
-                },
-                body: JSON.stringify({
-                    'username': username,
-                    'password': password})
-            })
-            .then(response => {
-                if(response.ok) {
-                    return response.json();
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        alert("로그인 실패: 서버 응답 형식 오류");
+                    }
+                } else {
+                    alert('로그인 실패: 아이디 또는 비밀번호를 확인하세요.');
                 }
-
-                throw new Error('Login failed with status : '+ response.status);
-            })
-            .then(data => {
-                if(data.success && data.redirectUrl){
-
-                    window.location.href = data.redirectUrl;
-                }else{
-                    alert("로그인 실패: 서버 응답 형식 오류");
-                }
-
-                //window.location.href='/';
-            })
-            .catch( error => {
-                console.error('fetch error:',error);
-            });
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('로그인 중 오류가 발생했습니다.');
+            }
         });
-
+        
+        usernameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loginButton.click();
+            }
+        });
+        
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loginButton.click();
+            }
+        });
     });
     </script>
 </body>
