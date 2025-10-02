@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JWTLogoutHandler implements LogoutHandler {
 
-    private static final String JWT_COOKIE_NAME = "jwtToken";
+    private static final String JWT_COOKIE_NAME = "Authorization";
 
     @Override
     public void logout(HttpServletRequest request, 
@@ -24,7 +24,7 @@ public class JWTLogoutHandler implements LogoutHandler {
 
         cookie.setPath("/");
 
-        cookie.setHttpOnly(true);
+        cookie.setHttpOnly(false);
 
         response.addCookie(cookie);
 
