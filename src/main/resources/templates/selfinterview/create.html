@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>셀프 면접 시작 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .create-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        
+        .create-card {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #212529;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        select.form-control {
+            cursor: pointer;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 관리</a>
+                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/mypage}">마이페이지</a>
+                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/logout}">로그아웃</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>셀프 면접 시작</h1>
+                <p>AI와 함께하는 1:1 모의면접</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container create-container">
+        <div class="create-card">
+            <div class="info-box">
+                AI가 자동으로 질문을 생성하고 답변에 대한 피드백을 제공합니다
+            </div>
+
+            <form id="createForm">
+                <div class="form-group">
+                    <label for="title">면접 제목</label>
+                    <input type="text" id="title" name="title" class="form-control" 
+                        placeholder="예: 신입 개발자 기술면접 연습" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="questionCount">질문 개수</label>
+                    <select id="questionCount" name="questionCount" class="form-control" required>
+                        <option value="3">3개</option>
+                        <option value="5" selected>5개</option>
+                        <option value="7">7개</option>
+                        <option value="10">10개</option>
+                    </select>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">면접 시작</button>
+                    <a href="/session/list" class="btn btn-secondary">취소</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/authFetch.js"></script>
+    <script src="/js/selfinterview.js"></script>
+</body>
+</html>

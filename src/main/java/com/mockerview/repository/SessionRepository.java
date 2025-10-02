@@ -45,18 +45,25 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
                                 @Param("sortBy") String sortBy, 
                                 @Param("sortOrder") String sortOrder);
 
-
     @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host " +
-               "WHERE (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
-               "AND (:status IS NULL OR s.status = :status) ", // <-- 'status = :status'만 남기고 '' = '' 부분을 제거
+                "WHERE (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
+                "AND (:status IS NULL OR s.status = :status) ", 
         countQuery = "SELECT COUNT(s) FROM Session s WHERE " +
-                     "(:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
-                     "AND (:status IS NULL OR s.status = :status) ")
-Page<Session> searchSessionsPageable(@Param("keyword") String keyword, 
-                                     @Param("status") Session.SessionStatus status, 
-                                     Pageable pageable);
+                    "(:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
+                    "AND (:status IS NULL OR s.status = :status) ")
+    Page<Session> searchSessionsPageable(@Param("keyword") String keyword, 
+                                        @Param("status") Session.SessionStatus status, 
+                                        Pageable pageable);
 
-     @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host", 
+    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host", 
         countQuery = "SELECT COUNT(s) FROM Session s")
-     Page<Session> findAllSessionsWithHost(Pageable pageable);
+    Page<Session> findAllSessionsWithHost(Pageable pageable);
+    
+    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId AND s.sessionType = :sessionType ORDER BY s.createdAt DESC")
+    List<Session> findByHostIdAndSessionType(@Param("hostId") Long hostId, @Param("sessionType") String sessionType);
+    
+    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.status = :status AND s.isReviewable = :isReviewable ORDER BY s.endTime DESC")
+    List<Session> findByStatusAndIsReviewable(@Param("status") Session.SessionStatus status, @Param("isReviewable") String isReviewable);
+
+    List<Session> findByHostIdAndSessionTypeOrderByCreatedAtDesc(Long hostId, String sessionType);
 }

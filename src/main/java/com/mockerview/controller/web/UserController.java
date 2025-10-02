@@ -286,7 +286,7 @@ public class UserController {
             for (Answer answer : myAnswers) {
                 String date = answer.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
                 String question = answer.getQuestion().getText().replace(",", " ");
-                String answerText = answer.getText().replace(",", " ").replace("\n", " ");
+                String answerText = answer.getAnswerText().replace(",", " ").replace("\n", " ");
                 
                 Integer aiScore = answer.getFeedbacks().stream()
                     .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
