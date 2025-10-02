@@ -16,6 +16,7 @@ public class QuestionMessage {
     private Long questionId;
     private String questionText;
     private Integer orderNo;
+    private Integer timer; 
     private Long questionerId;
     private LocalDateTime timestamp;
 }

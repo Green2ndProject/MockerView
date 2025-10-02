@@ -1,5 +1,6 @@
 package com.mockerview.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +27,7 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id")
+    @JsonIgnoreProperties({"questions", "host"})
     private Session session;
 
     @Lob
@@ -38,12 +41,17 @@ public class Question {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "timer")
+    private Integer timer; 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "questioner_id")
+    @JsonIgnoreProperties({"password"})
     private User questioner;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnoreProperties({"question"})
     private List<Answer> answers = new ArrayList<>();
 
     @PrePersist

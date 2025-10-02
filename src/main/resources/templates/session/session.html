@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="'면접 진행 - ' + ${sessionTitle}">면접 진행 - MockerView</title>
+    <title th:text="'면접 진행 - ' + ${sessionTitle}">면접 진행</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/session.css">
 </head>
@@ -14,105 +14,199 @@
                 <a class="navbar-brand" href="/session/list">Mockerview</a>
                 <div class="navbar-nav">
                     <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
-                    <span class="nav-text" th:text="'사용자: ' + ${userName}">사용자: 테스트</span>
-                    <span class="nav-text" th:text="'역할: ' + ${currentUser.role}">역할: STUDENT</span>
+                    <div class="user-info">
+                        <span class="user-name" th:text="${userName}">사용자</span>
+                        <span class="user-role" th:classappend="${isHost} ? 'role-host' : 'role-student'" 
+                              th:text="${isHost} ? '면접관' : '지원자'">역할</span>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="page-header">
+    <div class="session-info-bar">
         <div class="container">
-            <div class="page-title">
-                <h1 th:text="${sessionTitle}">모의면접 세션</h1>
-                <div class="session-status">
+            <div class="session-title-section">
+                <h1 th:text="${sessionTitle}">면접 세션</h1>
+                <div class="session-meta">
+                    <span class="timer">
+                        <span id="session-timer">00:00</span>
+                    </span>
                     <span class="badge badge-live">진행 중</span>
-                    <span id="session-stats">질문: 0개 | 답변: 0개</span>
+                    <span id="session-stats">질문 0개 • 답변 0개</span>
                 </div>
+            </div>
+            <div class="session-actions">
+                <a th:href="@{/session/scoreboard/{id}(id=${sessionId})}" class="btn btn-secondary btn-sm">
+                    점수판
+                </a>
+                <a th:href="@{/session/detail/{id}(id=${sessionId})}" class="btn btn-primary btn-sm">
+                    상세 결과
+                </a>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <div class="session-container">
-            <div class="main-content">
-                <div class="question-section">
-                    <h3>현재 질문</h3>
-                    <div id="current-question" class="current-question">
-                        <p id="current-question-text">질문이 출제될 때까지 기다려주세요.</p>
+        <div class="interview-layout">
+            <aside class="sidebar">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>참가자</h4>
+                        <span class="participant-count">0명</span>
                     </div>
-                    <input type="hidden" id="currentQuestionId" value="">
+                    <div class="card-body">
+                        <ul id="participants-list" class="participants-list">
+                        </ul>
+                    </div>
+                </div>
+            </aside>
 
-                    <div th:if="${isHost}" class="question-form">
-                        <h4>새 질문 출제</h4>
+            <main class="main-content">
+                <div class="card current-question">
+                    <div class="card-header">
+                        <h3>현재 질문</h3>
+                        <div class="question-info">
+                            <span id="question-number">Q1</span>
+                            <span id="question-timer">⏱️ 00:00</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="current-question" class="question-display">
+                            <p id="current-question-text">면접관이 질문을 준비 중입니다...</p>
+                        </div>
+                        <input type="hidden" id="currentQuestionId" value="">
+                    </div>
+                </div>
+
+                <div class="card" th:if="${isHost}" id="question-form">
+                    <div class="card-header">
+                        <h4>질문 출제</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">질문 내용</label>
+                            <textarea id="newQuestionText" placeholder="면접 질문을 입력하세요..." class="form-control" rows="3"></textarea>
+                        </div>
                         <div class="form-row">
-                            <input type="text" id="newQuestionText" placeholder="질문을 입력하세요..." class="form-control">
-                            <input type="number" id="newQuestionOrder" placeholder="순서" min="1" value="1" class="form-control" style="width: 100px;">
-                            <button onclick="sendQuestion()" class="btn btn-primary">질문 출제</button>
+                            <div class="form-group">
+                                <label class="form-label">순서</label>
+                                <input type="number" id="newQuestionOrder" value="1" min="1" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">답변시간</label>
+                                <select id="newTimerOrder" class="form-select">
+                                    <option value="30">30초</option>
+                                    <option value="60" selected>1분</option>
+                                    <option value="90">1분 30초</option>
+                                    <option value="120">2분</option>
+                                    <option value="180">3분</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="sendQuestion()" class="btn btn-primary btn-full">질문 출제</button>
+                    </div>
+                </div>
+
+                <div class="card answer-card" th:unless="${isHost}" id="answer-section">
+                    <div class="card-header">
+                        <h4>답변 작성</h4>
+                        <span class="answer-tip">차분히 생각하고 답변해보세요</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="5"></textarea>
+                            <div class="char-counter">
+                                <span id="charCount">0</span>/1000자
+                            </div>
+                        </div>
+                        <button onclick="submitAnswer()" class="btn btn-success btn-full">답변 제출</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4>제출된 답변</h4>
+                        <span id="answer-count" class="badge badge-waiting">0개</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="answers-list" class="answers-list scrollable">
+                            <div class="empty-state">
+                                <p>아직 제출된 답변이 없습니다</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </main>
 
-                <div class="answer-section" th:if="${!isHost}">
-                    <h3>답변 작성</h3>
-                    <div class="answer-form">
-                        <textarea id="answerText" placeholder="답변을 입력하세요..." class="form-control" rows="4"></textarea>
-                        <button onclick="submitAnswer()" class="btn btn-success">답변 제출</button>
+            <aside class="feedback-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>AI 피드백</h4>
+                        <span class="ai-status">대기중</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ai-feedback-list" class="feedback-list scrollable">
+                            <div class="empty-state">
+                                <div class="ai-icon">🤖</div>
+                                <p>답변이 제출되면 AI가 즉시 분석합니다</p>
+                                <div class="ai-features">
+                                    <span>• 강점 분석</span>
+                                    <span>• 개선점 제시</span>
+                                    <span>• 점수 평가</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="answers-section">
-                    <h3>제출된 답변</h3>
-                    <div id="answers-list" class="answers-list">
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar">
-                <div class="participants-section">
-                    <h4>참가자 목록</h4>
-                    <ul id="participants-list" class="participants-list">
-                        <li th:text="${userName}">현재 사용자</li>
-                    </ul>
-                </div>
-
-                <div class="feedback-section">
-                    <h4>AI 피드백</h4>
-                    <div id="ai-feedback-list" class="ai-feedback-list">
-                    </div>
-                </div>
-            </div>
+            </aside>
         </div>
     </div>
 
-    <input type="hidden" id="sessionId" th:value="${sessionId}">
-    <input type="hidden" id="userId" th:value="${userId}">
-    <input type="hidden" id="userName" th:value="${userName}">
-    <input type="hidden" id="userRole" th:value="${currentUser.role}">
-
-    <div id="toast-container" class="toast-container"></div>
-
-    <script src="/webjars/sockjs-client/1.5.1/sockjs.min.js"></script>
-    <script src="/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
-    <script src="/js/mockerview-websocket.js"></script>
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof SockJS === 'undefined') {
-                console.error('SockJS 라이브러리가 로드되지 않았습니다.');
-                return;
+    <input type="hidden" id="sessionId" th:value="${sessionId}" />
+    <input type="hidden" id="userId" th:value="${userId}" />
+    <input type="hidden" id="userName" th:value="${userName}" />
+    <input type="hidden" id="sessionRole" th:value="${isHost ? 'HOST' : 'STUDENT'}" />
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script th:inline="javascript">
+    const SESSION_DATA = {
+        sessionId: /*[[${sessionId}]]*/ 1,
+        userId: /*[[${userId}]]*/ 1,
+        userName: /*[[${userName}]]*/ '사용자',
+        isHost: /*[[${isHost}]]*/ false
+    };
+    
+    const answerTextArea = document.getElementById('answerText');
+    if (answerTextArea) {
+        answerTextArea.addEventListener('input', function() {
+            const count = this.value.length;
+            document.getElementById('charCount').textContent = count;
+            if (count > 1000) {
+                this.value = this.value.substring(0, 1000);
+                document.getElementById('charCount').textContent = 1000;
             }
-            if (typeof Stomp === 'undefined') {
-                console.error('Stomp 라이브러리가 로드되지 않았습니다.');
-                return;
-            }
-            
-            const sessionId = /*[[${sessionId}]]*/ 1;
-            const userId = /*[[${userId}]]*/ 1;
-            const userName = /*[[${userName}]]*/ '테스트사용자';
-            
-            console.log('WebSocket 초기화 시작:', sessionId, userId, userName);
-            initializeWebSocket(sessionId, userId, userName);
         });
-    </script>
+    }
+    
+    console.log('세션 데이터:', SESSION_DATA);
+</script>
+<script src="/js/mockerview-websocket.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM 로드 완료');
+        console.log('SockJS 로드됨:', typeof SockJS !== 'undefined');
+        console.log('Stomp 로드됨:', typeof Stomp !== 'undefined');
+        
+        if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
+            console.error('WebSocket 라이브러리 로드 실패');
+            alert('WebSocket 라이브러리를 로드할 수 없습니다. 인터넷 연결을 확인하세요.');
+            return;
+        }
+        
+        console.log('WebSocket 초기화 시작:', SESSION_DATA);
+        initializeWebSocket(SESSION_DATA.sessionId, SESSION_DATA.userId, SESSION_DATA.userName);
+    });
+</script>
 </body>
 </html>

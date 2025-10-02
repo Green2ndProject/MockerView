@@ -35,6 +35,34 @@
             color: var(--gray-600);
             margin-top: 0.5rem;
         }
+        .session-history {
+            margin-top: 2rem;
+        }
+        .session-history-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+        }
+        .history-item {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-info h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.125rem;
+            color: var(--gray-900);
+        }
+        .history-meta {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
     </style>
 </head>
 <body>
@@ -60,6 +88,9 @@
                 <span th:if="${user.role.name() == 'HOST'}">면접관</span>
                 <span th:text="' • ' + ${user.email}"></span>
             </div>
+            <div style="text-align: center; margin-top: 1rem;">
+                <a href="/auth/mypage/stats" class="btn btn-primary">내 활동 통계 보기</a>
+            </div>
         </div>
     </div>
 
@@ -74,16 +105,31 @@
 
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-number">0</span>
+                <span class="stat-number" th:text="${participatedSessionCount}">0</span>
                 <div class="stat-label">참여한 세션</div>
             </div>
             <div class="stat-card">
-                <span class="stat-number">0</span>
+                <span class="stat-number" th:text="${answerCount}">0</span>
                 <div class="stat-label">답변 개수</div>
             </div>
             <div class="stat-card">
-                <span class="stat-number">0</span>
-                <div class="stat-label">평균 점수</div>
+                <span class="stat-number" th:text="${#lists.size(hostedSessions)}">0</span>
+                <div class="stat-label">호스팅한 세션</div>
+            </div>
+        </div>
+
+        <div class="session-history" th:if="${hostedSessions != null and !hostedSessions.empty}">
+            <h3 class="session-history-title">내가 호스팅한 세션</h3>
+            <div th:each="hostedSession : ${hostedSessions}" class="history-item">
+                <div class="history-info">
+                    <h4 th:text="${hostedSession.title}">세션 제목</h4>
+                    <div class="history-meta">
+                        <span th:text="${#temporals.format(hostedSession.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
+                        <span> • </span>
+                        <span th:text="${hostedSession.status}">ENDED</span>
+                    </div>
+                </div>
+                <a th:href="@{/session/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
             </div>
         </div>
 
