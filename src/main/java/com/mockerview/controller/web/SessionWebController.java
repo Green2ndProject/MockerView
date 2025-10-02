@@ -188,6 +188,7 @@ public class SessionWebController {
         }
     }
 
+
     @GetMapping("/detail/{id}")
     public String sessionDetail(@PathVariable Long id, Model model) {
         try {
