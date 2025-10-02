@@ -17,6 +17,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -174,12 +176,18 @@ public class SessionWebController {
             log.info("세션 생성 요청 - title: {}, hostId: {}", title, currentUser.getId());
             sessionService.createSession(title, currentUser.getId());
             log.info("세션 생성 완료");
-            return "redirect:/session/list?success=세션이 생성되었습니다";
+
+            String successMessage = "세션이 생성되었습니다";
+            String encodedMessage = URLEncoder.encode(successMessage, StandardCharsets.UTF_8.toString());
+
+            return "redirect:/session/list?success=" + encodedMessage;
+
         } catch (Exception e) {
             log.error("세션 생성 오류: ", e);
             return "redirect:/session/list?error=" + e.getMessage();
         }
     }
+
 
     @GetMapping("/detail/{id}")
     public String sessionDetail(@PathVariable Long id, Model model) {
