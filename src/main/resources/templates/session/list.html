@@ -6,7 +6,13 @@
     <title>세션 목록 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css" />
     <link rel="stylesheet" href="/css/sessionModal.css" />
+<<<<<<< HEAD
     <link rel="stylesheet" href="/css/pagination.css" />
+=======
+    <!-- 세션 진행상황 반영 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+>>>>>>> 68a082b3cc409d3921cfb90e6086e5acdf167159
     <style>
       .search-container {
         margin-bottom: 2rem;
@@ -15,14 +21,13 @@
         border-radius: 8px;
         border: 1px solid #e9ecef;
       }
-      
       .search-form {
         display: flex;
         gap: 0.5rem;
         align-items: center;
         flex-wrap: wrap;
       }
-      
+
       .search-input {
         flex: 1;
         min-width: 300px;
@@ -33,14 +38,15 @@
         background: white;
         transition: border-color 0.15s ease-in-out;
       }
-      
+
       .search-input:focus {
         outline: none;
         border-color: #007bff;
         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
       }
-      
-      .btn-search, .btn-reset {
+
+      .btn-search,
+      .btn-reset {
         padding: 0.75rem 1.5rem;
         font-size: 1rem;
         font-weight: 400;
@@ -52,29 +58,29 @@
         display: inline-block;
         text-align: center;
       }
-      
+
       .btn-search {
-        background: #007bff;
+        background: #667eea;
         color: white;
-        border-color: #007bff;
+        border-color: #667eea;
       }
-      
+
       .btn-search:hover {
         background: #0056b3;
         border-color: #0056b3;
       }
-      
+
       .btn-reset {
         background: white;
         color: #6c757d;
         border-color: #6c757d;
       }
-      
+
       .btn-reset:hover {
         background: #6c757d;
         color: white;
       }
-      
+
       .search-result-info {
         margin-top: 1rem;
         padding: 0.75rem;
@@ -91,10 +97,9 @@
         <div class="navbar-content">
           <a class="navbar-brand" href="/session/list"> Mockerview </a>
           <div class="navbar-nav">
-            <a class="nav-link active" href="/session/list">세션 관리</a>
-            <div th:if="${currentUser != null}">
-              <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
-              <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+                  <a class="nav-link active" href="/session/list">세션 관리</a>
+                  <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/mypage}">마이페이지</a>
+                  <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/logout}">로그아웃</a>
             </div>
             <div th:if="${currentUser == null}">
               <a class="nav-link" th:href="@{/auth/login}">로그인</a>
@@ -103,7 +108,10 @@
           </div>
         </div>
       </div>
-    </nav>
+    </div>
+  </div>
+</nav>
+
 
     <div class="page-header">
       <div class="container">
@@ -136,9 +144,13 @@
             초기화
           </button>
         </form>
-        
-        <div class="search-result-info" th:if="${keyword != null and !#strings.isEmpty(keyword)}">
-          "<span th:text="${keyword}">검색어</span>" 검색 결과: <strong th:text="${#lists.size(sessions)}">0</strong>개의 세션
+
+        <div
+          class="search-result-info"
+          th:if="${keyword != null and !#strings.isEmpty(keyword)}"
+        >
+          "<span th:text="${keyword}">검색어</span>" 검색 결과:
+          <strong th:text="${#lists.size(sessions)}">0</strong>개의 세션
         </div>
       </div>
 
@@ -151,7 +163,11 @@
       </div>
 
       <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
-        <div th:each="sessionItem : ${sessions}" class="session-card">
+        <div
+          th:each="sessionItem : ${sessions}"
+          class="session-card"
+          th:attr="data-session-id=${sessionItem.id}"
+        >
           <div class="session-header">
             <div>
               <h3
@@ -165,21 +181,26 @@
                   class="badge"
                   th:classappend="${sessionItem.status == 'RUNNING' ? 'badge-live' : (sessionItem.status == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
                   th:text="${sessionItem.status != null ? sessionItem.status : 'PLANNED'}"
-                >PLANNED</span>
+                  >PLANNED</span
+                >
               </div>
             </div>
           </div>
 
           <div class="session-meta" th:if="${sessionItem.host != null}">
             <span>호스트: </span>
-            <span th:text="${sessionItem.host.name != null ? sessionItem.host.name : (sessionItem.host.username != null ? sessionItem.host.username : '알 수 없음')}">
+            <span
+              th:text="${sessionItem.host.name != null ? sessionItem.host.name : (sessionItem.host.username != null ? sessionItem.host.username : '알 수 없음')}"
+            >
               호스트명
             </span>
           </div>
 
           <div class="session-meta" th:if="${sessionItem.createdAt != null}">
             <span>생성일: </span>
-            <span th:text="${#temporals.format(sessionItem.createdAt, 'yyyy-MM-dd HH:mm')}">
+            <span
+              th:text="${#temporals.format(sessionItem.createdAt, 'yyyy-MM-dd HH:mm')}"
+            >
               2025-09-23 10:00
             </span>
           </div>
@@ -206,7 +227,10 @@
             >
               리뷰어로 참가
             </a>
-            <div th:if="${currentUser == null}" style="text-align: center; color: #6c757d;">
+            <div
+              th:if="${currentUser == null}"
+              style="text-align: center; color: #6c757d"
+            >
               로그인 후 참가할 수 있습니다
             </div>
           </div>
@@ -237,7 +261,8 @@
               href="/session/1/join?role=HOST"
               class="btn btn-success"
               style="margin-right: 8px"
-            >면접관으로 테스트</a>
+              >면접관으로 테스트</a
+            >
             <a href="/session/1/join?role=STUDENT" class="btn btn-primary">
               학생으로 테스트
             </a>
@@ -324,16 +349,101 @@
       );
     });
 </script>    
-</body>
-  <script>
+  </body>
+  <script th:inline="javascript">
     function createNewSession() {
       document.getElementById("sessionModal").style.display = "flex";
     }
-    
+
     function resetSearch() {
-      window.location.href = '/session/list';
+      window.location.href = "/session/list";
     }
-    
+
+    //실시간 반영 로직
+    /*<![CDATA[*/
+    // Thymeleaf에서 세션 목록 데이터를 JavaScript로 가져옵니다.
+    const sessions = /*[[${sessions}]]*/ [];
+    let stompClient = null;
+
+    function connect() {
+      // 백엔드 WebSocket 설정 경로에 맞게 '/ws' 수정이 필요할 수 있습니다.
+      const socket = new SockJS("/ws");
+      stompClient = Stomp.over(socket);
+
+      stompClient.connect({}, onConnected, onError);
+    }
+
+    function onConnected() {
+      console.log("WebSocket 연결 성공.");
+
+      // 현재 페이지에 로드된 모든 세션의 상태 토픽을 구독합니다.
+      if (sessions) {
+        sessions.forEach((session) => {
+          if (session && session.id) {
+            // 백엔드의 @SendTo("/topic/session/{sessionId}/status") 토픽을 구독
+            stompClient.subscribe(
+              `/topic/session/${session.id}/status`,
+              onSessionStatusReceived
+            );
+            console.log(`[WebSocket] 세션 ${session.id} 상태 토픽 구독 완료.`);
+          }
+        });
+      }
+    }
+
+    function onError(error) {
+      console.error("WebSocket 연결 실패:", error);
+    }
+
+    // 세션 상태 변경 메시지를 수신했을 때 UI를 업데이트하는 함수
+    function onSessionStatusReceived(payload) {
+      try {
+        const statusMessage = JSON.parse(payload.body);
+        const sessionId = statusMessage.sessionId;
+        const newStatus = statusMessage.status; // 예: "RUNNING" 또는 "ENDED"
+
+        console.log(
+          `[WebSocket] 세션 ${sessionId}의 새로운 상태 수신: ${newStatus}`
+        );
+
+        // 1. data-session-id 속성을 사용하여 해당 세션 카드를 찾습니다.
+        const sessionCard = document.querySelector(
+          `.session-card[data-session-id='${sessionId}']`
+        );
+
+        if (sessionCard) {
+          const badge = sessionCard.querySelector(".session-meta .badge");
+
+          if (badge) {
+            // 2. 뱃지 텍스트 업데이트
+            badge.textContent = newStatus;
+
+            // 3. 뱃지 색상 (클래스) 업데이트
+            badge.classList.remove(
+              "badge-waiting",
+              "badge-live",
+              "badge-ended"
+            );
+
+            if (newStatus === "RUNNING") {
+              badge.classList.add("badge-live");
+            } else if (newStatus === "ENDED") {
+              badge.classList.add("badge-ended");
+            } else {
+              // PLANNED
+              badge.classList.add("badge-waiting");
+            }
+          }
+
+          // (추가: 필요하다면 참가 버튼 상태도 업데이트 가능)
+        }
+      } catch (e) {
+        console.error("세션 상태 메시지 처리 오류:", e);
+      }
+    }
+
+    /*]]>*/
+
     document.addEventListener("DOMContentLoaded", function () {
       const modal = document.getElementById("sessionModal");
       const closeBtns = document.getElementsByClassName("close-modal");
@@ -373,6 +483,8 @@
             alert("세션 제목을 입력해주세요!");
           }
         });
+
+      connect();
     });
   </script>
 </html>
