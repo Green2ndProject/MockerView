@@ -70,6 +70,15 @@ public class SessionWebSocketController {
             message.setQuestionId(questionId);
             message.setQuestionerId(userId); // 질문자 ID 설정
             message.setTimestamp(LocalDateTime.now());
+
+            // ⭐ 상태 변경 메시지 별도 전송 (PLANNED -> RUNNING 변경 시에만)
+            // SessionService에서 상태가 변경되었다면, 그 상태를 가져와 /status 토픽으로 전송합니다.
+            // 이 작업은 모든 질문마다 호출되지만, 상태가 PLANNED일 때만 실제로 DB가 변경됩니다.
+            SessionStatusMessage statusMessage = sessionService.getSessionStatus(sessionId);
+            messagingTemplate.convertAndSend(
+                "/topic/session/" + sessionId + "/status", 
+                statusMessage
+            );
             
             log.info("질문 저장 완료 - questionId: {}", questionId);
             
