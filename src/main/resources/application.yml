@@ -6,7 +6,7 @@ spring:
     secret: 0y0KPgwYtmYq1AoSfRRJav2/ImhCV6ueHW0Le+MEeCQ=
 
   profiles:
-    active: dev-school
+    active: dev
 
   jpa:
     hibernate:
