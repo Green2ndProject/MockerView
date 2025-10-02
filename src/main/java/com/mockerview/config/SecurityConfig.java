@@ -93,7 +93,7 @@ public class SecurityConfig {
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/auth/login")))
             .logout((logout) -> logout
                 .logoutUrl("/auth/logout")
-                .logoutSuccessUrl("/auth/login?logout")
+                .logoutSuccessUrl("/?logout=success")
                 .addLogoutHandler(jwtLogoutHandler)
                 .permitAll());
             
