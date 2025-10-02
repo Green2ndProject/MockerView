@@ -109,6 +109,17 @@ public class SessionService {
         try {
             Session session = findById(sessionId);
             
+             // ⭐ 1. 세션 상태 변경 로직 추가: PLANNED 상태일 경우 RUNNING으로 변경
+            if (session.getStatus() == Session.SessionStatus.PLANNED) {
+                log.info("세션 상태 변경: PLANNED -> RUNNING (Session ID: {})", sessionId);
+                session.setStatus(Session.SessionStatus.RUNNING);
+                session.setStartTime(LocalDateTime.now()); // 세션 시작 시간 기록
+                sessionRepository.save(session); // 상태 변경 저장
+                
+                // 참고: 이 상태 변경 내용은 SessionWebSocketController의 handleQuestion에서 
+                // /topic/session/{sessionId}/status 토픽으로 브로드캐스팅되어야 합니다.
+            }
+
             User questioner = userRepository.findById(questionerId)
                 .orElseThrow(() -> new RuntimeException("Questioner not found: " + questionerId));
             
@@ -180,11 +191,17 @@ public class SessionService {
         return sessionRepository.save(session);
     }
 
-    public Session endSession(Long sessionId) {
+   public Session endSession(Long sessionId) {
         Session session = findById(sessionId);
-        session.setStatus(Session.SessionStatus.ENDED);
-        session.setEndTime(LocalDateTime.now());
-        return sessionRepository.save(session);
+        
+        if (session.getStatus() != Session.SessionStatus.ENDED) {
+            log.info("세션 상태 변경: RUNNING -> ENDED (Session ID: {})", sessionId);
+            session.setStatus(Session.SessionStatus.ENDED);
+            session.setEndTime(LocalDateTime.now());
+            return sessionRepository.save(session);
+        }
+        
+        return session;
     }
 
     @Transactional(readOnly = true)

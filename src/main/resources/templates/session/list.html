@@ -6,6 +6,9 @@
     <title>세션 목록 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css" />
     <link rel="stylesheet" href="/css/sessionModal.css" />
+    <!-- 세션 진행상황 반영 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
       .search-container {
         margin-bottom: 2rem;
@@ -155,7 +158,11 @@
       </div>
 
       <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
-        <div th:each="sessionItem : ${sessions}" class="session-card">
+        <div
+          th:each="sessionItem : ${sessions}"
+          class="session-card"
+          th:attr="data-session-id=${sessionItem.id}"
+        >
           <div class="session-header">
             <div>
               <h3
@@ -295,7 +302,7 @@
       </div>
     </div>
   </body>
-  <script>
+  <script th:inline="javascript">
     function createNewSession() {
       document.getElementById("sessionModal").style.display = "flex";
     }
@@ -303,6 +310,91 @@
     function resetSearch() {
       window.location.href = "/session/list";
     }
+
+    //실시간 반영 로직
+    /*<![CDATA[*/
+    // Thymeleaf에서 세션 목록 데이터를 JavaScript로 가져옵니다.
+    const sessions = /*[[${sessions}]]*/ [];
+    let stompClient = null;
+
+    function connect() {
+      // 백엔드 WebSocket 설정 경로에 맞게 '/ws' 수정이 필요할 수 있습니다.
+      const socket = new SockJS("/ws");
+      stompClient = Stomp.over(socket);
+
+      stompClient.connect({}, onConnected, onError);
+    }
+
+    function onConnected() {
+      console.log("WebSocket 연결 성공.");
+
+      // 현재 페이지에 로드된 모든 세션의 상태 토픽을 구독합니다.
+      if (sessions) {
+        sessions.forEach((session) => {
+          if (session && session.id) {
+            // 백엔드의 @SendTo("/topic/session/{sessionId}/status") 토픽을 구독
+            stompClient.subscribe(
+              `/topic/session/${session.id}/status`,
+              onSessionStatusReceived
+            );
+            console.log(`[WebSocket] 세션 ${session.id} 상태 토픽 구독 완료.`);
+          }
+        });
+      }
+    }
+
+    function onError(error) {
+      console.error("WebSocket 연결 실패:", error);
+    }
+
+    // 세션 상태 변경 메시지를 수신했을 때 UI를 업데이트하는 함수
+    function onSessionStatusReceived(payload) {
+      try {
+        const statusMessage = JSON.parse(payload.body);
+        const sessionId = statusMessage.sessionId;
+        const newStatus = statusMessage.status; // 예: "RUNNING" 또는 "ENDED"
+
+        console.log(
+          `[WebSocket] 세션 ${sessionId}의 새로운 상태 수신: ${newStatus}`
+        );
+
+        // 1. data-session-id 속성을 사용하여 해당 세션 카드를 찾습니다.
+        const sessionCard = document.querySelector(
+          `.session-card[data-session-id='${sessionId}']`
+        );
+
+        if (sessionCard) {
+          const badge = sessionCard.querySelector(".session-meta .badge");
+
+          if (badge) {
+            // 2. 뱃지 텍스트 업데이트
+            badge.textContent = newStatus;
+
+            // 3. 뱃지 색상 (클래스) 업데이트
+            badge.classList.remove(
+              "badge-waiting",
+              "badge-live",
+              "badge-ended"
+            );
+
+            if (newStatus === "RUNNING") {
+              badge.classList.add("badge-live");
+            } else if (newStatus === "ENDED") {
+              badge.classList.add("badge-ended");
+            } else {
+              // PLANNED
+              badge.classList.add("badge-waiting");
+            }
+          }
+
+          // (추가: 필요하다면 참가 버튼 상태도 업데이트 가능)
+        }
+      } catch (e) {
+        console.error("세션 상태 메시지 처리 오류:", e);
+      }
+    }
+
+    /*]]>*/
 
     document.addEventListener("DOMContentLoaded", function () {
       const modal = document.getElementById("sessionModal");
@@ -343,6 +435,8 @@
             alert("세션 제목을 입력해주세요!");
           }
         });
+
+      connect();
     });
   </script>
 </html>
