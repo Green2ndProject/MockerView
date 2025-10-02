@@ -86,24 +86,26 @@
     </style>
   </head>
   <body>
-    <nav class="navbar">
-      <div class="container">
-        <div class="navbar-content">
-          <a class="navbar-brand" href="/session/list"> Mockerview </a>
-          <div class="navbar-nav">
-            <a class="nav-link active" href="/session/list">세션 관리</a>
-            <div th:if="${currentUser != null}">
-              <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
-              <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
-            </div>
-            <div th:if="${currentUser == null}">
-              <a class="nav-link" th:href="@{/auth/login}">로그인</a>
-              <a class="nav-link" th:href="@{/auth/register}">회원가입</a>
-            </div>
-          </div>
+<nav class="navbar">
+  <div class="container">
+    <div class="navbar-content">
+      <a class="navbar-brand" href="/session/list"> Mockerview </a>
+      <div class="navbar-nav">
+      <a class="nav-link active" href="/session/list">세션 관리</a>
+      <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/mypage}">마이페이지</a>
+      <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/logout}">로그아웃</a>
+      </div>
+
+        
+        <div th:if="${currentUser == null}">
+          <a class="nav-link" th:href="@{/auth/login}">로그인</a>
+          <a class="nav-link" th:href="@{/auth/register}">회원가입</a>
         </div>
       </div>
-    </nav>
+    </div>
+  </div>
+</nav>
+
 
     <div class="page-header">
       <div class="container">
