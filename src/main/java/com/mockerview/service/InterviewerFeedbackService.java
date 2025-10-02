@@ -40,10 +40,10 @@ public class InterviewerFeedbackService {
                 .score(feedbackMessage.getScore())
                 .reviewerComment(feedbackMessage.getComment())
                 .feedbackType(Feedback.FeedbackType.INTERVIEWER)
-                .summary("면접관 피드백")
-                .strengths("점수: " + feedbackMessage.getScore() + "/10")
-                .weaknesses("")
-                .improvement(feedbackMessage.getComment())
+                .summary(feedbackMessage.getComment())
+                .strengths(null)
+                .weaknesses(null)
+                .improvement(null)
                 .model("INTERVIEWER")
                 .build();
             
