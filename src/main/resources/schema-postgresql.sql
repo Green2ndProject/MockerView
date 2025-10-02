@@ -12,6 +12,8 @@ CREATE TABLE sessions (
     start_time TIMESTAMP,
     end_time TIMESTAMP,
     status VARCHAR(20) CHECK (status IN ('PLANNED','RUNNING','ENDED')) DEFAULT 'PLANNED',
+    session_type VARCHAR(20) CHECK (session_type IN ('GROUP','SELF')) DEFAULT 'GROUP',
+    is_reviewable CHAR(1) CHECK (is_reviewable IN ('Y','N')) DEFAULT 'Y',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -40,5 +42,23 @@ CREATE TABLE feedbacks (
     weaknesses TEXT,
     improvement TEXT,
     model VARCHAR(50) DEFAULT 'GPT-4',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE question_pool (
+    id BIGSERIAL PRIMARY KEY,
+    category VARCHAR(50) NOT NULL,
+    difficulty VARCHAR(20) CHECK (difficulty IN ('EASY','MEDIUM','HARD')),
+    text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE reviews (
+    id BIGSERIAL PRIMARY KEY,
+    session_id BIGINT REFERENCES sessions(id),
+    reviewer_id BIGINT REFERENCES users(id),
+    answer_id BIGINT REFERENCES answers(id),
+    comment TEXT,
+    rating DECIMAL(2,1) CHECK (rating BETWEEN 0.0 AND 5.0),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
