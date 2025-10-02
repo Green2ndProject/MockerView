@@ -6,6 +6,7 @@
     <title>세션 목록 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css" />
     <link rel="stylesheet" href="/css/sessionModal.css" />
+    <link rel="stylesheet" href="/css/pagination.css" />
     <style>
       .search-container {
         margin-bottom: 2rem;
@@ -280,7 +281,50 @@
         </div>
       </div>
     </div>
-  </body>
+    <div class ="pagination hidden" id="pagination">
+        <button class="btn btn-outline btn-sm" id="prev-btn" disabled>이전</button>
+        <div class="page-numbers" id="page-numbers"></div>
+        <button class="btn btn-outline btn-sm" id="next-btn">다음</button>
+    </div>
+    <script th:src="@{/js/pagination.js}"></script>
+<script th:inline="javascript">
+   
+    const serverCurrentPage = /*[[${serverCurrentPage}]]*/ 1; 
+    const serverTotalPages = /*[[${totalPages}]]*/ 1;
+    const itemsPerPage = 6; 
+
+    function hideElement(element) {
+        if (element) element.classList.add('hidden');
+    }
+    function showElement(element) {
+        if (element) element.classList.remove('hidden');
+    }
+
+    function onPageChange(page) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('page', page);
+        url.searchParams.set('size', itemsPerPage); 
+        window.location.href = url.toString();
+    }
+  
+     window.addEventListener('load', () => {
+      const paginationContainer = document.getElementById('pagination');
+
+      if (serverTotalPages > 1) {
+          showElement(paginationContainer);
+      } else {
+          hideElement(paginationContainer);
+      }
+
+      createPagination(
+        serverCurrentPage || 1,
+        serverTotalPages || 1,
+        onPageChange,
+        '#pagination'
+      );
+    });
+</script>    
+</body>
   <script>
     function createNewSession() {
       document.getElementById("sessionModal").style.display = "flex";

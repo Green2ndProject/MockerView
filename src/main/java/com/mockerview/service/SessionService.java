@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,7 +30,49 @@ public class SessionService {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
+    
+    @Transactional(readOnly = true)
+    public Page<Session> getSessionsPageable(Pageable pageable) {
+        try {
+         log.info("Getting paginated sessions with host information. Page: {}, Size: {}", 
+            pageable.getPageNumber(), pageable.getPageSize());
+            
+        Page<Session> sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
+        
+        log.info("Found {} total sessions across {} pages.", 
+            sessionPage.getTotalElements(), sessionPage.getTotalPages());
+        
+        return sessionPage;
+         } catch (Exception e) {
+            log.error("Error getting paginated sessions: ", e);
+            throw new RuntimeException("페이지별 세션 목록 조회 실패", e);
+            }
+    }
 
+
+    public Page<Session> searchSessionsPageable(String keyword, String status, Pageable pageable) {
+    try {
+        log.info("Searching paginated sessions - keyword: {}, status: {}, Page: {}, Size: {}", 
+            keyword, status, pageable.getPageNumber(), pageable.getPageSize());
+        
+        // [수정] String status를 Enum으로 변환합니다.
+        Session.SessionStatus sessionStatus = null;
+        if (status != null && !status.isEmpty()) {
+            sessionStatus = Session.SessionStatus.valueOf(status);
+        }
+
+        // [수정] Repository 호출 시 변환된 Enum 객체 사용
+        Page<Session> sessionPage = sessionRepository.searchSessionsPageable(keyword, sessionStatus, pageable);
+        
+        log.info("Search result: {} total sessions across {} pages.", 
+            sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            
+        return sessionPage;
+        } catch (Exception e) {
+            log.error("Error searching paginated sessions: ", e);
+            throw new RuntimeException("페이지별 세션 검색 실패", e);
+        }
+    }
     @Transactional(readOnly = true)
     public List<Session> getAllSessions() {
         try {

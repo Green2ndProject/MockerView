@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,4 +44,19 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
                                 @Param("status") String status, 
                                 @Param("sortBy") String sortBy, 
                                 @Param("sortOrder") String sortOrder);
+
+
+    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host " +
+               "WHERE (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
+               "AND (:status IS NULL OR s.status = :status) ", // <-- 'status = :status'만 남기고 '' = '' 부분을 제거
+        countQuery = "SELECT COUNT(s) FROM Session s WHERE " +
+                     "(:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
+                     "AND (:status IS NULL OR s.status = :status) ")
+Page<Session> searchSessionsPageable(@Param("keyword") String keyword, 
+                                     @Param("status") Session.SessionStatus status, 
+                                     Pageable pageable);
+
+     @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host", 
+        countQuery = "SELECT COUNT(s) FROM Session s")
+     Page<Session> findAllSessionsWithHost(Pageable pageable);
 }
