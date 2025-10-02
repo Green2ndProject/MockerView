@@ -73,3 +73,11 @@ CREATE TABLE reviews (
     CONSTRAINT fk_reviews_reviewer FOREIGN KEY (reviewer_id) REFERENCES users(id),
     CONSTRAINT fk_reviews_answer FOREIGN KEY (answer_id) REFERENCES answers(id)
 );
+
+ALTER TABLE QUESTIONS DROP COLUMN TEXT;
+
+COMMIT;
+
+ALTER TABLE ANSWERS DROP COLUMN text;
+
+COMMIT;

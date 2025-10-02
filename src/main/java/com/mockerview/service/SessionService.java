@@ -134,7 +134,7 @@ public class SessionService {
             Answer answer = Answer.builder()
                 .user(user)
                 .question(question)
-                .text(message.getAnswerText())
+                .answerText(message.getAnswerText())
                 .score(message.getScore())
                 .build();
             

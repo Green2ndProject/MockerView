@@ -97,3 +97,11 @@ INSERT INTO question_pool (category, difficulty, text) VALUES ('상황', 'MEDIUM
 INSERT INTO question_pool (category, difficulty, text) VALUES ('상황', 'HARD', '기술적 의견 충돌이 있을 때 어떻게 해결하시나요?');
 
 COMMIT;
+
+ALTER TABLE QUESTIONS DROP COLUMN TEXT;
+
+COMMIT;
+
+ALTER TABLE ANSWERS DROP COLUMN text;
+
+COMMIT;

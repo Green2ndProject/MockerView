@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class AIFeedbackService {
             Hibernate.initialize(answer.getQuestion());
             Hibernate.initialize(answer.getUser());
             
-            log.info("Answer found: {}", answer.getText().substring(0, Math.min(50, answer.getText().length())));
+            log.info("Answer found: {}", answer.getAnswerText().substring(0, Math.min(50, answer.getAnswerText().length())));
             
             String prompt = createFeedbackPrompt(answer);
             log.info("Calling OpenAI API...");
@@ -88,6 +89,82 @@ public class AIFeedbackService {
         } catch (Exception e) {
             log.error("Error generating AI feedback for answer {}: ", answerId, e);
             sendErrorFeedback(answerId, sessionId, e.getMessage());
+        }
+    }
+
+    public List<String> generateInterviewQuestions(int count) {
+        log.info("Generating {} interview questions", count);
+        
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            log.warn("OpenAI API key not configured, returning dummy questions");
+            return generateDummyQuestions(count);
+        }
+
+        try {
+            String prompt = String.format("""
+                면접 질문 %d개를 생성해주세요. 각 질문은 한 줄로 작성하고, 번호나 특수문자 없이 질문만 작성해주세요.
+                
+                다음 카테고리를 골고루 포함해주세요:
+                - 자기소개 및 경력
+                - 기술 역량
+                - 문제 해결 능력
+                - 협업 및 커뮤니케이션
+                - 성장 마인드
+                
+                각 질문은 구체적이고 답변하기에 적절한 수준이어야 합니다.
+                """, count);
+
+            String aiResponse = callOpenAI(prompt);
+            List<String> questions = parseQuestions(aiResponse);
+            
+            while (questions.size() < count) {
+                questions.add("추가 질문 " + (questions.size() + 1) + ": 본인의 강점과 약점에 대해 말씀해주세요.");
+            }
+
+            return questions.subList(0, Math.min(count, questions.size()));
+            
+        } catch (Exception e) {
+            log.error("Error generating interview questions: ", e);
+            return generateDummyQuestions(count);
+        }
+    }
+
+    public Map<String, Object> generateFeedbackSync(String question, String answer) {
+        log.info("Generating synchronous feedback for answer");
+        
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            log.warn("OpenAI API key not configured, returning dummy feedback");
+            return generateDummyFeedback(answer);
+        }
+
+        try {
+            String prompt = String.format("""
+                다음은 면접 질문과 지원자의 답변입니다.
+                
+                질문: %s
+                
+                답변: %s
+                
+                다음 루브릭 기준으로 평가해주세요:
+                1. 내용의 완성도 (30점): 질문에 대한 직접적이고 명확한 답변
+                2. 구체성 (25점): 구체적인 사례와 경험 제시
+                3. 논리성 (25점): 답변의 구조와 흐름
+                4. 전문성 (20점): 해당 분야에 대한 이해도
+                
+                다음 형식으로 JSON 응답해주세요:
+                {
+                    "score": 85,
+                    "strengths": "강점에 대한 구체적인 설명 (2-3문장)",
+                    "improvements": "개선이 필요한 부분과 구체적인 조언 (2-3문장)"
+                }
+                """, question, answer);
+
+            String aiResponse = callOpenAI(prompt);
+            return parseFeedbackJson(aiResponse);
+            
+        } catch (Exception e) {
+            log.error("Error generating synchronous feedback: ", e);
+            return generateDummyFeedback(answer);
         }
     }
 
@@ -128,7 +205,7 @@ public class AIFeedbackService {
 
     private String createFeedbackPrompt(Answer answer) {
         String question = answer.getQuestion().getText();
-        String answerText = answer.getText();
+        String answerText = answer.getAnswerText();
         
         return String.format("""
             면접 질문과 답변을 분석하여 피드백을 제공해주세요.
@@ -160,6 +237,7 @@ public class AIFeedbackService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", "gpt-4o-mini");
         requestBody.put("messages", List.of(
+            Map.of("role", "system", "content", "당신은 전문 면접관이자 커리어 코치입니다. 루브릭 기반으로 객관적이고 건설적인 피드백을 제공합니다."),
             Map.of("role", "user", "content", prompt)
         ));
         requestBody.put("max_tokens", 800);
@@ -228,5 +306,89 @@ public class AIFeedbackService {
                 .model("GPT-4O-MINI")
                 .build();
         }
+    }
+
+    private List<String> parseQuestions(String aiResponse) {
+        List<String> questions = new ArrayList<>();
+        String[] lines = aiResponse.split("\n");
+        
+        for (String line : lines) {
+            String cleaned = line.trim()
+                .replaceAll("^\\d+[.)\\s]+", "")
+                .replaceAll("^[-*•]\\s+", "")
+                .trim();
+            
+            if (!cleaned.isEmpty() && cleaned.length() > 10 && cleaned.contains("?")) {
+                questions.add(cleaned);
+            }
+        }
+        
+        return questions;
+    }
+
+    private Map<String, Object> parseFeedbackJson(String aiResponse) {
+        try {
+            String cleanResponse = aiResponse.trim();
+            if (cleanResponse.startsWith("```json")) {
+                cleanResponse = cleanResponse.substring(7);
+            }
+            if (cleanResponse.startsWith("```")) {
+                cleanResponse = cleanResponse.substring(3);
+            }
+            if (cleanResponse.endsWith("```")) {
+                cleanResponse = cleanResponse.substring(0, cleanResponse.length() - 3);
+            }
+            cleanResponse = cleanResponse.trim();
+
+            JsonNode jsonNode = objectMapper.readTree(cleanResponse);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("score", jsonNode.path("score").asInt(75));
+            result.put("strengths", jsonNode.path("strengths").asText("답변이 성실하게 작성되었습니다."));
+            result.put("improvements", jsonNode.path("improvements").asText("더 구체적인 사례를 추가하면 좋겠습니다."));
+            
+            return result;
+        } catch (Exception e) {
+            log.error("Error parsing feedback JSON: {}", aiResponse, e);
+            return generateDummyFeedback("");
+        }
+    }
+
+    private List<String> generateDummyQuestions(int count) {
+        List<String> dummyQuestions = List.of(
+            "자기소개를 해주시고, 지원 동기를 말씀해주세요.",
+            "본인의 가장 큰 강점은 무엇이며, 그것을 어떻게 업무에 활용하시겠습니까?",
+            "최근 진행한 프로젝트에서 가장 어려웠던 문제와 해결 방법을 설명해주세요.",
+            "팀원과 의견 충돌이 있었던 경험과 해결 과정을 말씀해주세요.",
+            "5년 후 본인의 모습은 어떨 것 같습니까?",
+            "본인의 약점은 무엇이며, 이를 극복하기 위해 어떤 노력을 하고 계십니까?",
+            "압박 상황에서 업무를 처리했던 경험을 구체적으로 말씀해주세요.",
+            "새로운 기술이나 지식을 학습했던 경험과 그 과정을 설명해주세요.",
+            "실패했던 경험과 그로부터 배운 점을 말씀해주세요.",
+            "우리 회사에 지원한 이유와 기여할 수 있는 부분을 설명해주세요."
+        );
+
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < Math.min(count, dummyQuestions.size()); i++) {
+            result.add(dummyQuestions.get(i));
+        }
+        
+        while (result.size() < count) {
+            result.add("추가 질문 " + (result.size() + 1) + ": 본인에 대해 더 자세히 설명해주세요.");
+        }
+        
+        return result;
+    }
+
+    private Map<String, Object> generateDummyFeedback(String answer) {
+        int wordCount = answer.split("\\s+").length;
+        int score = Math.min(95, 60 + (wordCount / 10));
+
+        Map<String, Object> feedback = new HashMap<>();
+        feedback.put("score", score);
+        feedback.put("strengths", "답변이 성실하게 작성되었으며, 질문의 핵심을 이해하고 있습니다. 전반적인 구조가 논리적입니다.");
+        feedback.put("improvements", "더 구체적인 사례와 수치를 포함하면 답변의 설득력이 높아질 것입니다. STAR 기법을 활용해보세요.");
+        
+        return feedback;
     }
 }

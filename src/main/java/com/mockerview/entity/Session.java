@@ -40,6 +40,14 @@ public class Session {
     @Builder.Default
     private SessionStatus status = SessionStatus.PLANNED;
 
+    @Column(name = "session_type")
+    @Builder.Default
+    private String sessionType = "GROUP";
+
+    @Column(name = "is_reviewable")
+    @Builder.Default
+    private String isReviewable = "Y";
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
