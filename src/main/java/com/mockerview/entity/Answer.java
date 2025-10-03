@@ -35,8 +35,8 @@ public class Answer {
     @JsonIgnoreProperties({"password"})
     private User user;
     
-    @Column(name = "text", columnDefinition = "CLOB", nullable = false)
-    private String text;
+    @Column(name = "answer_text", columnDefinition = "CLOB", nullable = false)
+    private String answerText;
     
     @Column(name = "score")
     private Integer score;

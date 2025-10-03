@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>리뷰 가능한 세션 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/session/list">Mockerview</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/session/list">세션 목록</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>리뷰 가능한 세션</h1>
+        
+        <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
+            <div th:each="session : ${sessions}" class="session-card">
+                <h3 th:text="${session.title}">면접 세션</h3>
+                <p th:text="${#temporals.format(session.endTime, 'yyyy-MM-dd HH:mm')}"></p>
+                <a th:href="@{/review/detail/{id}(id=${session.id})}" class="btn btn-primary">리뷰 작성</a>
+            </div>
+        </div>
+        
+        <div th:if="${sessions == null or sessions.empty}" style="text-align: center; padding: 3rem;">
+            <p>리뷰 가능한 세션이 없습니다.</p>
+        </div>
+    </div>
+</body>
+</html>

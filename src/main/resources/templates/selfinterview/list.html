@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내 연습 기록 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/session/list">Mockerview</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/session/list">세션 목록</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>내 셀프 면접 기록</h1>
+        
+        <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
+            <div th:each="session : ${sessions}" class="session-card">
+                <h3 th:text="${session.title}">셀프 면접</h3>
+                <p th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
+                <a th:href="@{/selfinterview/room/{id}(id=${session.id})}" class="btn btn-primary">결과 보기</a>
+            </div>
+        </div>
+        
+        <div th:if="${sessions == null or sessions.empty}" style="text-align: center; padding: 3rem;">
+            <p>아직 셀프 면접 기록이 없습니다.</p>
+            <a href="/selfinterview/create" class="btn btn-primary">첫 면접 시작하기</a>
+        </div>
+    </div>
+</body>
+</html>

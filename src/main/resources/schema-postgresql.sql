@@ -1,8 +1,11 @@
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    role VARCHAR(20) CHECK (role IN ('STUDENT','HOST','REVIEWER')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    role VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    email VARCHAR(255),
+    password VARCHAR(255),
+    username VARCHAR(255)
 );
 
 CREATE TABLE sessions (
@@ -11,7 +14,7 @@ CREATE TABLE sessions (
     title VARCHAR(255) NOT NULL,
     start_time TIMESTAMP,
     end_time TIMESTAMP,
-    status VARCHAR(20) CHECK (status IN ('PLANNED','RUNNING','ENDED')) DEFAULT 'PLANNED',
+    status VARCHAR(20) DEFAULT 'PLANNED',
     session_type VARCHAR(20) CHECK (session_type IN ('GROUP','SELF')) DEFAULT 'GROUP',
     is_reviewable CHAR(1) CHECK (is_reviewable IN ('Y','N')) DEFAULT 'Y',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -22,7 +25,9 @@ CREATE TABLE questions (
     session_id BIGINT REFERENCES sessions(id),
     text TEXT NOT NULL,
     order_no INT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    questioner_id BIGINT,
+    timer INT
 );
 
 CREATE TABLE answers (
@@ -30,7 +35,7 @@ CREATE TABLE answers (
     question_id BIGINT REFERENCES questions(id),
     user_id BIGINT REFERENCES users(id),
     text TEXT NOT NULL,
-    score INT CHECK (score BETWEEN 1 AND 10),
+    score INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -42,13 +47,17 @@ CREATE TABLE feedbacks (
     weaknesses TEXT,
     improvement TEXT,
     model VARCHAR(50) DEFAULT 'GPT-4',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewer_id BIGINT,
+    score INT,
+    reviewer_comment TEXT,
+    feedback_type VARCHAR(20)
 );
 
 CREATE TABLE question_pool (
     id BIGSERIAL PRIMARY KEY,
     category VARCHAR(50) NOT NULL,
-    difficulty VARCHAR(20) CHECK (difficulty IN ('EASY','MEDIUM','HARD')),
+    difficulty VARCHAR(20),
     text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,6 +68,12 @@ CREATE TABLE reviews (
     reviewer_id BIGINT REFERENCES users(id),
     answer_id BIGINT REFERENCES answers(id),
     comment TEXT,
-    rating DECIMAL(2,1) CHECK (rating BETWEEN 0.0 AND 5.0),
+    rating DECIMAL(2,1),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE QUESTIONS DROP COLUMN TEXT;
+
+ALTER TABLE ANSWERS DROP COLUMN text;
+
+COMMIT;

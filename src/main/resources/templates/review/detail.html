@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>리뷰 작성 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/session/list">Mockerview</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/session/list">세션 목록</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>리뷰 작성</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>세션 정보</h3>
+            </div>
+            <div class="card-body">
+                <p>세션 ID: <span th:text="${sessionId}"></span></p>
+                <form action="/api/review/create" method="POST">
+                    <input type="hidden" name="sessionId" th:value="${sessionId}">
+                    <div class="form-group">
+                        <label>평점 (0.0 ~ 5.0)</label>
+                        <input type="number" name="rating" class="form-control" step="0.1" min="0" max="5" value="3.0">
+                    </div>
+                    <div class="form-group">
+                        <label>리뷰 내용</label>
+                        <textarea name="comment" class="form-control" rows="5" placeholder="피드백을 작성하세요"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">리뷰 제출</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
