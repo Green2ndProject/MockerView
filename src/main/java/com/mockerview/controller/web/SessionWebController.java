@@ -11,6 +11,11 @@ import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -120,27 +125,40 @@ public class SessionWebController {
     }
 
     @GetMapping("/list")
-    public String sessionList(@RequestParam(required = false) String keyword,
+    public String sessionList(
+                            @RequestParam(value = "page", defaultValue = "1") int page,
+                            @RequestParam(value = "size", defaultValue = "6") int size,
+                            @RequestParam(required = false) String keyword,
                             @RequestParam(required = false) String status,
                             @RequestParam(required = false) String sortBy,
                             @RequestParam(required = false) String sortOrder,
                             Model model) {
+
         try {
             log.info("세션 목록 로드 중...");
+
+            Page<Session> sessionPage; 
+
+            Sort sort = Sort.by(
+            sortOrder != null && sortOrder.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC,
+            sortBy != null ? sortBy : "createdAt"
+            );
+
+            Pageable pageable = PageRequest.of(page - 1, size, sort);
             
-            List<Session> sessions;
             if (keyword != null || status != null) {
-                sessions = sessionService.searchSessions(
-                    keyword, 
-                    status, 
-                    sortBy != null ? sortBy : "createdAt", 
-                    sortOrder != null ? sortOrder : "DESC"
-                );
+                sessionPage = sessionService.searchSessionsPageable(
+                keyword, 
+                status, 
+                pageable 
+            );
             } else {
-                sessions = sessionService.getAllSessions();
+                sessionPage = sessionService.getSessionsPageable(pageable);
             }
-            
-            model.addAttribute("sessions", sessions);
+
+            model.addAttribute("sessions", sessionPage.getContent()); 
+            model.addAttribute("totalPages", sessionPage.getTotalPages()); // 총 페이지 수
+            model.addAttribute("serverCurrentPage", page); 
             model.addAttribute("keyword", keyword);
 
             User currentUser = getCurrentUser();
@@ -148,11 +166,11 @@ public class SessionWebController {
             if (currentUser != null) {
                 model.addAttribute("currentUser", currentUser);
                 model.addAttribute("isLoggedIn", true);
-                log.info("세션 목록 로드 완료 - {}개 세션. 현재 사용자: {}", sessions.size(), currentUser.getUsername());
+                log.info("세션 목록 로드 완료 - {}개 세션. 현재 페이지: {}/{} 사용자: {}", sessionPage.getContent().size(), page, sessionPage.getTotalPages(), currentUser.getUsername());
             } else {
                 model.addAttribute("currentUser", null);
                 model.addAttribute("isLoggedIn", false);
-                log.info("세션 목록 로드 완료 - {}개 세션. 비로그인 상태.", sessions.size());
+                log.info("세션 목록 로드 완료 - {}개 세션. 비로그인 상태.", sessionPage.getContent().size());
             }
             
             return "session/list";

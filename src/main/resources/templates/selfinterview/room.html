@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>셀프 면접</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/selfinterview.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/selfinterview/list">내 연습 기록</a>
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="session-info-bar">
+        <div class="container">
+            <div class="session-title-section">
+                <h1 id="session-title">셀프 면접</h1>
+                <div class="session-meta">
+                    <span class="timer">
+                        <span id="session-timer">00:00</span>
+                    </span>
+                    <span class="badge badge-ai">AI 면접관</span>
+                    <span id="session-stats">질문 로딩중...</span>
+                </div>
+            </div>
+            <div class="session-actions">
+                <button onclick="toggleResultView()" class="btn btn-secondary btn-sm">결과 보기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="selfinterview-layout">
+            <main class="main-content">
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progress-current">0</span> / <span id="progress-total">0</span> 질문 완료
+                    </div>
+                </div>
+
+                <div class="card current-question">
+                    <div class="card-header">
+                        <div class="question-info">
+                            <span id="question-number">Q1</span>
+                            <span class="ai-badge">🤖 AI 질문</span>
+                        </div>
+                        <div id="question-timer" class="question-timer">⏱️ 00:00</div>
+                    </div>
+                    <div class="card-body">
+                        <div id="current-question" class="question-display">
+                            <p id="current-question-text">질문을 불러오는 중...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card answer-card" id="answer-section">
+                    <div class="card-header">
+                        <h4>답변 작성</h4>
+                        <span class="answer-tip">자신있게 답변해보세요</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="6"></textarea>
+                            <div class="char-counter">
+                                <span id="charCount">0</span>/1000자
+                            </div>
+                        </div>
+                        <div class="answer-actions">
+                            <button onclick="skipQuestion()" class="btn btn-secondary">건너뛰기</button>
+                            <button onclick="submitAnswer()" class="btn btn-success">답변 제출</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="result-section" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h4>면접 완료</h4>
+                        <span class="badge badge-success">분석 완료</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="result-summary">
+                            <div class="result-item">
+                                <div class="result-label">평균 점수</div>
+                                <div id="avg-score" class="result-value">0점</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">답변한 질문</div>
+                                <div id="answered-count" class="result-value">0개</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">소요 시간</div>
+                                <div id="total-time" class="result-value">0분</div>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button onclick="viewDetailedResults()" class="btn btn-primary">상세 결과 보기</button>
+                            <a href="/selfinterview/create" class="btn btn-secondary">새 면접 시작</a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="feedback-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>AI 피드백</h4>
+                        <span id="ai-status" class="ai-status">대기중</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ai-feedback-list" class="feedback-list scrollable">
+                            <div class="empty-state">
+                                <div class="ai-icon">🤖</div>
+                                <p>답변이 제출되면 AI가 즉시 분석합니다</p>
+                                <div class="ai-features">
+                                    <span>• 루브릭 기반 평가</span>
+                                    <span>• 강점 분석</span>
+                                    <span>• 개선점 제시</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card question-list-card">
+                    <div class="card-header">
+                        <h4>질문 목록</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul id="question-list" class="question-nav-list">
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="/js/authFetch.js"></script>
+    <script src="/js/selfinterview-room.js"></script>
+</body>
+</html>

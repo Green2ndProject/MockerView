@@ -7,13 +7,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "questions")
+@Table(name = "QUESTIONS")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,37 +22,38 @@ import java.util.List;
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID")
     private Long id;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id")
+    @JoinColumn(name = "SESSION_ID")
     @JsonIgnoreProperties({"questions", "host"})
     private Session session;
-
+    
     @Lob
-    @Column(nullable = false)
+    @Column(name = "QUESTION_TEXT", nullable = false)
     private String text;
-
-    @Column(name = "order_no")
+    
+    @Column(name = "ORDER_NO")
     @Builder.Default
     private Integer orderNo = 1;
-
-    @Column(name = "created_at")
+    
+    @Column(name = "CREATED_AT")
     private LocalDateTime createdAt;
-
-    @Column(name = "timer")
-    private Integer timer; 
-
+    
+    @Column(name = "TIMER")
+    private Integer timer;
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questioner_id")
+    @JoinColumn(name = "QUESTIONER_ID")
     @JsonIgnoreProperties({"password"})
     private User questioner;
-
+    
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
     @Builder.Default
     @JsonIgnoreProperties({"question"})
     private List<Answer> answers = new ArrayList<>();
-
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

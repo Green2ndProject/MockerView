@@ -9,7 +9,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.User;
-import com.mockerview.entity.User.UserRole;
 import com.mockerview.repository.UserRepository;
 
 import jakarta.servlet.FilterChain;
@@ -54,7 +53,6 @@ public class JWTFilter extends OncePerRequestFilter{
           Cookie[] cookies = request.getCookies();
           if(cookies != null){
             for(Cookie cookie : cookies){
-              // 수정했음... jwtToken -> Authorization으로 변경 (통일성을 위해서ㅠㅠ)
               if("Authorization".equals(cookie.getName())){
                 token = cookie.getValue();
                 log.info("authorization now. Token extracted from Cookie: {}", token);
@@ -92,23 +90,27 @@ public class JWTFilter extends OncePerRequestFilter{
   }
 
   @Override
-  protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 
     String uri    = request.getRequestURI();
     String method = request.getMethod();
 
-    if (uri.equals("/auth/login") && method.equals("GET")) {
+    if (uri.equals("/") || uri.equals("/index")) {
         return true;
     }
 
-    if (uri.equals("/auth/register") && method.equals("GET")) {
+    if (uri.equals("/auth/login")) {
         return true;
     }
 
-    if (uri.startsWith("/images/") || 
-        uri.startsWith("/css/") || 
+    if (uri.equals("/auth/register")) {
+        return true;
+    }
+
+    if (uri.startsWith("/images/") ||
+        uri.startsWith("/css/") ||
         uri.startsWith("/js/") ||
-        uri.equals("/favicon.ico")) { 
+        uri.equals("/favicon.ico")) {
             
         log.warn("[JWTFilter] Bypass! Static resource is skipping JWT validation: {}", uri); 
         return true;
