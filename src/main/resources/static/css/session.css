@@ -1,3 +1,7 @@
+body, .container, .interview-layout, .student-view, .host-view {
+  background: white !important;
+}
+
 .user-info {
   display: flex;
   align-items: center;

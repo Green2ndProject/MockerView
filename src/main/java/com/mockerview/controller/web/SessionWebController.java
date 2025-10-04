@@ -107,13 +107,14 @@ public class SessionWebController {
             
             model.addAttribute("sessionId", sessionId);
             model.addAttribute("sessionTitle", session.getTitle() != null ? session.getTitle() : "모의면접 세션");
+            model.addAttribute("sessionType", session.getSessionType() != null ? session.getSessionType() : "TEXT");
             model.addAttribute("userId", currentUser.getId());
             model.addAttribute("userName", currentUser.getName());
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("isHost", isHost);
             
-            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}", 
-                currentUser.getName(), sessionRole, isHost);
+            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}", 
+                currentUser.getName(), sessionRole, isHost, session.getSessionType());
             
             return "session/session";
             
@@ -157,7 +158,7 @@ public class SessionWebController {
             }
 
             model.addAttribute("sessions", sessionPage.getContent()); 
-            model.addAttribute("totalPages", sessionPage.getTotalPages()); // 총 페이지 수
+            model.addAttribute("totalPages", sessionPage.getTotalPages());
             model.addAttribute("serverCurrentPage", page); 
             model.addAttribute("keyword", keyword);
 
@@ -183,7 +184,8 @@ public class SessionWebController {
     }
 
     @PostMapping("/create")
-    public String createSession(@RequestParam String title) {
+    public String createSession(@RequestParam String title,
+                                @RequestParam(defaultValue = "TEXT") String sessionType) {
         try {
             User currentUser = getCurrentUser();
             
@@ -191,15 +193,15 @@ public class SessionWebController {
                 return "redirect:/auth/login";
             }
             
-            log.info("세션 생성 요청 - title: {}, hostId: {}", title, currentUser.getId());
-            sessionService.createSession(title, currentUser.getId());
+            log.info("세션 생성 요청 - title: {}, hostId: {}, type: {}", title, currentUser.getId(), sessionType);
+            sessionService.createSession(title, currentUser.getId(), sessionType);
             log.info("세션 생성 완료");
-
+    
             String successMessage = "세션이 생성되었습니다";
             String encodedMessage = URLEncoder.encode(successMessage, StandardCharsets.UTF_8.toString());
-
+    
             return "redirect:/session/list?success=" + encodedMessage;
-
+    
         } catch (Exception e) {
             log.error("세션 생성 오류: ", e);
             return "redirect:/session/list?error=" + e.getMessage();
@@ -208,34 +210,41 @@ public class SessionWebController {
 
 
     @GetMapping("/detail/{id}")
-    public String sessionDetail(@PathVariable Long id, Model model) {
-        try {
-            Session sess = sessionService.findById(id);
-            List<Question> questions = sessionService.getSessionQuestions(id);
-            List<Answer> answers = sessionService.getSessionAnswers(id);
-            
-            Map<Long, List<Answer>> answersByQuestion = answers.stream()
-                .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
-            
-            User currentUser = getCurrentUser();
-            
-            int totalAnswerCount = answers.size();
-            int answeredQuestionCount = answersByQuestion.size();
-            
-            model.addAttribute("interviewSession", sess);
-            model.addAttribute("questions", questions);
-            model.addAttribute("answersByQuestion", answersByQuestion);
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("totalAnswerCount", totalAnswerCount);
-            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
-            
-            log.info("세션 상세 로드 완료 - sessionId: {}", id);
-            
-            return "session/detail";
-            
-        } catch (Exception e) {
-            log.error("세션 상세 조회 오류: ", e);
+public String sessionDetail(@PathVariable Long id, Model model) {
+    try {
+        Session sess = sessionService.findById(id);
+        
+        if (sess == null) {
+            model.addAttribute("error", "세션을 찾을 수 없습니다.");
             return "redirect:/session/list";
         }
+        
+        List<Question> questions = sessionService.getSessionQuestions(id);
+        List<Answer> answers = sessionService.getSessionAnswers(id);
+        
+        Map<Long, List<Answer>> answersByQuestion = answers.stream()
+            .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
+        
+        User currentUser = getCurrentUser();
+        
+        int totalAnswerCount = answers.size();
+        int answeredQuestionCount = answersByQuestion.size();
+        
+        model.addAttribute("interviewSession", sess);
+        model.addAttribute("questions", questions);
+        model.addAttribute("answersByQuestion", answersByQuestion);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("totalAnswerCount", totalAnswerCount);
+        model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+        
+        log.info("세션 상세 로드 완료 - sessionId: {}", id);
+        
+        return "session/detail";
+        
+    } catch (Exception e) {
+        log.error("세션 상세 조회 오류: ", e);
+        model.addAttribute("error", "세션 상세 정보를 불러올 수 없습니다: " + e.getMessage());
+        return "redirect:/session/list";
     }
+}
 }

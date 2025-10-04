@@ -81,3 +81,8 @@ COMMIT;
 ALTER TABLE ANSWERS DROP COLUMN text;
 
 COMMIT;
+
+ALTER TABLE sessions ADD CONSTRAINT chk_session_type 
+CHECK (session_type IN ('GROUP', 'SELF', 'TEXT', 'AUDIO', 'VIDEO'));
+
+COMMIT;

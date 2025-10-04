@@ -4,6 +4,48 @@
     <meta charset="UTF-8">
     <title>리뷰 가능한 세션 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .session-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+        .session-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .session-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            color: #666;
+        }
+        .session-host {
+            background: #f8f9fa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .session-date {
+            font-size: 0.9rem;
+        }
+        .session-questions {
+            background: #e3f2fd;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -11,6 +53,7 @@
             <a class="navbar-brand" href="/session/list">Mockerview</a>
             <div class="navbar-nav">
                 <a class="nav-link" href="/session/list">세션 목록</a>
+                <a class="nav-link" href="/review/my">내 리뷰</a>
             </div>
         </div>
     </nav>
@@ -18,16 +61,26 @@
     <div class="container">
         <h1>리뷰 가능한 세션</h1>
         
-        <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
-            <div th:each="session : ${sessions}" class="session-card">
-                <h3 th:text="${session.title}">면접 세션</h3>
-                <p th:text="${#temporals.format(session.endTime, 'yyyy-MM-dd HH:mm')}"></p>
-                <a th:href="@{/review/detail/{id}(id=${session.id})}" class="btn btn-primary">리뷰 작성</a>
+        <div th:if="${sessions != null and !sessions.empty}">
+            <div th:each="reviewSession : ${sessions}" class="session-card">
+                <div class="session-title" th:text="${reviewSession.title}">면접 세션</div>
+                <div class="session-info">
+                    <span class="session-host" th:text="'면접관: ' + ${reviewSession.host.name}">면접관</span>
+                    <span class="session-date" th:text="${#temporals.format(reviewSession.endTime, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                </div>
+                <div class="session-questions" th:if="${reviewSession.questions != null and !reviewSession.questions.empty}">
+                    <strong>면접 질문들:</strong>
+                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                        <li th:each="question : ${reviewSession.questions}" th:text="${question.text}">질문</li>
+                    </ul>
+                </div>
+                <a th:href="@{/review/detail/{id}(id=${reviewSession.id})}" class="btn btn-primary">리뷰 작성</a>
             </div>
         </div>
         
-        <div th:if="${sessions == null or sessions.empty}" style="text-align: center; padding: 3rem;">
+        <div th:if="${sessions == null or sessions.empty}" class="empty-state">
             <p>리뷰 가능한 세션이 없습니다.</p>
+            <p>완료된 면접이 있으면 여기에 표시됩니다.</p>
         </div>
     </div>
 </body>

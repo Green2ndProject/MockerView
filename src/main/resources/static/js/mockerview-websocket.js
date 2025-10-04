@@ -235,10 +235,34 @@ class MockerViewWebSocket {
     }
   }
 
-  handleNewAnswer(message) {
+  async handleNewAnswer(message) {
     console.log("New answer:", message);
     this.displayAnswer(message);
     this.showNotification(`${message.userName}님이 답변을 제출했습니다.`);
+    
+    if (message.answerId) {
+      await this.requestAIFeedback(message.answerId);
+    }
+  }
+
+  async requestAIFeedback(answerId) {
+    try {
+      const token = this.getTokenFromCookie();
+      const response = await fetch(`/api/feedback/ai/${answerId}`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': token,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const feedback = await response.json();
+        console.log('AI 피드백 생성됨:', feedback);
+      }
+    } catch (error) {
+      console.error('AI 피드백 요청 실패:', error);
+    }
   }
 
   handleNewFeedback(message) {

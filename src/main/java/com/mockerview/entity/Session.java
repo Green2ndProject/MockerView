@@ -51,6 +51,13 @@ public class Session {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "media_enabled")
+    @Builder.Default
+    private Boolean mediaEnabled = false;
+
+    @Column(name = "agora_channel")
+    private String agoraChannel;
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Question> questions = new ArrayList<>();
@@ -58,6 +65,9 @@ public class Session {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (agoraChannel == null) {
+            agoraChannel = "session_" + System.currentTimeMillis();
+        }
     }
 
     public enum SessionStatus {
