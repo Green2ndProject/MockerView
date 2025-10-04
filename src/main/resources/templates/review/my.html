@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내가 작성한 리뷰 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/session/list">Mockerview</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/review/list">리뷰 작성</a>
+                <a class="nav-link" href="/session/list">세션 목록</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1>내가 작성한 리뷰</h1>
+        
+        <div th:if="${reviews != null and !reviews.empty}">
+            <div th:each="review : ${reviews}" class="card mb-3">
+                <div class="card-header">
+                    <h5>세션 ID: <span th:text="${review.sessionId}"></span></h5>
+                    <small th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>평점:</strong> <span th:text="${review.rating}"></span>/5.0
+                    </div>
+                    <div>
+                        <strong>리뷰 내용:</strong>
+                        <p th:text="${review.reviewComment}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${reviews == null or reviews.empty}" style="text-align: center; padding: 3rem;">
+            <p>아직 작성한 리뷰가 없습니다.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -41,23 +41,9 @@ function initializeSession() {
     }
 
     document.getElementById('progress-total').textContent = questions.length;
+    document.getElementById('session-stats').textContent = `총 ${questions.length}개 질문`;
     renderQuestionList();
     loadQuestion(0);
-    setupTextareaCounter();
-}
-
-function setupTextareaCounter() {
-    const answerTextArea = document.getElementById('answerText');
-    if (answerTextArea) {
-        answerTextArea.addEventListener('input', function() {
-            const count = this.value.length;
-            document.getElementById('charCount').textContent = count;
-            if (count > 1000) {
-                this.value = this.value.substring(0, 1000);
-                document.getElementById('charCount').textContent = 1000;
-            }
-        });
-    }
 }
 
 function startSessionTimer() {
@@ -78,7 +64,7 @@ function startQuestionTimer() {
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
         document.getElementById('question-timer').textContent = 
-            `⏱️ ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }, 1000);
 }
 
@@ -115,7 +101,7 @@ function renderQuestionList() {
     questions.forEach((q, index) => {
         const li = document.createElement('li');
         li.className = 'question-nav-item';
-        li.textContent = `Q${index + 1}: ${q.questionText.substring(0, 30)}...`;
+        li.innerHTML = `<strong>Q${index + 1}</strong> ${q.questionText.substring(0, 30)}...`;
         li.onclick = () => loadQuestion(index);
         questionList.appendChild(li);
     });
@@ -133,7 +119,7 @@ function updateQuestionListUI() {
     });
 }
 
-async function submitAnswer() {
+window.submitTextAnswer = async function() {
     const answerText = document.getElementById('answerText').value.trim();
     
     if (!answerText) {
@@ -152,12 +138,9 @@ async function submitAnswer() {
         answerText: answerText
     };
 
-    console.log('Submitting answer:', answerData);
-    console.log('Session ID:', SESSION_DATA.sessionId);
-
     try {
         document.getElementById('ai-status').textContent = '분석중...';
-        document.getElementById('ai-status').classList.add('analyzing');
+        document.getElementById('ai-status').style.color = '#f59e0b';
 
         const response = await authFetch(`/api/selfinterview/${SESSION_DATA.sessionId}/answer`, {
             method: 'POST',
@@ -165,26 +148,20 @@ async function submitAnswer() {
             body: JSON.stringify(answerData)
         });
 
-        console.log('Response status:', response.status);
-
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Error response:', errorText);
             throw new Error('답변 제출 실패');
         }
 
         const result = await response.json();
-        console.log('Result:', result);
+        console.log('Answer result:', result);
         
         answers.push(result.answer);
         feedbacks.push(result.feedback);
 
-        displayFeedback(result.feedback, question);
+        displayFeedback(result.feedback, question, currentQuestionIndex + 1);
 
         document.getElementById('ai-status').textContent = '완료';
-        document.getElementById('ai-status').classList.remove('analyzing');
-        document.getElementById('ai-status').classList.add('completed');
-
+        document.getElementById('ai-status').style.color = '#10b981';
         updateProgress();
 
         setTimeout(() => {
@@ -195,46 +172,111 @@ async function submitAnswer() {
         console.error('답변 제출 오류:', error);
         alert('답변 제출 중 오류가 발생했습니다: ' + error.message);
         document.getElementById('ai-status').textContent = '오류';
-        document.getElementById('ai-status').classList.remove('analyzing');
+        document.getElementById('ai-status').style.color = '#ef4444';
     }
-}
+};
 
-function displayFeedback(feedback, question) {
+window.submitVoiceAnswerSelf = async function(audioBlob) {
+    if (!SESSION_DATA || !SESSION_DATA.sessionId) {
+        alert('세션 정보를 불러올 수 없습니다.');
+        return;
+    }
+
+    const question = questions[currentQuestionIndex];
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'answer.webm');
+    formData.append('questionId', question.id);
+    formData.append('sessionId', SESSION_DATA.sessionId);
+
+    try {
+        document.getElementById('ai-status').textContent = '음성 변환 중...';
+        document.getElementById('ai-status').style.color = '#f59e0b';
+        
+        const token = document.cookie.split(';').find(c => c.trim().startsWith('Authorization='));
+        const authToken = token ? token.split('=')[1] : '';
+        
+        const response = await fetch('/api/selfinterview/transcribe', {
+            method: 'POST',
+            headers: {
+                'Authorization': authToken
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('음성 변환 실패: ' + response.status);
+        }
+        
+        const result = await response.json();
+        console.log('Voice answer result:', result);
+        
+        answers.push(result.answer);
+        feedbacks.push(result.feedback);
+        
+        displayFeedback(result.feedback, question, currentQuestionIndex + 1);
+        
+        document.getElementById('ai-status').textContent = '완료';
+        document.getElementById('ai-status').style.color = '#10b981';
+        
+        window.audioBlob = null;
+        document.getElementById('recordingStatus').textContent = '녹음 시작하려면 클릭';
+        
+        updateProgress();
+        
+        setTimeout(() => {
+            loadQuestion(currentQuestionIndex + 1);
+        }, 1500);
+        
+    } catch (error) {
+        console.error('음성 답변 제출 실패:', error);
+        alert('음성 답변 제출에 실패했습니다: ' + error.message);
+        document.getElementById('ai-status').textContent = '실패';
+        document.getElementById('ai-status').style.color = '#ef4444';
+    }
+};
+
+function displayFeedback(feedback, question, questionNumber) {
     const feedbackList = document.getElementById('ai-feedback-list');
     
     if (feedbackList.querySelector('.empty-state')) {
         feedbackList.innerHTML = '';
     }
 
-    const feedbackItem = document.createElement('div');
-    feedbackItem.className = 'feedback-item';
-    feedbackItem.innerHTML = `
-        <div class="feedback-question">Q${currentQuestionIndex + 1}: ${question.questionText.substring(0, 40)}...</div>
-        <div class="feedback-score">
-            <span class="score-badge">${feedback.score}점</span>
-            <span>${getScoreLabel(feedback.score)}</span>
-        </div>
-        <div class="feedback-content">
-            <div class="feedback-section">
-                <h5>💪 강점</h5>
-                <p>${feedback.strengths || '분석 중...'}</p>
+    const feedbackCard = document.createElement('div');
+    feedbackCard.style.cssText = `
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        animation: slideIn 0.3s ease-out;
+    `;
+
+    feedbackCard.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="font-weight: 600; color: #374151; font-size: 0.875rem;">
+                Q${questionNumber}: ${question.questionText.substring(0, 40)}...
             </div>
-            <div class="feedback-section">
-                <h5>📈 개선점</h5>
-                <p>${feedback.improvements || '분석 중...'}</p>
+            <div style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.875rem; font-weight: 600;">
+                ${feedback.score}점
+            </div>
+        </div>
+        <div style="background: #f9fafb; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
+            <div style="font-weight: 600; color: #10b981; font-size: 0.875rem; margin-bottom: 0.5rem;">✅ 강점</div>
+            <div style="color: #374151; font-size: 0.875rem; line-height: 1.5;">
+                ${feedback.strengths || '분석 중...'}
+            </div>
+        </div>
+        <div style="background: #fef3c7; padding: 1rem; border-radius: 6px;">
+            <div style="font-weight: 600; color: #f59e0b; font-size: 0.875rem; margin-bottom: 0.5rem;">💡 개선점</div>
+            <div style="color: #374151; font-size: 0.875rem; line-height: 1.5;">
+                ${feedback.improvements || '분석 중...'}
             </div>
         </div>
     `;
 
-    feedbackList.insertBefore(feedbackItem, feedbackList.firstChild);
-}
-
-function getScoreLabel(score) {
-    if (score >= 90) return '탁월함';
-    if (score >= 80) return '우수함';
-    if (score >= 70) return '양호함';
-    if (score >= 60) return '보통';
-    return '개선 필요';
+    feedbackList.insertBefore(feedbackCard, feedbackList.firstChild);
 }
 
 function skipQuestion() {

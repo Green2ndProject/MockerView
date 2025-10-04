@@ -15,7 +15,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: var(--primary-blue);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -62,6 +62,31 @@
         .history-meta {
             font-size: 0.875rem;
             color: var(--gray-600);
+        }
+        .answer-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .answer-table th,
+        .answer-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .answer-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        .answer-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .answer-text {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -130,6 +155,41 @@
                     </div>
                 </div>
                 <a th:href="@{/session/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
+            </div>
+        </div>
+
+        <div class="session-history">
+            <h3 class="session-history-title">내 답변 목록</h3>
+            <div class="card">
+                <div class="card-body">
+                    <table class="answer-table" th:if="${userAnswers != null and !userAnswers.empty}">
+                        <thead>
+                            <tr>
+                                <th>세션</th>
+                                <th>질문</th>
+                                <th>답변</th>
+                                <th>작성일시</th>
+                                <th>액션</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="answer : ${userAnswers}">
+                                <td th:text="${answer.question.session.title}">세션 제목</td>
+                                <td th:text="${answer.question.text}">질문 내용</td>
+                                <td class="answer-text" th:text="${answer.answerText}">답변 내용</td>
+                                <td th:text="${#temporals.format(answer.createdAt, 'MM-dd HH:mm')}">01-15 14:30</td>
+                                <td>
+                                    <a th:href="@{/session/detail/{id}(id=${answer.question.session.id})}" 
+                                        class="btn btn-sm btn-primary">상세</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${userAnswers == null or userAnswers.empty}" 
+                        style="text-align: center; padding: 2rem; color: #6c757d;">
+                        아직 작성한 답변이 없습니다
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -167,8 +167,8 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .details-title {
@@ -223,6 +223,17 @@
 
         .feedback-item.interviewer .feedback-header {
             color: #92400e;
+        }
+
+        .feedback-section {
+            margin-top: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .feedback-section strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #374151;
         }
 
         .empty-state {
@@ -322,15 +333,37 @@
                     <h4 class="details-title">답변 상세</h4>
                     <div th:each="answer : ${userScore.answers}" class="answer-item">
                         <div class="question-text" th:text="'Q. ' + ${answer.question.text}">질문</div>
-                        <div class="answer-text" th:text="'A. ' + ${answer.text}">답변</div>
+                        <div class="answer-text" th:text="'A. ' + ${answer.answerText}">답변</div>
                         
-                        <div th:each="feedback : ${answer.feedbacks}" 
-                            th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-item' : 'feedback-item interviewer'}">
-                            <div class="feedback-header" th:text="${feedback.feedbackType.toString() == 'AI' ? 'AI 피드백' : '면접관 피드백'}">피드백</div>
-                            <div th:text="${feedback.summary}">피드백 내용</div>
-                            <div th:if="${feedback.score != null}" style="margin-top: 0.5rem; font-weight: 500;">
-                                점수: <span th:text="${feedback.score}">0</span>/10
+                        <div th:if="${!#lists.isEmpty(answer.feedbacks)}">
+                            <div th:each="feedback : ${answer.feedbacks}" 
+                                th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-item' : 'feedback-item interviewer'}">
+                                <div class="feedback-header" th:text="${feedback.feedbackType.toString() == 'AI' ? '🤖 AI 피드백' : '👤 면접관 피드백'}">피드백</div>
+                                
+                                <div class="feedback-section">
+                                    <strong>요약</strong>
+                                    <div th:text="${feedback.summary}">요약 내용</div>
+                                </div>
+                                
+                                <div class="feedback-section" th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}">
+                                    <strong>강점</strong>
+                                    <div th:text="${feedback.strengths}">강점 내용</div>
+                                </div>
+                                
+                                <div class="feedback-section" th:if="${feedback.improvement != null and !feedback.improvement.isEmpty()}">
+                                    <strong>개선점</strong>
+                                    <div th:text="${feedback.improvement}">개선점 내용</div>
+                                </div>
+                                
+                                <div class="feedback-section" th:if="${feedback.model != null}">
+                                    <strong>모델</strong>
+                                    <div th:text="${feedback.model}">GPT-4O-MINI</div>
+                                </div>
                             </div>
+                        </div>
+                        
+                        <div th:if="${#lists.isEmpty(answer.feedbacks)}" style="color: #9ca3af; font-size: 0.875rem; margin-top: 0.5rem;">
+                            아직 피드백이 없습니다
                         </div>
                     </div>
                 </div>
@@ -344,10 +377,12 @@
     </div>
 
     <script>
-    function toggleDetails(index) {
-        const detailsEl = document.getElementById('details-' + index);
-        detailsEl.classList.toggle('show');
-    }
+        function toggleDetails(index) {
+            const detailsEl = document.getElementById('details-' + index);
+            if (detailsEl) {
+                detailsEl.classList.toggle('show');
+            }
+        }
     </script>
 </body>
 </html>

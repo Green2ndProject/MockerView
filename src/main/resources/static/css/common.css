@@ -40,7 +40,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--gray-50);
+    background-color: white !important;
     color: var(--gray-900);
     line-height: 1.6;
 }
@@ -412,6 +412,7 @@ textarea.form-control {
     gap: 1.5rem;
     height: calc(100vh - 140px);
     margin-top: 1rem;
+    background: white !important;
 }
 
 .sidebar {

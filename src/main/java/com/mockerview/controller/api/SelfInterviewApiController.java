@@ -3,13 +3,20 @@ package com.mockerview.controller.api;
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.*;
 import com.mockerview.repository.*;
+import com.mockerview.service.SelfInterviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +34,7 @@ public class SelfInterviewApiController {
     private final AnswerRepository answerRepository;
     private final FeedbackRepository feedbackRepository;
     private final UserRepository userRepository;
+    private final SelfInterviewService selfInterviewService;
     private final RestTemplate restTemplate = new RestTemplate();
     
     @Value("${openai.api.key}")
@@ -34,6 +42,38 @@ public class SelfInterviewApiController {
     
     @Value("${openai.api.url}")
     private String openaiApiUrl;
+
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createSelfInterview(
+            @RequestBody Map<String, Object> request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            Long userId = userDetails.getUserId();
+            String title = (String) request.get("title");
+            Integer questionCount = (Integer) request.get("questionCount");
+            
+            User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            Session session = selfInterviewService.createSelfInterviewSession(
+                user, title, questionCount);
+            
+            response.put("success", true);
+            response.put("message", "셀프 면접이 생성되었습니다");
+            response.put("sessionId", session.getId());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("셀프 면접 생성 실패", e);
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<Map<String, Object>> getSessionData(
@@ -68,6 +108,68 @@ public class SelfInterviewApiController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/transcribe")
+    public ResponseEntity<Map<String, Object>> transcribeAudio(
+            @RequestParam("audio") MultipartFile audioFile,
+            @RequestParam("questionId") Long questionId,
+            @RequestParam("sessionId") Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        try {
+            log.info("음성 파일 수신 - 크기: {} bytes", audioFile.getSize());
+
+            String transcribedText = transcribeWithWhisper(audioFile);
+            log.info("음성 변환 완료: {}", transcribedText.substring(0, Math.min(50, transcribedText.length())));
+
+            Question question = questionRepository.findById(questionId).orElseThrow();
+            User user = userRepository.findById(userDetails.getUserId()).orElseThrow();
+
+            Answer answer = Answer.builder()
+                    .question(question)
+                    .user(user)
+                    .answerText(transcribedText)
+                    .build();
+            answer = answerRepository.save(answer);
+
+            String feedbackText = generateAIFeedback(question.getText(), transcribedText);
+            
+            int score = extractScore(feedbackText);
+            String strengths = extractSection(feedbackText, "강점");
+            String improvements = extractSection(feedbackText, "개선점");
+
+            Feedback feedback = Feedback.builder()
+                    .answer(answer)
+                    .feedbackType(Feedback.FeedbackType.AI)
+                    .summary("AI 음성 분석 완료")
+                    .score(score)
+                    .strengths(strengths)
+                    .weaknesses("")
+                    .improvement(improvements)
+                    .model("GPT-4O-MINI")
+                    .build();
+            feedbackRepository.save(feedback);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("answer", Map.of(
+                "id", answer.getId(), 
+                "answerText", transcribedText
+            ));
+            result.put("feedback", Map.of(
+                "score", score,
+                "strengths", strengths,
+                "improvements", improvements
+            ));
+
+            log.info("음성 답변 처리 완료 - answerId: {}", answer.getId());
+
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            log.error("음성 처리 실패", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PostMapping("/{sessionId}/answer")
     public ResponseEntity<Map<String, Object>> submitAnswer(
             @PathVariable Long sessionId,
@@ -79,7 +181,7 @@ public class SelfInterviewApiController {
             String answerText = request.get("answerText").toString();
 
             log.info("Answer submitted - sessionId: {}, questionId: {}, userId: {}", 
-                     sessionId, questionId, userDetails.getUserId());
+                    sessionId, questionId, userDetails.getUserId());
 
             Question question = questionRepository.findById(questionId).orElseThrow();
             User user = userRepository.findById(userDetails.getUserId()).orElseThrow();
@@ -95,13 +197,18 @@ public class SelfInterviewApiController {
             
             int score = extractScore(feedbackText);
             String strengths = extractSection(feedbackText, "강점");
-            String weaknesses = extractSection(feedbackText, "개선점");
+            String improvements = extractSection(feedbackText, "개선점");
 
-            Feedback feedback = new Feedback();
-            feedback.setAnswer(answer);
-            feedback.setScore(score);
-            feedback.setStrengths(strengths);
-            feedback.setWeaknesses(weaknesses);
+            Feedback feedback = Feedback.builder()
+                    .answer(answer)
+                    .feedbackType(Feedback.FeedbackType.AI)
+                    .summary("AI 텍스트 분석 완료")
+                    .score(score)
+                    .strengths(strengths)
+                    .weaknesses("")
+                    .improvement(improvements)
+                    .model("GPT-4O-MINI")
+                    .build();
             feedbackRepository.save(feedback);
 
             Map<String, Object> result = new HashMap<>();
@@ -109,7 +216,7 @@ public class SelfInterviewApiController {
             result.put("feedback", Map.of(
                 "score", score,
                 "strengths", strengths,
-                "improvements", weaknesses
+                "improvements", improvements
             ));
 
             log.info("Feedback generated - score: {}", score);
@@ -119,6 +226,97 @@ public class SelfInterviewApiController {
         } catch (Exception e) {
             log.error("Failed to submit answer", e);
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/{sessionId}/video-answer")
+    public ResponseEntity<Map<String, Object>> submitVideoAnswer(
+            @PathVariable Long sessionId,
+            @RequestParam("audio") MultipartFile audioFile,
+            @RequestParam("questionId") Long questionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        try {
+            log.info("비디오 답변 수신 - 크기: {} bytes", audioFile.getSize());
+
+            String transcribedText = transcribeWithWhisper(audioFile);
+            log.info("음성 변환 완료: {}", transcribedText.substring(0, Math.min(50, transcribedText.length())));
+
+            Question question = questionRepository.findById(questionId).orElseThrow();
+            User user = userRepository.findById(userDetails.getUserId()).orElseThrow();
+
+            Answer answer = Answer.builder()
+                    .question(question)
+                    .user(user)
+                    .answerText(transcribedText)
+                    .build();
+            answer = answerRepository.save(answer);
+
+            String feedbackText = generateAIFeedback(question.getText(), transcribedText);
+            
+            int score = extractScore(feedbackText);
+            String strengths = extractSection(feedbackText, "강점");
+            String improvements = extractSection(feedbackText, "개선점");
+
+            Feedback feedback = Feedback.builder()
+                    .answer(answer)
+                    .feedbackType(Feedback.FeedbackType.AI)
+                    .summary("AI 비디오 분석 완료")
+                    .score(score)
+                    .strengths(strengths)
+                    .weaknesses("")
+                    .improvement(improvements)
+                    .model("GPT-4O-MINI")
+                    .build();
+            feedbackRepository.save(feedback);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("transcription", transcribedText);
+            result.put("answer", Map.of("id", answer.getId(), "answerText", transcribedText));
+            result.put("feedback", Map.of(
+                "score", score,
+                "strengths", strengths,
+                "improvements", improvements
+            ));
+
+            log.info("비디오 답변 처리 완료 - answerId: {}", answer.getId());
+            return ResponseEntity.ok(result);
+            
+        } catch (Exception e) {
+            log.error("비디오 답변 처리 실패", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "비디오 처리 실패: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
+
+    private String transcribeWithWhisper(MultipartFile audioFile) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(openaiApiKey.replace("Bearer ", ""));
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", audioFile.getResource());
+            body.add("model", "whisper-1");
+            body.add("language", "ko");
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://api.openai.com/v1/audio/transcriptions",
+                requestEntity,
+                Map.class
+            );
+
+            Map<String, Object> responseBody = response.getBody();
+            return (String) responseBody.get("text");
+
+        } catch (Exception e) {
+            log.error("Whisper API 호출 실패", e);
+            return "음성 인식에 실패했습니다.";
         }
     }
 
@@ -132,12 +330,12 @@ public class SelfInterviewApiController {
             ));
             requestBody.put("max_tokens", 500);
 
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + openaiApiKey);
             headers.set("Content-Type", "application/json");
 
-            org.springframework.http.HttpEntity<Map<String, Object>> entity = 
-                new org.springframework.http.HttpEntity<>(requestBody, headers);
+            HttpEntity<Map<String, Object>> entity = 
+                new HttpEntity<>(requestBody, headers);
 
             ResponseEntity<Map> response = restTemplate.postForEntity(
                 openaiApiUrl, entity, Map.class);
