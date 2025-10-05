@@ -266,29 +266,31 @@
         </div>
     </nav>
 
-    <div class="page-header">
-        <div class="container">
-            <h1>면접 결과 점수판</h1>
-            <p th:text="${interviewSession.title}">세션 제목</p>
-            <div style="margin-top: 1rem;">
-                <a th:href="@{/session/{id}(id=${interviewSession.id})}" class="btn btn-secondary">세션으로 돌아가기</a>
-            </div>
-        </div>
+    <div style="margin-top: 1rem;">
+        <a th:if="${interviewSession.isSelfInterview == 'Y'}"
+            href="/selfinterview/list"
+            class="btn btn-secondary">목록으로 돌아가기</a>
+        <a th:if="${interviewSession.isSelfInterview != 'Y'}"
+            href="/session/list"
+            class="btn btn-secondary">세션 목록으로</a>
     </div>
 
     <div class="container" style="padding: 2rem 1rem;">
         <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-number" th:text="${#lists.size(userScores)}">0</span>
-                <div class="stat-label">참가자</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${totalQuestions}">0</span>
-                <div class="stat-label">질문 수</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${interviewSession.status}">진행중</span>
-                <div class="stat-label">세션 상태</div>
+                <div class="stat-card">
+                    <span class="stat-number" th:text="${#lists.size(userScores)}">0</span>
+                    <div class="stat-label">참가자</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" th:text="${totalQuestions}">0</span>
+                    <div class="stat-label">질문 수</div>
+                </div>
+                <div class="stat-card">
+                    <span class="badge" 
+                        th:classappend="${interviewSession.sessionStatus.toString() == 'RUNNING' ? 'badge-live' : (interviewSession.sessionStatus.toString() == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
+                        th:text="${interviewSession.sessionStatus}">PLANNED</span>
+                    <div class="stat-label">세션 상태</div>
+                </div>
             </div>
         </div>
 

@@ -297,4 +297,40 @@ public class SessionApiController {
         }
         return "분석 중...";
     }
+
+    @PostMapping("/{sessionId}/end")
+    public ResponseEntity<Map<String, Object>> endSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            log.info("세션 종료 요청 - sessionId: {}, userId: {}", sessionId, userDetails.getUserId());
+            
+            Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            session.setStatus(Session.SessionStatus.ENDED);
+            session.setEndTime(LocalDateTime.now());
+            sessionRepository.save(session);
+            
+            Map<String, Object> statusMessage = new HashMap<>();
+            statusMessage.put("sessionId", sessionId);
+            statusMessage.put("status", "ENDED");
+            statusMessage.put("timestamp", LocalDateTime.now());
+            
+            messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/status", statusMessage);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Session ended successfully");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("세션 종료 실패", e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
 }
