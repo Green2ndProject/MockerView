@@ -110,3 +110,17 @@ ALTER TABLE sessions ADD CONSTRAINT chk_session_type
 CHECK (session_type IN ('GROUP', 'SELF', 'TEXT', 'AUDIO', 'VIDEO'));
 
 COMMIT;
+
+ALTER TABLE sessions ADD is_self_interview CHAR(1) DEFAULT 'N';
+
+UPDATE sessions SET is_self_interview = 'Y', session_type = 'TEXT' WHERE session_type = 'SELF';
+
+UPDATE sessions SET is_self_interview = 'N' WHERE session_type IN ('TEXT', 'AUDIO', 'VIDEO', 'GROUP');
+
+COMMIT;
+
+UPDATE sessions
+SET is_self_interview = 'Y', session_type = 'TEXT' 
+WHERE session_type = 'SELF';
+
+COMMIT;

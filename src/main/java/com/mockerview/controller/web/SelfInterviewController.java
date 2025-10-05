@@ -1,8 +1,8 @@
 package com.mockerview.controller.web;
 
+import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.User;
 import com.mockerview.entity.Session;
-import com.mockerview.service.SelfInterviewService;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class SelfInterviewController {
             
             List<Session> allSessions = sessionRepository.findByHostId(user.getId());
             List<Session> selfSessions = allSessions.stream()
-                .filter(s -> "SELF".equals(s.getSessionType()))
+                .filter(s -> "Y".equals(s.getIsSelfInterview()))
                 .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
                 .collect(Collectors.toList());
             
@@ -78,6 +78,30 @@ public class SelfInterviewController {
             return "selfinterview/room";
         } catch (Exception e) {
             log.error("셀프면접 룸 조회 오류", e);
+            model.addAttribute("error", e.getMessage());
+            return "error";
+        }
+    }
+
+    @GetMapping("/history")
+    public String historyPage(Authentication authentication, Model model) {
+        try {
+            if (authentication == null) {
+                return "redirect:/auth/login";
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            
+            List<Session> allSessions = sessionRepository.findByHostId(userDetails.getUserId());
+            List<Session> selfSessions = allSessions.stream()
+                .filter(s -> "Y".equals(s.getIsSelfInterview()))
+                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+                .collect(Collectors.toList());
+            
+            model.addAttribute("sessions", selfSessions);
+            return "selfinterview/history";
+        } catch (Exception e) {
+            log.error("셀프면접 히스토리 조회 오류", e);
             model.addAttribute("error", e.getMessage());
             return "error";
         }

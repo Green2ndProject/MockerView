@@ -80,10 +80,10 @@
     
     <div class="container">
         <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
-            <div th:each="session : ${sessions}" class="session-card">
-                <h3 th:text="${session.title}">셀프 면접</h3>
-                <p th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
-                <a th:href="@{/selfinterview/room/{id}(id=${session.id})}" class="btn btn-primary">결과 보기</a>
+            <div th:each="selfSession : ${sessions}" class="session-card">
+                <h3 th:text="${selfSession.title}">셀프 면접</h3>
+                <p th:text="${#temporals.format(selfSession.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
+                <a th:href="@{/session/scoreboard/{id}(id=${selfSession.id})}" class="btn btn-primary">결과 보기</a>
             </div>
         </div>
         

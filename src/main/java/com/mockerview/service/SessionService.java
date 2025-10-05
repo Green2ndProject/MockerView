@@ -111,11 +111,12 @@ public class SessionService {
             Session session = Session.builder()
                 .title(title)
                 .host(host)
-                .status(Session.SessionStatus.PLANNED)
+                .sessionStatus(Session.SessionStatus.PLANNED)
                 .sessionType(validSessionType)
                 .mediaEnabled(!"TEXT".equals(validSessionType))
                 .isReviewable("Y")
                 .createdAt(LocalDateTime.now())
+                .lastActivity(LocalDateTime.now())
                 .build();
             
             Session saved = sessionRepository.save(session);
@@ -145,6 +146,10 @@ public class SessionService {
             Answer saved = answerRepository.save(answer);
             log.info("Answer saved with ID: {}", saved.getId());
             
+            Session session = question.getSession();
+            session.setLastActivity(LocalDateTime.now());
+            sessionRepository.save(session);
+            
             return saved.getId();
             
         } catch (Exception e) {
@@ -157,12 +162,14 @@ public class SessionService {
         try {
             Session session = findById(sessionId);
             
-            if (session.getStatus() == Session.SessionStatus.PLANNED) {
+            if (session.getSessionStatus() == Session.SessionStatus.PLANNED) {
                 log.info("세션 상태 변경: PLANNED -> RUNNING (Session ID: {})", sessionId);
-                session.setStatus(Session.SessionStatus.RUNNING);
+                session.setSessionStatus(Session.SessionStatus.RUNNING);
                 session.setStartTime(LocalDateTime.now());
-                sessionRepository.save(session);
             }
+            
+            session.setLastActivity(LocalDateTime.now());
+            sessionRepository.save(session);
 
             User questioner = userRepository.findById(questionerId)
                 .orElseThrow(() -> new RuntimeException("Questioner not found: " + questionerId));
@@ -203,7 +210,7 @@ public class SessionService {
             
             return SessionStatusMessage.builder()
                 .sessionId(sessionId)
-                .status(session.getStatus().toString())
+                .status(session.getSessionStatus().toString())
                 .participants(participants)
                 .questionCount(questionCount.intValue())
                 .answerCount(answerCount.intValue())
@@ -229,17 +236,18 @@ public class SessionService {
 
     public Session startSession(Long sessionId) {
         Session session = findById(sessionId);
-        session.setStatus(Session.SessionStatus.RUNNING);
+        session.setSessionStatus(Session.SessionStatus.RUNNING);
         session.setStartTime(LocalDateTime.now());
+        session.setLastActivity(LocalDateTime.now());
         return sessionRepository.save(session);
     }
 
     public Session endSession(Long sessionId) {
         Session session = findById(sessionId);
         
-        if (session.getStatus() != Session.SessionStatus.ENDED) {
+        if (session.getSessionStatus() != Session.SessionStatus.ENDED) {
             log.info("세션 상태 변경: RUNNING -> ENDED (Session ID: {})", sessionId);
-            session.setStatus(Session.SessionStatus.ENDED);
+            session.setSessionStatus(Session.SessionStatus.ENDED);
             session.setEndTime(LocalDateTime.now());
             return sessionRepository.save(session);
         }

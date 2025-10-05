@@ -30,6 +30,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     
     implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
     implementation 'io.agora:authentication:2.0.0'
     
     implementation 'org.webjars:bootstrap:5.3.2'

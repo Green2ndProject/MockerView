@@ -54,12 +54,13 @@ public class SelfInterviewApiController {
             Long userId = userDetails.getUserId();
             String title = (String) request.get("title");
             Integer questionCount = (Integer) request.get("questionCount");
+            String sessionType = request.getOrDefault("sessionType", "TEXT").toString();
             
             User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
             Session session = selfInterviewService.createSelfInterviewSession(
-                user, title, questionCount);
+                user, title, questionCount, sessionType);
             
             response.put("success", true);
             response.put("message", "셀프 면접이 생성되었습니다");
