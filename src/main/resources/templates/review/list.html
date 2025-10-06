@@ -5,6 +5,17 @@
     <title>리뷰 작성 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/review.css">
+    <style>
+        .badge-self {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -28,7 +39,10 @@
             <div th:each="reviewSession : ${sessions}" class="review-session-card">
                 <div class="card-header">
                     <h3 th:text="${reviewSession.title}">면접 세션</h3>
-                    <span class="badge badge-ended">완료</span>
+                    <div>
+                        <span class="badge badge-ended">완료</span>
+                        <span th:if="${reviewSession.isSelfInterview == 'Y'}" class="badge badge-self">🎯 셀프면접</span>
+                    </div>
                 </div>
                 
                 <div class="card-body">
