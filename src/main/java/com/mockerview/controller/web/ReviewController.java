@@ -52,11 +52,11 @@ public class ReviewController {
             User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
-            var session = sessionRepository.findByIdWithHostAndQuestions(sessionId)
+            var interviewSession = sessionRepository.findByIdWithHostAndQuestions(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
             
-            log.info("Questions: {}", session.getQuestions());
-            log.info("Questions size: {}", session.getQuestions().size());
+            log.info("Questions: {}", interviewSession.getQuestions());
+            log.info("Questions size: {}", interviewSession.getQuestions().size());
             
             List<Answer> allAnswers = answerRepository.findAllBySessionIdWithFeedbacks(sessionId);
             
@@ -65,8 +65,8 @@ public class ReviewController {
             
             log.info("Total answers: {}", allAnswers.size());
             
-            model.addAttribute("session", session);
-            model.addAttribute("questions", session.getQuestions());
+            model.addAttribute("interviewSession", interviewSession);
+            model.addAttribute("questions", interviewSession.getQuestions());
             model.addAttribute("answersByQuestion", answersByQuestion);
             model.addAttribute("currentUser", currentUser);
             
