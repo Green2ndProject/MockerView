@@ -204,6 +204,14 @@
             background: #f3f4f6;
             color: #374151;
         }
+        
+        .scheduled-time {
+            display: block;
+            margin-top: 0.5rem;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
@@ -235,13 +243,13 @@
     <div class="container">
         <div class="section-tabs">
             <button class="tab-btn active" onclick="switchTab('group', event)">
-                👥 그룹 면접
+                그룹 면접
             </button>
             <button class="tab-btn" onclick="switchTab('self', event)">
-                🎯 셀프 면접
+                셀프 면접
             </button>
             <button class="tab-btn" onclick="switchTab('review', event)">
-                📝 리뷰
+                리뷰
             </button>
         </div>
 
@@ -324,6 +332,11 @@
                         <span
                             th:text="${sessionItem.host.name != null ? sessionItem.host.name : (sessionItem.host.username != null ? sessionItem.host.username : '알 수 없음')}">
                             호스트명
+                        </span>
+                        
+                        <span th:if="${sessionItem.sessionStatus.name() == 'PLANNED' and sessionItem.startTime != null}"
+                            class="scheduled-time">
+                            ⏰ [[${#temporals.format(sessionItem.startTime, 'MM/dd HH:mm')}]] 시작 예정
                         </span>
                     </div>
 
@@ -470,6 +483,17 @@
                                 <div class="mode-desc">얼굴 보며 면접</div>
                             </label>
                         </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="scheduledStartTime">시작 예정 시각 (선택)</label>
+                        <input 
+                            type="datetime-local" 
+                            id="scheduledStartTime" 
+                            name="scheduledStartTime" 
+                            class="form-control"
+                        />
+                        <small class="text-muted">비워두면 즉시 시작 가능</small>
                     </div>
                     
                     <div class="form-actions">
@@ -625,6 +649,7 @@
                     e.preventDefault();
                     const title = document.getElementById("sessionTitle").value;
                     const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
+                    const scheduledStartTime = document.getElementById("scheduledStartTime").value;
                     
                     if (title !== null && title.trim() !== "") {
                         const form = document.createElement("form");
@@ -642,6 +667,14 @@
                         typeInput.name = "sessionType";
                         typeInput.value = sessionType;
                         form.appendChild(typeInput);
+                        
+                        if (scheduledStartTime) {
+                            const timeInput = document.createElement("input");
+                            timeInput.type = "hidden";
+                            timeInput.name = "scheduledStartTime";
+                            timeInput.value = scheduledStartTime;
+                            form.appendChild(timeInput);
+                        }
                         
                         document.body.appendChild(form);
                         form.submit();
