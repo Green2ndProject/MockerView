@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -185,7 +186,8 @@ public class SessionWebController {
 
     @PostMapping("/create")
     public String createSession(@RequestParam String title,
-                                @RequestParam(defaultValue = "TEXT") String sessionType) {
+                                @RequestParam(defaultValue = "TEXT") String sessionType,
+                                @RequestParam(required = false) String scheduledStartTime) {
         try {
             User currentUser = getCurrentUser();
             
@@ -193,15 +195,21 @@ public class SessionWebController {
                 return "redirect:/auth/login";
             }
             
-            log.info("세션 생성 요청 - title: {}, hostId: {}, type: {}", title, currentUser.getId(), sessionType);
-            sessionService.createSession(title, currentUser.getId(), sessionType);
+            LocalDateTime startTime = null;
+            if (scheduledStartTime != null && !scheduledStartTime.isEmpty()) {
+                startTime = LocalDateTime.parse(scheduledStartTime);
+            }
+            
+            log.info("세션 생성 요청 - title: {}, hostId: {}, type: {}, scheduled: {}", 
+                    title, currentUser.getId(), sessionType, startTime);
+            sessionService.createSession(title, currentUser.getId(), sessionType, startTime);
             log.info("세션 생성 완료");
-    
+
             String successMessage = "세션이 생성되었습니다";
             String encodedMessage = URLEncoder.encode(successMessage, StandardCharsets.UTF_8.toString());
-    
+
             return "redirect:/session/list?success=" + encodedMessage;
-    
+
         } catch (Exception e) {
             log.error("세션 생성 오류: ", e);
             return "redirect:/session/list?error=" + e.getMessage();

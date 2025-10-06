@@ -45,4 +45,25 @@ public class SessionScheduler {
             log.info("자동 종료된 세션 수: {}", endedCount);
         }
     }
+    
+    @Scheduled(cron = "0 */1 * * * *")
+    @Transactional
+    public void autoStartScheduledSessions() {
+        LocalDateTime now = LocalDateTime.now();
+        
+        List<Session> scheduledSessions = sessionRepository.findByStatusAndStartTimeBefore(
+            Session.SessionStatus.PLANNED, now
+        );
+        
+        for (Session session : scheduledSessions) {
+            session.setSessionStatus(Session.SessionStatus.RUNNING);
+            log.info("예약 세션 자동 시작 - ID: {}, 제목: {}, 예약시각: {}", 
+                    session.getId(), session.getTitle(), session.getStartTime());
+        }
+        
+        if (!scheduledSessions.isEmpty()) {
+            sessionRepository.saveAll(scheduledSessions);
+            log.info("총 {} 개 예약 세션 자동 시작됨", scheduledSessions.size());
+        }
+    }
 }

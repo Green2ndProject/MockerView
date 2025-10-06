@@ -98,7 +98,7 @@ public class SessionService {
         }
     }
 
-    public Session createSession(String title, Long hostId, String sessionType) {
+    public Session createSession(String title, Long hostId, String sessionType, LocalDateTime scheduledStartTime) {
         try {
             User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("Host not found: " + hostId));
@@ -117,10 +117,12 @@ public class SessionService {
                 .isReviewable("Y")
                 .createdAt(LocalDateTime.now())
                 .lastActivity(LocalDateTime.now())
+                .startTime(scheduledStartTime)
                 .build();
             
             Session saved = sessionRepository.save(session);
-            log.info("Session created with ID: {}, type: {}", saved.getId(), validSessionType);
+            log.info("Session created with ID: {}, type: {}, scheduled: {}", 
+                    saved.getId(), validSessionType, scheduledStartTime);
             return saved;
         } catch (Exception e) {
             log.error("Error creating session: ", e);

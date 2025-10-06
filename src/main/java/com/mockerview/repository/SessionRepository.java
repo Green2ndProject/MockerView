@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,4 +70,10 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host LEFT JOIN FETCH s.questions WHERE s.id = :id")
     Optional<Session> findByIdWithHostAndQuestions(@Param("id") Long id);
+
+    @Query("SELECT s FROM Session s WHERE s.sessionStatus = :status AND s.startTime <= :now")
+    List<Session> findByStatusAndStartTimeBefore(
+    @Param("status") Session.SessionStatus status,
+    @Param("now") LocalDateTime now
+);
 }
