@@ -10,6 +10,7 @@ import com.mockerview.repository.AnswerRepository;
 import com.mockerview.repository.ReviewRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/review")
+@Slf4j
 public class ReviewApiController {
 
     private final ReviewRepository reviewRepository;
@@ -43,32 +45,51 @@ public class ReviewApiController {
             @RequestBody ReviewRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
-        User reviewer = userRepository.findById(userDetails.getUserId())
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        Session session = sessionRepository.findById(request.getSessionId())
-            .orElseThrow(() -> new RuntimeException("Session not found"));
-        
-        Answer answer = null;
-        if (request.getAnswerId() != null) {
-            answer = answerRepository.findById(request.getAnswerId())
-                .orElseThrow(() -> new RuntimeException("Answer not found"));
-        }
-        
-        Review review = Review.builder()
-            .session(session)
-            .reviewer(reviewer)
-            .answer(answer)
-            .reviewComment(request.getComment())
-            .rating(request.getRating())
-            .build();
-        
-        reviewRepository.save(review);
+        log.info("리뷰 생성 요청 - sessionId: {}, answerId: {}, rating: {}", 
+            request.getSessionId(), request.getAnswerId(), request.getRating());
         
         Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("reviewId", review.getId());
         
-        return ResponseEntity.ok(response);
+        if (request.getSessionId() == null) {
+            response.put("success", false);
+            response.put("message", "세션 ID가 필요합니다.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        try {
+            User reviewer = userRepository.findById(userDetails.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            Session session = sessionRepository.findById(request.getSessionId())
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            Review.ReviewBuilder reviewBuilder = Review.builder()
+                .session(session)
+                .reviewer(reviewer)
+                .reviewComment(request.getComment())
+                .rating(request.getRating());
+            
+            if (request.getAnswerId() != null && request.getAnswerId() > 0) {
+                Answer answer = answerRepository.findById(request.getAnswerId())
+                    .orElseThrow(() -> new RuntimeException("Answer not found"));
+                reviewBuilder.answer(answer);
+            }
+            
+            Review review = reviewBuilder.build();
+            reviewRepository.save(review);
+            
+            log.info("리뷰 생성 완료 - reviewId: {}", review.getId());
+            
+            response.put("success", true);
+            response.put("reviewId", review.getId());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("리뷰 생성 중 오류", e);
+            response.put("success", false);
+            response.put("message", "리뷰 생성 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 
     @GetMapping("/session/{sessionId}")
