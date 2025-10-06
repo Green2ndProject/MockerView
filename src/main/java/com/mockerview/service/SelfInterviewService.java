@@ -34,7 +34,7 @@ public class SelfInterviewService {
             .sessionStatus(Session.SessionStatus.RUNNING)
             .sessionType(sessionType != null ? sessionType : "TEXT")
             .isSelfInterview("Y")
-            .isReviewable("N")
+            .isReviewable("Y")
             .createdAt(LocalDateTime.now())
             .startTime(LocalDateTime.now())
             .lastActivity(LocalDateTime.now())
