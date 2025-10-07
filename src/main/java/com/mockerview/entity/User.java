@@ -3,12 +3,16 @@ package com.mockerview.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+@Where(clause = "IS_DELETED = 0")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,4 +45,15 @@ public class User {
     public enum UserRole {
         STUDENT, HOST, REVIEWER
     }
+
+    @Column(name = "IS_DELETED", nullable = false, precision = 1)
+    @ColumnDefault("0")
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    @Column(name = "DELETED_AT")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "WITHDRAWAL_REASON", length = 255)
+    private String withdrawalReason;
 }
