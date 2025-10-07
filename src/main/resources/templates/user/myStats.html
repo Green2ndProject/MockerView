@@ -517,7 +517,7 @@
             if (!answer) return;
 
             document.getElementById('modalQuestion').textContent = answer.question.text;
-            document.getElementById('modalAnswer').textContent = answer.text;
+            document.getElementById('modalAnswer').textContent = answer.answerText || answer.text || '답변 내용이 없습니다.';
 
             var feedbacksContainer = document.getElementById('modalFeedbacks');
             feedbacksContainer.innerHTML = '';
@@ -535,7 +535,11 @@
                             '<span class="feedback-type ' + typeClass + '">' + feedbackType + ' 피드백</span>' +
                             (feedback.score ? '<span class="feedback-score ' + typeClass + '">' + feedback.score + '/10</span>' : '') +
                         '</div>' +
-                        '<div class="feedback-content">' + (feedback.summary || '피드백 내용이 없습니다.') + '</div>';
+                        '<div class="feedback-content">' +
+                            '<div><strong>요약:</strong> ' + (feedback.summary || 'AI 분석 완료') + '</div>' +
+                            (feedback.strengths ? '<div style="margin-top: 0.5rem;"><strong>강점:</strong> ' + feedback.strengths + '</div>' : '') +
+                            (feedback.improvement ? '<div style="margin-top: 0.5rem;"><strong>개선점:</strong> ' + feedback.improvement + '</div>' : '') +
+                        '</div>';
                     
                     feedbacksContainer.appendChild(feedbackDiv);
                 });

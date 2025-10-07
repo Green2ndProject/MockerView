@@ -4,10 +4,481 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="'면접 진행 - ' + ${sessionTitle}">면접 진행</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/session.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/common.css}" rel="stylesheet">
+    <link th:href="@{/css/session.css}" rel="stylesheet">
+    <link th:href="@{/css/agora-media.css}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.0.js"></script>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --host-color: #667eea;
+            --student-color: #4CAF50;
+            --reviewer-color: #FF9800;
+        }
+        
+        body {
+            background: white !important;
+        }
+        
+        body.role-host {
+            --role-color: var(--host-color);
+        }
+        body.role-student {
+            --role-color: var(--student-color);
+        }
+        body.role-reviewer {
+            --role-color: var(--reviewer-color);
+        }
+        
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .navbar-brand {
+            color: var(--role-color);
+        }
+        
+        .user-role {
+            background: var(--role-color);
+            color: white;
+        }
+        
+        .session-info-bar {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 1.5rem 0;
+        }
+        
+        .video-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .video-container {
+            background: #000;
+            border-radius: 8px;
+            aspect-ratio: 16/9;
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container {
+            background: white;
+        }
+        
+        .card {
+            background: white;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .current-question {
+            border: 2px solid var(--role-color);
+        }
+        
+        .current-question .card-header {
+            background: white;
+            color: var(--role-color);
+            border-bottom: 2px solid var(--role-color);
+        }
+        
+        .question-display {
+            background: white;
+            padding: 2rem;
+        }
+        
+        #current-question-text {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+        }
+        
+        .answer-card {
+            border: 2px solid var(--role-color);
+        }
+        
+        .answer-card .card-header {
+            background: white;
+            color: var(--role-color);
+            border-bottom: 2px solid var(--role-color);
+        }
+        
+        .btn-primary {
+            background: var(--role-color);
+            border-color: var(--role-color);
+        }
+        
+        .btn-primary:hover {
+            background: var(--role-color);
+            opacity: 0.9;
+        }
+        
+        .btn-success {
+            background: var(--role-color);
+            border-color: var(--role-color);
+        }
+        
+        .btn-success:hover {
+            background: var(--role-color);
+            opacity: 0.9;
+        }
+        
+        .badge-live {
+            background: var(--role-color);
+            color: white;
+        }
+        
+        .interview-layout {
+            background: white;
+        }
+        
+        .student-view, .host-view {
+            background: white;
+        }
+        
+        .media-section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .video-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .video-container {
+            background: #f5f5f5;
+            border-radius: 8px;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-placeholder {
+            color: #999;
+            font-size: 1.2rem;
+        }
+        
+        .remote-videos-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .media-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            background: white;
+        }
+        
+        .media-btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        
+        .media-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .media-btn.audio.muted {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        
+        .media-btn.video.off {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        
+        .media-btn.leave {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        
+        .media-btn.leave:hover {
+            background: #dc2626;
+        }
+        
+        .session-controls {
+            margin-bottom: 1.5rem;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .control-buttons .btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+        
+        .session-status-display {
+            text-align: center;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .status-badge.waiting {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .status-badge.ongoing {
+            background: #d1f4e0;
+            color: #28a745;
+        }
+        
+        .status-badge.paused {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-badge.ended {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .answer-review-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .user-name-badge {
+            font-weight: 600;
+            color: #333;
+            background: #f8f9fa;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .answer-time {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .question-text, .answer-text {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .question-text {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .answer-text {
+            background: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            color: #495057;
+        }
+
+        .ai-feedback-section {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #e3f2fd;
+            border-radius: 6px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .ai-feedback-loading {
+            color: #1976d2;
+            font-weight: 500;
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .ai-feedback-content {
+            color: #1565c0;
+        }
+
+        .ai-feedback-header {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #0d47a1;
+        }
+
+        .ai-score {
+            background: #bbdefb;
+            color: #0d47a1;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .ai-strengths, .ai-improvements {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .interviewer-evaluation {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .evaluation-header {
+            margin-bottom: 1rem;
+        }
+
+        .evaluation-header h5 {
+            color: #495057;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .score-input-group, .feedback-input-group {
+            margin-bottom: 1rem;
+        }
+
+        .score-input-group label, .feedback-input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .score-input {
+            width: 100px;
+            padding: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .score-input:focus, .feedback-textarea:focus {
+            border-color: var(--role-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .evaluation-submit-btn {
+            background: var(--role-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .evaluation-submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        .evaluation-submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .submitted-evaluation {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            color: #155724;
+            font-size: 0.9rem;
+        }
+
+        .answers-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .scrollable {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
-<body>
+<body th:classappend="${isHost} ? 'role-host' : 'role-student'">
     <nav class="navbar">
         <div class="container">
             <div class="navbar-content">
@@ -16,8 +487,7 @@
                     <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
                     <div class="user-info">
                         <span class="user-name" th:text="${userName}">사용자</span>
-                        <span class="user-role" th:classappend="${isHost} ? 'role-host' : 'role-student'" 
-                              th:text="${isHost} ? '면접관' : '지원자'">역할</span>
+                        <span class="user-role" th:text="${isHost} ? '면접관' : '지원자'">역할</span>
                     </div>
                 </div>
             </div>
@@ -48,38 +518,49 @@
     </div>
 
     <div class="container">
+        <div class="media-section mb-4" id="mediaSection" 
+                th:style="${sessionType == 'AUDIO' or sessionType == 'VIDEO'} ? 'display: block;' : 'display: none;'">
+            <div class="video-grid" id="videoGrid">
+                <div id="local-video" class="video-container">
+                    <div class="video-placeholder">
+                        <span th:text="${sessionType == 'VIDEO' ? '📹 내 화면' : '🎤 음성 연결 중...'}">미디어</span>
+                    </div>
+                </div>
+                <div id="remote-videos" class="remote-videos-container"></div>
+            </div>
+            <div class="media-controls" id="mediaControls">
+                <button id="audioBtn" class="media-btn audio" onclick="toggleAudio()">🎤</button>
+                <button id="videoBtn" class="media-btn video" onclick="toggleVideo()" 
+                        th:style="${sessionType == 'VIDEO'} ? 'display: inline-block;' : 'display: none;'">📹</button>
+                <button class="media-btn leave" onclick="stopMedia()">📞 종료</button>
+            </div>
+        </div>
+
         <div class="interview-layout">
-            <aside class="sidebar">
+            <div th:if="${isHost}" class="host-view">
+                <div class="card session-controls">
+                    <div class="card-header">
+                        <h4>면접 제어</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="control-buttons">
+                            <button id="startInterviewBtn" onclick="startInterview()" class="btn btn-success">
+                                면접 시작
+                            </button>
+                            <button id="pauseInterviewBtn" onclick="pauseInterview()" class="btn btn-warning" style="display: none;">
+                                일시정지
+                            </button>
+                            <button id="endInterviewBtn" onclick="endInterview()" class="btn btn-danger" style="display: none;">
+                                면접 종료
+                            </button>
+                        </div>
+                        <div class="session-status-display">
+                            <span class="status-badge waiting" id="sessionStatusBadge">대기중</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
-                    <div class="card-header">
-                        <h4>참가자</h4>
-                        <span class="participant-count">0명</span>
-                    </div>
-                    <div class="card-body">
-                        <ul id="participants-list" class="participants-list">
-                        </ul>
-                    </div>
-                </div>
-            </aside>
-
-            <main class="main-content">
-                <div class="card current-question">
-                    <div class="card-header">
-                        <h3>현재 질문</h3>
-                        <div class="question-info">
-                            <span id="question-number">Q1</span>
-                            <span id="question-timer">⏱️ 00:00</span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="current-question" class="question-display">
-                            <p id="current-question-text">면접관이 질문을 준비 중입니다...</p>
-                        </div>
-                        <input type="hidden" id="currentQuestionId" value="">
-                    </div>
-                </div>
-
-                <div class="card" th:if="${isHost}" id="question-form">
                     <div class="card-header">
                         <h4>질문 출제</h4>
                     </div>
@@ -108,39 +589,95 @@
                     </div>
                 </div>
 
-                <div class="card answer-card" th:unless="${isHost}" id="answer-section">
+                <div class="card mt-4">
                     <div class="card-header">
-                        <h4>답변 작성</h4>
-                        <span class="answer-tip">차분히 생각하고 답변해보세요</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="5"></textarea>
-                            <div class="char-counter">
-                                <span id="charCount">0</span>/1000자
-                            </div>
-                        </div>
-                        <button onclick="submitAnswer()" class="btn btn-success btn-full">답변 제출</button>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h4>제출된 답변</h4>
+                        <h4>제출된 답변 및 평가</h4>
                         <span id="answer-count" class="badge badge-waiting">0개</span>
                     </div>
                     <div class="card-body">
-                        <div id="answers-list" class="answers-list scrollable">
+                        <div id="answers-list" class="answers-list">
                             <div class="empty-state">
                                 <p>아직 제출된 답변이 없습니다</p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
+            <div th:unless="${isHost}" class="student-view">
+                <div class="card current-question">
+                    <div class="card-header">
+                        <h3>현재 질문</h3>
+                        <div class="question-info">
+                            <span id="question-number">Q1</span>
+                            <span id="question-timer">⏱️ 00:00</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="current-question" class="question-display">
+                            <p id="current-question-text">면접관이 질문을 준비 중입니다...</p>
+                        </div>
+                        <input type="hidden" id="currentQuestionId" value="">
+                    </div>
+                </div>
 
-            <aside class="feedback-panel">
-                <div class="card">
+                <div class="card answer-card mt-4" id="answer-section">
+                    <div class="card-header">
+                        <h4>답변 작성</h4>
+                        <span class="answer-tip">차분히 생각하고 답변해보세요</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="answer-mode-toggle" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <button id="textModeBtn" class="btn btn-secondary active" onclick="switchAnswerMode('text')">
+                                💬 텍스트
+                            </button>
+                            <button id="voiceModeBtn" class="btn btn-secondary" onclick="switchAnswerMode('voice')" 
+                                    th:if="${sessionType == 'AUDIO' or sessionType == 'VIDEO'}">
+                                🎤 음성
+                            </button>
+                        </div>
+                
+                        <div id="text-answer-area">
+                            <div class="form-group">
+                                <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="5"></textarea>
+                                <div class="char-counter">
+                                    <span id="charCount">0</span>/1000자
+                                </div>
+                            </div>
+                            <button onclick="submitAnswer()" class="btn btn-success btn-full">답변 제출</button>
+                        </div>
+                
+                        <div id="voice-answer-area" style="display: none;">
+                            <div th:if="${sessionType == 'VIDEO'}" class="video-recording-section" style="text-align: center; padding: 1rem;">
+                                <video id="recordingPreview" width="300" height="200" style="border: 1px solid #ccc; border-radius: 6px; margin-bottom: 1rem;" muted></video>
+                                <br>
+                                <button id="videoRecordBtn" class="btn btn-danger btn-lg" onclick="toggleVideoRecording()" 
+                                        style="width: 120px; height: 50px; border-radius: 8px; margin-bottom: 1rem;">
+                                    🎥 녹화 시작
+                                </button>
+                                <div id="videoRecordingStatus" style="margin-top: 0.5rem; color: #6c757d; font-weight: 500;">
+                                    비디오 답변 녹화 준비
+                                </div>
+                            </div>
+                            
+                            <div th:unless="${sessionType == 'VIDEO'}" class="audio-recorder-container" style="text-align: center; padding: 2rem;">
+                                <button id="recordBtn" class="btn btn-danger btn-lg" onclick="toggleRecording()" 
+                                        style="width: 100px; height: 100px; border-radius: 50%; font-size: 2rem;">
+                                    🎤
+                                </button>
+                                <div id="recordingStatus" style="margin-top: 1rem; color: #6c757d; font-weight: 500;">
+                                    녹음 시작하려면 클릭
+                                </div>
+                            </div>
+                            
+                            <button id="submitVoiceBtn" onclick="submitVoiceAnswer()" class="btn btn-success btn-lg" 
+                                    style="margin-top: 1rem; display: none;">
+                                답변 제출
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
                     <div class="card-header">
                         <h4>AI 피드백</h4>
                         <span class="ai-status">대기중</span>
@@ -150,63 +687,600 @@
                             <div class="empty-state">
                                 <div class="ai-icon">🤖</div>
                                 <p>답변이 제출되면 AI가 즉시 분석합니다</p>
-                                <div class="ai-features">
-                                    <span>• 강점 분석</span>
-                                    <span>• 개선점 제시</span>
-                                    <span>• 점수 평가</span>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </aside>
+            </div>
         </div>
     </div>
 
-    <input type="hidden" id="sessionId" th:value="${sessionId}" />
-    <input type="hidden" id="userId" th:value="${userId}" />
-    <input type="hidden" id="userName" th:value="${userName}" />
-    <input type="hidden" id="sessionRole" th:value="${isHost ? 'HOST' : 'STUDENT'}" />
-<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-<script th:inline="javascript">
-    const SESSION_DATA = {
-        sessionId: /*[[${sessionId}]]*/ 1,
-        userId: /*[[${userId}]]*/ 1,
-        userName: /*[[${userName}]]*/ '사용자',
-        isHost: /*[[${isHost}]]*/ false
-    };
-    
-    const answerTextArea = document.getElementById('answerText');
-    if (answerTextArea) {
-        answerTextArea.addEventListener('input', function() {
-            const count = this.value.length;
-            document.getElementById('charCount').textContent = count;
-            if (count > 1000) {
-                this.value = this.value.substring(0, 1000);
-                document.getElementById('charCount').textContent = 1000;
-            }
-        });
-    }
-    
-    console.log('세션 데이터:', SESSION_DATA);
-</script>
-<script src="/js/mockerview-websocket.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM 로드 완료');
-        console.log('SockJS 로드됨:', typeof SockJS !== 'undefined');
-        console.log('Stomp 로드됨:', typeof Stomp !== 'undefined');
+    <script th:inline="javascript">
+        const SESSION_DATA = {
+            sessionId: /*[[${sessionId}]]*/ 1,
+            userId: /*[[${userId}]]*/ 1,
+            userName: /*[[${userName}]]*/ '사용자',
+            isHost: /*[[${isHost}]]*/ false,
+            sessionType: /*[[${sessionType}]]*/ 'TEXT'
+        };
         
-        if (typeof SockJS === 'undefined' || typeof Stomp === 'undefined') {
-            console.error('WebSocket 라이브러리 로드 실패');
-            alert('WebSocket 라이브러리를 로드할 수 없습니다. 인터넷 연결을 확인하세요.');
-            return;
+        console.log('=== 세션 데이터 디버깅 ===');
+        console.log('sessionType:', SESSION_DATA.sessionType);
+        
+        const answerTextArea = document.getElementById('answerText');
+        if (answerTextArea) {
+            answerTextArea.addEventListener('input', function() {
+                const count = this.value.length;
+                document.getElementById('charCount').textContent = count;
+                if (count > 1000) {
+                    this.value = this.value.substring(0, 1000);
+                    document.getElementById('charCount').textContent = 1000;
+                }
+            });
         }
         
-        console.log('WebSocket 초기화 시작:', SESSION_DATA);
-        initializeWebSocket(SESSION_DATA.sessionId, SESSION_DATA.userId, SESSION_DATA.userName);
-    });
-</script>
+        let agoraClient = null;
+        let mediaEnabled = false;
+        let interviewStatus = 'waiting';
+        let currentAnswerMode = 'text';
+        let audioRecorder = null;
+        let audioBlob = null;
+        let audioChunks = [];
+        let answerCount = 0;
+        let videoRecordingStream = null;
+        let videoRecorder = null;
+        let recordedVideoBlob = null;
+    
+        function getToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'Authorization') {
+                    return value;
+                }
+            }
+            return '';
+        }
+    
+        async function initializeMedia() {
+            try {
+                const token = getToken();
+                const response = await fetch(`/api/agora/token/${SESSION_DATA.sessionId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': token }
+                });
+                
+                const tokenData = await response.json();
+                
+                agoraClient = new AgoraClient(tokenData.appId);
+                await agoraClient.join(tokenData.channel, tokenData.token, tokenData.uid);
+                
+                if (SESSION_DATA.sessionType === 'VIDEO') {
+                    await agoraClient.publishAudioVideo();
+                    document.getElementById('videoBtn').style.display = 'inline-block';
+                } else {
+                    await agoraClient.publishAudioOnly();
+                }
+                
+                document.getElementById('mediaSection').style.display = 'block';
+                mediaEnabled = true;
+                
+            } catch (error) {
+                console.error('미디어 시작 실패:', error);
+            }
+        }
+    
+        async function stopMedia() {
+            if (agoraClient) {
+                await agoraClient.leave();
+                agoraClient = null;
+            }
+            mediaEnabled = false;
+            document.getElementById('mediaSection').style.display = 'none';
+        }
+    
+        function toggleAudio() {
+            if (agoraClient) {
+                const enabled = agoraClient.toggleAudio();
+                const btn = document.getElementById('audioBtn');
+                btn.classList.toggle('muted', !enabled);
+                btn.innerHTML = enabled ? '🎤' : '🔇';
+            }
+        }
+    
+        function toggleVideo() {
+            if (agoraClient && SESSION_DATA.sessionType === 'VIDEO') {
+                const enabled = agoraClient.toggleVideo();
+                const btn = document.getElementById('videoBtn');
+                btn.classList.toggle('off', !enabled);
+                btn.innerHTML = enabled ? '📹' : '🚫';
+            }
+        }
+    
+        function startInterview() {
+            if (confirm('면접을 시작하시겠습니까?')) {
+                interviewStatus = 'ongoing';
+                document.getElementById('startInterviewBtn').style.display = 'none';
+                document.getElementById('pauseInterviewBtn').style.display = 'inline-block';
+                document.getElementById('endInterviewBtn').style.display = 'inline-block';
+                
+                const badge = document.getElementById('sessionStatusBadge');
+                badge.textContent = '진행중';
+                badge.className = 'status-badge ongoing';
+                
+                if (typeof stompClient !== 'undefined' && stompClient.connected) {
+                    stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
+                        action: 'START',
+                        timestamp: new Date().toISOString()
+                    }));
+                }
+                
+                console.log('면접 시작됨');
+            }
+        }
+    
+        function pauseInterview() {
+            if (confirm('면접을 일시정지하시겠습니까?')) {
+                interviewStatus = 'paused';
+                document.getElementById('pauseInterviewBtn').textContent = '재개';
+                document.getElementById('pauseInterviewBtn').onclick = resumeInterview;
+                
+                const badge = document.getElementById('sessionStatusBadge');
+                badge.textContent = '일시정지';
+                badge.className = 'status-badge paused';
+                
+                if (typeof stompClient !== 'undefined' && stompClient.connected) {
+                    stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
+                        action: 'PAUSE'
+                    }));
+                }
+            }
+        }
+    
+        function resumeInterview() {
+            interviewStatus = 'ongoing';
+            document.getElementById('pauseInterviewBtn').textContent = '일시정지';
+            document.getElementById('pauseInterviewBtn').onclick = pauseInterview;
+            
+            const badge = document.getElementById('sessionStatusBadge');
+            badge.textContent = '진행중';
+            badge.className = 'status-badge ongoing';
+            
+            if (typeof stompClient !== 'undefined' && stompClient.connected) {
+                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
+                    action: 'RESUME'
+                }));
+            }
+        }
+    
+        function endInterview() {
+            if (confirm('면접을 종료하시겠습니까?\n종료 후에는 답변을 제출할 수 없습니다.')) {
+                interviewStatus = 'ended';
+                document.getElementById('pauseInterviewBtn').style.display = 'none';
+                document.getElementById('endInterviewBtn').style.display = 'none';
+                
+                const badge = document.getElementById('sessionStatusBadge');
+                badge.textContent = '종료됨';
+                badge.className = 'status-badge ended';
+                
+                if (typeof stompClient !== 'undefined' && stompClient.connected) {
+                    stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
+                        action: 'END'
+                    }));
+                }
+                
+                alert('면접이 종료되었습니다.');
+                
+                setTimeout(() => {
+                    window.location.href = `/session/detail/${SESSION_DATA.sessionId}`;
+                }, 2000);
+            }
+        }
+    
+        function switchAnswerMode(mode) {
+            currentAnswerMode = mode;
+            
+            if (mode === 'text') {
+                document.getElementById('textModeBtn').classList.add('active');
+                const voiceBtn = document.getElementById('voiceModeBtn');
+                if (voiceBtn) voiceBtn.classList.remove('active');
+                document.getElementById('text-answer-area').style.display = 'block';
+                document.getElementById('voice-answer-area').style.display = 'none';
+            } else {
+                const textBtn = document.getElementById('textModeBtn');
+                if (textBtn) textBtn.classList.remove('active');
+                document.getElementById('voiceModeBtn').classList.add('active');
+                document.getElementById('text-answer-area').style.display = 'none';
+                document.getElementById('voice-answer-area').style.display = 'block';
+            }
+        }
+
+        async function toggleVideoRecording() {
+            const recordBtn = document.getElementById('videoRecordBtn');
+            const recordingStatus = document.getElementById('videoRecordingStatus');
+            const submitBtn = document.getElementById('submitVoiceBtn');
+
+            if (!videoRecorder || videoRecorder.state === 'inactive') {
+                try {
+                    videoRecordingStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: true, 
+                        audio: true 
+                    });
+                    
+                    document.getElementById('recordingPreview').srcObject = videoRecordingStream;
+                    document.getElementById('recordingPreview').play();
+                    
+                    videoRecorder = new MediaRecorder(videoRecordingStream);
+                    let videoChunks = [];
+                    
+                    videoRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            videoChunks.push(e.data);
+                        }
+                    };
+                    
+                    videoRecorder.onstop = () => {
+                        recordedVideoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                        recordingStatus.textContent = '녹화 완료! 제출하려면 답변 제출 버튼을 클릭하세요';
+                        submitBtn.style.display = 'inline-block';
+                        videoRecordingStream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    videoRecorder.start();
+                    recordBtn.innerHTML = '⏹️ 녹화 중지';
+                    recordBtn.style.background = '#dc3545';
+                    recordingStatus.textContent = '비디오 녹화 중... 중지하려면 다시 클릭';
+                    submitBtn.style.display = 'none';
+                    
+                } catch (error) {
+                    alert('카메라/마이크 권한을 허용해주세요.');
+                    console.error('비디오 녹화 시작 실패:', error);
+                }
+            } else if (videoRecorder.state === 'recording') {
+                videoRecorder.stop();
+                recordBtn.innerHTML = '🎥 녹화 시작';
+                recordBtn.style.background = '';
+            }
+        }
+    
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const recordingStatus = document.getElementById('recordingStatus');
+            const submitVoiceBtn = document.getElementById('submitVoiceBtn');
+            
+            if (!audioRecorder || audioRecorder.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    audioRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            audioChunks.push(e.data);
+                        }
+                    };
+                    
+                    audioRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        recordingStatus.textContent = '녹음 완료! 제출하려면 버튼을 클릭하세요';
+                        submitVoiceBtn.style.display = 'inline-block';
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    audioRecorder.start();
+                    recordBtn.textContent = '⏹️';
+                    recordBtn.style.background = '#dc3545';
+                    recordingStatus.textContent = '녹음 중... 중지하려면 다시 클릭';
+                    submitVoiceBtn.style.display = 'none';
+                    
+                } catch (error) {
+                    alert('마이크 권한을 허용해주세요.');
+                    console.error('녹음 시작 실패:', error);
+                }
+            } else if (audioRecorder.state === 'recording') {
+                audioRecorder.stop();
+                recordBtn.textContent = '🎤';
+                recordBtn.style.background = '';
+            }
+        }
+    
+        async function submitVoiceAnswer() {
+            if (SESSION_DATA.sessionType === 'VIDEO') {
+                await submitVideoAnswer();
+            } else {
+                await submitAudioOnlyAnswer();
+            }
+        }
+        
+        async function submitAudioOnlyAnswer() {
+            const questionId = document.getElementById('currentQuestionId').value;
+            
+            if (!audioBlob) {
+                alert('먼저 음성을 녹음해주세요.');
+                return;
+            }
+            
+            if (!questionId) {
+                alert('현재 답변할 질문이 없습니다.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'answer.webm');
+            formData.append('questionId', questionId);
+            
+            try {
+                const token = getToken();
+                const submitBtn = document.getElementById('submitVoiceBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = '제출 중...';
+                
+                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/voice-answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert('음성 답변이 제출되었습니다!\n변환된 텍스트: ' + result.transcription);
+                    audioBlob = null;
+                    audioChunks = [];
+                    document.getElementById('recordingStatus').textContent = '녹음 시작하려면 클릭';
+                    submitBtn.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '답변 제출';
+                } else {
+                    alert('음성 답변 제출에 실패했습니다: ' + (result.message || '알 수 없는 오류'));
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '답변 제출';
+                }
+            } catch (error) {
+                console.error('음성 답변 제출 실패:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+                const submitBtn = document.getElementById('submitVoiceBtn');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '답변 제출';
+            }
+        }
+
+        async function submitVideoAnswer() {
+            const questionId = document.getElementById('currentQuestionId').value;
+            
+            if (!recordedVideoBlob) {
+                alert('먼저 비디오를 녹화해주세요.');
+                return;
+            }
+            
+            if (!questionId) {
+                alert('현재 답변할 질문이 없습니다.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('audio', recordedVideoBlob, 'answer.webm');
+            formData.append('questionId', questionId);
+            
+            try {
+                const token = getToken();
+                const submitBtn = document.getElementById('submitVoiceBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = '비디오 분석 중...';
+                
+                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/video-answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token
+                    },
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert('비디오 답변이 제출되었습니다!\n변환된 텍스트: ' + result.transcription);
+                    recordedVideoBlob = null;
+                    document.getElementById('videoRecordingStatus').textContent = '비디오 답변 녹화 준비';
+                    submitBtn.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '답변 제출';
+                } else {
+                    alert('답변 제출에 실패했습니다: ' + (result.message || '알 수 없는 오류'));
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '답변 제출';
+                }
+            } catch (error) {
+                console.error('비디오 답변 제출 실패:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+                const submitBtn = document.getElementById('submitVoiceBtn');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '답변 제출';
+            }
+        }
+
+        function displayAnswerForReview(answerData) {
+            if (!SESSION_DATA.isHost) return;
+            
+            const answersList = document.getElementById('answers-list');
+            
+            const emptyState = answersList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+            
+            const answerCard = document.createElement('div');
+            answerCard.className = 'answer-review-card';
+            answerCard.id = `answer-card-${answerData.answerId}`;
+            answerCard.innerHTML = `
+                <div class="answer-header">
+                    <div class="user-name-badge">${answerData.userName}</div>
+                    <div class="answer-time">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="question-text">Q: ${answerData.questionText}</div>
+                <div class="answer-text">A: ${answerData.answerText}</div>
+                
+                <div class="ai-feedback-section" id="ai-feedback-${answerData.answerId}">
+                    <div class="ai-feedback-loading">🤖 AI 분석 중...</div>
+                </div>
+                
+                <div class="interviewer-evaluation" id="evaluation-${answerData.answerId}">
+                    <div class="evaluation-header">
+                        <h5>면접관 평가</h5>
+                    </div>
+                    <div class="score-input-group">
+                        <label>점수 (1-10):</label>
+                        <input type="number" min="1" max="10" value="7" 
+                            id="score-${answerData.answerId}" class="score-input">
+                    </div>
+                    <div class="feedback-input-group">
+                        <label>피드백:</label>
+                        <textarea placeholder="이 답변에 대한 피드백을 작성하세요..." 
+                                id="feedback-${answerData.answerId}" 
+                                class="feedback-textarea"></textarea>
+                    </div>
+                    <button onclick="submitInterviewerFeedback(${answerData.answerId})" 
+                            class="evaluation-submit-btn">평가 제출</button>
+                </div>
+            `;
+            
+            answersList.appendChild(answerCard);
+            updateAnswerCount();
+        }
+
+        function submitInterviewerFeedback(answerId) {
+            const score = document.getElementById(`score-${answerId}`).value;
+            const feedbackText = document.getElementById(`feedback-${answerId}`).value;
+            
+            if (!feedbackText.trim()) {
+                alert('피드백을 입력해주세요.');
+                return;
+            }
+            
+            const feedbackData = {
+                answerId: answerId,
+                score: parseInt(score),
+                feedbackText: feedbackText,
+                reviewerId: SESSION_DATA.userId
+            };
+            
+            if (stompClient && stompClient.connected) {
+                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/interviewer-feedback`, 
+                                {}, JSON.stringify(feedbackData));
+            }
+            
+            const evaluationDiv = document.getElementById(`evaluation-${answerId}`);
+            evaluationDiv.innerHTML = `
+                <div class="submitted-evaluation">
+                    ✅ 평가 완료 (점수: ${score}/10)
+                </div>
+            `;
+            
+            alert('평가가 제출되었습니다!');
+        }
+
+        function displayAIFeedbackForInterviewer(feedbackData) {
+            const aiSection = document.getElementById(`ai-feedback-${feedbackData.answerId}`);
+            if (aiSection) {
+                aiSection.innerHTML = `
+                    <div class="ai-feedback-content">
+                        <div class="ai-feedback-header">🤖 AI 분석 결과</div>
+                        <div class="ai-score">점수: ${feedbackData.score}/100</div>
+                        <div class="ai-strengths"><strong>강점:</strong> ${feedbackData.strengths}</div>
+                        <div class="ai-improvements"><strong>개선점:</strong> ${feedbackData.improvements}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function updateAnswerCount() {
+            answerCount++;
+            document.getElementById('answer-count').textContent = answerCount + '개';
+        }
+
+        function submitAnswer() {
+            const answerText = document.getElementById('answerText').value.trim();
+            const questionId = document.getElementById('currentQuestionId').value;
+            
+            if (!answerText) {
+                alert('답변을 입력하세요.');
+                return;
+            }
+            
+            if (!questionId) {
+                alert('현재 답변할 질문이 없습니다.');
+                return;
+            }
+            
+            const answerData = {
+                questionId: questionId,
+                answerText: answerText,
+                userId: SESSION_DATA.userId,
+                userName: SESSION_DATA.userName
+            };
+            
+            if (stompClient && stompClient.connected) {
+                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/answer`, 
+                                {}, JSON.stringify(answerData));
+            }
+            
+            document.getElementById('answerText').value = '';
+            document.getElementById('charCount').textContent = '0';
+            alert('답변이 제출되었습니다!');
+        }
+
+        function sendQuestion() {
+            const questionText = document.getElementById('newQuestionText').value.trim();
+            const orderNo = parseInt(document.getElementById('newQuestionOrder').value);
+            const timerSeconds = parseInt(document.getElementById('newTimerOrder').value);
+            
+            if (!questionText) {
+                alert('질문 내용을 입력하세요.');
+                return;
+            }
+            
+            const questionData = {
+                text: questionText,
+                orderNo: orderNo,
+                timerSeconds: timerSeconds,
+                sessionId: SESSION_DATA.sessionId
+            };
+            
+            if (stompClient && stompClient.connected) {
+                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/question`, 
+                                {}, JSON.stringify(questionData));
+            }
+            
+            document.getElementById('newQuestionText').value = '';
+            document.getElementById('newQuestionOrder').value = orderNo + 1;
+            alert('질문이 출제되었습니다!');
+        }
+    </script>
+    <script th:src="@{/js/mockerview-websocket.js}"></script>
+    <script th:src="@{/js/agora-client.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM 로드 완료');
+            console.log('현재 sessionType:', SESSION_DATA.sessionType);
+            
+            const mediaSection = document.getElementById('mediaSection');
+            console.log('mediaSection element:', mediaSection);
+            
+            if (SESSION_DATA.sessionType === 'AUDIO' || SESSION_DATA.sessionType === 'VIDEO') {
+                console.log('미디어 섹션 표시 시작');
+                if (mediaSection) {
+                    mediaSection.style.display = 'block';
+                    console.log('mediaSection.style.display = block 설정됨');
+                }
+                initializeMedia();
+            } else {
+                console.log('TEXT 모드 - 미디어 섹션 숨김');
+            }
+            
+            if (typeof initializeWebSocket === 'function') {
+                initializeWebSocket(SESSION_DATA.sessionId, SESSION_DATA.userId, SESSION_DATA.userName);
+            }
+        });
+    </script>
 </body>
 </html>

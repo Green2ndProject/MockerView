@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId")
     List<Session> findByHostId(@Param("hostId") Long hostId);
     
-    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.status = :status ORDER BY s.createdAt DESC")
+    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.sessionStatus = :status ORDER BY s.createdAt DESC")
     List<Session> findByStatus(@Param("status") Session.SessionStatus status);
     
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host LEFT JOIN FETCH s.questions ORDER BY s.createdAt DESC")
@@ -34,7 +35,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host " +
             "WHERE (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
-            "AND (:status IS NULL OR :status = '' OR s.status = :status) " +
+            "AND (:status IS NULL OR :status = '' OR s.sessionStatus = :status) " +
             "ORDER BY " +
             "CASE WHEN :sortBy = 'createdAt' AND :sortOrder = 'ASC' THEN s.createdAt END ASC, " +
             "CASE WHEN :sortBy = 'createdAt' AND :sortOrder = 'DESC' THEN s.createdAt END DESC, " +
@@ -47,10 +48,10 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
     @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host " +
                 "WHERE (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
-                "AND (:status IS NULL OR s.status = :status) ", 
+                "AND (:status IS NULL OR s.sessionStatus = :status) ", 
         countQuery = "SELECT COUNT(s) FROM Session s WHERE " +
                     "(:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
-                    "AND (:status IS NULL OR s.status = :status) ")
+                    "AND (:status IS NULL OR s.sessionStatus = :status) ")
     Page<Session> searchSessionsPageable(@Param("keyword") String keyword, 
                                         @Param("status") Session.SessionStatus status, 
                                         Pageable pageable);
@@ -62,8 +63,17 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId AND s.sessionType = :sessionType ORDER BY s.createdAt DESC")
     List<Session> findByHostIdAndSessionType(@Param("hostId") Long hostId, @Param("sessionType") String sessionType);
     
-    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.status = :status AND s.isReviewable = :isReviewable ORDER BY s.endTime DESC")
+    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.sessionStatus = :status AND s.isReviewable = :isReviewable ORDER BY s.endTime DESC")
     List<Session> findByStatusAndIsReviewable(@Param("status") Session.SessionStatus status, @Param("isReviewable") String isReviewable);
 
     List<Session> findByHostIdAndSessionTypeOrderByCreatedAtDesc(Long hostId, String sessionType);
+
+    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host LEFT JOIN FETCH s.questions WHERE s.id = :id")
+    Optional<Session> findByIdWithHostAndQuestions(@Param("id") Long id);
+
+    @Query("SELECT s FROM Session s WHERE s.sessionStatus = :status AND s.startTime <= :now")
+    List<Session> findByStatusAndStartTimeBefore(
+    @Param("status") Session.SessionStatus status,
+    @Param("now") LocalDateTime now
+);
 }

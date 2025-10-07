@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내 리뷰 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/review.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/session/list">Mockerview</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/session/list">세션 목록</a>
+                <a class="nav-link" href="/review/list">리뷰 작성</a>
+                <a class="nav-link active" href="/review/my">내 리뷰</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>내가 작성한 리뷰</h1>
+            <p class="subtitle">작성한 리뷰 목록입니다</p>
+        </div>
+        
+        <div th:if="${reviews != null and !reviews.empty}" class="my-reviews-container">
+            <div th:each="review : ${reviews}" class="my-review-card">
+                <div class="review-header">
+                    <div class="header-left">
+                        <h3>세션 #<span th:text="${review.sessionId}">1</span></h3>
+                        <span class="review-date" th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                    </div>
+                    <div class="rating-display">
+                        <span class="rating-value" th:text="${review.rating}">4.5</span>
+                        <span class="rating-max">/ 5.0</span>
+                    </div>
+                </div>
+                
+                <div class="review-content">
+                    <p th:text="${review.reviewComment}">리뷰 내용</p>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${reviews == null or reviews.empty}" class="empty-state">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="1.5">
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            <h3>아직 작성한 리뷰가 없습니다</h3>
+            <p>면접을 완료하고 리뷰를 작성해보세요</p>
+            <a href="/review/list" class="btn-primary">리뷰 작성하러 가기</a>
+        </div>
+    </div>
+</body>
+</html>

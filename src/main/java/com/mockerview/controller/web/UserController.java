@@ -126,6 +126,7 @@ public class UserController {
                 
                 model.addAttribute("user", user);
                 model.addAttribute("hostedSessions", hostedSessions != null ? hostedSessions : List.of());
+                model.addAttribute("userAnswers", userAnswers != null ? userAnswers : List.of());
                 model.addAttribute("participatedSessionCount", participatedSessionCount);
                 model.addAttribute("answerCount", answerCount);
                 
@@ -166,7 +167,6 @@ public class UserController {
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             
-            // ... (업데이트 로직은 동일)
             User updatedUser = user.toBuilder()
                     .name(name)
                     .email(email)
@@ -259,66 +259,66 @@ public class UserController {
     }
 
     @GetMapping("/mypage/stats/export-csv")
-    public void exportStatsCSV(@AuthenticationPrincipal CustomUserDetails userDetails, 
-                                HttpServletResponse response) throws IOException {
-        if (userDetails == null) {
-            response.sendRedirect("/auth/login");
-            return;
-        }
+public void exportStatsCSV(@AuthenticationPrincipal CustomUserDetails userDetails, 
+                            HttpServletResponse response) throws IOException {
+    if (userDetails == null) {
+        response.sendRedirect("/auth/login");
+        return;
+    }
+    
+    Long userId = userDetails.getUserId();
+    User currentUser = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+    
+    List<Answer> myAnswers = answerRepository.findByUserIdWithFeedbacks(currentUser.getId());
+    
+    response.setContentType("text/csv; charset=UTF-8");
+    response.setCharacterEncoding("UTF-8");
+    response.setHeader("Content-Disposition", "attachment; filename=\"my_interview_stats.csv\"");
+    
+    response.getOutputStream().write(new byte[]{(byte)0xEF, (byte)0xBB, (byte)0xBF});
+    
+    try (PrintWriter writer = new PrintWriter(
+            new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8))) {
         
-        Long userId = userDetails.getUserId();
-        User currentUser = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        writer.println("날짜,질문,답변,AI점수,면접관점수,AI피드백,면접관피드백");
         
-        List<Answer> myAnswers = answerRepository.findByUserIdWithFeedbacks(currentUser.getId());
-        
-        response.setContentType("text/csv; charset=UTF-8");
-        response.setCharacterEncoding("UTF-8");
-        response.setHeader("Content-Disposition", "attachment; filename=\"my_interview_stats.csv\"");
-        
-        response.getOutputStream().write(new byte[]{(byte)0xEF, (byte)0xBB, (byte)0xBF});
-        
-        try (PrintWriter writer = new PrintWriter(
-                new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8))) {
+        for (Answer answer : myAnswers) {
+            String date = answer.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            String question = answer.getQuestion().getText().replace(",", " ");
+            String answerText = answer.getAnswerText().replace(",", " ").replace("\n", " ");
             
-            writer.println("날짜,질문,답변,AI점수,면접관점수,AI피드백,면접관피드백");
+            Integer aiScore = answer.getFeedbacks().stream()
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
+                .findFirst()
+                .map(Feedback::getScore)
+                .orElse(null);
             
-            for (Answer answer : myAnswers) {
-                String date = answer.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-                String question = answer.getQuestion().getText().replace(",", " ");
-                String answerText = answer.getAnswerText().replace(",", " ").replace("\n", " ");
-                
-                Integer aiScore = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
-                    .findFirst()
-                    .map(Feedback::getScore)
-                    .orElse(null);
-                
-                Integer interviewerScore = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
-                    .findFirst()
-                    .map(Feedback::getScore)
-                    .orElse(null);
-                
-                String aiFeedback = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
-                    .findFirst()
-                    .map(f -> (f.getSummary() != null ? f.getSummary() : "").replace(",", " ").replace("\n", " "))
-                    .orElse("");
-                
-                String interviewerFeedback = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
-                    .findFirst()
-                    .map(f -> (f.getReviewerComment() != null ? f.getReviewerComment() : "").replace(",", " ").replace("\n", " "))
-                    .orElse("");
-                
-                writer.println(String.format("%s,%s,%s,%s,%s,%s,%s",
-                    date, question, answerText,
-                    aiScore != null ? aiScore : "",
-                    interviewerScore != null ? interviewerScore : "",
-                    aiFeedback, interviewerFeedback
-                ));
-            }
+            Integer interviewerScore = answer.getFeedbacks().stream()
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
+                .findFirst()
+                .map(Feedback::getScore)
+                .orElse(null);
+            
+            String aiFeedback = answer.getFeedbacks().stream()
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+                .findFirst()
+                .map(f -> (f.getSummary() != null ? f.getSummary() : "").replace(",", " ").replace("\n", " "))
+                .orElse("");
+            
+            String interviewerFeedback = answer.getFeedbacks().stream()
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+                .findFirst()
+                .map(f -> (f.getReviewerComment() != null ? f.getReviewerComment() : "").replace(",", " ").replace("\n", " "))
+                .orElse("");
+            
+            writer.println(String.format("%s,%s,%s,%s,%s,%s,%s",
+                date, question, answerText,
+                aiScore != null ? aiScore : "",
+                interviewerScore != null ? interviewerScore : "",
+                aiFeedback, interviewerFeedback
+            ));
         }
     }
+}
 }

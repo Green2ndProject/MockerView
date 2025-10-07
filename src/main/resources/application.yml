@@ -8,6 +8,11 @@ spring:
   profiles:
     active: dev
 
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -47,6 +52,11 @@ openai:
   api:
     key: ${OPENAI_API_KEY}
     url: https://api.openai.com/v1/chat/completions
+
+agora:
+  app-id: ${AGORA_APP_ID}
+  app-certificate: ${AGORA_APP_CERTIFICATE}
+  token-expiration: 3600
 
 ---
 # 개발(Oracle) - 로컬

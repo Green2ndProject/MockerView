@@ -1,0 +1,111 @@
+.media-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 15px 30px;
+    border-radius: 50px;
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.media-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #667eea;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.3s;
+    color: white;
+    background: #667eea;
+}
+
+.media-btn.audio.muted {
+    background: #333;
+    border-color: #f44336;
+    color: #f44336;
+}
+
+.media-btn.video.off {
+    background: #333;
+    border-color: #f44336;
+    color: #f44336;
+}
+
+.media-btn.leave {
+    background: #f44336;
+    border-color: #f44336;
+    width: 60px;
+}
+
+.media-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 100px;
+    padding: 20px;
+}
+
+#local-video, .remote-video-container {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #1a1a1a;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #667eea;
+}
+
+#local-video::before {
+    content: 'You';
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: #667eea;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    z-index: 1;
+}
+
+.remote-video-container::before {
+    content: 'Participant';
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(102, 126, 234, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    z-index: 1;
+}
+
+.media-toggle-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px 0;
+    transition: all 0.3s;
+}
+
+.media-toggle-btn:hover {
+    background: #5568d3;
+}
+
+.media-toggle-btn.active {
+    background: #f44336;
+}

@@ -35,4 +35,21 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "WHERE a.user.id = :userId " +
             "ORDER BY a.createdAt DESC")
     List<Answer> findByUserIdWithFeedbacks(@Param("userId") Long userId);
+
+    List<Answer> findByQuestionSessionIdAndUserId(Long sessionId, Long userId);
+
+    @Query("SELECT DISTINCT a FROM Answer a " +
+        "LEFT JOIN FETCH a.feedbacks f " +
+        "LEFT JOIN FETCH a.question q " +
+        "WHERE q.session.id = :sessionId AND a.user.id = :userId " +
+        "ORDER BY q.orderNo, a.createdAt")
+    List<Answer> findByQuestionSessionIdAndUserIdWithFeedbacks(@Param("sessionId") Long sessionId, @Param("userId") Long userId);
+
+    @Query("SELECT DISTINCT a FROM Answer a " +
+        "LEFT JOIN FETCH a.feedbacks " +
+        "LEFT JOIN FETCH a.question q " +
+        "LEFT JOIN FETCH a.user " +
+        "WHERE q.session.id = :sessionId " +
+        "ORDER BY q.orderNo, a.createdAt")
+List<Answer> findAllBySessionIdWithFeedbacks(@Param("sessionId") Long sessionId);
 }

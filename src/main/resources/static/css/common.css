@@ -40,7 +40,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--gray-50);
+    background-color: white !important;
     color: var(--gray-900);
     line-height: 1.6;
 }
@@ -412,6 +412,7 @@ textarea.form-control {
     gap: 1.5rem;
     height: calc(100vh - 140px);
     margin-top: 1rem;
+    background: white !important;
 }
 
 .sidebar {
@@ -611,4 +612,28 @@ textarea.form-control {
     .session-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.badge-waiting {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-live {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-ended {
+    background: #f3f4f6;
+    color: #374151;
 }

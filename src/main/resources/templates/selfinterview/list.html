@@ -2,32 +2,94 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>내 연습 기록 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .session-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .session-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        
+        .session-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .session-card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            color: #212529;
+        }
+        
+        .session-card p {
+            color: #6c757d;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state-text {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="/session/list">Mockerview</a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="/session/list">세션 목록</a>
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                    <a class="nav-link" href="/auth/logout">로그아웃</a>
+                </div>
             </div>
         </div>
     </nav>
     
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>내 셀프 면접 기록</h1>
+                <p>AI와 함께 연습한 모든 면접 기록</p>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
-        <h1>내 셀프 면접 기록</h1>
-        
         <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
-            <div th:each="session : ${sessions}" class="session-card">
-                <h3 th:text="${session.title}">셀프 면접</h3>
-                <p th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
-                <a th:href="@{/selfinterview/room/{id}(id=${session.id})}" class="btn btn-primary">결과 보기</a>
+            <div th:each="selfSession : ${sessions}" class="session-card">
+                <h3 th:text="${selfSession.title}">셀프 면접</h3>
+                <p th:text="${#temporals.format(selfSession.createdAt, 'yyyy-MM-dd HH:mm')}"></p>
+                <a th:href="@{/session/scoreboard/{id}(id=${selfSession.id})}" class="btn btn-primary">결과 보기</a>
             </div>
         </div>
         
-        <div th:if="${sessions == null or sessions.empty}" style="text-align: center; padding: 3rem;">
-            <p>아직 셀프 면접 기록이 없습니다.</p>
+        <div th:if="${sessions == null or sessions.empty}" class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <p class="empty-state-text">아직 셀프 면접 기록이 없습니다</p>
             <a href="/selfinterview/create" class="btn btn-primary">첫 면접 시작하기</a>
         </div>
     </div>

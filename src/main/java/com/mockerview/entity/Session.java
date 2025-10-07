@@ -37,12 +37,17 @@ public class Session {
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     @Builder.Default
-    private SessionStatus status = SessionStatus.PLANNED;
+    private SessionStatus sessionStatus = SessionStatus.PLANNED;
 
     @Column(name = "session_type")
     @Builder.Default
-    private String sessionType = "GROUP";
+    private String sessionType = "TEXT";
+
+    @Column(name = "is_self_interview")
+    @Builder.Default
+    private String isSelfInterview = "N";
 
     @Column(name = "is_reviewable")
     @Builder.Default
@@ -51,16 +56,44 @@ public class Session {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "media_enabled")
+    @Builder.Default
+    private Boolean mediaEnabled = false;
+
+    @Column(name = "agora_channel")
+    private String agoraChannel;
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Question> questions = new ArrayList<>();
 
+    @Column(name = "last_activity")
+    private LocalDateTime lastActivity;
+
+    @Transient
+    private Long answerCount;
+
+    @Transient
+    private Double avgScore;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        lastActivity = LocalDateTime.now();
+        if (agoraChannel == null) {
+            agoraChannel = "session_" + System.currentTimeMillis();
+        }
     }
 
     public enum SessionStatus {
         PLANNED, RUNNING, ENDED
+    }
+
+    public SessionStatus getStatus() {
+        return sessionStatus;
+    }
+
+    public void setStatus(SessionStatus status) {
+        this.sessionStatus = status;
     }
 }
