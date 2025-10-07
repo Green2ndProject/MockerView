@@ -5,7 +5,7 @@ services:
     image: container-registry.oracle.com/database/express:latest
     container_name: mockerview-oracle
     ports:
-      - "1521:1521"
+      - "1522:1521"
     environment:
       - ORACLE_PASSWORD=mockerview
     volumes:
