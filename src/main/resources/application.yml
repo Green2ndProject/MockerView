@@ -56,7 +56,7 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:oracle:thin:@localhost/XEPDB1
+    url: jdbc:oracle:thin:@localhost:1522/XEPDB1
     username: mockerview
     password: mockerview
     driver-class-name: oracle.jdbc.OracleDriver
