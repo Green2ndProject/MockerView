@@ -88,6 +88,103 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
+        /* 탈퇴 모달 */
+        .custom-modal-backdrop {
+            position : fixed;
+            z-index : 1000;
+            left : 0;
+            top : 0;
+            width : 100%;
+            height : 100%;
+            overflow : auto;
+            background-color : rgba(0,0,0,0.4);
+            display : flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .custom-modal-card {
+            background-color : #ffffff;
+            padding : 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width : 90%;
+            max-width: 400px;
+            text-align : center;
+        }
+        
+        .modal-title {
+            font-size : 1.5em;
+            font-weight : 600;
+            margin-bottom : 20px;
+            color : #333;
+        }
+
+        .modal-instruction {
+            color : #666;
+            margin-bottom : 20px;
+            font-size : 0.95em;
+        }  
+
+        .modal-reason-label {
+            color : #888;
+            margin : 20px 0 10px 0;
+            font-size : 0.85em;
+            padding-left : 5px;
+            text-align : left;
+        }
+
+        .input-field {
+            margin-bottom : 25px;
+        }
+        .select-field {
+            margin-bottom : 0;
+        }
+        .input-field, .select-field {
+            width : 100%;
+            padding : 12px 15px;
+            border : 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing : border-box;
+            font-size : 1em;
+        }
+
+        .wmodal-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 10px;
+            padding : 0 10px;
+        }
+        .wmodal-actions button {
+            width : 50%;
+            padding : 12px;
+            border-radius : 8px;
+            font-size : 1em;
+            cursor : pointer;
+            transition : background-color 0.2s;
+            font-weight : 600;
+        }
+
+        .danger-btn {
+            background-color: #E74C3C;
+            color : white;
+            border : none;
+        }
+        .danger-btn:hover {
+            background-color: #C0392B;
+        }
+
+        .secondary-btn {
+            background-color: transparent;
+            color: #7F78FF; 
+            border: 2px solid #7F78FF;
+        }
+
+        .secondary-btn:hover {
+            background-color: #F0F0FF; 
+        }
     </style>
 </head>
 <body>
@@ -217,7 +314,32 @@
                         </div>
                         
                         <button type="submit" class="btn btn-primary">프로필 업데이트</button>
+                        <button type="button" class="btn btn-primary" id="withdraw-btn">회원 탈퇴</button>
                     </form>
+                </div>
+            </div>
+
+            <div id="withdrawal-modal" class="custom-modal-backdrop" style="display:none;">
+                <div class="custom-modal-card">
+                    <h3 class="modal-title">정말로 탈퇴하시겠습니까?</h3>
+
+                    <div class="modal-body">
+                        <p class="modal-instruction">탈퇴를 진행하시려면 비밀번호를 입력해주세요</p>
+                        <input type="password" id="withdrawal-password" placeholder="비밀번호 재확인" class="input-field">
+
+                        <p class="modal-reason-label">탈퇴 사유를 선택해주세요</p>
+                        <select id="reason-select" class="select-field">
+                            <option value="">선택안함</option>
+                            <option value="no">하고싶지않아요</option>
+                            <option value="dontneed">날 그만 보내주세요</option>
+                            <option value="letmego">히히히</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+                    <div class="wmodal-actions">
+                        <button id="confirm-withdraw-btn" class="danger-btn" >탈퇴하기</button>
+                        <button id="cancel-btn" class="secondary-btn">취소</button>
+                    </div>
                 </div>
             </div>
             
@@ -269,6 +391,88 @@
                 return;
             }
         });
+    </script>
+
+    <script>
+        const withdrawBtn             = document.getElementById('withdraw-btn');
+        const withdrawalModal         = document.getElementById('withdrawal-modal');
+        const withdrawalPasswordInput = document.getElementById('withdrawal-password');
+        const cancelBtn               = document.getElementById('cancel-btn');
+        const confirmWithdrawBtn      = document.getElementById('confirm-withdraw-btn');
+        const reasonSelect            = document.getElementById('reason-select');
+
+        withdrawBtn.addEventListener('click', ()=>{
+            withdrawalModal.style.display = 'flex';
+        });
+
+        cancelBtn.addEventListener('click', ()=>{
+            withdrawalModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e)=>{
+            if(e.target === withdrawalModal){
+                withdrawalModal.style.display = 'none';
+            }
+        });
+
+        confirmWithdrawBtn.addEventListener('click', async ()=>{
+            const password = withdrawalPasswordInput.value;
+            const reason   = reasonSelect.value;
+
+            if(!password) {
+                alert("비밀번호를 입력해주세요");
+                return;
+            }
+
+            console.log("탈퇴 사유 : " + reason);
+            console.log("실제 전송 비밀번호:", password);
+            console.log("비밀번호 길이:", password.length);
+            
+            try {
+                
+                const response = await fetch('/api/user/withdraw', {
+                    method  : 'POST',
+                    headers : { 
+                        'Content-Type' : 'application/json'
+                    },
+                    redirect : 'manual',
+                    body : JSON.stringify({
+                        'password' : password,
+                        'reason'   : reason
+                    })
+                });
+
+                if(response.status === 303 || response.type === 'opaqueredirect'){
+                    //alert("회원 탙퇴가 성공적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
+
+                    //const redirectUrl = response.headers.get('Location');
+                    const redirectUrl = response.headers.get('Location') || '/auth/logout';
+
+                    withdrawalModal.style.display = 'none';
+
+                    window.location.href = redirectUrl; 
+                    
+                } else if(response.status === 401 || response.status === 403){
+                    const errData = await response.json();
+                    alert(`실패 : ${errData.message || '비밀번호가 일치하지 않거나 세션이 만료되었습니다.'}`);
+                } 
+               
+                else if(response.status === 400){
+                    const errData = await response.json();
+                    alert(`탈퇴 실패: ${errData.message}`);
+                } else {
+                    alert(`탈퇴 처리 중 오류 발생. 응답 상태 코드: ${response.status} (Type: ${response.type})`);
+                }
+
+            } catch (error) {
+                console.error("탈퇴 요청 오류 : " , error);
+                alert("서버 통신에 실패했습니다.");
+            }
+
+            
+        }); 
+
+    
     </script>
 </body>
 </html>
