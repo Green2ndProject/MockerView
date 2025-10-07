@@ -10,40 +10,34 @@
             background: #f5f5f5;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-
         .results-header {
             background: #667eea;
             color: white;
             padding: 3rem 0;
             text-align: center;
         }
-
         .results-header h1 {
             font-size: 2rem;
             margin-bottom: 1rem;
             font-weight: 600;
         }
-
         .session-meta {
             display: flex;
             justify-content: center;
             gap: 2rem;
             font-size: 0.875rem;
         }
-
         .results-container {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
-
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
-
         .stat-card {
             background: white;
             border-radius: 8px;
@@ -52,7 +46,6 @@
             text-align: center;
             border: 1px solid #e5e7eb;
         }
-
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
@@ -60,13 +53,11 @@
             display: block;
             margin-bottom: 0.5rem;
         }
-
         .stat-label {
             color: #6b7280;
             font-size: 0.875rem;
             font-weight: 500;
         }
-
         .qa-section {
             background: white;
             border-radius: 8px;
@@ -75,7 +66,6 @@
             margin-bottom: 2rem;
             border: 1px solid #e5e7eb;
         }
-
         .section-title {
             font-size: 1.5rem;
             font-weight: 600;
@@ -84,20 +74,17 @@
             padding-bottom: 1rem;
             border-bottom: 2px solid #667eea;
         }
-
         .qa-item {
             border-left: 3px solid #667eea;
             padding-left: 1.5rem;
             margin-bottom: 2.5rem;
         }
-
         .question-text {
             font-size: 1.125rem;
             font-weight: 600;
             color: #374151;
             margin-bottom: 1rem;
         }
-
         .answer-card {
             background: #f9fafb;
             border: 1px solid #e5e7eb;
@@ -105,19 +92,16 @@
             padding: 1.25rem;
             margin-bottom: 1rem;
         }
-
         .answer-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.75rem;
         }
-
         .answer-author {
             font-weight: 600;
             color: #4b5563;
         }
-
         .answer-score {
             background: #667eea;
             color: white;
@@ -126,25 +110,21 @@
             font-size: 0.875rem;
             font-weight: 500;
         }
-
         .answer-text {
             color: #6b7280;
             line-height: 1.6;
         }
-
         .feedback-section {
             margin-top: 1rem;
             padding-top: 1rem;
             border-top: 1px solid #e5e7eb;
         }
-
         .feedback-title {
             font-size: 0.875rem;
             font-weight: 600;
             color: #6b7280;
             margin-bottom: 0.75rem;
         }
-
         .feedback-card {
             background: #fef3c7;
             border: 1px solid #fde68a;
@@ -152,36 +132,30 @@
             padding: 0.875rem;
             margin-bottom: 0.75rem;
         }
-
         .feedback-card.ai {
             background: #eff6ff;
             border-color: #dbeafe;
         }
-
         .feedback-author-tag {
             font-size: 0.75rem;
             font-weight: 600;
             color: #92400e;
             margin-bottom: 0.5rem;
         }
-
         .feedback-card.ai .feedback-author-tag {
             color: #1e40af;
         }
-
         .feedback-text {
             font-size: 0.875rem;
             color: #374151;
             line-height: 1.6;
         }
-
         .action-buttons {
             display: flex;
             gap: 1rem;
             justify-content: center;
             margin-top: 2rem;
         }
-
         .empty-state {
             text-align: center;
             padding: 2rem;
@@ -252,7 +226,7 @@
                             <span class="answer-score" th:if="${answer.score != null}" 
                                 th:text="${'점수: ' + answer.score}">점수: 0</span>
                         </div>
-                        <div class="answer-text" th:text="${answer.text}">답변 내용</div>
+                        <div class="answer-text" th:text="${answer.answerText}">답변 내용</div>
                         
                         <div class="feedback-section" th:if="${answer.feedbacks != null and !answer.feedbacks.isEmpty()}">
                             <div class="feedback-title">받은 피드백</div>
@@ -260,7 +234,17 @@
                                 th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-card ai' : 'feedback-card'}">
                                 <div class="feedback-author-tag" 
                                     th:text="${feedback.feedbackType.toString() == 'AI' ? 'AI 코치' : (feedback.reviewer != null ? feedback.reviewer.name + ' (면접관)' : '면접관')}">피드백 작성자</div>
-                                <div class="feedback-text" th:text="${feedback.summary}">피드백 내용</div>
+                                    <div class="feedback-content">
+                                        <div class="feedback-summary" th:text="${feedback.summary}">요약</div>
+                                        <div class="feedback-section" th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}">
+                                            <strong>강점:</strong>
+                                            <div th:text="${feedback.strengths}">강점 내용</div>
+                                        </div>
+                                        <div class="feedback-section" th:if="${feedback.improvement != null and !feedback.improvement.isEmpty()}">
+                                            <strong>개선점:</strong>
+                                            <div th:text="${feedback.improvement}">개선점 내용</div>
+                                        </div>
+                                    </div>
                             </div>
                         </div>
                     </div>

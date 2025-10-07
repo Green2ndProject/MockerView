@@ -3,12 +3,13 @@ document.getElementById('createForm').addEventListener('submit', async function(
     
     const title = document.getElementById('title').value;
     const questionCount = parseInt(document.getElementById('questionCount').value);
+    const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
     
     if (!title.trim()) {
         alert('면접 제목을 입력해주세요.');
         return;
     }
-    
+
     const submitBtn = this.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.textContent = '생성 중...';
@@ -21,7 +22,8 @@ document.getElementById('createForm').addEventListener('submit', async function(
             },
             body: JSON.stringify({
                 title: title,
-                questionCount: questionCount
+                questionCount: questionCount,
+                sessionType: sessionType
             })
         });
         

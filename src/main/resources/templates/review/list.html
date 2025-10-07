@@ -2,8 +2,20 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>리뷰 가능한 세션 - MockerView</title>
+    <title>리뷰 작성 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/review.css">
+    <style>
+        .badge-self {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -11,23 +23,57 @@
             <a class="navbar-brand" href="/session/list">Mockerview</a>
             <div class="navbar-nav">
                 <a class="nav-link" href="/session/list">세션 목록</a>
+                <a class="nav-link active" href="/review/list">리뷰 작성</a>
+                <a class="nav-link" href="/review/my">내 리뷰</a>
             </div>
         </div>
     </nav>
     
     <div class="container">
-        <h1>리뷰 가능한 세션</h1>
+        <div class="page-header">
+            <h1>리뷰 작성 가능한 세션</h1>
+            <p class="subtitle">완료된 면접에 대한 피드백을 작성해주세요</p>
+        </div>
         
-        <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
-            <div th:each="session : ${sessions}" class="session-card">
-                <h3 th:text="${session.title}">면접 세션</h3>
-                <p th:text="${#temporals.format(session.endTime, 'yyyy-MM-dd HH:mm')}"></p>
-                <a th:href="@{/review/detail/{id}(id=${session.id})}" class="btn btn-primary">리뷰 작성</a>
+        <div th:if="${sessions != null and !sessions.empty}" class="session-grid">
+            <div th:each="reviewSession : ${sessions}" class="review-session-card">
+                <div class="card-header">
+                    <h3 th:text="${reviewSession.title}">면접 세션</h3>
+                    <div>
+                        <span class="badge badge-ended">완료</span>
+                        <span th:if="${reviewSession.isSelfInterview == 'Y'}" class="badge badge-self">🎯 셀프면접</span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="info-row">
+                        <span class="label">면접관</span>
+                        <span class="value" th:text="${reviewSession.host != null ? reviewSession.host.name : '알 수 없음'}">면접관</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">종료 시간</span>
+                        <span class="value" th:text="${#temporals.format(reviewSession.endTime, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                    </div>
+                    
+                    <div class="questions-preview" th:if="${reviewSession.questions != null and !reviewSession.questions.empty}">
+                        <span class="label">질문 수</span>
+                        <span class="count" th:text="${reviewSession.questions.size()} + '개'">3개</span>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <a th:href="@{/review/detail/{id}(id=${reviewSession.id})}" class="btn-primary">리뷰 작성하기</a>
+                </div>
             </div>
         </div>
         
-        <div th:if="${sessions == null or sessions.empty}" style="text-align: center; padding: 3rem;">
-            <p>리뷰 가능한 세션이 없습니다.</p>
+        <div th:if="${sessions == null or sessions.empty}" class="empty-state">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="1.5">
+                <path d="M9 11l3 3L22 4"></path>
+                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+            </svg>
+            <h3>리뷰 작성 가능한 세션이 없습니다</h3>
+            <p>완료된 면접 세션이 있으면 여기에 표시됩니다</p>
         </div>
     </div>
 </body>

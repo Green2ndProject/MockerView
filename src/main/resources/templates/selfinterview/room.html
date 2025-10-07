@@ -54,9 +54,9 @@
                     <div class="card-header">
                         <div class="question-info">
                             <span id="question-number">Q1</span>
-                            <span class="ai-badge">🤖 AI 질문</span>
+                            <span class="ai-badge">AI 질문</span>
                         </div>
-                        <div id="question-timer" class="question-timer">⏱️ 00:00</div>
+                        <div id="question-timer" class="question-timer">00:00</div>
                     </div>
                     <div class="card-body">
                         <div id="current-question" class="question-display">
@@ -71,15 +71,40 @@
                         <span class="answer-tip">자신있게 답변해보세요</span>
                     </div>
                     <div class="card-body">
-                        <div class="form-group">
-                            <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="6"></textarea>
-                            <div class="char-counter">
-                                <span id="charCount">0</span>/1000자
+                        <div class="answer-mode-toggle" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <button id="textModeBtn" class="btn btn-secondary active" onclick="switchToTextMode()">텍스트 답변</button>
+                            <button id="voiceModeBtn" class="btn btn-secondary" onclick="switchToVoiceMode()">음성 답변</button>
+                            <button id="videoModeBtn" class="btn btn-secondary" onclick="switchToVideoMode()">화상 답변</button>
+                        </div>
+
+                        <div id="text-answer-area">
+                            <div class="form-group">
+                                <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="6"></textarea>
+                                <div class="char-counter">
+                                    <span id="charCount">0</span>/1000자
+                                </div>
                             </div>
                         </div>
-                        <div class="answer-actions">
+
+                        <div id="voice-answer-area" style="display: none; text-align: center; padding: 2rem;">
+                            <button id="recordBtn" class="btn btn-danger" onclick="toggleRecording()" style="width: 100px; height: 100px; border-radius: 50%; font-size: 2rem;">
+                                🎤
+                            </button>
+                            <div id="recordingStatus" style="margin-top: 1rem; color: #6c757d; font-weight: 500;">녹음 시작하려면 클릭</div>
+                        </div>
+
+                        <div id="video-answer-area" style="display: none; text-align: center; padding: 2rem;">
+                            <video id="videoPreview" width="400" height="300" style="border: 1px solid #ccc; margin-bottom: 1rem; border-radius: 8px;" muted></video>
+                            <br>
+                            <button id="videoRecordBtn" class="btn btn-danger" onclick="toggleVideoRecording()" style="width: 120px; height: 50px; border-radius: 8px; margin-bottom: 1rem;">
+                                🎥 녹화 시작
+                            </button>
+                            <div id="videoRecordingStatus" style="margin-top: 1rem; color: #6c757d; font-weight: 500;">카메라를 허용하고 녹화 시작</div>
+                        </div>
+
+                        <div class="answer-actions" style="display: flex; gap: 1rem; margin-top: 1rem;">
                             <button onclick="skipQuestion()" class="btn btn-secondary">건너뛰기</button>
-                            <button onclick="submitAnswer()" class="btn btn-success">답변 제출</button>
+                            <button onclick="submitAnswer()" class="btn btn-success" style="flex: 1;">답변 제출</button>
                         </div>
                     </div>
                 </div>
@@ -148,5 +173,238 @@
 
     <script src="/js/authFetch.js"></script>
     <script src="/js/selfinterview-room.js"></script>
+    <script>
+        let isRecording = false;
+        let currentMode = 'text';
+        let mediaRecorder = null;
+        let audioBlob = null;
+        let audioChunks = [];
+        let videoStream = null;
+        let videoRecorder = null;
+        let videoBlob = null;
+        let isVideoRecording = false;
+
+        const answerTextArea = document.getElementById('answerText');
+        if (answerTextArea) {
+            answerTextArea.addEventListener('input', function() {
+                const count = this.value.length;
+                document.getElementById('charCount').textContent = count;
+                if (count > 1000) {
+                    this.value = this.value.substring(0, 1000);
+                    document.getElementById('charCount').textContent = 1000;
+                }
+            });
+        }
+
+        function switchToTextMode() {
+            currentMode = 'text';
+            document.getElementById('textModeBtn').classList.add('active');
+            document.getElementById('voiceModeBtn').classList.remove('active');
+            document.getElementById('videoModeBtn').classList.remove('active');
+            document.getElementById('text-answer-area').style.display = 'block';
+            document.getElementById('voice-answer-area').style.display = 'none';
+            document.getElementById('video-answer-area').style.display = 'none';
+        }
+
+        function switchToVoiceMode() {
+            currentMode = 'voice';
+            document.getElementById('voiceModeBtn').classList.add('active');
+            document.getElementById('textModeBtn').classList.remove('active');
+            document.getElementById('videoModeBtn').classList.remove('active');
+            document.getElementById('text-answer-area').style.display = 'none';
+            document.getElementById('voice-answer-area').style.display = 'block';
+            document.getElementById('video-answer-area').style.display = 'none';
+        }
+
+        function switchToVideoMode() {
+            currentMode = 'video';
+            document.getElementById('videoModeBtn').classList.add('active');
+            document.getElementById('textModeBtn').classList.remove('active');
+            document.getElementById('voiceModeBtn').classList.remove('active');
+            document.getElementById('text-answer-area').style.display = 'none';
+            document.getElementById('voice-answer-area').style.display = 'none';
+            document.getElementById('video-answer-area').style.display = 'block';
+            startVideoPreview();
+        }
+
+        async function startVideoPreview() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                document.getElementById('videoPreview').srcObject = videoStream;
+                document.getElementById('videoPreview').play();
+            } catch (error) {
+                alert('카메라 접근 권한을 허용해주세요.');
+                console.error('카메라 접근 실패:', error);
+            }
+        }
+
+        async function toggleVideoRecording() {
+            const recordBtn = document.getElementById('videoRecordBtn');
+            const recordingStatus = document.getElementById('videoRecordingStatus');
+
+            if (!isVideoRecording) {
+                try {
+                    if (!videoStream) {
+                        await startVideoPreview();
+                    }
+                    
+                    videoRecorder = new MediaRecorder(videoStream);
+                    let videoChunks = [];
+                    
+                    videoRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            videoChunks.push(e.data);
+                        }
+                    };
+                    
+                    videoRecorder.onstop = () => {
+                        videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                        recordingStatus.textContent = '녹화 완료! 제출해주세요';
+                    };
+                    
+                    videoRecorder.start();
+                    isVideoRecording = true;
+                    recordBtn.innerHTML = '⏹️ 녹화 중지';
+                    recordBtn.style.background = '#dc3545';
+                    recordingStatus.textContent = '비디오 녹화 중...';
+                } catch (error) {
+                    alert('비디오 녹화를 시작할 수 없습니다.');
+                    console.error('비디오 녹화 실패:', error);
+                }
+            } else {
+                videoRecorder.stop();
+                isVideoRecording = false;
+                recordBtn.innerHTML = '🎥 녹화 시작';
+                recordBtn.style.background = '';
+            }
+        }
+
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const recordingStatus = document.getElementById('recordingStatus');
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            audioChunks.push(e.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        recordingStatus.textContent = '녹음 완료! 제출해주세요';
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.innerHTML = '⏹️';
+                    recordBtn.style.background = '#dc3545';
+                    recordingStatus.textContent = '녹음 중...';
+                } catch (error) {
+                    alert('마이크 권한을 허용해주세요.');
+                    console.error('녹음 시작 실패:', error);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.innerHTML = '🎤';
+                recordBtn.style.background = '';
+            }
+        }
+
+        async function submitAnswer() {
+            if (currentMode === 'text') {
+                const answerText = document.getElementById('answerText').value.trim();
+                if (!answerText) {
+                    alert('답변을 입력하세요');
+                    return;
+                }
+                if (typeof window.submitTextAnswer === 'function') {
+                    window.submitTextAnswer();
+                }
+            } else if (currentMode === 'voice') {
+                if (!audioBlob) {
+                    alert('먼저 음성을 녹음해주세요');
+                    return;
+                }
+                if (typeof window.submitVoiceAnswerSelf === 'function') {
+                    window.submitVoiceAnswerSelf(audioBlob);
+                }
+            } else if (currentMode === 'video') {
+                if (!videoBlob) {
+                    alert('먼저 비디오를 녹화해주세요');
+                    return;
+                }
+                await submitVideoAnswer();
+            }
+        }
+
+        async function submitVideoAnswer() {
+            if (!SESSION_DATA || !SESSION_DATA.sessionId) {
+                alert('세션 정보를 불러올 수 없습니다.');
+                return;
+            }
+
+            const question = questions[currentQuestionIndex];
+            const formData = new FormData();
+            
+            formData.append('audio', videoBlob, 'answer.webm');
+            formData.append('questionId', question.id);
+
+            try {
+                document.getElementById('ai-status').textContent = '비디오 분석 중...';
+                document.getElementById('ai-status').style.color = '#f59e0b';
+                
+                const token = document.cookie.split(';').find(c => c.trim().startsWith('Authorization='));
+                const authToken = token ? token.split('=')[1] : '';
+                
+                const response = await fetch('/api/selfinterview/' + SESSION_DATA.sessionId + '/video-answer', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authToken
+                    },
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('비디오 제출 실패: ' + response.status);
+                }
+                
+                const result = await response.json();
+                
+                answers.push(result.answer);
+                feedbacks.push(result.feedback);
+                
+                displayFeedback(result.feedback, question, currentQuestionIndex + 1);
+                
+                document.getElementById('ai-status').textContent = '완료';
+                document.getElementById('ai-status').style.color = '#10b981';
+                
+                videoBlob = null;
+                document.getElementById('videoRecordingStatus').textContent = '카메라를 허용하고 녹화 시작';
+                
+                updateProgress();
+                
+                setTimeout(() => {
+                    loadQuestion(currentQuestionIndex + 1);
+                }, 1500);
+                
+            } catch (error) {
+                console.error('비디오 답변 제출 실패:', error);
+                alert('비디오 답변 제출에 실패했습니다: ' + error.message);
+                document.getElementById('ai-status').textContent = '실패';
+                document.getElementById('ai-status').style.color = '#ef4444';
+            }
+        }
+    </script>
 </body>
 </html>

@@ -1,17 +1,20 @@
 package com.mockerview.service;
 
-import com.mockerview.dto.SelfInterviewCreateDTO;
-import com.mockerview.entity.*;
-import com.mockerview.repository.*;
+import com.mockerview.entity.Question;
+import com.mockerview.entity.QuestionPool;
+import com.mockerview.entity.Session;
+import com.mockerview.entity.User;
+import com.mockerview.repository.QuestionPoolRepository;
+import com.mockerview.repository.QuestionRepository;
+import com.mockerview.repository.SessionRepository;
+import com.mockerview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -20,91 +23,57 @@ public class SelfInterviewService {
 
     private final SessionRepository sessionRepository;
     private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
-    private final FeedbackRepository feedbackRepository;
+    private final QuestionPoolRepository questionPoolRepository;
     private final UserRepository userRepository;
-    private final AIFeedbackService aiFeedbackService;
 
     @Transactional
-    public Session createSelfInterview(Long userId, SelfInterviewCreateDTO dto) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-
+    public Session createSelfInterviewSession(User user, String title, Integer questionCount, String sessionType) {
         Session session = Session.builder()
             .host(user)
-            .title(dto.getTitle())
-            .sessionType("SELF")
-            .status(Session.SessionStatus.RUNNING)
-            .startTime(LocalDateTime.now())
+            .title(title)
+            .sessionStatus(Session.SessionStatus.RUNNING)
+            .sessionType(sessionType != null ? sessionType : "TEXT")
+            .isSelfInterview("Y")
             .isReviewable("Y")
-            .questions(new ArrayList<>())
+            .createdAt(LocalDateTime.now())
+            .startTime(LocalDateTime.now())
+            .lastActivity(LocalDateTime.now())
             .build();
 
-        session = sessionRepository.save(session);
-        log.info("Created self interview session: {}", session.getId());
+        Session savedSession = sessionRepository.save(session);
 
-        List<String> aiQuestions = aiFeedbackService.generateInterviewQuestions(dto.getQuestionCount());
-        log.info("Generated {} AI questions", aiQuestions.size());
-
-        for (int i = 0; i < aiQuestions.size(); i++) {
+        List<QuestionPool> randomQuestions = questionPoolRepository.findRandomQuestions(questionCount);
+        
+        int orderNo = 1;
+        for (QuestionPool qp : randomQuestions) {
             Question question = Question.builder()
-                .session(session)
-                .text(aiQuestions.get(i))
-                .orderNo(i + 1)
+                .session(savedSession)
+                .text(qp.getText())
+                .orderNo(orderNo++)
                 .questioner(user)
+                .timer(120)
                 .build();
-            
-            session.getQuestions().add(question);
             questionRepository.save(question);
         }
 
-        return session;
-    }
-
-    @Transactional(readOnly = true)
-    public List<Session> getUserSelfInterviews(Long userId) {
-        return sessionRepository.findByHostIdAndSessionTypeOrderByCreatedAtDesc(userId, "SELF");
-    }
-
-    @Transactional(readOnly = true)
-    public Session getSessionById(Long sessionId) {
-        return sessionRepository.findById(sessionId)
-            .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다."));
+        log.info("셀프 면접 생성 완료 - sessionId: {}, type: {}, 질문 수: {}", 
+            savedSession.getId(), sessionType, randomQuestions.size());
+        return savedSession;
     }
 
     @Transactional
-    public Answer submitAnswer(Long sessionId, Long questionId, Long userId, String answerText) {
-        Question question = questionRepository.findById(questionId)
-            .orElseThrow(() -> new RuntimeException("질문을 찾을 수 없습니다."));
-
+    public Session createSelfInterview(Long userId, String interviewType, Integer questionCount) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Answer answer = Answer.builder()
-            .question(question)
-            .user(user)
-            .answerText(answerText)
-            .build();
-
-        return answerRepository.save(answer);
+        return createSelfInterviewSession(user, "셀프 면접 - " + interviewType, questionCount, "TEXT");
     }
 
     @Transactional
-    public Feedback generateAIFeedback(Answer answer) {
-        Map<String, Object> aiResult = aiFeedbackService.generateFeedbackSync(
-            answer.getQuestion().getText(), 
-            answer.getAnswerText()
-        );
+    public Session createSelfInterviewWithAI(Long userId, String interviewType, Integer questionCount) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Feedback feedback = Feedback.builder()
-            .answer(answer)
-            .feedbackType(Feedback.FeedbackType.AI)
-            .score(((Number) aiResult.get("score")).intValue())
-            .strengths((String) aiResult.get("strengths"))
-            .improvement((String) aiResult.get("improvements"))
-            .model("GPT-4O-MINI")
-            .build();
-
-        return feedbackRepository.save(feedback);
+        return createSelfInterviewSession(user, "AI 셀프 면접 - " + interviewType, questionCount, "TEXT");
     }
 }

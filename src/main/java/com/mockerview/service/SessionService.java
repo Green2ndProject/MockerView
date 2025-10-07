@@ -34,7 +34,7 @@ public class SessionService {
     @Transactional(readOnly = true)
     public Page<Session> getSessionsPageable(Pageable pageable) {
         try {
-         log.info("Getting paginated sessions with host information. Page: {}, Size: {}", 
+            log.info("Getting paginated sessions with host information. Page: {}, Size: {}", 
             pageable.getPageNumber(), pageable.getPageSize());
             
         Page<Session> sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
@@ -43,25 +43,22 @@ public class SessionService {
             sessionPage.getTotalElements(), sessionPage.getTotalPages());
         
         return sessionPage;
-         } catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error getting paginated sessions: ", e);
             throw new RuntimeException("페이지별 세션 목록 조회 실패", e);
             }
     }
-
 
     public Page<Session> searchSessionsPageable(String keyword, String status, Pageable pageable) {
     try {
         log.info("Searching paginated sessions - keyword: {}, status: {}, Page: {}, Size: {}", 
             keyword, status, pageable.getPageNumber(), pageable.getPageSize());
         
-        // [수정] String status를 Enum으로 변환합니다.
         Session.SessionStatus sessionStatus = null;
         if (status != null && !status.isEmpty()) {
             sessionStatus = Session.SessionStatus.valueOf(status);
         }
 
-        // [수정] Repository 호출 시 변환된 Enum 객체 사용
         Page<Session> sessionPage = sessionRepository.searchSessionsPageable(keyword, sessionStatus, pageable);
         
         log.info("Search result: {} total sessions across {} pages.", 
@@ -73,6 +70,7 @@ public class SessionService {
             throw new RuntimeException("페이지별 세션 검색 실패", e);
         }
     }
+    
     @Transactional(readOnly = true)
     public List<Session> getAllSessions() {
         try {
@@ -85,7 +83,6 @@ public class SessionService {
             throw new RuntimeException("세션 목록 조회 실패", e);
         }
     }
-
     
     @Transactional(readOnly = true)
     public List<Session> searchSessions(String keyword, String status, String sortBy, String sortOrder) {
@@ -101,27 +98,37 @@ public class SessionService {
         }
     }
 
-    public Session createSession(String title, Long hostId) {
+    public Session createSession(String title, Long hostId, String sessionType, LocalDateTime scheduledStartTime) {
         try {
             User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("Host not found: " + hostId));
             
+            String validSessionType = sessionType;
+            if (!"TEXT".equals(sessionType) && !"AUDIO".equals(sessionType) && !"VIDEO".equals(sessionType)) {
+                validSessionType = "TEXT";
+            }
+            
             Session session = Session.builder()
                 .title(title)
                 .host(host)
-                .status(Session.SessionStatus.PLANNED)
+                .sessionStatus(Session.SessionStatus.PLANNED)
+                .sessionType(validSessionType)
+                .mediaEnabled(!"TEXT".equals(validSessionType))
+                .isReviewable("Y")
                 .createdAt(LocalDateTime.now())
+                .lastActivity(LocalDateTime.now())
+                .startTime(scheduledStartTime)
                 .build();
             
             Session saved = sessionRepository.save(session);
-            log.info("Session created with ID: {}", saved.getId());
+            log.info("Session created with ID: {}, type: {}, scheduled: {}", 
+                    saved.getId(), validSessionType, scheduledStartTime);
             return saved;
         } catch (Exception e) {
             log.error("Error creating session: ", e);
             throw new RuntimeException("세션 생성 실패", e);
         }
     }
-    
 
     public Long saveAnswer(AnswerMessage message) {
         try {
@@ -141,6 +148,10 @@ public class SessionService {
             Answer saved = answerRepository.save(answer);
             log.info("Answer saved with ID: {}", saved.getId());
             
+            Session session = question.getSession();
+            session.setLastActivity(LocalDateTime.now());
+            sessionRepository.save(session);
+            
             return saved.getId();
             
         } catch (Exception e) {
@@ -153,16 +164,14 @@ public class SessionService {
         try {
             Session session = findById(sessionId);
             
-             // ⭐ 1. 세션 상태 변경 로직 추가: PLANNED 상태일 경우 RUNNING으로 변경
-            if (session.getStatus() == Session.SessionStatus.PLANNED) {
+            if (session.getSessionStatus() == Session.SessionStatus.PLANNED) {
                 log.info("세션 상태 변경: PLANNED -> RUNNING (Session ID: {})", sessionId);
-                session.setStatus(Session.SessionStatus.RUNNING);
-                session.setStartTime(LocalDateTime.now()); // 세션 시작 시간 기록
-                sessionRepository.save(session); // 상태 변경 저장
-                
-                // 참고: 이 상태 변경 내용은 SessionWebSocketController의 handleQuestion에서 
-                // /topic/session/{sessionId}/status 토픽으로 브로드캐스팅되어야 합니다.
+                session.setSessionStatus(Session.SessionStatus.RUNNING);
+                session.setStartTime(LocalDateTime.now());
             }
+            
+            session.setLastActivity(LocalDateTime.now());
+            sessionRepository.save(session);
 
             User questioner = userRepository.findById(questionerId)
                 .orElseThrow(() -> new RuntimeException("Questioner not found: " + questionerId));
@@ -187,9 +196,8 @@ public class SessionService {
     }
 
     public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Integer timer) {
- 
-    return saveQuestion(sessionId, questionText, orderNo, 1L, timer); 
-}
+        return saveQuestion(sessionId, questionText, orderNo, 1L, timer); 
+    }
 
     @Transactional(readOnly = true)
     public SessionStatusMessage getSessionStatus(Long sessionId) {
@@ -204,7 +212,7 @@ public class SessionService {
             
             return SessionStatusMessage.builder()
                 .sessionId(sessionId)
-                .status(session.getStatus().toString())
+                .status(session.getSessionStatus().toString())
                 .participants(participants)
                 .questionCount(questionCount.intValue())
                 .answerCount(answerCount.intValue())
@@ -230,17 +238,18 @@ public class SessionService {
 
     public Session startSession(Long sessionId) {
         Session session = findById(sessionId);
-        session.setStatus(Session.SessionStatus.RUNNING);
+        session.setSessionStatus(Session.SessionStatus.RUNNING);
         session.setStartTime(LocalDateTime.now());
+        session.setLastActivity(LocalDateTime.now());
         return sessionRepository.save(session);
     }
 
-   public Session endSession(Long sessionId) {
+    public Session endSession(Long sessionId) {
         Session session = findById(sessionId);
         
-        if (session.getStatus() != Session.SessionStatus.ENDED) {
+        if (session.getSessionStatus() != Session.SessionStatus.ENDED) {
             log.info("세션 상태 변경: RUNNING -> ENDED (Session ID: {})", sessionId);
-            session.setStatus(Session.SessionStatus.ENDED);
+            session.setSessionStatus(Session.SessionStatus.ENDED);
             session.setEndTime(LocalDateTime.now());
             return sessionRepository.save(session);
         }
@@ -257,6 +266,4 @@ public class SessionService {
     public List<Answer> getSessionAnswers(Long sessionId) {
         return answerRepository.findByQuestionSessionIdOrderByCreatedAt(sessionId);
     }
-
-  
 }

@@ -92,22 +92,25 @@ async function handleReviewSubmit(e) {
     const rating = document.getElementById('rating').value;
     const comment = document.getElementById('reviewComment').value;
     
+    const data = {
+        sessionId: sessionId,
+        answerId: currentAnswerId,
+        rating: parseFloat(rating),
+        comment: comment
+    };
+    
+    console.log('Sending review data:', data);
+    
     try {
-        const response = await authFetch('/api/review', {
-            method: 'POST',
-            body: new URLSearchParams({
-                sessionId: sessionId,
-                answerId: currentAnswerId,
-                rating: rating,
-                comment: comment
-            })
-        });
+        const response = await authPost('/api/review', data);
         
         if (response.ok) {
             alert('리뷰가 등록되었습니다');
             document.getElementById('reviewModal').style.display = 'none';
             loadAnswers();
         } else {
+            const errorText = await response.text();
+            console.error('Server error:', errorText);
             alert('리뷰 등록 실패');
         }
     } catch (error) {

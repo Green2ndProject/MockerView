@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>셀프 면접 기록 - Mockerview</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/selfinterview.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/selfinterview/list">셀프 면접</a>
+                    <a class="nav-link active" href="/selfinterview/history">내 기록</a>
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/user/mypage">마이페이지</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 2rem">
+        <div style="margin-bottom: 2rem">
+            <h1 style="color: #667eea; font-size: 2rem; font-weight: 700">셀프 면접 기록</h1>
+            <p style="color: #666; margin-top: 0.5rem">나의 셀프 면접 연습 기록을 확인하세요</p>
+        </div>
+
+        <div th:if="${sessions.isEmpty()}" style="text-align: center; padding: 3rem 0; color: #999">
+            <p style="font-size: 1.2rem">아직 연습 기록이 없습니다</p>
+            <a href="/selfinterview/create" class="btn" style="margin-top: 1rem; background: #667eea; color: white; text-decoration: none; display: inline-block; padding: 0.75rem 1.5rem; border-radius: 6px">첫 연습 시작하기</a>
+        </div>
+
+        <div th:if="${!sessions.isEmpty()}" class="session-grid">
+            <div th:each="session : ${sessions}" class="session-card">
+                <div class="session-card-header">
+                    <h3 th:text="${session.title}" style="margin: 0; color: #333; font-size: 1.2rem"></h3>
+                    <span class="badge" th:text="${session.sessionType}"></span>
+                </div>
+                
+                <div class="session-card-body">
+                    <div class="session-stat">
+                        <span class="stat-label">질문 수</span>
+                        <span class="stat-value" th:text="${session.answerCount} + '개'"></span>
+                    </div>
+                    <div class="session-stat">
+                        <span class="stat-label">평균 점수</span>
+                        <span class="stat-value" th:text="${session.avgScore != null ? #numbers.formatDecimal(session.avgScore, 1, 1) + '점' : 'N/A'}"></span>
+                    </div>
+                    <div class="session-stat">
+                        <span class="stat-label">연습 시간</span>
+                        <span class="stat-value" th:text="${#temporals.format(session.createdAt, 'MM/dd HH:mm')}"></span>
+                    </div>
+                </div>
+
+                <div class="session-card-footer">
+                    <a th:href="@{/session/scoreboard/{id}(id=${session.id})}" class="btn-view">결과 보기</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .session-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .session-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: box-shadow 0.2s;
+        }
+        
+        .session-card:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .session-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .session-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .session-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .session-card-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-view {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .btn-view:hover {
+            background: #5568d3;
+        }
+    </style>
+</body>
+</html>

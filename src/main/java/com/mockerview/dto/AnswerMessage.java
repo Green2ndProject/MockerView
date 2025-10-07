@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AnswerMessage {
+    private Long sessionId;
     private Long questionId;
     private Long answerId;
     private Long userId;

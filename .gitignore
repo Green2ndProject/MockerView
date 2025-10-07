@@ -20,7 +20,10 @@ Thumbs.db
 # Logs
 *.log
 
-# 환경변수 파일 (중요!)
+# Spring Boot
+target/
+
+# 환경변수 파일
 .env
 .env.local
 .env.development
@@ -30,6 +33,3 @@ Thumbs.db
 *.tmp
 *.temp
 bin/
-
-# Spring Boot
-target/
