@@ -32,6 +32,8 @@ CREATE TABLE sessions (
     media_enabled NUMBER(1) DEFAULT 0,
     last_activity TIMESTAMP,
     expires_at TIMESTAMP,
+    difficulty VARCHAR2(20),
+    category VARCHAR2(50),
     created_at TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT fk_sessions_host FOREIGN KEY (host_id) REFERENCES users(id),
     CONSTRAINT chk_status CHECK (status IN ('PLANNED','RUNNING','ENDED')),

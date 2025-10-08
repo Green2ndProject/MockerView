@@ -157,6 +157,26 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="difficulty">난이도</label>
+                    <select id="difficulty" name="difficulty" class="form-control" required>
+                        <option value="EASY">쉬움 ⭐</option>
+                        <option value="MEDIUM" selected>보통 ⭐⭐</option>
+                        <option value="HARD">어려움 ⭐⭐⭐</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">카테고리</label>
+                    <select id="category" name="category" class="form-control" required>
+                        <option value="TECHNICAL">기술면접</option>
+                        <option value="PERSONALITY">인성면접</option>
+                        <option value="PROJECT">프로젝트 경험</option>
+                        <option value="SITUATION">상황 대처</option>
+                        <option value="GENERAL" selected>일반 질문</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label>면접 방식</label>
                     <div class="interview-mode-options">
                         <label class="mode-option-card active">
