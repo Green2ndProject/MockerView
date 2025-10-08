@@ -25,12 +25,16 @@ CREATE TABLE sessions (
     agora_channel VARCHAR(255),
     media_enabled SMALLINT DEFAULT 0,
     last_activity TIMESTAMP,
+    expires_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_status CHECK (status IN ('PLANNED','RUNNING','ENDED')),
     CONSTRAINT chk_session_type CHECK (session_type IN ('GROUP','SELF','TEXT','AUDIO','VIDEO')),
     CONSTRAINT chk_is_reviewable CHECK (is_reviewable IN ('Y','N')),
     CONSTRAINT chk_media_enabled CHECK (media_enabled IN (0,1))
 );
+
+CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX idx_sessions_status_expires ON sessions(status, expires_at);
 
 CREATE TABLE questions (
     id BIGSERIAL PRIMARY KEY,

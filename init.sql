@@ -101,6 +101,12 @@ ALTER TABLE sessions ADD agora_channel VARCHAR2(255);
 ALTER TABLE sessions ADD media_enabled NUMBER(1) DEFAULT 0;
 ALTER TABLE sessions ADD last_activity TIMESTAMP;
 ALTER TABLE sessions ADD CONSTRAINT chk_media_enabled CHECK (media_enabled IN (0,1));
+ALTER TABLE sessions ADD expires_at TIMESTAMP;
+
+UPDATE sessions SET expires_at = created_at + INTERVAL '3' HOUR WHERE expires_at IS NULL;
+
+CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX idx_sessions_status_expires ON sessions(status, expires_at);
 
 ALTER TABLE answers ADD CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 10);
 

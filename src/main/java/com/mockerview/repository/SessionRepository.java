@@ -73,7 +73,17 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
     @Query("SELECT s FROM Session s WHERE s.sessionStatus = :status AND s.startTime <= :now")
     List<Session> findByStatusAndStartTimeBefore(
-    @Param("status") Session.SessionStatus status,
-    @Param("now") LocalDateTime now
-);
+        @Param("status") Session.SessionStatus status,
+        @Param("now") LocalDateTime now
+    );
+
+    @Query("SELECT s FROM Session s WHERE s.sessionStatus = :status AND s.expiresAt < :now")
+    List<Session> findExpiredSessions(
+        @Param("status") Session.SessionStatus status, 
+        @Param("now") LocalDateTime now
+    );
+    
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
+            "FROM Session s WHERE s.id = :sessionId AND s.host.id = :hostId")
+    boolean isHost(@Param("sessionId") Long sessionId, @Param("hostId") Long hostId);
 }
