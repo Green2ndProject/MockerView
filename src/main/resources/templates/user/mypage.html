@@ -407,11 +407,13 @@
 
         cancelBtn.addEventListener('click', ()=>{
             withdrawalModal.style.display = 'none';
+            resetWithdrawForm();
         });
 
         window.addEventListener('click', (e)=>{
             if(e.target === withdrawalModal){
                 withdrawalModal.style.display = 'none';
+                resetWithdrawForm();
             }
         });
 
@@ -459,7 +461,7 @@
                
                 else if(response.status === 400){
                     const errData = await response.json();
-                    alert(`탈퇴 실패: ${errData.message}`);
+                    alert(`탈퇴 실패: 비밀번호가 틀렸습니다.`);
                 } else {
                     alert(`탈퇴 처리 중 오류 발생. 응답 상태 코드: ${response.status} (Type: ${response.type})`);
                 }
@@ -473,6 +475,17 @@
         }); 
 
     
+    function resetWithdrawForm(){
+
+        if(withdrawalPasswordInput){
+            withdrawalPasswordInput.value = '';
+        }
+
+        if(reasonSelect){
+            reasonSelect.selectedIndex = 0;
+        }        
+    }
+
     </script>
 </body>
 </html>
