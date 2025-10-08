@@ -86,4 +86,10 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
             "FROM Session s WHERE s.id = :sessionId AND s.host.id = :hostId")
     boolean isHost(@Param("sessionId") Long sessionId, @Param("hostId") Long hostId);
+    
+    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.sessionStatus = :status",
+        countQuery = "SELECT COUNT(s) FROM Session s WHERE s.sessionStatus = :status")
+    Page<Session> findByStatusPageable(@Param("status") Session.SessionStatus status, Pageable pageable);
+    
+    Long countBySessionStatus(Session.SessionStatus status);
 }

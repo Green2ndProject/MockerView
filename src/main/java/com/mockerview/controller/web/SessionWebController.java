@@ -6,6 +6,7 @@ import com.mockerview.entity.Question;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.entity.User.UserRole;
+import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class SessionWebController {
     
     private final SessionService sessionService;
     private final UserRepository userRepository;
+    private final SessionRepository sessionRepository;
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -137,13 +139,26 @@ public class SessionWebController {
             Model model) {
         
         try {
-            log.info("세션 목록 로드 중...");
+            log.info("세션 목록 로드 중 - status: {}, keyword: {}", status, keyword);
             
             User currentUser = getCurrentUser();
             String currentUsername = currentUser != null ? currentUser.getUsername() : "guest";
             
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-            Page<Session> sessionPage = sessionService.getSessionsPageable(pageable);
+            Page<Session> sessionPage;
+            
+            if (status != null && !status.isEmpty()) {
+                Session.SessionStatus sessionStatus = Session.SessionStatus.valueOf(status);
+                if (keyword != null && !keyword.isEmpty()) {
+                    sessionPage = sessionRepository.searchSessionsPageable(keyword, sessionStatus, pageable);
+                } else {
+                    sessionPage = sessionRepository.findByStatusPageable(sessionStatus, pageable);
+                }
+            } else if (keyword != null && !keyword.isEmpty()) {
+                sessionPage = sessionRepository.searchSessionsPageable(keyword, null, pageable);
+            } else {
+                sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
+            }
             
             List<Map<String, Object>> sessionList = sessionPage.getContent().stream()
                 .map(session -> {
@@ -175,6 +190,11 @@ public class SessionWebController {
                 })
                 .collect(Collectors.toList());
             
+            long totalCount = sessionRepository.count();
+            long plannedCount = sessionRepository.countBySessionStatus(Session.SessionStatus.PLANNED);
+            long runningCount = sessionRepository.countBySessionStatus(Session.SessionStatus.RUNNING);
+            long endedCount = sessionRepository.countBySessionStatus(Session.SessionStatus.ENDED);
+            
             model.addAttribute("sessions", sessionList);
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("currentPage", page);
@@ -182,6 +202,12 @@ public class SessionWebController {
             model.addAttribute("totalPages", sessionPage.getTotalPages());
             model.addAttribute("totalItems", sessionPage.getTotalElements());
             model.addAttribute("pageSize", size);
+            model.addAttribute("statusFilter", status);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("totalCount", totalCount);
+            model.addAttribute("plannedCount", plannedCount);
+            model.addAttribute("runningCount", runningCount);
+            model.addAttribute("endedCount", endedCount);
             
             log.info("세션 목록 로드 완료 - {}개 세션. 현재 페이지: {}/{} 사용자: {}", 
                     sessionList.size(), page, sessionPage.getTotalPages(), currentUsername);
