@@ -5,7 +5,11 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     email VARCHAR(255),
     password VARCHAR(255),
-    username VARCHAR(255)
+    username VARCHAR(255),
+    is_deleted SMALLINT DEFAULT 0 NOT NULL,
+    deleted_at TIMESTAMP,
+    withdrawal_reason VARCHAR(255),
+    CONSTRAINT chk_is_deleted CHECK (is_deleted IN (0, 1))
 );
 
 CREATE TABLE sessions (

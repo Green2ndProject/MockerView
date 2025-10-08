@@ -88,6 +88,11 @@ CREATE TABLE reviews (
     CONSTRAINT fk_reviews_answer FOREIGN KEY (answer_id) REFERENCES answers(id)
 );
 
+ALTER TABLE users ADD is_deleted NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE users ADD CONSTRAINT chk_is_deleted CHECK (is_deleted IN (0, 1));
+ALTER TABLE users ADD deleted_at DATE;
+ALTER TABLE users ADD withdrawal_reason VARCHAR2(255);
+
 ALTER TABLE sessions ADD CONSTRAINT chk_session_type CHECK (session_type IN ('GROUP', 'SELF', 'TEXT', 'AUDIO', 'VIDEO'));
 ALTER TABLE sessions ADD CONSTRAINT chk_status CHECK (status IN ('PLANNED','RUNNING','ENDED'));
 ALTER TABLE sessions ADD CONSTRAINT chk_is_reviewable CHECK (is_reviewable IN ('Y','N'));
