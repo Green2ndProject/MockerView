@@ -476,6 +476,56 @@
             max-height: 400px;
             overflow-y: auto;
         }
+
+        .countdown-timer {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-left: 1rem;
+        }
+
+        .countdown-timer.warning {
+            color: #ff9800;
+            animation: pulse 1s infinite;
+        }
+
+        .countdown-timer.danger {
+            color: #ef4444;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .expiration-warning {
+            background: #fff3cd;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .btn-end-session {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-end-session:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
     </style>
 </head>
 <body th:classappend="${isHost} ? 'role-host' : 'role-student'">
@@ -502,11 +552,15 @@
                     <span class="timer">
                         <span id="session-timer">00:00</span>
                     </span>
+                    <span id="countdown-display" class="countdown-timer"></span>
                     <span class="badge badge-live">진행 중</span>
                     <span id="session-stats">질문 0개 • 답변 0개</span>
                 </div>
             </div>
             <div class="session-actions">
+                <button th:if="${isHost}" id="endSessionBtn" class="btn-end-session" onclick="endSessionManually()">
+                    🛑 세션 종료
+                </button>
                 <a th:href="@{/session/scoreboard/{id}(id=${sessionId})}" class="btn btn-secondary btn-sm">
                     점수판
                 </a>
@@ -514,6 +568,12 @@
                     상세 결과
                 </a>
             </div>
+        </div>
+    </div>
+
+    <div id="expiration-warning" class="container" style="display: none;">
+        <div class="expiration-warning">
+            ⚠️ 세션이 5분 후 자동 종료됩니다!
         </div>
     </div>
 
@@ -701,8 +761,77 @@
             userId: /*[[${userId}]]*/ 1,
             userName: /*[[${userName}]]*/ '사용자',
             isHost: /*[[${isHost}]]*/ false,
-            sessionType: /*[[${sessionType}]]*/ 'TEXT'
+            sessionType: /*[[${sessionType}]]*/ 'TEXT',
+            expiresAt: /*[[${session.expiresAt}]]*/ null
         };
+        
+        let countdownInterval = null;
+        let warningShown = false;
+        
+        function startCountdown() {
+            if (!SESSION_DATA.expiresAt) return;
+            
+            const expiresAt = new Date(SESSION_DATA.expiresAt).getTime();
+            
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const remaining = expiresAt - now;
+                
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdown-display').textContent = '만료됨';
+                    document.getElementById('countdown-display').className = 'countdown-timer danger';
+                    return;
+                }
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('countdown-display').textContent = 
+                    `남은 시간: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (remaining <= 5 * 60 * 1000) {
+                    document.getElementById('countdown-display').className = 'countdown-timer warning';
+                    if (!warningShown) {
+                        document.getElementById('expiration-warning').style.display = 'block';
+                        warningShown = true;
+                    }
+                }
+                
+                if (remaining <= 1 * 60 * 1000) {
+                    document.getElementById('countdown-display').className = 'countdown-timer danger';
+                }
+            }, 1000);
+        }
+        
+        async function endSessionManually() {
+            if (!confirm('정말로 세션을 종료하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const token = getToken();
+                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/end`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('세션이 종료되었습니다');
+                    window.location.href = '/session/list';
+                } else {
+                    alert(data.message || '세션 종료에 실패했습니다');
+                }
+            } catch (error) {
+                console.error('세션 종료 오류:', error);
+                alert('세션 종료 중 오류가 발생했습니다');
+            }
+        }
         
         console.log('=== 세션 데이터 디버깅 ===');
         console.log('sessionType:', SESSION_DATA.sessionType);
@@ -1263,6 +1392,8 @@
             console.log('DOM 로드 완료');
             console.log('현재 sessionType:', SESSION_DATA.sessionType);
             
+            startCountdown();
+            
             const mediaSection = document.getElementById('mediaSection');
             console.log('mediaSection element:', mediaSection);
             
@@ -1279,6 +1410,21 @@
             
             if (typeof initializeWebSocket === 'function') {
                 initializeWebSocket(SESSION_DATA.sessionId, SESSION_DATA.userId, SESSION_DATA.userName);
+            }
+            
+            if (typeof stompClient !== 'undefined') {
+                stompClient.subscribe('/topic/session/' + SESSION_DATA.sessionId + '/status', function(message) {
+                    const status = JSON.parse(message.body);
+                    
+                    if (status.status === 'ENDED') {
+                        if (status.reason === 'EXPIRED') {
+                            alert('⏰ 세션 시간이 만료되었습니다');
+                        } else if (status.reason === 'MANUAL') {
+                            alert('🛑 호스트가 세션을 종료했습니다');
+                        }
+                        window.location.href = '/session/list';
+                    }
+                });
             }
         });
     </script>

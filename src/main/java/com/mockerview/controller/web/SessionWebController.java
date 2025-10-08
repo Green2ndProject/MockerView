@@ -10,12 +10,10 @@ import com.mockerview.repository.UserRepository;
 import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -25,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -113,6 +112,7 @@ public class SessionWebController {
             model.addAttribute("userName", currentUser.getName());
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("isHost", isHost);
+            model.addAttribute("session", session);
             
             log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}", 
                 currentUser.getName(), sessionRole, isHost, session.getSessionType());
@@ -128,59 +128,70 @@ public class SessionWebController {
 
     @GetMapping("/list")
     public String sessionList(
-                            @RequestParam(value = "page", defaultValue = "1") int page,
-                            @RequestParam(value = "size", defaultValue = "6") int size,
-                            @RequestParam(required = false) String keyword,
-                            @RequestParam(required = false) String status,
-                            @RequestParam(required = false) String sortBy,
-                            @RequestParam(required = false) String sortOrder,
-                            Model model) {
-
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortOrder,
+            Model model) {
+        
         try {
             log.info("세션 목록 로드 중...");
-
-            Page<Session> sessionPage; 
-
-            Sort sort = Sort.by(
-            sortOrder != null && sortOrder.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC,
-            sortBy != null ? sortBy : "createdAt"
-            );
-
-            Pageable pageable = PageRequest.of(page - 1, size, sort);
             
-            if (keyword != null || status != null) {
-                sessionPage = sessionService.searchSessionsPageable(
-                keyword, 
-                status, 
-                pageable 
-            );
-            } else {
-                sessionPage = sessionService.getSessionsPageable(pageable);
-            }
-
-            model.addAttribute("sessions", sessionPage.getContent()); 
-            model.addAttribute("totalPages", sessionPage.getTotalPages());
-            model.addAttribute("serverCurrentPage", page); 
-            model.addAttribute("keyword", keyword);
-
             User currentUser = getCurrentUser();
+            String currentUsername = currentUser != null ? currentUser.getUsername() : "guest";
             
-            if (currentUser != null) {
-                model.addAttribute("currentUser", currentUser);
-                model.addAttribute("isLoggedIn", true);
-                log.info("세션 목록 로드 완료 - {}개 세션. 현재 페이지: {}/{} 사용자: {}", sessionPage.getContent().size(), page, sessionPage.getTotalPages(), currentUser.getUsername());
-            } else {
-                model.addAttribute("currentUser", null);
-                model.addAttribute("isLoggedIn", false);
-                log.info("세션 목록 로드 완료 - {}개 세션. 비로그인 상태.", sessionPage.getContent().size());
-            }
+            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+            Page<Session> sessionPage = sessionService.getSessionsPageable(pageable);
+            
+            List<Map<String, Object>> sessionList = sessionPage.getContent().stream()
+                .map(session -> {
+                    Map<String, Object> sessionMap = new HashMap<>();
+                    sessionMap.put("id", session.getId());
+                    sessionMap.put("title", session.getTitle());
+                    sessionMap.put("sessionType", session.getSessionType());
+                    sessionMap.put("sessionStatus", session.getSessionStatus().toString());
+                    sessionMap.put("createdAt", session.getCreatedAt());
+                    sessionMap.put("expiresAt", session.getExpiresAt());
+                    sessionMap.put("startTime", session.getStartTime());
+                    sessionMap.put("endTime", session.getEndTime());
+                    sessionMap.put("mediaEnabled", session.getMediaEnabled());
+                    sessionMap.put("agoraChannel", session.getAgoraChannel());
+                    sessionMap.put("isSelfInterview", session.getIsSelfInterview());
+                    
+                    if (session.getHost() != null) {
+                        Map<String, Object> hostMap = new HashMap<>();
+                        hostMap.put("id", session.getHost().getId());
+                        hostMap.put("name", session.getHost().getName());
+                        hostMap.put("username", session.getHost().getUsername());
+                        hostMap.put("role", session.getHost().getRole().toString());
+                        sessionMap.put("host", hostMap);
+                    } else {
+                        sessionMap.put("host", null);
+                    }
+                    
+                    return sessionMap;
+                })
+                .collect(Collectors.toList());
+            
+            model.addAttribute("sessions", sessionList);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("serverCurrentPage", page);
+            model.addAttribute("totalPages", sessionPage.getTotalPages());
+            model.addAttribute("totalItems", sessionPage.getTotalElements());
+            model.addAttribute("pageSize", size);
+            
+            log.info("세션 목록 로드 완료 - {}개 세션. 현재 페이지: {}/{} 사용자: {}", 
+                    sessionList.size(), page, sessionPage.getTotalPages(), currentUsername);
             
             return "session/list";
             
         } catch (Exception e) {
-            log.error("세션 목록 로드 오류: ", e);
+            log.error("세션 목록 로드 실패", e);
             model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
-            return "session/list";
+            return "error";
         }
     }
 
@@ -216,43 +227,42 @@ public class SessionWebController {
         }
     }
 
-
     @GetMapping("/detail/{id}")
-public String sessionDetail(@PathVariable Long id, Model model) {
-    try {
-        Session sess = sessionService.findById(id);
-        
-        if (sess == null) {
-            model.addAttribute("error", "세션을 찾을 수 없습니다.");
+    public String sessionDetail(@PathVariable Long id, Model model) {
+        try {
+            Session sess = sessionService.findById(id);
+            
+            if (sess == null) {
+                model.addAttribute("error", "세션을 찾을 수 없습니다.");
+                return "redirect:/session/list";
+            }
+            
+            List<Question> questions = sessionService.getSessionQuestions(id);
+            List<Answer> answers = sessionService.getSessionAnswers(id);
+            
+            Map<Long, List<Answer>> answersByQuestion = answers.stream()
+                .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
+            
+            User currentUser = getCurrentUser();
+            
+            int totalAnswerCount = answers.size();
+            int answeredQuestionCount = answersByQuestion.size();
+            
+            model.addAttribute("interviewSession", sess);
+            model.addAttribute("questions", questions);
+            model.addAttribute("answersByQuestion", answersByQuestion);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("totalAnswerCount", totalAnswerCount);
+            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+            
+            log.info("세션 상세 로드 완료 - sessionId: {}", id);
+            
+            return "session/detail";
+            
+        } catch (Exception e) {
+            log.error("세션 상세 조회 오류: ", e);
+            model.addAttribute("error", "세션 상세 정보를 불러올 수 없습니다: " + e.getMessage());
             return "redirect:/session/list";
         }
-        
-        List<Question> questions = sessionService.getSessionQuestions(id);
-        List<Answer> answers = sessionService.getSessionAnswers(id);
-        
-        Map<Long, List<Answer>> answersByQuestion = answers.stream()
-            .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
-        
-        User currentUser = getCurrentUser();
-        
-        int totalAnswerCount = answers.size();
-        int answeredQuestionCount = answersByQuestion.size();
-        
-        model.addAttribute("interviewSession", sess);
-        model.addAttribute("questions", questions);
-        model.addAttribute("answersByQuestion", answersByQuestion);
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("totalAnswerCount", totalAnswerCount);
-        model.addAttribute("answeredQuestionCount", answeredQuestionCount);
-        
-        log.info("세션 상세 로드 완료 - sessionId: {}", id);
-        
-        return "session/detail";
-        
-    } catch (Exception e) {
-        log.error("세션 상세 조회 오류: ", e);
-        model.addAttribute("error", "세션 상세 정보를 불러올 수 없습니다: " + e.getMessage());
-        return "redirect:/session/list";
     }
-}
 }

@@ -36,6 +36,9 @@ public class Session {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Builder.Default
@@ -82,6 +85,9 @@ public class Session {
         lastActivity = LocalDateTime.now();
         if (agoraChannel == null) {
             agoraChannel = "session_" + System.currentTimeMillis();
+        }
+        if (expiresAt == null) {
+            expiresAt = LocalDateTime.now().plusHours(3);
         }
     }
 

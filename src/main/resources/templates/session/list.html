@@ -313,8 +313,8 @@
                             <div class="session-meta">
                                 <span
                                     class="badge"
-                                    th:classappend="${sessionItem.status.toString() == 'RUNNING' ? 'badge-live' : (sessionItem.status.toString() == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
-                                    th:text="${sessionItem.status != null ? sessionItem.status : 'PLANNED'}">
+                                    th:classappend="${sessionItem.sessionStatus == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
+                                    th:text="${sessionItem.sessionStatus != null ? sessionItem.sessionStatus : 'PLANNED'}">
                                     PLANNED
                                 </span>
                                 <span
@@ -334,7 +334,7 @@
                             호스트명
                         </span>
                         
-                        <span th:if="${sessionItem.sessionStatus.name() == 'PLANNED' and sessionItem.startTime != null}"
+                        <span th:if="${sessionItem.sessionStatus == 'PLANNED' and sessionItem.startTime != null}"
                             class="scheduled-time">
                             ⏰ [[${#temporals.format(sessionItem.startTime, 'MM/dd HH:mm')}]] 시작 예정
                         </span>
