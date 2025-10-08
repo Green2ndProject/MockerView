@@ -102,6 +102,8 @@ ALTER TABLE sessions ADD media_enabled NUMBER(1) DEFAULT 0;
 ALTER TABLE sessions ADD last_activity TIMESTAMP;
 ALTER TABLE sessions ADD CONSTRAINT chk_media_enabled CHECK (media_enabled IN (0,1));
 ALTER TABLE sessions ADD expires_at TIMESTAMP;
+ALTER TABLE sessions ADD difficulty VARCHAR2(20);
+ALTER TABLE sessions ADD category VARCHAR2(50);
 
 UPDATE sessions SET expires_at = created_at + INTERVAL '3' HOUR WHERE expires_at IS NULL;
 

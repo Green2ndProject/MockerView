@@ -66,6 +66,12 @@ public class Session {
     @Column(name = "agora_channel")
     private String agoraChannel;
 
+    @Column(name = "difficulty")
+    private String difficulty;
+
+    @Column(name = "category")
+    private String category;
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Question> questions = new ArrayList<>();

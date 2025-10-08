@@ -26,6 +26,8 @@ CREATE TABLE sessions (
     media_enabled SMALLINT DEFAULT 0,
     last_activity TIMESTAMP,
     expires_at TIMESTAMP,
+    difficulty VARCHAR(20),
+    category VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_status CHECK (status IN ('PLANNED','RUNNING','ENDED')),
     CONSTRAINT chk_session_type CHECK (session_type IN ('GROUP','SELF','TEXT','AUDIO','VIDEO')),

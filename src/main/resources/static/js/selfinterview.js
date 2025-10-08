@@ -4,6 +4,8 @@ document.getElementById('createForm').addEventListener('submit', async function(
     const title = document.getElementById('title').value;
     const questionCount = parseInt(document.getElementById('questionCount').value);
     const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
+    const difficulty = document.getElementById('difficulty').value;
+    const category = document.getElementById('category').value;
     
     if (!title.trim()) {
         alert('면접 제목을 입력해주세요.');
@@ -23,7 +25,9 @@ document.getElementById('createForm').addEventListener('submit', async function(
             body: JSON.stringify({
                 title: title,
                 questionCount: questionCount,
-                sessionType: sessionType
+                sessionType: sessionType,
+                difficulty: difficulty,
+                category: category
             })
         });
         

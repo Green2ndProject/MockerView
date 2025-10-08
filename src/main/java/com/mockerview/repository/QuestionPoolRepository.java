@@ -20,4 +20,23 @@ public interface QuestionPoolRepository extends JpaRepository<QuestionPool, Long
     
     @Query(value = "SELECT * FROM (SELECT * FROM question_pool ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM <= :count", nativeQuery = true)
     List<QuestionPool> findRandomQuestions(@Param("count") Integer count);
+    
+    @Query(value = "SELECT * FROM (SELECT * FROM question_pool WHERE difficulty = :difficulty AND category = :category ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM <= :limit", nativeQuery = true)
+    List<QuestionPool> findRandomQuestionsByDifficultyAndCategory(
+        @Param("difficulty") String difficulty,
+        @Param("category") String category,
+        @Param("limit") Integer limit
+    );
+    
+    @Query(value = "SELECT * FROM (SELECT * FROM question_pool WHERE difficulty = :difficulty ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM <= :limit", nativeQuery = true)
+    List<QuestionPool> findRandomQuestionsByDifficulty(
+        @Param("difficulty") String difficulty,
+        @Param("limit") Integer limit
+    );
+    
+    @Query(value = "SELECT * FROM (SELECT * FROM question_pool WHERE category = :category ORDER BY DBMS_RANDOM.VALUE) WHERE ROWNUM <= :limit", nativeQuery = true)
+    List<QuestionPool> findRandomQuestionsByCategory(
+        @Param("category") String category,
+        @Param("limit") Integer limit
+    );
 }
