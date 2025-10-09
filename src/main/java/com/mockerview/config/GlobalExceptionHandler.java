@@ -1,9 +1,13 @@
 package com.mockerview.config;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.mockerview.exception.AlreadyDeletedException;
 
 import java.util.Map;
 
@@ -22,5 +26,22 @@ public class GlobalExceptionHandler {
         return Map.of("message", e.getMessage()); 
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED) // 401
+    public Map<String, String> handleBadCredentialsException(BadCredentialsException e) {
+        return Map.of("message", "인증에 실패했습니다. 세션이 유효하지 않습니다.");
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN) // 403
+    public Map<String, String> handleDisabledException(DisabledException e) {
+        return Map.of("message", "탈퇴한 회원이거나 접근 권한이 없습니다.");
+    }
+
+    @ExceptionHandler(AlreadyDeletedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT) // 409
+    public Map<String, String> handleAlreadyDeletedException(AlreadyDeletedException e) {
+        return Map.of("message", e.getMessage());
+    }
     // 필요하다면 다른 예외(NullPointerException, CustomException 등)도 추가할 수 있습니다.
 }

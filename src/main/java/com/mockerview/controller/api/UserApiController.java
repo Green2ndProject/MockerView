@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.dto.WithdrawRequest;
+import com.mockerview.dto.WithdrawResponse;
 import com.mockerview.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +32,11 @@ public class UserApiController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Void> withdrawUser(
+    public ResponseEntity<WithdrawResponse> withdrawUser(
         @RequestBody WithdrawRequest withdrawRequest, 
         @AuthenticationPrincipal CustomUserDetails userDetails ){
 
             log.info("탈퇴 요청 Controller 진입: {}", userDetails.getUsername());
-            log.info("탈퇴 요청 : {} ", withdrawRequest.getPassword());
-            log.info("탈퇴 요청 : {} ", withdrawRequest.getReason());
 
             String username = userDetails.getUsername();
             String password = withdrawRequest.getPassword();
@@ -47,10 +46,10 @@ public class UserApiController {
                 userService.withdraw(username, password, reason);    
 
                 log.info("탈퇴 처리 Service 성공: {}", username);
-                HttpHeaders headers = new HttpHeaders();
-                headers.add("Location", "/auth/logout");
-
-                return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
+                
+                WithdrawResponse withdrawResponse = new WithdrawResponse("success", "/auth/logout");
+                // 200 ok
+                return ResponseEntity.ok(withdrawResponse);
 
             // } catch (IllegalArgumentException e) {
             //     // 비밀번호 불일치 등의 경우 401 or 403 반환

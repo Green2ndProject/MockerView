@@ -2,6 +2,7 @@ package com.mockerview.service;
 
 import java.util.Optional;
 
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,13 +24,12 @@ public class CustomUserDetailsService implements UserDetailsService{
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Optional<User> userOpt = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
-        if(userOpt.isEmpty()){              
-            throw new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다.");
+        // isDeleted 검증
+        if(user.getIsDeleted()){
+            throw new DisabledException("탈퇴한 회원이거나 접근 권한이 없습니다.");
         }
-
-        User user = userOpt.get();
 
         return new CustomUserDetails(user);
     }
