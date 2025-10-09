@@ -36,6 +36,9 @@ public class Session {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     @Builder.Default
@@ -63,6 +66,12 @@ public class Session {
     @Column(name = "agora_channel")
     private String agoraChannel;
 
+    @Column(name = "difficulty")
+    private String difficulty;
+
+    @Column(name = "category")
+    private String category;
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     @Builder.Default
     private List<Question> questions = new ArrayList<>();
@@ -82,6 +91,9 @@ public class Session {
         lastActivity = LocalDateTime.now();
         if (agoraChannel == null) {
             agoraChannel = "session_" + System.currentTimeMillis();
+        }
+        if (expiresAt == null) {
+            expiresAt = LocalDateTime.now().plusHours(3);
         }
     }
 

@@ -321,4 +321,8 @@ public void exportStatsCSV(@AuthenticationPrincipal CustomUserDetails userDetail
         }
     }
 }
+    @GetMapping("/withdraw")
+    public String withdrawPage() {
+        return "user/withdraw";
+    }
 }

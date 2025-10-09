@@ -88,6 +88,11 @@ CREATE TABLE reviews (
     CONSTRAINT fk_reviews_answer FOREIGN KEY (answer_id) REFERENCES answers(id)
 );
 
+ALTER TABLE users ADD is_deleted NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE users ADD CONSTRAINT chk_is_deleted CHECK (is_deleted IN (0, 1));
+ALTER TABLE users ADD deleted_at DATE;
+ALTER TABLE users ADD withdrawal_reason VARCHAR2(255);
+
 ALTER TABLE sessions ADD CONSTRAINT chk_session_type CHECK (session_type IN ('GROUP', 'SELF', 'TEXT', 'AUDIO', 'VIDEO'));
 ALTER TABLE sessions ADD CONSTRAINT chk_status CHECK (status IN ('PLANNED','RUNNING','ENDED'));
 ALTER TABLE sessions ADD CONSTRAINT chk_is_reviewable CHECK (is_reviewable IN ('Y','N'));
@@ -96,6 +101,14 @@ ALTER TABLE sessions ADD agora_channel VARCHAR2(255);
 ALTER TABLE sessions ADD media_enabled NUMBER(1) DEFAULT 0;
 ALTER TABLE sessions ADD last_activity TIMESTAMP;
 ALTER TABLE sessions ADD CONSTRAINT chk_media_enabled CHECK (media_enabled IN (0,1));
+ALTER TABLE sessions ADD expires_at TIMESTAMP;
+ALTER TABLE sessions ADD difficulty VARCHAR2(20);
+ALTER TABLE sessions ADD category VARCHAR2(50);
+
+UPDATE sessions SET expires_at = created_at + INTERVAL '3' HOUR WHERE expires_at IS NULL;
+
+CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX idx_sessions_status_expires ON sessions(status, expires_at);
 
 ALTER TABLE answers ADD CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 10);
 

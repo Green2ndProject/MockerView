@@ -5,7 +5,11 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     email VARCHAR(255),
     password VARCHAR(255),
-    username VARCHAR(255)
+    username VARCHAR(255),
+    is_deleted SMALLINT DEFAULT 0 NOT NULL,
+    deleted_at TIMESTAMP,
+    withdrawal_reason VARCHAR(255),
+    CONSTRAINT chk_is_deleted CHECK (is_deleted IN (0, 1))
 );
 
 CREATE TABLE sessions (
@@ -21,12 +25,18 @@ CREATE TABLE sessions (
     agora_channel VARCHAR(255),
     media_enabled SMALLINT DEFAULT 0,
     last_activity TIMESTAMP,
+    expires_at TIMESTAMP,
+    difficulty VARCHAR(20),
+    category VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_status CHECK (status IN ('PLANNED','RUNNING','ENDED')),
     CONSTRAINT chk_session_type CHECK (session_type IN ('GROUP','SELF','TEXT','AUDIO','VIDEO')),
     CONSTRAINT chk_is_reviewable CHECK (is_reviewable IN ('Y','N')),
     CONSTRAINT chk_media_enabled CHECK (media_enabled IN (0,1))
 );
+
+CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX idx_sessions_status_expires ON sessions(status, expires_at);
 
 CREATE TABLE questions (
     id BIGSERIAL PRIMARY KEY,
