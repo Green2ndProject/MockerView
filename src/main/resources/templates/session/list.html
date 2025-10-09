@@ -13,6 +13,56 @@
         :root {
             --primary-color: #667eea;
             --secondary-color: #4CAF50;
+            --planned-color: #f2b824;
+            --running-color: #28a745;
+            --ended-color: #6c757d;
+        }
+        
+        .status-filter-tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .status-tab {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            background: white;
+            color: var(--primary-color);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: center;
+            position: relative;
+        }
+        
+        .status-tab:hover {
+            background: #f0f3ff;
+        }
+        
+        .status-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .status-tab .count {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 0.2rem 0.6rem;
+            background: rgba(0,0,0,0.1);
+            border-radius: 12px;
+            font-size: 0.875rem;
+        }
+        
+        .status-tab.active .count {
+            background: rgba(255,255,255,0.3);
         }
         
         .search-container {
@@ -268,8 +318,28 @@
                 </div>
             </div>
 
+            <div class="status-filter-tabs">
+                <button class="status-tab" th:classappend="${statusFilter == null or statusFilter == '' ? 'active' : ''}" onclick="filterByStatus('')">
+                    전체보기
+                    <span class="count" th:text="${totalCount}">0</span>
+                </button>
+                <button class="status-tab" th:classappend="${statusFilter == 'PLANNED' ? 'active' : ''}" onclick="filterByStatus('PLANNED')">
+                    예정된 세션
+                    <span class="count" th:text="${plannedCount}">0</span>
+                </button>
+                <button class="status-tab" th:classappend="${statusFilter == 'RUNNING' ? 'active' : ''}" onclick="filterByStatus('RUNNING')">
+                    진행 중
+                    <span class="count" th:text="${runningCount}">0</span>
+                </button>
+                <button class="status-tab" th:classappend="${statusFilter == 'ENDED' ? 'active' : ''}" onclick="filterByStatus('ENDED')">
+                    종료됨
+                    <span class="count" th:text="${endedCount}">0</span>
+                </button>
+            </div>
+
             <div class="search-container">
-                <form class="search-form" method="get" action="/session/list">
+                <form class="search-form" method="get" action="/session/list" id="searchForm">
+                    <input type="hidden" name="status" id="statusInput" th:value="${statusFilter}" />
                     <input
                         type="text"
                         id="keyword"
@@ -302,7 +372,7 @@
                 <div
                     th:each="sessionItem : ${sessions}"
                     class="session-card"
-                    th:attr="data-session-id=${sessionItem.id}">
+                    th:attr="data-session-id=${sessionItem.id}, data-session-status=${sessionItem.sessionStatus}">
                     <div class="session-header">
                         <div>
                             <h3
@@ -313,8 +383,8 @@
                             <div class="session-meta">
                                 <span
                                     class="badge"
-                                    th:classappend="${sessionItem.status.toString() == 'RUNNING' ? 'badge-live' : (sessionItem.status.toString() == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
-                                    th:text="${sessionItem.status != null ? sessionItem.status : 'PLANNED'}">
+                                    th:classappend="${sessionItem.sessionStatus == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
+                                    th:text="${sessionItem.sessionStatus != null ? sessionItem.sessionStatus : 'PLANNED'}">
                                     PLANNED
                                 </span>
                                 <span
@@ -334,7 +404,7 @@
                             호스트명
                         </span>
                         
-                        <span th:if="${sessionItem.sessionStatus.name() == 'PLANNED' and sessionItem.startTime != null}"
+                        <span th:if="${sessionItem.sessionStatus == 'PLANNED' and sessionItem.startTime != null}"
                             class="scheduled-time">
                             ⏰ [[${#temporals.format(sessionItem.startTime, 'MM/dd HH:mm')}]] 시작 예정
                         </span>
@@ -378,10 +448,10 @@
                 th:if="${sessions == null or sessions.empty}"
                 style="text-align: center; padding: 4rem 0">
                 <h3 style="color: #6c757d; margin-bottom: 1rem">
-                    현재 진행 중인 세션이 없습니다
+                    현재 조건에 맞는 세션이 없습니다
                 </h3>
                 <p style="color: #999; margin-bottom: 2rem">
-                    새로운 세션을 생성하거나 기존 세션이 열릴 때까지 기다려주세요.
+                    다른 필터를 선택하거나 새로운 세션을 생성해주세요.
                 </p>
             </div>
         </div>
@@ -516,6 +586,7 @@
         const serverCurrentPage = /*[[${serverCurrentPage}]]*/ 1;
         const serverTotalPages = /*[[${totalPages}]]*/ 1;
         const itemsPerPage = 6;
+        const currentStatusFilter = /*[[${statusFilter}]]*/ '';
 
         function hideElement(element) {
             if (element) element.classList.add("hidden");
@@ -552,6 +623,19 @@
             
             event.target.classList.add("active");
             document.getElementById(tabName + "-tab").classList.add("active");
+        }
+
+        function filterByStatus(status) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('page');
+            
+            if (status) {
+                url.searchParams.set('status', status);
+            } else {
+                url.searchParams.delete('status');
+            }
+            
+            window.location.href = url.toString();
         }
 
         function createNewSession() {
@@ -612,6 +696,29 @@
                         } else {
                             badge.classList.add("badge-waiting");
                         }
+                    }
+                    
+                    sessionCard.setAttribute('data-session-status', newStatus);
+                    
+                    if (currentStatusFilter && currentStatusFilter !== newStatus) {
+                        sessionCard.style.display = 'none';
+                        
+                        const statusCounts = {
+                            'PLANNED': parseInt(document.querySelector('.status-tab:nth-child(2) .count').textContent),
+                            'RUNNING': parseInt(document.querySelector('.status-tab:nth-child(3) .count').textContent),
+                            'ENDED': parseInt(document.querySelector('.status-tab:nth-child(4) .count').textContent)
+                        };
+                        
+                        if (statusCounts[newStatus] !== undefined) {
+                            statusCounts[newStatus]++;
+                        }
+                        if (statusCounts[currentStatusFilter] !== undefined) {
+                            statusCounts[currentStatusFilter]--;
+                        }
+                        
+                        document.querySelector('.status-tab:nth-child(2) .count').textContent = statusCounts['PLANNED'];
+                        document.querySelector('.status-tab:nth-child(3) .count').textContent = statusCounts['RUNNING'];
+                        document.querySelector('.status-tab:nth-child(4) .count').textContent = statusCounts['ENDED'];
                     }
                 }
             } catch (e) {

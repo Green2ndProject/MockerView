@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -207,6 +208,60 @@ public class SessionApiController {
         }
     }
 
+    @PostMapping("/{sessionId}/end")
+    public ResponseEntity<Map<String, Object>> endSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            log.info("세션 종료 요청 - sessionId: {}, userId: {}", 
+                    sessionId, userDetails.getUserId());
+            
+            if (!sessionRepository.isHost(sessionId, userDetails.getUserId())) {
+                response.put("success", false);
+                response.put("message", "호스트만 세션을 종료할 수 있습니다");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            if (session.getSessionStatus() == Session.SessionStatus.ENDED) {
+                response.put("success", false);
+                response.put("message", "이미 종료된 세션입니다");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+            }
+            
+            session.setSessionStatus(Session.SessionStatus.ENDED);
+            session.setEndTime(LocalDateTime.now());
+            sessionRepository.save(session);
+            
+            Map<String, Object> statusMessage = new HashMap<>();
+            statusMessage.put("sessionId", sessionId);
+            statusMessage.put("status", "ENDED");
+            statusMessage.put("reason", "MANUAL");
+            statusMessage.put("timestamp", LocalDateTime.now());
+            
+            messagingTemplate.convertAndSend(
+                "/topic/session/" + sessionId + "/status", 
+                statusMessage
+            );
+            
+            response.put("success", true);
+            response.put("message", "세션이 종료되었습니다");
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("세션 종료 실패", e);
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     private String transcribeWithWhisper(MultipartFile audioFile) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -296,41 +351,5 @@ public class SessionApiController {
             log.warn("Failed to extract section: " + section, e);
         }
         return "분석 중...";
-    }
-
-    @PostMapping("/{sessionId}/end")
-    public ResponseEntity<Map<String, Object>> endSession(
-            @PathVariable Long sessionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        try {
-            log.info("세션 종료 요청 - sessionId: {}, userId: {}", sessionId, userDetails.getUserId());
-            
-            Session session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
-            
-            session.setStatus(Session.SessionStatus.ENDED);
-            session.setEndTime(LocalDateTime.now());
-            sessionRepository.save(session);
-            
-            Map<String, Object> statusMessage = new HashMap<>();
-            statusMessage.put("sessionId", sessionId);
-            statusMessage.put("status", "ENDED");
-            statusMessage.put("timestamp", LocalDateTime.now());
-            
-            messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/status", statusMessage);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Session ended successfully");
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            log.error("세션 종료 실패", e);
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
-        }
     }
 }
