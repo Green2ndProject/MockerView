@@ -465,9 +465,6 @@
 
         confirmWithdrawBtn.addEventListener('click', async ()=>{
 
-            confirmWithdrawBtn.disabled = true;
-            confirmWithdrawBtn.textContent = '처리 중..';
-
             const password = withdrawalPasswordInput.value;
             const reason   = reasonSelect.value;
 
@@ -475,6 +472,11 @@
                 alert("비밀번호를 입력해주세요");
                 return;
             }
+
+            confirmWithdrawBtn.disabled = true;
+            confirmWithdrawBtn.textContent = '처리 중..';
+
+           
 
             console.log("탈퇴 사유 : " + reason);
             console.log("실제 전송 비밀번호:", password);
@@ -487,36 +489,37 @@
                     headers : { 
                         'Content-Type' : 'application/json'
                     },
-                    redirect : 'manual',
+                    credentials : 'include',
                     body : JSON.stringify({
                         'password' : password,
                         'reason'   : reason
                     })
                 });
 
-                if(response.status === 303 || response.type === 'opaqueredirect'){
+                if(response.ok){
                     //alert("회원 탙퇴가 성공적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
+                    const data        = response.json();
+                    const redirectUrl = data.redirectUrl || "/";
+
                     modalCard.style.display = 'none';
                     successCard.style.display = 'block';
-
                     withdrawalModal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
 
                     setTimeout(()=> {
-                        const redirectUrl = response.headers.get('Location') || '/auth/logout';
                         withdrawalModal.style.display = 'none';
                         window.location.href = redirectUrl; 
-                    }, 3000);                   
+                    }, 2000);                   
                     
-                } else if(response.status === 401 || response.status === 403){
-                    const errData = await response.json();
-                    alert(`실패 : ${errData.message || '비밀번호가 일치하지 않거나 세션이 만료되었습니다.'}`);
-                } 
-               
-                else if(response.status === 400){
-                    const errData = await response.json();
-                    alert(`탈퇴 실패: 비밀번호가 틀렸습니다.`);
+                } else if (response.status >= 400 && response.status < 500) {
+
+                    const message = getErrorMessage(response.status);
+                    alert(message);
+
+                    if(response.status === 401 || response.status === 403){
+                        window.location.href = '/auth/login';
+                    }
                 } else {
-                    alert(`탈퇴 처리 중 오류 발생. 응답 상태 코드: ${response.status} (Type: ${response.type})`);
+                    alert(`서버 오류가 발생했습니다. Code : ${response.status}`);
                 }
 
             } catch (error) {
@@ -530,7 +533,7 @@
             
         }); 
 
-    
+    // 탈퇴폼 리셋처리
     function resetWithdrawForm(){
 
         if(withdrawalPasswordInput){
@@ -540,6 +543,22 @@
         if(reasonSelect){
             reasonSelect.selectedIndex = 0;
         }        
+    }
+    // 탈퇴 후 에러 처리
+    function getErrorMessage(statusCode){
+
+        switch(statusCode){
+            case 400 :
+                return "비밀번호가 일치하지 않습니다. 다시 확인해주세요";
+            case 401 : 
+                return "세션이 만료되었습니다. 다시 로그인해주세요.";
+            case 403 :
+                return "탈퇴회원이거나 접근 권한이 없습니다. 다시 로그인해주세요";
+            case 409 :
+                return "이미 탈퇴한 회원입니다. (중복요청)";
+            default : 
+                return "처리중 오류 발생. 잠시 후 다시 시도해주세요. (Code : " + statusCode + ")";
+        }
     }
 
     </script>
