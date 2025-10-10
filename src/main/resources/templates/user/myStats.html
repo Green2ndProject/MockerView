@@ -4,63 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>내 활동 통계 - MockerView</title>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
         body {
             background: #f5f5f5;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
-        
         .navbar {
             background: #fff;
             border-bottom: 1px solid #e5e7eb;
             padding: 16px 0;
         }
-        
         .navbar-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
         .navbar-brand {
             font-size: 24px;
             font-weight: 600;
             color: #667eea;
             text-decoration: none;
         }
-        
         .navbar-nav {
             display: flex;
             gap: 24px;
         }
-        
         .nav-link {
             color: #6b7280;
             text-decoration: none;
             font-weight: 500;
         }
-        
         .nav-link:hover {
             color: #667eea;
         }
-        
         .btn {
             padding: 10px 20px;
             border-radius: 6px;
@@ -71,56 +60,46 @@
             font-size: 14px;
             transition: all 0.2s;
         }
-        
         .btn-primary {
             background: #667eea;
             color: white;
         }
-        
         .btn-primary:hover {
             background: #5568d3;
         }
-        
         .btn-secondary {
             background: #f3f4f6;
             color: #374151;
         }
-        
         .btn-secondary:hover {
             background: #e5e7eb;
         }
-        
         .stats-header {
             background: #667eea;
             color: white;
             padding: 40px 0;
             margin-bottom: 32px;
         }
-        
         .stats-header h1 {
             font-size: 32px;
             font-weight: 600;
             margin-bottom: 8px;
         }
-        
         .stats-header p {
             font-size: 16px;
             opacity: 0.9;
         }
-        
         .export-buttons {
             display: flex;
             gap: 12px;
             margin-top: 16px;
         }
-        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 32px;
         }
-        
         .stat-card {
             background: white;
             border-radius: 8px;
@@ -129,7 +108,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid #e5e7eb;
         }
-        
         .stat-number {
             font-size: 40px;
             font-weight: 700;
@@ -137,13 +115,11 @@
             display: block;
             margin-bottom: 8px;
         }
-        
         .stat-label {
             color: #6b7280;
             font-size: 14px;
             font-weight: 500;
         }
-        
         .chart-container {
             background: white;
             border-radius: 8px;
@@ -152,14 +128,12 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid #e5e7eb;
         }
-        
         .chart-title {
             font-size: 20px;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 24px;
         }
-        
         .answer-list {
             background: white;
             border-radius: 8px;
@@ -167,7 +141,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid #e5e7eb;
         }
-        
         .answer-item {
             border-left: 3px solid #667eea;
             padding: 16px 24px;
@@ -177,48 +150,40 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        
         .answer-item:hover {
             background: #f0f4ff;
             transform: translateY(-1px);
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-        
         .answer-date {
             font-size: 14px;
             color: #6b7280;
             margin-bottom: 8px;
         }
-        
         .answer-question {
             font-weight: 600;
             color: #374151;
             margin-bottom: 8px;
         }
-        
         .answer-scores {
             display: flex;
             gap: 12px;
             margin-top: 8px;
         }
-        
         .score-badge {
             padding: 4px 12px;
             border-radius: 6px;
             font-size: 14px;
             font-weight: 500;
         }
-        
         .score-badge.ai {
             background: #eff6ff;
             color: #1e40af;
         }
-        
         .score-badge.interviewer {
             background: #fef3c7;
             color: #92400e;
         }
-        
         .modal {
             display: none;
             position: fixed;
@@ -229,7 +194,6 @@
             height: 100%;
             background-color: rgba(0,0,0,0.5);
         }
-        
         .modal-content {
             background-color: white;
             margin: 5% auto;
@@ -241,7 +205,6 @@
             max-height: 80vh;
             overflow-y: auto;
         }
-        
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -250,13 +213,11 @@
             padding-bottom: 16px;
             border-bottom: 1px solid #e5e7eb;
         }
-        
         .modal-title {
             font-size: 20px;
             font-weight: 600;
             color: #1f2937;
         }
-        
         .close-btn {
             background: none;
             border: none;
@@ -265,22 +226,18 @@
             color: #6b7280;
             padding: 8px;
         }
-        
         .close-btn:hover {
             color: #374151;
         }
-        
         .modal-section {
             margin-bottom: 24px;
         }
-        
         .modal-section h4 {
             font-size: 16px;
             font-weight: 600;
             color: #374151;
             margin-bottom: 8px;
         }
-        
         .feedback-item {
             background: #f9fafb;
             padding: 16px;
@@ -288,49 +245,40 @@
             margin-bottom: 16px;
             border-left: 3px solid #667eea;
         }
-        
         .feedback-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
         }
-        
         .feedback-type {
             font-weight: 600;
         }
-        
         .feedback-type.ai {
             color: #1e40af;
         }
-        
         .feedback-type.interviewer {
             color: #92400e;
         }
-        
         .feedback-score {
             font-weight: 600;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 14px;
         }
-        
         .feedback-score.ai {
             background: #eff6ff;
             color: #1e40af;
         }
-        
         .feedback-score.interviewer {
             background: #fef3c7;
             color: #92400e;
         }
-        
         .feedback-content {
             color: #374151;
             line-height: 1.6;
             margin-top: 8px;
         }
-        
         .my-answer-text {
             background: #f8fafc;
             padding: 16px;
@@ -339,7 +287,6 @@
             line-height: 1.6;
             border: 1px solid #e2e8f0;
         }
-        
         .question-text {
             background: #fef7e1;
             padding: 16px;
@@ -347,6 +294,52 @@
             color: #92400e;
             font-weight: 500;
             border: 1px solid #f59e0b;
+        }
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border-left: 3px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        .ranking-item:hover {
+            background: #f0f4ff;
+        }
+        .ranking-item.current-user {
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+        }
+        .rank-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            width: 40px;
+        }
+        .rank-info {
+            flex: 1;
+            margin-left: 16px;
+        }
+        .rank-name {
+            font-weight: 600;
+            color: #374151;
+        }
+        .rank-stats {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .rank-score {
+            font-size: 24px;
+            font-weight: 700;
+            color: #10b981;
+        }
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
         }
     </style>
 </head>
@@ -363,7 +356,6 @@
             </div>
         </div>
     </nav>
-
     <div class="stats-header">
         <div class="container">
             <h1>내 활동 통계</h1>
@@ -375,7 +367,6 @@
             </div>
         </div>
     </div>
-
     <div class="container" id="stats-content">
         <div class="stats-grid">
             <div class="stat-card">
@@ -395,24 +386,35 @@
                 <div class="stat-label">AI 평균 점수</div>
             </div>
         </div>
-
         <div class="chart-container">
             <h3 class="chart-title">📈 나의 성장 추이 (점수 변화)</h3>
             <canvas id="growthChart"></canvas>
         </div>
-
+        <div class="chart-container">
+            <h3 class="chart-title">🏆 전체 면접자 순위</h3>
+            <div th:if="${rankings.empty}" class="empty-state">
+                <p>아직 순위 데이터가 없습니다</p>
+            </div>
+            <div th:each="rank : ${rankings}"
+                th:class="${rank.isCurrentUser ? 'ranking-item current-user' : 'ranking-item'}">
+                <div class="rank-number" th:text="${rank.rank}">1</div>
+                <div class="rank-info">
+                    <div class="rank-name" th:text="${rank.userName}">사용자명</div>
+                    <div class="rank-stats" th:text="'답변 ' + ${rank.answerCount} + '개'">답변 10개</div>
+                </div>
+                <div class="rank-score" th:text="${rank.avgScore}">95.0</div>
+            </div>
+        </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px;">
             <div class="chart-container">
                 <h3 class="chart-title">월별 답변 추이</h3>
                 <canvas id="monthlyChart"></canvas>
             </div>
-
             <div class="chart-container">
                 <h3 class="chart-title">피드백 비율</h3>
                 <canvas id="feedbackChart"></canvas>
             </div>
         </div>
-
         <div class="answer-list">
             <h3 class="chart-title">최근 답변 내역</h3>
             <div th:each="answer : ${myAnswers}" 
@@ -432,31 +434,26 @@
             </div>
         </div>
     </div>
-
     <div id="answerModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">답변 상세 정보</h3>
                 <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
-            
             <div class="modal-section">
                 <h4>질문</h4>
                 <div id="modalQuestion" class="question-text"></div>
             </div>
-            
             <div class="modal-section">
                 <h4>내 답변</h4>
                 <div id="modalAnswer" class="my-answer-text"></div>
             </div>
-            
             <div class="modal-section">
                 <h4>받은 피드백</h4>
                 <div id="modalFeedbacks"></div>
             </div>
         </div>
     </div>
-
     <script th:inline="javascript">
         var answersByMonth = /*[[${answersByMonth}]]*/ {};
         var aiFeedbackCount = /*[[${aiFeedbackCount}]]*/ 0;
@@ -465,10 +462,8 @@
         var avgInterviewerScore = parseFloat(/*[[${avgInterviewerScore}]]*/ '0');
         var myAnswersData = /*[[${myAnswers}]]*/ [];
         var growthData = /*[[${growthData}]]*/ [];
-
         var months = Object.keys(answersByMonth).sort();
         var counts = months.map(function(m) { return answersByMonth[m]; });
-
         function getToken() {
             const cookies = document.cookie.split(';');
             for (let cookie of cookies) {
@@ -479,7 +474,6 @@
             }
             return '';
         }
-
         async function downloadCSV() {
             try {
                 const token = getToken();
@@ -489,11 +483,9 @@
                         'Authorization': token
                     }
                 });
-
                 if (!response.ok) {
                     throw new Error('CSV 다운로드 실패');
                 }
-
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -508,12 +500,10 @@
                 alert('CSV 다운로드 중 오류가 발생했습니다.');
             }
         }
-
         if (document.getElementById('growthChart') && typeof Chart !== 'undefined') {
             var dates = growthData.map(function(d) { return d.date; });
             var aiScores = growthData.map(function(d) { return d.aiScore; });
             var interviewerScores = growthData.map(function(d) { return d.interviewerScore; });
-            
             new Chart(document.getElementById('growthChart'), {
                 type: 'line',
                 data: {
@@ -569,7 +559,6 @@
                 }
             });
         }
-
         if (document.getElementById('monthlyChart') && typeof Chart !== 'undefined') {
             new Chart(document.getElementById('monthlyChart'), {
                 type: 'line',
@@ -589,7 +578,6 @@
                 }
             });
         }
-
         if (document.getElementById('feedbackChart') && typeof Chart !== 'undefined') {
             var totalFeedback = aiFeedbackCount + interviewerFeedbackCount;
             new Chart(document.getElementById('feedbackChart'), {
@@ -607,28 +595,21 @@
                 }
             });
         }
-
         function openAnswerModal(answerId) {
             var answer = myAnswersData.find(function(a) {
                 return a.id == answerId;
             });
-            
             if (!answer) return;
-
             document.getElementById('modalQuestion').textContent = answer.question.text;
             document.getElementById('modalAnswer').textContent = answer.answerText || answer.text || '답변 내용이 없습니다.';
-
             var feedbacksContainer = document.getElementById('modalFeedbacks');
             feedbacksContainer.innerHTML = '';
-
             if (answer.feedbacks && answer.feedbacks.length > 0) {
                 answer.feedbacks.forEach(function(feedback) {
                     var feedbackDiv = document.createElement('div');
                     feedbackDiv.className = 'feedback-item';
-                    
                     var feedbackType = feedback.feedbackType === 'AI' ? 'AI' : '면접관';
                     var typeClass = feedback.feedbackType === 'AI' ? 'ai' : 'interviewer';
-                    
                     feedbackDiv.innerHTML = 
                         '<div class="feedback-header">' +
                             '<span class="feedback-type ' + typeClass + '">' + feedbackType + ' 피드백</span>' +
@@ -639,41 +620,33 @@
                             (feedback.strengths ? '<div style="margin-top: 8px;"><strong>강점:</strong> ' + feedback.strengths + '</div>' : '') +
                             (feedback.improvement ? '<div style="margin-top: 8px;"><strong>개선점:</strong> ' + feedback.improvement + '</div>' : '') +
                         '</div>';
-                    
                     feedbacksContainer.appendChild(feedbackDiv);
                 });
             } else {
                 feedbacksContainer.innerHTML = '<p>아직 피드백이 없습니다.</p>';
             }
-
             document.getElementById('answerModal').style.display = 'block';
         }
-
         function closeModal() {
             document.getElementById('answerModal').style.display = 'none';
         }
-
         window.onclick = function(event) {
             var modal = document.getElementById('answerModal');
             if (event.target === modal) {
                 closeModal();
             }
         }
-
         function exportPDF() {
             if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
                 alert('PDF 라이브러리가 로드되지 않았습니다.');
                 return;
             }
-            
             var content = document.getElementById('stats-content');
-            
             html2canvas(content).then(function(canvas) {
                 var imgData = canvas.toDataURL('image/png');
                 var pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
                 var pdfWidth = pdf.internal.pageSize.getWidth();
                 var pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                
                 pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
                 pdf.save('interview_stats.pdf');
             }).catch(function(error) {

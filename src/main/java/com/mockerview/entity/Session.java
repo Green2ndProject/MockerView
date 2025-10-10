@@ -17,7 +17,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class Session {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -107,5 +107,9 @@ public class Session {
 
     public void setStatus(SessionStatus status) {
         this.sessionStatus = status;
+    }
+    
+    public SessionStatus getSessionStatus() {
+        return sessionStatus;
     }
 }
