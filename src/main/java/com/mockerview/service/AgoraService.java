@@ -3,13 +3,13 @@ package com.mockerview.service;
 import com.mockerview.dto.AgoraTokenDTO;
 import io.agora.media.RtcTokenBuilder;
 import io.agora.media.RtcTokenBuilder.Role;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class AgoraService {
 
     @Value("${agora.app-id}")
@@ -23,17 +23,17 @@ public class AgoraService {
 
     @PostConstruct
     public void init() {
-        System.out.println("=== Agora Service 초기화 ===");
-        System.out.println("App ID: " + appId);
-        System.out.println("App Certificate: " + (appCertificate != null ? "설정됨" : "NULL"));
+        log.info("=== Agora Service 초기화 ===");
+        log.info("App ID: {}", appId);
+        log.info("App Certificate: {}", (appCertificate != null && !appCertificate.isEmpty()) ? "설정됨" : "NULL");
     }
 
     public AgoraTokenDTO generateToken(String channelName, Integer uid) {
         int timestamp = (int)(System.currentTimeMillis() / 1000);
         int privilegeExpiredTs = timestamp + tokenExpiration;
         
-        RtcTokenBuilder token = new RtcTokenBuilder();
-        String result = token.buildTokenWithUid(
+        RtcTokenBuilder tokenBuilder = new RtcTokenBuilder();
+        String generatedToken = tokenBuilder.buildTokenWithUid(
             appId, 
             appCertificate, 
             channelName, 
@@ -41,11 +41,14 @@ public class AgoraService {
             Role.Role_Publisher, 
             privilegeExpiredTs
         );
+        
+        log.info("Agora 토큰 생성 완료 - channel: {}, uid: {}, token: {}...", 
+            channelName, uid, generatedToken.substring(0, Math.min(20, generatedToken.length())));
 
         return AgoraTokenDTO.builder()
-            .token(result)
-            .channel(channelName)
             .appId(appId)
+            .channel(channelName)
+            .token(generatedToken)
             .uid(uid)
             .expireTime((long) privilegeExpiredTs)
             .build();
@@ -53,7 +56,14 @@ public class AgoraService {
 
     public AgoraTokenDTO generateTokenForSession(Long sessionId, Long userId) {
         String channelName = "session_" + sessionId;
-        Integer uid = userId.intValue();
+        
+        // UID 충돌 방지: userId + 타임스탬프
+        // userId를 10000배 + 현재 밀리초의 마지막 4자리
+        Integer uid = (int) (userId * 10000 + (System.currentTimeMillis() % 10000));
+        
+        log.info("세션 토큰 생성 - sessionId: {}, userId: {}, generated UID: {}, channel: {}", 
+            sessionId, userId, uid, channelName);
+        
         return generateToken(channelName, uid);
     }
 }
