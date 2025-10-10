@@ -90,7 +90,7 @@ public class ReviewService {
 
         @Transactional(readOnly = true)
         public List<ReviewDTO> getReviewsByReviewer(Long reviewerId) {
-        return reviewRepository.findByReviewerId(reviewerId).stream()
+        return reviewRepository.findByReviewerId(reviewerId).stream() // N+1 문제 발생 가능
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
         }
@@ -110,6 +110,7 @@ public class ReviewService {
         return ReviewDTO.builder()
         .id(review.getId())
         .sessionId(review.getSession().getId())
+        .sessionTitle(review.getSession() != null ? review.getSession().getTitle() : null) //추가
         .answerId(review.getAnswer() != null ? review.getAnswer().getId() : null)
         .reviewerId(review.getReviewer().getId())
         .reviewerName(review.getReviewer().getName())
