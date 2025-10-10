@@ -1053,8 +1053,9 @@
             </div>
         </div>
     </div>
-    <script th:src="@{/js/mockerview-websocket.js}"></script>
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.0.js"></script>
     <script th:src="@{/js/agora-client.js}"></script>
+    <script th:src="@{/js/mockerview-websocket.js}"></script>
     <script th:inline="javascript">
         const SESSION_DATA = {
             sessionId: /*[[${sessionId}]]*/ 1,
@@ -1134,6 +1135,13 @@
                 console.log('5️⃣ 채널 참가 시도...');
                 await agoraClient.join(tokenData.channel, tokenData.token, tokenData.uid);
                 console.log('✅ 채널 참가 성공!');
+                
+                // ✅ Placeholder 제거
+                const placeholder = document.querySelector('.video-placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                    console.log('✅ Placeholder 제거됨');
+                }
                 
                 console.log('6️⃣ 미디어 발행 시도...');
                 if (SESSION_DATA.sessionType === 'VIDEO') {
