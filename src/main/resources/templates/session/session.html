@@ -380,7 +380,7 @@
         
         .answer-card .card-header {
             background: #667eea;
-            color: white; !important;
+            color: white;
             border-bottom: 2px solid #667eea;
         }
         
@@ -687,6 +687,7 @@
             margin-top: 8px;
             color: #065f46;
             font-size: 14px;
+            text-align: center;
         }
         
         .answers-list {
@@ -709,6 +710,58 @@
             text-align: center;
             padding: 40px;
         }
+
+        .interviewer-feedback {
+            background: #fffbeb;
+            border: 2px solid #fbbf24;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .interviewer-feedback-title {
+            font-weight: 600;
+            color: #92400e;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .interviewer-name {
+            color: #78350f;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .feedback-score {
+            margin-bottom: 8px;
+            color: #78350f;
+        }
+        
+        .score-badge {
+            background: #fbbf24;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .feedback-comment {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .text-muted {
+            color: #9ca3af;
+            font-size: 13px;
+            text-align: right;
+        }
         
         #recordBtn {
             width: 100px;
@@ -727,6 +780,106 @@
             font-weight: 500;
         }
         
+        .participants-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .participant-item:last-child {
+            border-bottom: none;
+        }
+        
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .participant-info {
+            flex: 1;
+        }
+        
+        .participant-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .participant-status {
+            font-size: 12px;
+            color: #10b981;
+        }
+
+        .speech-recognition-area {
+            text-align: center;
+            padding: 32px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .recognized-text-box {
+            min-height: 120px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 16px;
+            text-align: left;
+            margin: 16px 0;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .recognition-status {
+            color: #666;
+            margin: 16px 0;
+            font-weight: 500;
+        }
+
+        .recognition-status.active {
+            color: #ef4444;
+        }
+
+        .recognition-status.success {
+            color: #10b981;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -808,111 +961,145 @@
             </div>
         </div>
 
-        <div class="interview-layout">
-            <div th:if="${isHost}" class="host-view">
-                <div class="card session-controls">
-                    <div class="card-header">
-                        <h4>면접 제어</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="control-buttons">
-                            <button id="startInterviewBtn" onclick="startInterview()" class="btn btn-success">면접 시작</button>
-                            <button id="pauseInterviewBtn" onclick="pauseInterview()" class="btn btn-warning" style="display: none;">일시정지</button>
-                            <button id="endInterviewBtn" onclick="endInterview()" class="btn btn-danger" style="display: none;">면접 종료</button>
-                        </div>
-                        <div class="session-status-display">
-                            <span class="status-badge waiting" id="sessionStatusBadge">대기중</span>
-                        </div>
-                    </div>
+        <div class="card">
+            <div class="card-header">
+                <h4>참가자</h4>
+                <span id="participant-count" class="badge-waiting">0명</span>
+            </div>
+            <div class="card-body">
+                <div id="participants-list" class="participants-list">
+                    <div class="empty-state">참가자 없음</div>
                 </div>
+            </div>
+        </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h4>질문 출제</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label class="form-label">질문 내용</label>
-                            <textarea id="newQuestionText" placeholder="면접 질문을 입력하세요..." class="form-control" rows="3"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">순서</label>
-                                <input type="number" id="newQuestionOrder" value="1" min="1" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">답변시간</label>
-                                <select id="newTimerOrder" class="form-select">
-                                    <option value="30">30초</option>
-                                    <option value="60" selected>1분</option>
-                                    <option value="90">1분 30초</option>
-                                    <option value="120">2분</option>
-                                    <option value="180">3분</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button onclick="sendQuestion()" class="btn btn-primary btn-full">질문 출제</button>
-                    </div>
+        <div th:if="${isHost}" class="host-view">
+            <div class="card session-controls">
+                <div class="card-header">
+                    <h4>면접 제어</h4>
                 </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h4>제출된 답변 및 평가</h4>
-                        <span id="answer-count" class="badge-waiting">0개</span>
+                <div class="card-body">
+                    <div class="control-buttons">
+                        <button id="startInterviewBtn" onclick="startInterview()" class="btn btn-success">면접 시작</button>
+                        <button id="pauseInterviewBtn" onclick="pauseInterview()" class="btn btn-warning" style="display: none;">일시정지</button>
+                        <button id="endInterviewBtn" onclick="endInterview()" class="btn btn-danger" style="display: none;">면접 종료</button>
                     </div>
-                    <div class="card-body">
-                        <div id="answers-list" class="answers-list">
-                            <div class="empty-state">
-                                <p>아직 제출된 답변이 없습니다</p>
-                            </div>
-                        </div>
+                    <div class="session-status-display">
+                        <span class="status-badge waiting" id="sessionStatusBadge">대기중</span>
                     </div>
                 </div>
             </div>
 
-            <div th:unless="${isHost}" class="student-view">
-                <div class="card current-question">
-                    <div class="card-header">
-                        <h3>현재 질문</h3>
-                        <div class="question-info">
-                            <span id="question-number">Q1</span>
-                            <span id="question-timer">⏱️ 00:00</span>
+            <div class="card">
+                <div class="card-header">
+                    <h4>질문 출제</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">질문 내용</label>
+                        <textarea id="newQuestionText" placeholder="면접 질문을 입력하세요..." class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">순서</label>
+                            <input type="number" id="newQuestionOrder" value="1" min="1" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">답변시간</label>
+                            <select id="newTimerOrder" class="form-select">
+                                <option value="30">30초</option>
+                                <option value="60" selected>1분</option>
+                                <option value="90">1분 30초</option>
+                                <option value="120">2분</option>
+                                <option value="180">3분</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div id="current-question" class="question-display">
-                            <p id="current-question-text">면접관이 질문을 준비 중입니다...</p>
+                    <button onclick="window.sendQuestion()" class="btn btn-primary btn-full">질문 출제</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4>제출된 답변 및 평가</h4>
+                    <span id="answer-count" class="badge-waiting">0개</span>
+                </div>
+                <div class="card-body">
+                    <div id="answers-list" class="answers-list">
+                        <div class="empty-state">
+                            <p>아직 제출된 답변이 없습니다</p>
                         </div>
-                        <input type="hidden" id="currentQuestionId" value="">
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="card answer-card">
-                    <div class="card-header">
-                        <h4>답변 작성 (화상으로 답변하세요)</h4>
-                    </div>
-                    <div class="card-body">
-                        <div style="text-align: center; padding: 32px;">
-                            <p style="font-size: 16px; color: #666;">
-                                💬 화상으로 구두 답변을 진행해주세요
-                            </p>
-                            <p style="color: #999; font-size: 14px; margin-top: 12px;">
-                                답변이 자동으로 AI에게 전달되어 분석됩니다
-                            </p>
-                        </div>
+        <div th:unless="${isHost}" class="student-view">
+            <div class="card current-question">
+                <div class="card-header">
+                    <h3>현재 질문</h3>
+                    <div class="question-info">
+                        <span id="question-number">Q1</span>
+                        <span id="question-timer">⏱️ 00:00</span>
                     </div>
                 </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h4>AI 피드백</h4>
+                <div class="card-body">
+                    <div id="current-question" class="question-display">
+                        <p id="current-question-text">면접관이 질문을 준비 중입니다...</p>
                     </div>
-                    <div class="card-body">
-                        <div id="ai-feedback-list" class="feedback-list scrollable">
-                            <div class="empty-state">
-                                <div>🤖</div>
-                                <p>답변이 제출되면 AI가 즉시 분석합니다</p>
+                    <input type="hidden" id="currentQuestionId" value="">
+                </div>
+            </div>
+
+            <div class="card answer-card">
+                <div class="card-header">
+                    <h4>답변 작성</h4>
+                    <span style="font-size: 14px; font-weight: normal;">화상으로 구두 답변하거나 텍스트로 작성하세요</span>
+                </div>
+                <div class="card-body">
+                    <div class="answer-mode-toggle">
+                        <button id="videoAnswerModeBtn" class="btn btn-secondary active" onclick="switchVideoAnswerMode('video')">🎥 구두 답변</button>
+                        <button id="textAnswerModeBtn" class="btn btn-secondary" onclick="switchVideoAnswerMode('text')">💬 텍스트 답변</button>
+                    </div>
+
+                    <div id="video-answer-area" class="speech-recognition-area">
+                        <div style="margin-bottom: 16px;">
+                            <button id="startRecognitionBtn" onclick="startSpeechRecognition()" class="btn btn-success btn-lg">
+                                🎤 음성 인식 시작
+                            </button>
+                        </div>
+                        <div id="recognitionStatus" class="recognition-status">
+                            음성 인식을 시작하면 자동으로 텍스트로 변환됩니다
+                        </div>
+                        <div id="recognizedText" class="recognized-text-box">
+                            <em style="color: #999;">인식된 텍스트가 여기에 표시됩니다...</em>
+                        </div>
+                        <button id="submitRecognizedBtn" onclick="submitRecognizedAnswer()" class="btn btn-primary btn-lg" style="display: none;">
+                            답변 제출
+                        </button>
+                    </div>
+
+                    <div id="text-answer-area" style="display: none;">
+                        <div class="form-group">
+                            <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="5"></textarea>
+                            <div class="char-counter">
+                                <span id="charCount">0</span>/1000자
                             </div>
+                        </div>
+                        <button onclick="window.submitAnswer()" class="btn btn-success btn-full">답변 제출</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4>AI 피드백</h4>
+                </div>
+                <div class="card-body">
+                    <div id="ai-feedback-list" class="feedback-list scrollable">
+                        <div class="empty-state">
+                            <div>🤖</div>
+                            <p>답변이 제출되면 AI가 즉시 분석합니다</p>
                         </div>
                     </div>
                 </div>
@@ -926,6 +1113,18 @@
             <p th:text="${sessionType == 'AUDIO' ? '텍스트 또는 음성으로 답변할 수 있습니다' : '텍스트로 답변을 작성하세요'}">모드 설명</p>
         </div>
 
+        <div class="card">
+            <div class="card-header">
+                <h4>참가자</h4>
+                <span id="participant-count" class="badge-waiting">0명</span>
+            </div>
+            <div class="card-body">
+                <div id="participants-list" class="participants-list">
+                    <div class="empty-state">참가자 없음</div>
+                </div>
+            </div>
+        </div>
+
         <div class="interview-layout">
             <div th:if="${isHost}" class="host-view">
                 <div class="card session-controls">
@@ -969,7 +1168,7 @@
                                 </select>
                             </div>
                         </div>
-                        <button onclick="sendQuestion()" class="btn btn-primary btn-full">질문 출제</button>
+                        <button onclick="window.sendQuestion()" class="btn btn-primary btn-full">질문 출제</button>
                     </div>
                 </div>
 
@@ -1023,7 +1222,7 @@
                                     <span id="charCount">0</span>/1000자
                                 </div>
                             </div>
-                            <button onclick="submitAnswer()" class="btn btn-success btn-full">답변 제출</button>
+                            <button onclick="window.submitAnswer()" class="btn btn-success btn-full">답변 제출</button>
                         </div>
                 
                         <div id="voice-answer-area" style="display: none;" th:if="${sessionType == 'AUDIO'}">
@@ -1065,7 +1264,7 @@
             sessionType: /*[[${sessionType}]]*/ 'TEXT',
             expiresAt: /*[[${session.expiresAt}]]*/ null
         };
-
+        
         let countdownInterval = null;
         let warningShown = false;
         let agoraClient = null;
@@ -1076,7 +1275,9 @@
         let audioBlob = null;
         let audioChunks = [];
         let answerCount = 0;
-
+        let recognition = null;
+        let recognizedFullText = '';
+        
         function getToken() {
             const cookies = document.cookie.split(';');
             for (let cookie of cookies) {
@@ -1255,71 +1456,147 @@
             });
         }
 
-        function startInterview() {
+        window.startInterview = function() {
             if (confirm('면접을 시작하시겠습니까?')) {
-                interviewStatus = 'ongoing';
-                document.getElementById('startInterviewBtn').style.display = 'none';
-                document.getElementById('pauseInterviewBtn').style.display = 'inline-block';
-                document.getElementById('endInterviewBtn').style.display = 'inline-block';
-                const badge = document.getElementById('sessionStatusBadge');
-                badge.textContent = '진행중';
-                badge.className = 'status-badge ongoing';
-                if (typeof stompClient !== 'undefined' && stompClient.connected) {
-                    stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
-                        action: 'START',
-                        timestamp: new Date().toISOString()
-                    }));
+                if (window.mockerViewWS && window.mockerViewWS.connected) {
+                    window.mockerViewWS.sendControlMessage('START');
+                    document.getElementById('startInterviewBtn').style.display = 'none';
+                    document.getElementById('pauseInterviewBtn').style.display = 'inline-block';
+                    document.getElementById('endInterviewBtn').style.display = 'inline-block';
                 }
             }
-        }
-
-        function pauseInterview() {
+        };
+    
+        window.pauseInterview = function() {
             if (confirm('면접을 일시정지하시겠습니까?')) {
-                interviewStatus = 'paused';
-                document.getElementById('pauseInterviewBtn').textContent = '재개';
-                document.getElementById('pauseInterviewBtn').onclick = resumeInterview;
-                const badge = document.getElementById('sessionStatusBadge');
-                badge.textContent = '일시정지';
-                badge.className = 'status-badge paused';
-                if (typeof stompClient !== 'undefined' && stompClient.connected) {
-                    stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
-                        action: 'PAUSE'
-                    }));
+                if (window.mockerViewWS && window.mockerViewWS.connected) {
+                    window.mockerViewWS.sendControlMessage('PAUSE');
+                    document.getElementById('pauseInterviewBtn').textContent = '재개';
+                    document.getElementById('pauseInterviewBtn').onclick = window.resumeInterview;
                 }
             }
-        }
-
-        function resumeInterview() {
-            interviewStatus = 'ongoing';
-            document.getElementById('pauseInterviewBtn').textContent = '일시정지';
-            document.getElementById('pauseInterviewBtn').onclick = pauseInterview;
-            const badge = document.getElementById('sessionStatusBadge');
-            badge.textContent = '진행중';
-            badge.className = 'status-badge ongoing';
-            if (typeof stompClient !== 'undefined' && stompClient.connected) {
-                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
-                    action: 'RESUME'
-                }));
+        };
+        
+        window.resumeInterview = function() {
+            if (window.mockerViewWS && window.mockerViewWS.connected) {
+                window.mockerViewWS.sendControlMessage('RESUME');
+                document.getElementById('pauseInterviewBtn').textContent = '일시정지';
+                document.getElementById('pauseInterviewBtn').onclick = window.pauseInterview;
             }
-        }
-
-        function endInterview() {
+        };
+        
+        window.endInterview = function() {
             if (confirm('면접을 종료하시겠습니까?\n종료 후에는 답변을 제출할 수 없습니다.')) {
-                interviewStatus = 'ended';
-                document.getElementById('pauseInterviewBtn').style.display = 'none';
-                document.getElementById('endInterviewBtn').style.display = 'none';
-                const badge = document.getElementById('sessionStatusBadge');
-                badge.textContent = '종료됨';
-                badge.className = 'status-badge ended';
-                if (typeof stompClient !== 'undefined' && stompClient.connected) {
-                    stompClient.send(`/app/session/${SESSION_DATA.sessionId}/control`, {}, JSON.stringify({
-                        action: 'END'
-                    }));
+                if (window.mockerViewWS && window.mockerViewWS.connected) {
+                    window.mockerViewWS.sendControlMessage('END');
+                    document.getElementById('pauseInterviewBtn').style.display = 'none';
+                    document.getElementById('endInterviewBtn').style.display = 'none';
+                    alert('면접이 종료되었습니다.');
+                    setTimeout(function() {
+                        window.location.href = "/session/detail/" + SESSION_DATA.sessionId;
+                    }, 2000);
                 }
-                alert('면접이 종료되었습니다.');
-                setTimeout(() => {
-                    window.location.href = `/session/detail/${SESSION_DATA.sessionId}`;
-                }, 2000);
+            }
+        };
+
+        function switchVideoAnswerMode(mode) {
+            if (mode === 'video') {
+                document.getElementById('videoAnswerModeBtn').classList.add('active');
+                document.getElementById('textAnswerModeBtn').classList.remove('active');
+                document.getElementById('video-answer-area').style.display = 'block';
+                document.getElementById('text-answer-area').style.display = 'none';
+            } else {
+                document.getElementById('videoAnswerModeBtn').classList.remove('active');
+                document.getElementById('textAnswerModeBtn').classList.add('active');
+                document.getElementById('video-answer-area').style.display = 'none';
+                document.getElementById('text-answer-area').style.display = 'block';
+            }
+        }
+
+        function startSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome을 사용해주세요.');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ko-KR';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            const statusDiv = document.getElementById('recognitionStatus');
+            const textDiv = document.getElementById('recognizedText');
+            const submitBtn = document.getElementById('submitRecognizedBtn');
+            const startBtn = document.getElementById('startRecognitionBtn');
+
+            recognizedFullText = '';
+
+            recognition.onstart = function() {
+                statusDiv.textContent = '🎤 음성 인식 중... 답변을 말씀해주세요';
+                statusDiv.className = 'recognition-status active';
+                startBtn.textContent = '⏹️ 인식 중지';
+                startBtn.onclick = stopSpeechRecognition;
+                submitBtn.style.display = 'none';
+            };
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        recognizedFullText += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                textDiv.innerHTML = recognizedFullText + '<span style="color: #999;">' + interimTranscript + '</span>';
+            };
+
+            recognition.onerror = function(event) {
+                console.error('음성 인식 오류:', event.error);
+                statusDiv.textContent = '❌ 오류: ' + event.error;
+                statusDiv.className = 'recognition-status';
+            };
+
+            recognition.onend = function() {
+                statusDiv.textContent = '✅ 인식 완료! 제출 버튼을 눌러주세요';
+                statusDiv.className = 'recognition-status success';
+                startBtn.textContent = '🎤 음성 인식 시작';
+                startBtn.onclick = startSpeechRecognition;
+                if (recognizedFullText.trim()) {
+                    submitBtn.style.display = 'inline-block';
+                }
+            };
+
+            recognition.start();
+        }
+
+        function stopSpeechRecognition() {
+            if (recognition) {
+                recognition.stop();
+            }
+        }
+
+        function submitRecognizedAnswer() {
+            const questionId = document.getElementById('currentQuestionId').value;
+            if (!recognizedFullText.trim()) {
+                alert('인식된 텍스트가 없습니다.');
+                return;
+            }
+            if (!questionId) {
+                alert('현재 답변할 질문이 없습니다.');
+                return;
+            }
+
+            if (window.mockerViewWS && window.mockerViewWS.connected) {
+                window.mockerViewWS.submitAnswer(questionId, recognizedFullText.trim());
+                document.getElementById('recognizedText').innerHTML = '<em style="color: #10b981;">✅ 답변이 제출되었습니다</em>';
+                document.getElementById('submitRecognizedBtn').style.display = 'none';
+                document.getElementById('recognitionStatus').textContent = '답변이 제출되었습니다';
+                document.getElementById('recognitionStatus').className = 'recognition-status success';
+                recognizedFullText = '';
+                alert('답변이 제출되었습니다!');
             }
         }
 
@@ -1423,47 +1700,6 @@
             }
         }
 
-        function displayAnswerForReview(answerData) {
-            if (!SESSION_DATA.isHost) return;
-            const answersList = document.getElementById('answers-list');
-            const emptyState = answersList.querySelector('.empty-state');
-            if (emptyState) emptyState.remove();
-            const answerCard = document.createElement('div');
-            answerCard.className = 'answer-review-card';
-            answerCard.id = `answer-card-${answerData.answerId}`;
-            answerCard.innerHTML = `
-                <div class="answer-header">
-                    <div class="user-name-badge">${answerData.userName}</div>
-                    <div class="answer-time">${new Date().toLocaleTimeString()}</div>
-                </div>
-                <div class="question-text">Q: ${answerData.questionText}</div>
-                <div class="answer-text">A: ${answerData.answerText}</div>
-                <div class="ai-feedback-section" id="ai-feedback-${answerData.answerId}">
-                    <div class="ai-feedback-loading">🤖 AI 분석 중...</div>
-                </div>
-                <div class="interviewer-evaluation" id="evaluation-${answerData.answerId}">
-                    <div class="evaluation-header">
-                        <h5>면접관 평가</h5>
-                    </div>
-                    <div class="score-input-group">
-                        <label>점수 (1-10):</label>
-                        <input type="number" min="1" max="10" value="7" 
-                            id="score-${answerData.answerId}" class="score-input">
-                    </div>
-                    <div class="feedback-input-group">
-                        <label>피드백:</label>
-                        <textarea placeholder="이 답변에 대한 피드백을 작성하세요..." 
-                                id="feedback-${answerData.answerId}" 
-                                class="feedback-textarea"></textarea>
-                    </div>
-                    <button onclick="submitInterviewerFeedback(${answerData.answerId})" 
-                            class="evaluation-submit-btn">평가 제출</button>
-                </div>
-            `;
-            answersList.appendChild(answerCard);
-            updateAnswerCount();
-        }
-
         function submitInterviewerFeedback(answerId) {
             const score = document.getElementById(`score-${answerId}`).value;
             const feedbackText = document.getElementById(`feedback-${answerId}`).value;
@@ -1471,91 +1707,18 @@
                 alert('피드백을 입력해주세요.');
                 return;
             }
-            const feedbackData = {
-                answerId: answerId,
-                score: parseInt(score),
-                feedbackText: feedbackText,
-                reviewerId: SESSION_DATA.userId
-            };
-            if (stompClient && stompClient.connected) {
-                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/interviewer-feedback`, 
-                                {}, JSON.stringify(feedbackData));
-            }
-            const evaluationDiv = document.getElementById(`evaluation-${answerId}`);
-            evaluationDiv.innerHTML = `
-                <div class="submitted-evaluation">
-                    ✅ 평가 완료 (점수: ${score}/10)
-                </div>
-            `;
-            alert('평가가 제출되었습니다!');
-        }
-
-        function displayAIFeedbackForInterviewer(feedbackData) {
-            const aiSection = document.getElementById(`ai-feedback-${feedbackData.answerId}`);
-            if (aiSection) {
-                aiSection.innerHTML = `
-                    <div class="ai-feedback-content">
-                        <div class="ai-feedback-header">🤖 AI 분석 결과</div>
-                        <div class="ai-score">점수: ${feedbackData.score}/100</div>
-                        <div class="ai-strengths"><strong>강점:</strong> ${feedbackData.strengths}</div>
-                        <div class="ai-improvements"><strong>개선점:</strong> ${feedbackData.improvements}</div>
+            
+            if (window.mockerViewWS && window.mockerViewWS.connected) {
+                window.mockerViewWS.submitInterviewerFeedback(answerId, parseInt(score), feedbackText);
+                
+                const evaluationDiv = document.getElementById(`evaluation-${answerId}`);
+                evaluationDiv.innerHTML = `
+                    <div class="submitted-evaluation">
+                        ✅ 평가 완료 (점수: ${score}/100)
                     </div>
                 `;
+                alert('평가가 제출되었습니다!');
             }
-        }
-
-        function updateAnswerCount() {
-            answerCount++;
-            document.getElementById('answer-count').textContent = answerCount + '개';
-        }
-
-        function submitAnswer() {
-            const answerText = document.getElementById('answerText').value.trim();
-            const questionId = document.getElementById('currentQuestionId').value;
-            if (!answerText) {
-                alert('답변을 입력하세요.');
-                return;
-            }
-            if (!questionId) {
-                alert('현재 답변할 질문이 없습니다.');
-                return;
-            }
-            const answerData = {
-                questionId: questionId,
-                answerText: answerText,
-                userId: SESSION_DATA.userId,
-                userName: SESSION_DATA.userName
-            };
-            if (stompClient && stompClient.connected) {
-                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/answer`, 
-                                {}, JSON.stringify(answerData));
-            }
-            document.getElementById('answerText').value = '';
-            document.getElementById('charCount').textContent = '0';
-            alert('답변이 제출되었습니다!');
-        }
-
-        function sendQuestion() {
-            const questionText = document.getElementById('newQuestionText').value.trim();
-            const orderNo = parseInt(document.getElementById('newQuestionOrder').value);
-            const timerSeconds = parseInt(document.getElementById('newTimerOrder').value);
-            if (!questionText) {
-                alert('질문 내용을 입력하세요.');
-                return;
-            }
-            const questionData = {
-                text: questionText,
-                orderNo: orderNo,
-                timerSeconds: timerSeconds,
-                sessionId: SESSION_DATA.sessionId
-            };
-            if (stompClient && stompClient.connected) {
-                stompClient.send(`/app/session/${SESSION_DATA.sessionId}/question`, 
-                                {}, JSON.stringify(questionData));
-            }
-            document.getElementById('newQuestionText').value = '';
-            document.getElementById('newQuestionOrder').value = orderNo + 1;
-            alert('질문이 출제되었습니다!');
         }
 
         window.addEventListener('beforeunload', function() {
@@ -1581,20 +1744,6 @@
             
             if (typeof initializeWebSocket === 'function') {
                 initializeWebSocket(SESSION_DATA.sessionId, SESSION_DATA.userId, SESSION_DATA.userName);
-            }
-            
-            if (typeof stompClient !== 'undefined') {
-                stompClient.subscribe('/topic/session/' + SESSION_DATA.sessionId + '/status', function(message) {
-                    const status = JSON.parse(message.body);
-                    if (status.status === 'ENDED') {
-                        if (status.reason === 'EXPIRED') {
-                            alert('⏰ 세션 시간이 만료되었습니다');
-                        } else if (status.reason === 'MANUAL') {
-                            alert('🛑 호스트가 세션을 종료했습니다');
-                        }
-                        window.location.href = '/session/list';
-                    }
-                });
             }
         });
     </script>

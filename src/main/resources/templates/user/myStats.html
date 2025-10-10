@@ -426,7 +426,7 @@
                         th:class="${feedback.feedbackType.toString() == 'AI' ? 'score-badge ai' : 'score-badge interviewer'}"
                         th:if="${feedback.score != null}">
                         <span th:text="${feedback.feedbackType.toString() == 'AI' ? 'AI' : '면접관'}"></span>: 
-                        <span th:text="${feedback.score}">0</span>/10
+                        <span th:text="${feedback.score}">0</span>/100
                     </span>
                 </div>
             </div>
@@ -543,7 +543,7 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 10,
+                            max: 100,
                             title: {
                                 display: true,
                                 text: '점수'
@@ -632,7 +632,7 @@
                     feedbackDiv.innerHTML = 
                         '<div class="feedback-header">' +
                             '<span class="feedback-type ' + typeClass + '">' + feedbackType + ' 피드백</span>' +
-                            (feedback.score ? '<span class="feedback-score ' + typeClass + '">' + feedback.score + '/10</span>' : '') +
+                            (feedback.score ? '<span class="feedback-score ' + typeClass + '">' + feedback.score + '/100</span>' : '') +
                         '</div>' +
                         '<div class="feedback-content">' +
                             '<div><strong>요약:</strong> ' + (feedback.summary || 'AI 분석 완료') + '</div>' +

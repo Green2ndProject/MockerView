@@ -141,7 +141,7 @@ public class AIFeedbackService {
         String answerText = answer.getAnswerText();
         
         return String.format("""
-            당신은 면접 평가 전문가입니다. 다음 답변을 객관적이고 구조화된 기준으로 평가하세요.
+            당신은 엄격한 면접 평가 전문가입니다. 아래 답변을 **실제 내용 기반으로** 평가하세요.
             
             [질문]
             %s
@@ -149,44 +149,26 @@ public class AIFeedbackService {
             [답변]
             %s
             
-            [평가 루브릭 - 총 100점]
+            **중요**: 위 답변의 실제 내용만 분석하세요. 루브릭 기반으로 평가하되, 예시나 템플릿을 사용하지 마세요.
             
-            1. STAR 구조 (30점)
-            - Situation (상황): 구체적인 배경과 맥락 제시 (8점)
-            - Task (과제): 명확한 목표와 역할 설명 (7점)
-            - Action (행동): 구체적인 행동과 과정 서술 (8점)
-            - Result (결과): 정량적/정성적 성과 제시 (7점)
+            [평가 기준 - 100점 만점]
+            1. STAR 구조 (30점): S(상황), T(과제), A(행동), R(결과) 각 요소 평가
+            2. 완성도 (25점): 질문 직접 답변, 논리성, 근거 충분성
+            3. 구체성 (25점): 실제 경험, 수치 데이터, 상세 묘사
+            4. 전문성 (20점): 분야 이해도, 전문 용어 사용
             
-            2. 내용의 완성도 (25점)
-            - 질문에 대한 직접적 답변 (10점)
-            - 논리적 흐름과 일관성 (8점)
-            - 충분한 설명과 근거 (7점)
+            **평가 방법**:
+            - 답변에서 실제로 언급된 내용만 인정
+            - 없는 요소는 0점 처리
+            - 각 항목별 구체적 근거 제시
             
-            3. 구체성 (25점)
-            - 실제 경험 기반 사례 (10점)
-            - 수치/데이터 활용 (8점)
-            - 상세한 과정 묘사 (7점)
-            
-            4. 전문성 (20점)
-            - 분야 이해도 (10점)
-            - 전문 용어 적절한 사용 (10점)
-            
-            [평가 결과를 JSON 형식으로 제공]
+            JSON 응답 (예시 값 사용 금지):
             {
-                "summary": "전체 평가 요약 (50자)",
-                "totalScore": 85,
-                "rubric": {
-                    "star": {"score": 24, "detail": "STAR 구조 평가"},
-                    "completeness": {"score": 20, "detail": "완성도 평가"},
-                    "specificity": {"score": 21, "detail": "구체성 평가"},
-                    "expertise": {"score": 18, "detail": "전문성 평가"}
-                },
-                "strengths": "강점 3가지를 구체적으로 (루브릭 항목 기반)",
-                "weaknesses": "약점 2-3가지를 건설적으로 (루브릭 항목 기반)",
-                "improvement": "STAR 기법과 루브릭 기준에 따른 구체적 개선 방안"
+                "summary": "이 답변의 핵심 내용을 30자로",
+                "strengths": "답변에서 발견된 실제 강점 2-3가지 나열",
+                "weaknesses": "답변에서 부족한 실제 약점 2-3가지 나열",
+                "improvement": "이 답변을 개선할 구체적 방법"
             }
-            
-            모든 평가는 루브릭 점수 기준으로 객관적으로 작성하세요.
             """, question, answerText);
     }
 
@@ -426,16 +408,16 @@ public class AIFeedbackService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(apiKey.replace("Bearer ", ""));
-
+    
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", "gpt-4o-mini");
         requestBody.put("messages", List.of(
-            Map.of("role", "system", "content", "당신은 루브릭 기반 객관적 면접 평가 전문가입니다. 모든 평가는 명확한 점수 기준과 근거를 제시합니다."),
+            Map.of("role", "system", "content", "당신은 각 답변을 독립적으로 평가하는 전문가입니다. 절대 동일한 평가를 반복하지 않으며, 매 답변마다 실제 내용에 기반한 고유한 분석을 제공합니다."),
             Map.of("role", "user", "content", prompt)
         ));
-        requestBody.put("max_tokens", 1000);
-        requestBody.put("temperature", 0.3);
-
+        requestBody.put("max_tokens", 1500);
+        requestBody.put("temperature", 0.7);
+    
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
         
         try {
@@ -458,6 +440,8 @@ public class AIFeedbackService {
                 throw new RuntimeException("Empty content from OpenAI response");
             }
             
+            log.info("✅ AI 전체 응답: {}", content);
+            
             return content;
             
         } catch (Exception e) {
@@ -468,7 +452,9 @@ public class AIFeedbackService {
 
     private Feedback parseFeedbackResponse(String aiResponse, Answer answer) {
         try {
+            log.info("🔍 Parsing AI response...");
             String cleanResponse = aiResponse.trim();
+            
             if (cleanResponse.startsWith("```json")) {
                 cleanResponse = cleanResponse.substring(7);
             }
@@ -476,19 +462,65 @@ public class AIFeedbackService {
                 cleanResponse = cleanResponse.substring(0, cleanResponse.length() - 3);
             }
             
+            cleanResponse = cleanResponse.trim();
+            log.info("📋 Cleaned response: {}", cleanResponse);
+            
             JsonNode feedback = objectMapper.readTree(cleanResponse);
+            log.info("✅ JSON parsed successfully");
+            
+            String summary = feedback.path("summary").asText("답변이 제출되었습니다.");
+            
+            String strengths = "";
+            JsonNode strengthsNode = feedback.get("strengths");
+            if (strengthsNode != null) {
+                if (strengthsNode.isArray()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < strengthsNode.size(); i++) {
+                        sb.append((i + 1)).append(") ").append(strengthsNode.get(i).asText()).append("\n");
+                    }
+                    strengths = sb.toString().trim();
+                } else {
+                    strengths = strengthsNode.asText("답변해주셔서 감사합니다.");
+                }
+            }
+            
+            String weaknesses = "";
+            JsonNode weaknessesNode = feedback.get("weaknesses");
+            if (weaknessesNode != null) {
+                if (weaknessesNode.isArray()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < weaknessesNode.size(); i++) {
+                        sb.append((i + 1)).append(") ").append(weaknessesNode.get(i).asText()).append("\n");
+                    }
+                    weaknesses = sb.toString().trim();
+                } else {
+                    weaknesses = weaknessesNode.asText("추가 개선이 필요합니다.");
+                }
+            }
+            
+            String improvement = feedback.path("improvement").asText("더 구체적인 설명을 추가해보세요.");
+            
+            if (strengths.isEmpty()) {
+                strengths = "답변해주셔서 감사합니다.";
+            }
+            if (weaknesses.isEmpty()) {
+                weaknesses = "추가 개선이 필요합니다.";
+            }
+            
+            log.info("📊 Extracted - Summary: {}, Strengths: {}, Weaknesses: {}", summary, strengths, weaknesses);
             
             return Feedback.builder()
                 .answer(answer)
-                .summary(feedback.path("summary").asText("답변이 제출되었습니다."))
-                .strengths(feedback.path("strengths").asText("답변해주셔서 감사합니다."))
-                .weaknesses(feedback.path("weaknesses").asText("추가 개선이 필요합니다."))
-                .improvement(feedback.path("improvement").asText("더 구체적인 설명을 추가해보세요."))
+                .summary(summary)
+                .strengths(strengths)
+                .weaknesses(weaknesses)
+                .improvement(improvement)
                 .model("GPT-4O-MINI")
                 .build();
                 
         } catch (Exception e) {
-            log.error("Error parsing AI response: {}", aiResponse, e);
+            log.error("❌ Error parsing AI response", e);
+            log.error("❌ Raw response was: {}", aiResponse);
             
             return Feedback.builder()
                 .answer(answer)
@@ -496,7 +528,7 @@ public class AIFeedbackService {
                 .strengths("답변해주셔서 감사합니다.")
                 .weaknesses("AI 응답 파싱 중 오류가 발생했습니다.")
                 .improvement("기술적인 문제로 상세 피드백을 제공할 수 없습니다.")
-                .model("GPT-4O-MINI")
+                .model("GPT-4O-MINI-ERROR")
                 .build();
         }
     }
