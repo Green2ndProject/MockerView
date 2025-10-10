@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
     public Map<String, String> handleDisabledException(DisabledException e) {
         return Map.of("message", "탈퇴한 회원이거나 접근 권한이 없습니다.");
     }
-
+    
     @ExceptionHandler(AlreadyDeletedException.class)
     @ResponseStatus(HttpStatus.CONFLICT) // 409
     public Map<String, String> handleAlreadyDeletedException(AlreadyDeletedException e) {
