@@ -1256,88 +1256,12 @@
           return;
         }
 
-        async function initializeMedia() {
-          if (
-            SESSION_DATA.sessionType !== "VIDEO" &&
-            SESSION_DATA.sessionType !== "AUDIO"
-          ) {
-            console.log("❌ 미디어 타입이 아님:", SESSION_DATA.sessionType);
-            return;
-          }
+        console.log("🎬 미디어 초기화 시작...");
 
-          console.log("🎬 미디어 초기화 시작...");
-
-          if (typeof AgoraRTC === "undefined") {
-            console.error("❌ AgoraRTC SDK가 로드되지 않았습니다");
-            alert("화상 연결 SDK 로딩 실패");
-            return;
-          }
-
-          if (typeof AgoraClient === "undefined") {
-            console.error("❌ AgoraClient 클래스가 로드되지 않았습니다");
-            alert("화상 연결 모듈 로딩 실패");
-            return;
-          }
-
-          try {
-            console.log("1️⃣ JWT 토큰 가져오기...");
-            const token = getToken();
-            if (!token) {
-              throw new Error("JWT 토큰이 없습니다");
-            }
-
-            console.log("2️⃣ Agora 토큰 요청...");
-            const response = await fetch(
-              `/api/agora/token/${SESSION_DATA.sessionId}`,
-              {
-                method: "POST",
-                headers: { Authorization: token },
-              }
-            );
-
-            if (!response.ok) {
-              throw new Error("Agora 토큰 발급 실패: " + response.status);
-            }
-
-            const tokenData = await response.json();
-            console.log("3️⃣ Agora 토큰 데이터:", tokenData);
-
-            console.log("4️⃣ AgoraClient 생성...");
-            agoraClient = new AgoraClient(tokenData.appId);
-            console.log("✅ AgoraClient 생성 완료");
-
-            console.log("5️⃣ 채널 참가 시도...");
-            await agoraClient.join(
-              tokenData.channel,
-              tokenData.token,
-              tokenData.uid
-            );
-            console.log("✅ 채널 참가 성공!");
-
-            // ✅ Placeholder 제거
-            const placeholder = document.querySelector(".video-placeholder");
-            if (placeholder) {
-              placeholder.remove();
-              console.log("✅ Placeholder 제거됨");
-            }
-
-            console.log("6️⃣ 미디어 발행 시도...");
-            if (SESSION_DATA.sessionType === "VIDEO") {
-              await agoraClient.publishAudioVideo();
-              console.log("✅ 비디오 발행 완료");
-            } else {
-              await agoraClient.publishAudioOnly();
-              console.log("✅ 오디오 발행 완료");
-            }
-
-            mediaEnabled = true;
-            console.log("🎉 미디어 초기화 완료!");
-          } catch (error) {
-            console.error("💥 미디어 초기화 실패:", error);
-            console.error("  - 오류 코드:", error.code);
-            console.error("  - 오류 메시지:", error.message);
-            alert("화상/음성 연결 실패:\n" + error.message);
-          }
+        if (typeof AgoraRTC === "undefined") {
+          console.error("❌ AgoraRTC SDK가 로드되지 않았습니다");
+          alert("화상 연결 SDK 로딩 실패");
+          return;
         }
 
         if (typeof AgoraClient === "undefined") {
@@ -1380,6 +1304,13 @@
             tokenData.uid
           );
           console.log("✅ 채널 참가 성공!");
+
+          // ✅ Placeholder 제거
+          const placeholder = document.querySelector(".video-placeholder");
+          if (placeholder) {
+            placeholder.remove();
+            console.log("✅ Placeholder 제거됨");
+          }
 
           console.log("6️⃣ 미디어 발행 시도...");
           if (SESSION_DATA.sessionType === "VIDEO") {
