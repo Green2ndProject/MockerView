@@ -110,7 +110,7 @@ public class ReviewService {
         return ReviewDTO.builder()
         .id(review.getId())
         .sessionId(review.getSession().getId())
-        .sessionTitle(review.getSession() != null ? review.getSession().getTitle() : null) //추가
+        .sessionTitle(review.getSession() != null ? review.getSession().getTitle() : null)
         .answerId(review.getAnswer() != null ? review.getAnswer().getId() : null)
         .reviewerId(review.getReviewer().getId())
         .reviewerName(review.getReviewer().getName())
