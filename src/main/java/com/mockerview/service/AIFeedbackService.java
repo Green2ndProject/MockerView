@@ -70,10 +70,13 @@ public class AIFeedbackService {
             feedback = feedbackRepository.save(feedback);
             log.info("Feedback saved with ID: {}", feedback.getId());
             
+            Integer score = extractScoreFromResponse(aiResponse);
+            
             FeedbackMessage feedbackMessage = FeedbackMessage.builder()
                 .sessionId(sessionId)
                 .answerId(answerId)
                 .userId(answer.getUser().getId())
+                .score(score)
                 .summary(feedback.getSummary())
                 .strengths(feedback.getStrengths())
                 .weaknesses(feedback.getWeaknesses())
@@ -115,10 +118,13 @@ public class AIFeedbackService {
             Feedback feedback = parseMultimodalFeedback(aiResponse, answerEntity);
             feedback = feedbackRepository.save(feedback);
             
+            Integer score = extractScoreFromResponse(aiResponse);
+            
             FeedbackMessage feedbackMessage = FeedbackMessage.builder()
                 .sessionId(sessionId)
                 .answerId(answerId)
                 .userId(answerEntity.getUser().getId())
+                .score(score)
                 .summary(feedback.getSummary())
                 .strengths(feedback.getStrengths())
                 .weaknesses(feedback.getWeaknesses())
@@ -149,7 +155,7 @@ public class AIFeedbackService {
             [답변]
             %s
             
-            **중요**: 위 답변의 실제 내용만 분석하세요. 루브릭 기반으로 평가하되, 예시나 템플릿을 사용하지 마세요.
+            **중요**: 위 답변의 실제 내용만 분석하세요. 루브릭 기반으로 평가하되, 예시나 템플릿을 사용하지 마세요. 문장을 완성시켜서 답변하세요.
             
             [평가 기준 - 100점 만점]
             1. STAR 구조 (30점): S(상황), T(과제), A(행동), R(결과) 각 요소 평가
@@ -162,8 +168,9 @@ public class AIFeedbackService {
             - 없는 요소는 0점 처리
             - 각 항목별 구체적 근거 제시
             
-            JSON 응답 (예시 값 사용 금지):
+            JSON 응답:
             {
+                "score": 85,
                 "summary": "이 답변의 핵심 내용을 30자로",
                 "strengths": "답변에서 발견된 실제 강점 2-3가지 나열",
                 "weaknesses": "답변에서 부족한 실제 약점 2-3가지 나열",
@@ -250,7 +257,7 @@ public class AIFeedbackService {
             JSON 형식으로 제공:
             {
                 "summary": "언어+비언어 종합 평가 (70자)",
-                "totalScore": 88,
+                "score": 88,
                 "verbalScore": 85,
                 "nonverbalScore": 32,
                 "rubric": {
@@ -385,6 +392,7 @@ public class AIFeedbackService {
                 .sessionId(sessionId)
                 .answerId(answerId)
                 .userId(answer.getUser().getId())
+                .score(0)
                 .summary(errorFeedback.getSummary())
                 .strengths(errorFeedback.getStrengths())
                 .weaknesses(errorFeedback.getWeaknesses())
@@ -450,6 +458,34 @@ public class AIFeedbackService {
         }
     }
 
+    private Integer extractScoreFromResponse(String aiResponse) {
+        try {
+            String cleanResponse = aiResponse.trim();
+            if (cleanResponse.startsWith("```json")) {
+                cleanResponse = cleanResponse.substring(7);
+            }
+            if (cleanResponse.endsWith("```")) {
+                cleanResponse = cleanResponse.substring(0, cleanResponse.length() - 3);
+            }
+            cleanResponse = cleanResponse.trim();
+            
+            JsonNode jsonNode = objectMapper.readTree(cleanResponse);
+            
+            if (jsonNode.has("score")) {
+                return jsonNode.path("score").asInt(75);
+            }
+            if (jsonNode.has("totalScore")) {
+                return jsonNode.path("totalScore").asInt(75);
+            }
+            
+            return 75;
+            
+        } catch (Exception e) {
+            log.warn("Failed to extract score from AI response, using default: 75");
+            return 75;
+        }
+    }
+
     private Feedback parseFeedbackResponse(String aiResponse, Answer answer) {
         try {
             log.info("🔍 Parsing AI response...");
@@ -468,6 +504,7 @@ public class AIFeedbackService {
             JsonNode feedback = objectMapper.readTree(cleanResponse);
             log.info("✅ JSON parsed successfully");
             
+            Integer score = feedback.path("score").asInt(75);
             String summary = feedback.path("summary").asText("답변이 제출되었습니다.");
             
             String strengths = "";
@@ -507,14 +544,16 @@ public class AIFeedbackService {
                 weaknesses = "추가 개선이 필요합니다.";
             }
             
-            log.info("📊 Extracted - Summary: {}, Strengths: {}, Weaknesses: {}", summary, strengths, weaknesses);
+            log.info("📊 Extracted - Score: {}, Summary: {}, Strengths: {}, Weaknesses: {}", score, summary, strengths, weaknesses);
             
             return Feedback.builder()
                 .answer(answer)
+                .score(score)
                 .summary(summary)
                 .strengths(strengths)
                 .weaknesses(weaknesses)
                 .improvement(improvement)
+                .feedbackType(Feedback.FeedbackType.AI)
                 .model("GPT-4O-MINI")
                 .build();
                 
@@ -524,10 +563,12 @@ public class AIFeedbackService {
             
             return Feedback.builder()
                 .answer(answer)
+                .score(0)
                 .summary("답변이 제출되었습니다.")
                 .strengths("답변해주셔서 감사합니다.")
                 .weaknesses("AI 응답 파싱 중 오류가 발생했습니다.")
                 .improvement("기술적인 문제로 상세 피드백을 제공할 수 없습니다.")
+                .feedbackType(Feedback.FeedbackType.AI)
                 .model("GPT-4O-MINI-ERROR")
                 .build();
         }
@@ -547,10 +588,12 @@ public class AIFeedbackService {
             
             return Feedback.builder()
                 .answer(answer)
+                .score(feedback.path("score").asInt(75))
                 .summary(feedback.path("summary").asText("멀티모달 루브릭 분석이 완료되었습니다."))
                 .strengths(feedback.path("strengths").asText("언어와 비언어 요소가 양호합니다."))
                 .weaknesses(feedback.path("weaknesses").asText("일부 개선이 필요합니다."))
                 .improvement(feedback.path("improvement").asText("STAR 구조와 표정을 함께 개선해보세요."))
+                .feedbackType(Feedback.FeedbackType.AI)
                 .model("GPT-4O")
                 .build();
                 
@@ -559,10 +602,12 @@ public class AIFeedbackService {
             
             return Feedback.builder()
                 .answer(answer)
+                .score(0)
                 .summary("멀티모달 루브릭 분석이 완료되었습니다.")
                 .strengths("답변이 제출되었습니다.")
                 .weaknesses("분석 중 일부 오류가 발생했습니다.")
                 .improvement("다음 답변에서 더 나은 결과를 기대합니다.")
+                .feedbackType(Feedback.FeedbackType.AI)
                 .model("GPT-4O")
                 .build();
         }
