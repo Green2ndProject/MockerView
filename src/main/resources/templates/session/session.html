@@ -1065,7 +1065,7 @@
             sessionType: /*[[${sessionType}]]*/ 'TEXT',
             expiresAt: /*[[${session.expiresAt}]]*/ null
         };
-        
+
         let countdownInterval = null;
         let warningShown = false;
         let agoraClient = null;
@@ -1136,7 +1136,6 @@
                 await agoraClient.join(tokenData.channel, tokenData.token, tokenData.uid);
                 console.log('✅ 채널 참가 성공!');
                 
-                // ✅ Placeholder 제거
                 const placeholder = document.querySelector('.video-placeholder');
                 if (placeholder) {
                     placeholder.remove();
