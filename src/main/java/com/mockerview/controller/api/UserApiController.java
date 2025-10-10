@@ -51,16 +51,6 @@ public class UserApiController {
                 // 200 ok
                 return ResponseEntity.ok(withdrawResponse);
 
-            // } catch (IllegalArgumentException e) {
-            //     // 비밀번호 불일치 등의 경우 401 or 403 반환
-            //     log.warn("탈퇴 실패 - 비밀번호 불일치: {}", username);
-            //     return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            // } catch(UsernameNotFoundException e){
-            //     log.error("탈퇴 실패 - 사용자를 찾을 수 없음: {}", username);
-            //     return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            // } catch (Exception e){
-            //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            // }
     }
 
 }
