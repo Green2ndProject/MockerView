@@ -1,686 +1,770 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>내 활동 통계 - MockerView</title>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #f5f5f5;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .navbar {
-            background: #fff;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 0;
-        }
-        
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: 600;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
-        .navbar-nav {
-            display: flex;
-            gap: 24px;
-        }
-        
-        .nav-link {
-            color: #6b7280;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .nav-link:hover {
-            color: #667eea;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-        
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-        
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
-        
-        .stats-header {
-            background: #667eea;
-            color: white;
-            padding: 40px 0;
-            margin-bottom: 32px;
-        }
-        
-        .stats-header h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .stats-header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        
-        .export-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 8px;
-            padding: 32px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e5e7eb;
-        }
-        
-        .stat-number {
-            font-size: 40px;
-            font-weight: 700;
-            color: #667eea;
-            display: block;
-            margin-bottom: 8px;
-        }
-        
-        .stat-label {
-            color: #6b7280;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .chart-container {
-            background: white;
-            border-radius: 8px;
-            padding: 32px;
-            margin-bottom: 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e5e7eb;
-        }
-        
-        .chart-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 24px;
-        }
-        
-        .answer-list {
-            background: white;
-            border-radius: 8px;
-            padding: 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e5e7eb;
-        }
-        
-        .answer-item {
-            border-left: 3px solid #667eea;
-            padding: 16px 24px;
-            margin-bottom: 16px;
-            background: #f9fafb;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .answer-item:hover {
-            background: #f0f4ff;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        
-        .answer-date {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-        
-        .answer-question {
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        
-        .answer-scores {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-        
-        .score-badge {
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .score-badge.ai {
-            background: #eff6ff;
-            color: #1e40af;
-        }
-        
-        .score-badge.interviewer {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 32px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 800px;
-            position: relative;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .modal-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #6b7280;
-            padding: 8px;
-        }
-        
-        .close-btn:hover {
-            color: #374151;
-        }
-        
-        .modal-section {
-            margin-bottom: 24px;
-        }
-        
-        .modal-section h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        
-        .feedback-item {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            border-left: 3px solid #667eea;
-        }
-        
-        .feedback-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .feedback-type {
-            font-weight: 600;
-        }
-        
-        .feedback-type.ai {
-            color: #1e40af;
-        }
-        
-        .feedback-type.interviewer {
-            color: #92400e;
-        }
-        
-        .feedback-score {
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .feedback-score.ai {
-            background: #eff6ff;
-            color: #1e40af;
-        }
-        
-        .feedback-score.interviewer {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .feedback-content {
-            color: #374151;
-            line-height: 1.6;
-            margin-top: 8px;
-        }
-        
-        .my-answer-text {
-            background: #f8fafc;
-            padding: 16px;
-            border-radius: 6px;
-            color: #374151;
-            line-height: 1.6;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .question-text {
-            background: #fef7e1;
-            padding: 16px;
-            border-radius: 6px;
-            color: #92400e;
-            font-weight: 500;
-            border: 1px solid #f59e0b;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: #f5f5f5;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      .navbar {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 0;
+      }
+
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .navbar-brand {
+        font-size: 24px;
+        font-weight: 600;
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 24px;
+      }
+
+      .nav-link {
+        color: #6b7280;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        color: #667eea;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+      }
+
+      .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      .btn-secondary:hover {
+        background: #e5e7eb;
+      }
+
+      .stats-header {
+        background: #667eea;
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 32px;
+      }
+
+      .stats-header h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .stats-header p {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+
+      .export-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 32px;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+      }
+
+      .stat-number {
+        font-size: 40px;
+        font-weight: 700;
+        color: #667eea;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .stat-label {
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .chart-container {
+        background: white;
+        border-radius: 8px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+      }
+
+      .chart-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 24px;
+      }
+
+      .answer-list {
+        background: white;
+        border-radius: 8px;
+        padding: 32px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+      }
+
+      .answer-item {
+        border-left: 3px solid #667eea;
+        padding: 16px 24px;
+        margin-bottom: 16px;
+        background: #f9fafb;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .answer-item:hover {
+        background: #f0f4ff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .answer-date {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 8px;
+      }
+
+      .answer-question {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+      }
+
+      .answer-scores {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .score-badge {
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .score-badge.ai {
+        background: #eff6ff;
+        color: #1e40af;
+      }
+
+      .score-badge.interviewer {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 32px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 800px;
+        position: relative;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 8px;
+      }
+
+      .close-btn:hover {
+        color: #374151;
+      }
+
+      .modal-section {
+        margin-bottom: 24px;
+      }
+
+      .modal-section h4 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+      }
+
+      .feedback-item {
+        background: #f9fafb;
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        border-left: 3px solid #667eea;
+      }
+
+      .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .feedback-type {
+        font-weight: 600;
+      }
+
+      .feedback-type.ai {
+        color: #1e40af;
+      }
+
+      .feedback-type.interviewer {
+        color: #92400e;
+      }
+
+      .feedback-score {
+        font-weight: 600;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .feedback-score.ai {
+        background: #eff6ff;
+        color: #1e40af;
+      }
+
+      .feedback-score.interviewer {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .feedback-content {
+        color: #374151;
+        line-height: 1.6;
+        margin-top: 8px;
+      }
+
+      .my-answer-text {
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 6px;
+        color: #374151;
+        line-height: 1.6;
+        border: 1px solid #e2e8f0;
+      }
+
+      .question-text {
+        background: #fef7e1;
+        padding: 16px;
+        border-radius: 6px;
+        color: #92400e;
+        font-weight: 500;
+        border: 1px solid #f59e0b;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">Mockerview</a>
-                <div class="navbar-nav">
-                    <a class="nav-link" href="/session/list">세션 목록</a>
-                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
-                    <a class="nav-link" href="/auth/logout">로그아웃</a>
-                </div>
-            </div>
+      <div class="container">
+        <div class="navbar-content">
+          <a class="navbar-brand" href="/session/list">Mockerview</a>
+          <div class="navbar-nav">
+            <a class="nav-link" href="/session/list">세션 목록</a>
+            <a class="nav-link" href="/auth/mypage">마이페이지</a>
+            <a class="nav-link" href="/auth/logout">로그아웃</a>
+          </div>
         </div>
+      </div>
     </nav>
 
     <div class="stats-header">
-        <div class="container">
-            <h1>내 활동 통계</h1>
-            <p th:text="${user.name} + '님의 면접 성장 추이 분석'">사용자님의 면접 성장 추이 분석</p>
-            <div class="export-buttons">
-                <button onclick="downloadCSV()" class="btn btn-secondary">CSV 다운로드</button>
-                <button onclick="exportPDF()" class="btn btn-secondary">PDF 다운로드</button>
-                <a href="/auth/mypage" class="btn btn-primary">마이페이지로</a>
-            </div>
+      <div class="container">
+        <h1>내 활동 통계</h1>
+        <p th:text="${user.name} + '님의 면접 성장 추이 분석'">
+          사용자님의 면접 성장 추이 분석
+        </p>
+        <div class="export-buttons">
+          <button onclick="downloadCSV()" class="btn btn-secondary">
+            CSV 다운로드
+          </button>
+          <button onclick="exportPDF()" class="btn btn-secondary">
+            PDF 다운로드
+          </button>
+          <a href="/auth/mypage" class="btn btn-primary">마이페이지로</a>
         </div>
+      </div>
     </div>
 
     <div class="container" id="stats-content">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-number" th:text="${totalAnswers}">0</span>
-                <div class="stat-label">총 답변 수</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${aiFeedbackCount}">0</span>
-                <div class="stat-label">AI 피드백</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${interviewerFeedbackCount}">0</span>
-                <div class="stat-label">면접관 피드백</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${avgAiScore}">0.0</span>
-                <div class="stat-label">AI 평균 점수</div>
-            </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number" th:text="${totalAnswers}">0</span>
+          <div class="stat-label">총 답변 수</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" th:text="${aiFeedbackCount}">0</span>
+          <div class="stat-label">AI 피드백</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" th:text="${interviewerFeedbackCount}"
+            >0</span
+          >
+          <div class="stat-label">면접관 피드백</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" th:text="${avgAiScore}">0.0</span>
+          <div class="stat-label">AI 평균 점수</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3 class="chart-title">📈 나의 성장 추이 (점수 변화)</h3>
+        <canvas id="growthChart"></canvas>
+      </div>
+
+      <div
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+          margin-bottom: 32px;
+        "
+      >
+        <div class="chart-container">
+          <h3 class="chart-title">월별 답변 추이</h3>
+          <canvas id="monthlyChart"></canvas>
         </div>
 
         <div class="chart-container">
-            <h3 class="chart-title">📈 나의 성장 추이 (점수 변화)</h3>
-            <canvas id="growthChart"></canvas>
+          <h3 class="chart-title">피드백 비율</h3>
+          <canvas id="feedbackChart"></canvas>
         </div>
+      </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px;">
-            <div class="chart-container">
-                <h3 class="chart-title">월별 답변 추이</h3>
-                <canvas id="monthlyChart"></canvas>
-            </div>
-
-            <div class="chart-container">
-                <h3 class="chart-title">피드백 비율</h3>
-                <canvas id="feedbackChart"></canvas>
-            </div>
+      <div class="answer-list">
+        <h3 class="chart-title">최근 답변 내역</h3>
+        <div
+          th:each="answer : ${myAnswers}"
+          class="answer-item"
+          th:attr="data-answer-id=${answer.id}"
+          th:onclick="'openAnswerModal(' + ${answer.id} + ')'"
+        >
+          <div
+            class="answer-date"
+            th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}"
+          >
+            날짜
+          </div>
+          <div
+            class="answer-question"
+            th:text="'Q. ' + ${answer.question.text}"
+          >
+            질문
+          </div>
+          <div class="answer-scores">
+            <span
+              th:each="feedback : ${answer.feedbacks}"
+              th:class="${feedback.feedbackType.toString() == 'AI' ? 'score-badge ai' : 'score-badge interviewer'}"
+              th:if="${feedback.score != null}"
+            >
+              <span
+                th:text="${feedback.feedbackType.toString() == 'AI' ? 'AI' : '면접관'}"
+              ></span
+              >: <span th:text="${feedback.score}">0</span>/10
+            </span>
+          </div>
         </div>
-
-        <div class="answer-list">
-            <h3 class="chart-title">최근 답변 내역</h3>
-            <div th:each="answer : ${myAnswers}" 
-                class="answer-item" 
-                th:attr="data-answer-id=${answer.id}"
-                th:onclick="'openAnswerModal(' + ${answer.id} + ')'">
-                <div class="answer-date" th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</div>
-                <div class="answer-question" th:text="'Q. ' + ${answer.question.text}">질문</div>
-                <div class="answer-scores">
-                    <span th:each="feedback : ${answer.feedbacks}"
-                        th:class="${feedback.feedbackType.toString() == 'AI' ? 'score-badge ai' : 'score-badge interviewer'}"
-                        th:if="${feedback.score != null}">
-                        <span th:text="${feedback.feedbackType.toString() == 'AI' ? 'AI' : '면접관'}"></span>: 
-                        <span th:text="${feedback.score}">0</span>/10
-                    </span>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
     <div id="answerModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">답변 상세 정보</h3>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-            
-            <div class="modal-section">
-                <h4>질문</h4>
-                <div id="modalQuestion" class="question-text"></div>
-            </div>
-            
-            <div class="modal-section">
-                <h4>내 답변</h4>
-                <div id="modalAnswer" class="my-answer-text"></div>
-            </div>
-            
-            <div class="modal-section">
-                <h4>받은 피드백</h4>
-                <div id="modalFeedbacks"></div>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">답변 상세 정보</h3>
+          <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
+
+        <div class="modal-section">
+          <h4>질문</h4>
+          <div id="modalQuestion" class="question-text"></div>
+        </div>
+
+        <div class="modal-section">
+          <h4>내 답변</h4>
+          <div id="modalAnswer" class="my-answer-text"></div>
+        </div>
+
+        <div class="modal-section">
+          <h4>받은 피드백</h4>
+          <div id="modalFeedbacks"></div>
+        </div>
+      </div>
     </div>
 
     <script th:inline="javascript">
-        var answersByMonth = /*[[${answersByMonth}]]*/ {};
-        var aiFeedbackCount = /*[[${aiFeedbackCount}]]*/ 0;
-        var interviewerFeedbackCount = /*[[${interviewerFeedbackCount}]]*/ 0;
-        var avgAiScore = parseFloat(/*[[${avgAiScore}]]*/ '0');
-        var avgInterviewerScore = parseFloat(/*[[${avgInterviewerScore}]]*/ '0');
-        var myAnswersData = /*[[${myAnswers}]]*/ [];
-        var growthData = /*[[${growthData}]]*/ [];
+      var answersByMonth = /*[[${answersByMonth}]]*/ {};
+      var aiFeedbackCount = /*[[${aiFeedbackCount}]]*/ 0;
+      var interviewerFeedbackCount = /*[[${interviewerFeedbackCount}]]*/ 0;
+      var avgAiScore = parseFloat(/*[[${avgAiScore}]]*/ "0");
+      var avgInterviewerScore = parseFloat(/*[[${avgInterviewerScore}]]*/ "0");
+      var myAnswersData = /*[[${myAnswers}]]*/ [];
+      var growthData = /*[[${growthData}]]*/ [];
 
-        var months = Object.keys(answersByMonth).sort();
-        var counts = months.map(function(m) { return answersByMonth[m]; });
+      var months = Object.keys(answersByMonth).sort();
+      var counts = months.map(function (m) {
+        return answersByMonth[m];
+      });
 
-        function getToken() {
-            const cookies = document.cookie.split(';');
-            for (let cookie of cookies) {
-                const [name, value] = cookie.trim().split('=');
-                if (name === 'Authorization') {
-                    return value;
-                }
-            }
-            return '';
+      function getToken() {
+        const cookies = document.cookie.split(";");
+        for (let cookie of cookies) {
+          const [name, value] = cookie.trim().split("=");
+          if (name === "Authorization") {
+            return value;
+          }
         }
+        return "";
+      }
 
-        async function downloadCSV() {
-            try {
-                const token = getToken();
-                const response = await fetch('/auth/mypage/stats/export-csv', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': token
-                    }
-                });
+      async function downloadCSV() {
+        try {
+          const token = getToken();
+          const response = await fetch("/auth/mypage/stats/export-csv", {
+            method: "GET",
+            headers: {
+              Authorization: token,
+            },
+          });
 
-                if (!response.ok) {
-                    throw new Error('CSV 다운로드 실패');
-                }
+          if (!response.ok) {
+            throw new Error("CSV 다운로드 실패");
+          }
 
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'my_interview_stats.csv';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (error) {
-                console.error('CSV 다운로드 오류:', error);
-                alert('CSV 다운로드 중 오류가 발생했습니다.');
-            }
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "my_interview_stats.csv";
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error("CSV 다운로드 오류:", error);
+          alert("CSV 다운로드 중 오류가 발생했습니다.");
         }
+      }
 
-        if (document.getElementById('growthChart') && typeof Chart !== 'undefined') {
-            var dates = growthData.map(function(d) { return d.date; });
-            var aiScores = growthData.map(function(d) { return d.aiScore; });
-            var interviewerScores = growthData.map(function(d) { return d.interviewerScore; });
-            
-            new Chart(document.getElementById('growthChart'), {
-                type: 'line',
-                data: {
-                    labels: dates.length > 0 ? dates : ['데이터 없음'],
-                    datasets: [
-                        {
-                            label: 'AI 점수',
-                            data: aiScores.length > 0 ? aiScores : [0],
-                            borderColor: '#667eea',
-                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: '면접관 점수',
-                            data: interviewerScores.length > 0 ? interviewerScores : [0],
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
+      if (
+        document.getElementById("growthChart") &&
+        typeof Chart !== "undefined"
+      ) {
+        var dates = growthData.map(function (d) {
+          return d.date;
+        });
+        var aiScores = growthData.map(function (d) {
+          return d.aiScore / 10;
+        });
+        var interviewerScores = growthData.map(function (d) {
+          return d.interviewerScore / 10;
+        });
+
+        new Chart(document.getElementById("growthChart"), {
+          type: "line",
+          data: {
+            labels: dates.length > 0 ? dates : ["데이터 없음"],
+            datasets: [
+              {
+                label: "AI 점수",
+                data: aiScores.length > 0 ? aiScores : [0],
+                borderColor: "#667eea",
+                backgroundColor: "rgba(102, 126, 234, 0.1)",
+                tension: 0.4,
+                fill: true,
+              },
+              {
+                label: "면접관 점수",
+                data: interviewerScores.length > 0 ? interviewerScores : [0],
+                borderColor: "#f59e0b",
+                backgroundColor: "rgba(245, 158, 11, 0.1)",
+                tension: 0.4,
+                fill: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 10,
+                title: {
+                  display: true,
+                  text: "점수",
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 10,
-                            title: {
-                                display: true,
-                                text: '점수'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: '날짜'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
-                        }
-                    }
-                }
-            });
-        }
-
-        if (document.getElementById('monthlyChart') && typeof Chart !== 'undefined') {
-            new Chart(document.getElementById('monthlyChart'), {
-                type: 'line',
-                data: {
-                    labels: months.length > 0 ? months : ['데이터 없음'],
-                    datasets: [{
-                        label: '답변 수',
-                        data: counts.length > 0 ? counts : [0],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4
-                    }]
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: "날짜",
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true
-                }
-            });
+              },
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+              },
+            },
+          },
+        });
+      }
+
+      if (
+        document.getElementById("monthlyChart") &&
+        typeof Chart !== "undefined"
+      ) {
+        new Chart(document.getElementById("monthlyChart"), {
+          type: "line",
+          data: {
+            labels: months.length > 0 ? months : ["데이터 없음"],
+            datasets: [
+              {
+                label: "답변 수",
+                data: counts.length > 0 ? counts : [0],
+                borderColor: "#667eea",
+                backgroundColor: "rgba(102, 126, 234, 0.1)",
+                tension: 0.4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+          },
+        });
+      }
+
+      if (
+        document.getElementById("feedbackChart") &&
+        typeof Chart !== "undefined"
+      ) {
+        var totalFeedback = aiFeedbackCount + interviewerFeedbackCount;
+        new Chart(document.getElementById("feedbackChart"), {
+          type: "doughnut",
+          data: {
+            labels: ["AI 피드백", "면접관 피드백"],
+            datasets: [
+              {
+                data:
+                  totalFeedback > 0
+                    ? [aiFeedbackCount, interviewerFeedbackCount]
+                    : [1, 1],
+                backgroundColor: ["#667eea", "#f59e0b"],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+          },
+        });
+      }
+
+      function openAnswerModal(answerId) {
+        var answer = myAnswersData.find(function (a) {
+          return a.id == answerId;
+        });
+
+        if (!answer) return;
+
+        document.getElementById("modalQuestion").textContent =
+          answer.question.text;
+        document.getElementById("modalAnswer").textContent =
+          answer.answerText || answer.text || "답변 내용이 없습니다.";
+
+        var feedbacksContainer = document.getElementById("modalFeedbacks");
+        feedbacksContainer.innerHTML = "";
+
+        if (answer.feedbacks && answer.feedbacks.length > 0) {
+          answer.feedbacks.forEach(function (feedback) {
+            var feedbackDiv = document.createElement("div");
+            feedbackDiv.className = "feedback-item";
+
+            var feedbackType = feedback.feedbackType === "AI" ? "AI" : "면접관";
+            var typeClass =
+              feedback.feedbackType === "AI" ? "ai" : "interviewer";
+
+            feedbackDiv.innerHTML =
+              '<div class="feedback-header">' +
+              '<span class="feedback-type ' +
+              typeClass +
+              '">' +
+              feedbackType +
+              " 피드백</span>" +
+              (feedback.score
+                ? '<span class="feedback-score ' +
+                  typeClass +
+                  '">' +
+                  feedback.score +
+                  "/10</span>"
+                : "") +
+              "</div>" +
+              '<div class="feedback-content">' +
+              "<div><strong>요약:</strong> " +
+              (feedback.summary || "AI 분석 완료") +
+              "</div>" +
+              (feedback.strengths
+                ? '<div style="margin-top: 8px;"><strong>강점:</strong> ' +
+                  feedback.strengths +
+                  "</div>"
+                : "") +
+              (feedback.improvement
+                ? '<div style="margin-top: 8px;"><strong>개선점:</strong> ' +
+                  feedback.improvement +
+                  "</div>"
+                : "") +
+              "</div>";
+
+            feedbacksContainer.appendChild(feedbackDiv);
+          });
+        } else {
+          feedbacksContainer.innerHTML = "<p>아직 피드백이 없습니다.</p>";
         }
 
-        if (document.getElementById('feedbackChart') && typeof Chart !== 'undefined') {
-            var totalFeedback = aiFeedbackCount + interviewerFeedbackCount;
-            new Chart(document.getElementById('feedbackChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['AI 피드백', '면접관 피드백'],
-                    datasets: [{
-                        data: totalFeedback > 0 ? [aiFeedbackCount, interviewerFeedbackCount] : [1, 1],
-                        backgroundColor: ['#667eea', '#f59e0b']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true
-                }
-            });
+        document.getElementById("answerModal").style.display = "block";
+      }
+
+      function closeModal() {
+        document.getElementById("answerModal").style.display = "none";
+      }
+
+      window.onclick = function (event) {
+        var modal = document.getElementById("answerModal");
+        if (event.target === modal) {
+          closeModal();
+        }
+      };
+
+      function exportPDF() {
+        if (
+          typeof window.jspdf === "undefined" ||
+          typeof html2canvas === "undefined"
+        ) {
+          alert("PDF 라이브러리가 로드되지 않았습니다.");
+          return;
         }
 
-        function openAnswerModal(answerId) {
-            var answer = myAnswersData.find(function(a) {
-                return a.id == answerId;
-            });
-            
-            if (!answer) return;
+        var content = document.getElementById("stats-content");
 
-            document.getElementById('modalQuestion').textContent = answer.question.text;
-            document.getElementById('modalAnswer').textContent = answer.answerText || answer.text || '답변 내용이 없습니다.';
+        html2canvas(content)
+          .then(function (canvas) {
+            var imgData = canvas.toDataURL("image/png");
+            var pdf = new window.jspdf.jsPDF("p", "mm", "a4");
+            var pdfWidth = pdf.internal.pageSize.getWidth();
+            var pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-            var feedbacksContainer = document.getElementById('modalFeedbacks');
-            feedbacksContainer.innerHTML = '';
-
-            if (answer.feedbacks && answer.feedbacks.length > 0) {
-                answer.feedbacks.forEach(function(feedback) {
-                    var feedbackDiv = document.createElement('div');
-                    feedbackDiv.className = 'feedback-item';
-                    
-                    var feedbackType = feedback.feedbackType === 'AI' ? 'AI' : '면접관';
-                    var typeClass = feedback.feedbackType === 'AI' ? 'ai' : 'interviewer';
-                    
-                    feedbackDiv.innerHTML = 
-                        '<div class="feedback-header">' +
-                            '<span class="feedback-type ' + typeClass + '">' + feedbackType + ' 피드백</span>' +
-                            (feedback.score ? '<span class="feedback-score ' + typeClass + '">' + feedback.score + '/10</span>' : '') +
-                        '</div>' +
-                        '<div class="feedback-content">' +
-                            '<div><strong>요약:</strong> ' + (feedback.summary || 'AI 분석 완료') + '</div>' +
-                            (feedback.strengths ? '<div style="margin-top: 8px;"><strong>강점:</strong> ' + feedback.strengths + '</div>' : '') +
-                            (feedback.improvement ? '<div style="margin-top: 8px;"><strong>개선점:</strong> ' + feedback.improvement + '</div>' : '') +
-                        '</div>';
-                    
-                    feedbacksContainer.appendChild(feedbackDiv);
-                });
-            } else {
-                feedbacksContainer.innerHTML = '<p>아직 피드백이 없습니다.</p>';
-            }
-
-            document.getElementById('answerModal').style.display = 'block';
-        }
-
-        function closeModal() {
-            document.getElementById('answerModal').style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            var modal = document.getElementById('answerModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-
-        function exportPDF() {
-            if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
-                alert('PDF 라이브러리가 로드되지 않았습니다.');
-                return;
-            }
-            
-            var content = document.getElementById('stats-content');
-            
-            html2canvas(content).then(function(canvas) {
-                var imgData = canvas.toDataURL('image/png');
-                var pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
-                var pdfWidth = pdf.internal.pageSize.getWidth();
-                var pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save('interview_stats.pdf');
-            }).catch(function(error) {
-                console.error('PDF 생성 오류:', error);
-                alert('PDF 생성 중 오류가 발생했습니다.');
-            });
-        }
+            pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+            pdf.save("interview_stats.pdf");
+          })
+          .catch(function (error) {
+            console.error("PDF 생성 오류:", error);
+            alert("PDF 생성 중 오류가 발생했습니다.");
+          });
+      }
     </script>
-</body>
+  </body>
 </html>
