@@ -50,7 +50,6 @@
 
 ### Frontend
 - **Template Engine**: Thymeleaf
-- **UI Framework**: Bootstrap 5
 - **JavaScript**: Vanilla JS (ES6+)
 
 ### Database
