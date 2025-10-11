@@ -1,7 +1,11 @@
 package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.entity.*;
+import com.mockerview.entity.Answer;
+import com.mockerview.entity.Feedback;
+import com.mockerview.entity.Question;
+import com.mockerview.entity.Session;
+import com.mockerview.entity.User;
 import com.mockerview.repository.AnswerRepository;
 import com.mockerview.repository.QuestionRepository;
 import com.mockerview.repository.SessionRepository;
@@ -189,10 +193,10 @@ public class SessionWebController {
                 })
                 .collect(Collectors.toList());
             
-            long totalCount = sessionRepository.count();
-            long plannedCount = sessionRepository.countBySessionStatus(Session.SessionStatus.PLANNED);
-            long runningCount = sessionRepository.countBySessionStatus(Session.SessionStatus.RUNNING);
-            long endedCount = sessionRepository.countBySessionStatus(Session.SessionStatus.ENDED);
+            long totalCount = sessionRepository.countNonSelfInterviewSessions();
+            long plannedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.PLANNED, "N");
+            long runningCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.RUNNING, "N");
+            long endedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.ENDED, "N");
             
             model.addAttribute("sessions", sessionList);
             model.addAttribute("currentUser", currentUser);
