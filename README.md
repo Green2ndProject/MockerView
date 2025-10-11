@@ -580,7 +580,6 @@ MockerView/
 - [OpenAI API](https://openai.com/)
 - [Agora RTC](https://www.agora.io/)
 - [FFmpeg](https://ffmpeg.org/)
-- [Bootstrap](https://getbootstrap.com/)
 - [SockJS](https://github.com/sockjs)
 - [STOMP.js](https://stomp-js.github.io/)
 
