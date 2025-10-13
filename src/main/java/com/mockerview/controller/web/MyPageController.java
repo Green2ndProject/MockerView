@@ -38,20 +38,25 @@ public class MyPageController {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
+            log.info("===== 마이페이지 로드 시작 =====");
+            log.info("사용자: {}, 역할: {}", currentUser.getName(), currentUser.getRole());
+            
             List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
+            log.info("호스팅 세션: {}", hostedSessions.size());
+            
             List<Answer> userAnswers = answerRepository.findByUserId(currentUser.getId());
+            log.info("답변: {}", userAnswers.size());
             
             long participatedSessionCount = answerRepository.countDistinctSessionsByUserId(currentUser.getId());
             long answerCount = answerRepository.countByUserId(currentUser.getId());
+            
+            log.info("참가 세션: {}, 답변 수: {}", participatedSessionCount, answerCount);
             
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("hostedSessions", hostedSessions);
             model.addAttribute("userAnswers", userAnswers);
             model.addAttribute("participatedSessionCount", participatedSessionCount);
             model.addAttribute("answerCount", answerCount);
-            
-            log.info("마이페이지 로드: userId={}, 참가세션={}, 답변수={}", 
-                currentUser.getId(), participatedSessionCount, answerCount);
             
             return "user/mypage";
         } catch (Exception e) {
