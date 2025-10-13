@@ -98,6 +98,25 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     
     Long countBySessionStatus(Session.SessionStatus status);
 
+    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host " +
+               "WHERE s.sessionStatus = :status AND s.isReviewable = :isReviewable " +
+               "ORDER BY s.endTime DESC", 
+    countQuery = "SELECT COUNT(s) FROM Session s " +
+                  "WHERE s.sessionStatus = :status AND s.isReviewable = :isReviewable")
+    Page<Session> findByStatusAndIsReviewablePageable(
+                    @Param("status") Session.SessionStatus status, 
+                    @Param("isReviewable") String isReviewable,
+                    Pageable pageable);
+
+    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host " +
+               "WHERE s.host.id = :hostId AND s.isSelfInterview = :isSelfInterview " +
+               "ORDER BY s.createdAt DESC", 
+    countQuery = "SELECT COUNT(s) FROM Session s " +
+                  "WHERE s.host.id = :hostId AND s.isSelfInterview = :isSelfInterview")
+    Page<Session> findByHostIdAndIsSelfInterviewPageable(
+                    @Param("hostId") Long hostId, 
+                    @Param("isSelfInterview") String isSelfInterview,
+                    Pageable pageable);
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId AND s.isSelfInterview = 'Y' ORDER BY s.createdAt DESC")
     List<Session> findSelfInterviewsByHostId(@Param("hostId") Long hostId);
 
