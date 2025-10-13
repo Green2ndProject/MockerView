@@ -51,11 +51,6 @@ public class InterviewerFeedbackService {
             
             feedbackMessage.setTimestamp(LocalDateTime.now());
             
-            String destination = "/topic/session/" + feedbackMessage.getSessionId() + "/interviewer-feedback";
-            log.info("Sending interviewer feedback to: {}", destination);
-            
-            messagingTemplate.convertAndSend(destination, feedbackMessage);
-            
             log.info("Interviewer feedback submitted successfully for answer: {}", feedbackMessage.getAnswerId());
             
         } catch (Exception e) {

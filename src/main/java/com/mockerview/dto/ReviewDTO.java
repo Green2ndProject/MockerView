@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class ReviewDTO {
+    private String sessionTitle; 
     private Long id;
     private Long sessionId;
     private Long answerId;
