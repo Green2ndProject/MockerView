@@ -367,16 +367,24 @@ class MockerViewWebSocket {
         return;
     }
     
-    participantsListDiv.innerHTML = participants.map(participant => 
-        `<div class="participant-item">
+    const hostName = document.querySelector('.role-title:first-child + .role-member span')?.textContent;
+    
+    const students = participants.filter(p => p !== hostName);
+    
+    participantsListDiv.innerHTML = students.map(participant => 
+        `<div class="role-member">
             <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
-            <span style="font-size: 14px; font-weight: 500;">${participant}</span>
+            <span>${participant}</span>
         </div>`
     ).join("");
     
+    if (students.length === 0) {
+        participantsListDiv.innerHTML = '<div class="empty-role">대기 중...</div>';
+    }
+    
     const participantCount = document.getElementById("participant-count");
     if (participantCount) {
-        participantCount.textContent = (participants.length + 1) + "명";
+        participantCount.textContent = `${participants.length}명`;
     }
 }
 
