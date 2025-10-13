@@ -121,8 +121,13 @@ public class WebSocketController {
             sessionId, message.getQuestionId(), message.getUserId());
         
         try {
+            if (message.getQuestionId() == null) {
+                log.error("❌ questionId가 null입니다!");
+                return;
+            }
+            
             Question question = questionRepository.findById(message.getQuestionId())
-                .orElseThrow(() -> new RuntimeException("Question not found"));
+                .orElseThrow(() -> new RuntimeException("Question not found: " + message.getQuestionId()));
             
             User user = userRepository.findById(message.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
