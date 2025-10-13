@@ -122,10 +122,11 @@ class MockerViewWebSocket {
     };
     
     console.log('📨 세션 참가 메시지 전송:', joinMessage);
+    console.log('🔍 userId 확인:', this.userId, 'userName 확인:', this.userName);
     
     try {
       this.stompClient.send(
-        `/app/session/${this.sessionId}/join`, 
+        `/app/session/${this.sessionId}/join`,
         {}, 
         JSON.stringify(joinMessage)
       );
@@ -135,35 +136,24 @@ class MockerViewWebSocket {
     }
   }
 
-  handleControlMessage(data) {
-    console.log('🎮 제어 메시지 처리:', data);
-    const badge = document.getElementById('sessionStatusBadge');
-    
-    if (data.action === 'START') {
-      alert('면접이 시작되었습니다!');
-      if (badge) {
-        badge.textContent = '진행중';
-        badge.className = 'status-badge ongoing';
-      }
-    } else if (data.action === 'PAUSE') {
-      alert('면접이 일시정지되었습니다.');
-      if (badge) {
-        badge.textContent = '일시정지';
-        badge.className = 'status-badge paused';
-      }
-    } else if (data.action === 'RESUME') {
-      alert('면접이 재개되었습니다.');
-      if (badge) {
-        badge.textContent = '진행중';
-        badge.className = 'status-badge ongoing';
-      }
-    } else if (data.action === 'END') {
-      alert('면접이 종료되었습니다.');
-      if (badge) {
-        badge.textContent = '종료됨';
-        badge.className = 'status-badge ended';
-      }
+  submitAnswer(questionId, answerText) {
+    if (!this.connected) {
+      alert('WebSocket이 연결되지 않았습니다.');
+      return;
     }
+    
+    const payload = {
+      sessionId: this.sessionId,
+      questionId: parseInt(questionId),
+      userId: this.userId,
+      userName: this.userName,
+      answerText: answerText
+    };
+    
+    console.log('📤 답변 제출 payload 확인:', payload);
+    console.log('🔍 questionId:', payload.questionId, 'userId:', payload.userId);
+    
+    this.stompClient.send(`/app/session/${this.sessionId}/answer`, {}, JSON.stringify(payload));
   }
 
   leaveSession() {
