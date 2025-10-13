@@ -7,6 +7,7 @@ class MockerViewWebSocket {
     this.connected = false;
     this.timerInterval = null;
     this.currentSeconds = 0;
+    this.participantNames = new Map();
   }
 
   connect() {
@@ -63,6 +64,7 @@ class MockerViewWebSocket {
       if (window.agoraClient && data.userId && data.userName) {
         window.agoraClient.updateRemoteUserName(data.userId, data.userName);
       }
+      this.participantNames.set(data.userId, data.userName);
     });
     
     this.stompClient.subscribe(`/topic/session/${this.sessionId}/status`, (message) => {
