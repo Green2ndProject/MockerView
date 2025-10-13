@@ -50,7 +50,7 @@ public class WebSocketController {
             .userName(message.getUserName())
             .participants(new ArrayList<>(participants))
             .questionCount(questionRepository.countBySessionId(sessionId).intValue())
-            .answerCount(answerRepository.countBySessionId(sessionId).intValue())
+            .answerCount(answerRepository.countByQuestionSessionId(sessionId).intValue())
             .build();
         
         messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/status", statusMessage);
@@ -194,8 +194,33 @@ public class WebSocketController {
     }
 
     @MessageMapping("/session/{sessionId}/control")
+    @Transactional
     public void handleControl(@DestinationVariable Long sessionId, Map<String, Object> message) {
         log.info("제어 메시지 수신: sessionId={}, action={}", sessionId, message.get("action"));
-        messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/control", message);
+        
+        try {
+            String action = (String) message.get("action");
+            
+            Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            if ("START".equals(action)) {
+                session.setSessionStatus(Session.SessionStatus.RUNNING);
+                session.setStartTime(LocalDateTime.now());
+            } else if ("END".equals(action)) {
+                session.setSessionStatus(Session.SessionStatus.ENDED);
+                session.setEndTime(LocalDateTime.now());
+            }
+            
+            sessionRepository.save(session);
+            
+            message.put("status", session.getSessionStatus().toString());
+            
+            messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/control", message);
+            log.info("제어 메시지 브로드캐스트 완료");
+            
+        } catch (Exception e) {
+            log.error("제어 메시지 처리 중 오류 발생", e);
+        }
     }
 }

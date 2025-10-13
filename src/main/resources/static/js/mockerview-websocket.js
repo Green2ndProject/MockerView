@@ -68,7 +68,7 @@ class MockerViewWebSocket {
           this.participantNames = new Map();
       }
       this.participantNames.set(data.userId, data.userName);
-  });
+    });
     
     this.stompClient.subscribe(`/topic/session/${this.sessionId}/status`, (message) => {
       console.log('📊 Status 메시지 수신');
@@ -122,7 +122,6 @@ class MockerViewWebSocket {
     };
     
     console.log('📨 세션 참가 메시지 전송:', joinMessage);
-    console.log('📍 전송 경로:', `/app/session/${this.sessionId}/join`);
     
     try {
       this.stompClient.send(
@@ -382,14 +381,16 @@ class MockerViewWebSocket {
     
     const hostName = document.querySelector('.role-group:first-child .role-member span')?.textContent;
     
-    const students = participants.filter(p => p !== hostName);
+    const students = participants.filter(p => p && p !== hostName);
     
-    participantsListDiv.innerHTML = students.map(participant => 
-        `<div class="role-member">
-            <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
-            <span>${participant}</span>
-        </div>`
-    ).join("");
+    participantsListDiv.innerHTML = students
+        .filter(participant => participant && typeof participant === 'string')
+        .map(participant => 
+            `<div class="role-member">
+                <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
+                <span>${participant}</span>
+            </div>`
+        ).join("");
     
     if (students.length === 0) {
         participantsListDiv.innerHTML = '<div class="empty-role">대기 중...</div>';
