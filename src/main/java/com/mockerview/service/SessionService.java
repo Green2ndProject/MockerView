@@ -30,6 +30,51 @@ public class SessionService {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
+
+    @Transactional(readOnly = true)
+    public Page<Session> getSelfInterviewRecords(Long hostId, Pageable pageable) {
+        try {
+            log.info("Getting paginated self-interview records for host {}. Page: {}, Size: {}", 
+            hostId, pageable.getPageNumber(), pageable.getPageSize());
+
+        String isSelfInterview = "Y"; 
+
+        Page<Session> sessionPage = sessionRepository.findByHostIdAndIsSelfInterviewPageable(
+            hostId, isSelfInterview, pageable
+        );
+        
+        log.info("Found {} total self-interviews across {} pages.", 
+            sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            
+        return sessionPage;
+        } catch (Exception e) {
+            log.error("Error getting self-interview records: ", e);
+            throw new RuntimeException("페이지별 셀프 면접 기록 조회 실패", e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Session> getReviewableSessionsPageable(Pageable pageable) {
+        try {
+            log.info("Getting paginated reviewable sessions. Page: {}, Size: {}", 
+            pageable.getPageNumber(), pageable.getPageSize());
+
+            Session.SessionStatus status = Session.SessionStatus.ENDED;
+            String isReviewable = "Y";
+
+            Page<Session> sessionPage = sessionRepository.findByStatusAndIsReviewablePageable(
+                                        status, isReviewable, pageable
+            );
+        
+            log.info("Found {} total reviewable sessions across {} pages.", 
+                    sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            
+             return sessionPage;
+        } catch (Exception e) {
+            log.error("Error getting reviewable sessions: ", e);
+            throw new RuntimeException("페이지별 리뷰 가능 세션 목록 조회 실패", e);
+        }
+    }
     
     @Transactional(readOnly = true)
     public Page<Session> getSessionsPageable(Pageable pageable) {
@@ -46,7 +91,7 @@ public class SessionService {
         } catch (Exception e) {
             log.error("Error getting paginated sessions: ", e);
             throw new RuntimeException("페이지별 세션 목록 조회 실패", e);
-            }
+        }
     }
 
     public Page<Session> searchSessionsPageable(String keyword, String status, Pageable pageable) {

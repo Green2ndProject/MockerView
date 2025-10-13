@@ -7,12 +7,21 @@ import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
+import com.mockerview.service.SessionService;
 
 import java.util.List;
 
@@ -24,6 +33,7 @@ public class SelfInterviewController {
     
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final SessionService sessionService; 
 
     @GetMapping("/create")
     public String createPage(Authentication authentication, Model model) {
@@ -35,7 +45,10 @@ public class SelfInterviewController {
     }
 
     @GetMapping("/list")
-    public String listPage(Authentication authentication, Model model) {
+    public String listPage(Authentication authentication,
+                           @RequestParam(defaultValue = "1") int page,
+                           @RequestParam(defaultValue = "6") int size,
+                           Model model) {
         try {
             if (authentication == null) {
                 return "redirect:/auth/login";
@@ -44,7 +57,12 @@ public class SelfInterviewController {
             String username = authentication.getName();
             User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+            Long hostId = user.getId();
+
+            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             
+            Page<Session> sessionPage = sessionService.getSelfInterviewRecords(hostId, pageable);
             log.info("=== DEBUG: User ID: {}", user.getId());
             
             List<Session> allSessions = sessionRepository.findByHostId(user.getId());
@@ -63,9 +81,12 @@ public class SelfInterviewController {
             }
             
             model.addAttribute("username", username);
-            model.addAttribute("sessions", selfSessions);
+            model.addAttribute("sessions", sessionPage.getContent());
+            model.addAttribute("serverCurrentPage", sessionPage.getNumber() + 1);
+            model.addAttribute("totalPages", sessionPage.getTotalPages());
             
             return "selfinterview/list";
+
         } catch (Exception e) {
             log.error("셀프면접 목록 조회 오류", e);
             model.addAttribute("error", e.getMessage());
