@@ -61,7 +61,7 @@ public class Session {
 
     @Column(name = "media_enabled")
     @Builder.Default
-    private Boolean mediaEnabled = false;
+    private Short mediaEnabled = 0;
 
     @Column(name = "agora_channel")
     private String agoraChannel;
@@ -111,5 +111,13 @@ public class Session {
     
     public SessionStatus getSessionStatus() {
         return sessionStatus;
+    }
+    
+    public boolean isMediaEnabled() {
+        return mediaEnabled != null && mediaEnabled == 1;
+    }
+    
+    public void setMediaEnabledBoolean(boolean enabled) {
+        this.mediaEnabled = enabled ? (short) 1 : (short) 0;
     }
 }
