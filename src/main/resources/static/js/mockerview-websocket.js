@@ -452,24 +452,31 @@ class MockerViewWebSocket {
 
   displayAIFeedback(feedback) {
     const answerId = feedback.answerId || feedback.id;
-    const aiSection = document.getElementById("ai-feedback-" + answerId);
     
+    const aiSection = document.getElementById("ai-feedback-" + answerId);
     if (aiSection) {
-      aiSection.innerHTML = `
-        <div class="ai-feedback-content">
-          <div class="ai-feedback-header">🤖 AI 분석 결과</div>
-          <div class="ai-score">점수: ${feedback.score || 75}/100</div>
-          <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
-          <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
-        </div>
-      `;
+        aiSection.innerHTML = `
+            <div class="ai-feedback-content">
+                <div class="ai-feedback-header">🤖 AI 분석 결과</div>
+                <div class="ai-score">점수: ${feedback.score || 75}/100</div>
+                <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
+            </div>
+        `;
     }
     
     const studentAiSection = document.getElementById("student-ai-feedback-" + answerId);
     if (studentAiSection) {
-      studentAiSection.innerHTML = aiSection ? aiSection.innerHTML : '';
+        studentAiSection.innerHTML = `
+            <div class="ai-feedback-content">
+                <div class="ai-feedback-header">🤖 AI 분석 결과</div>
+                <div class="ai-score">점수: ${feedback.score || 75}/100</div>
+                <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
+            </div>
+        `;
     }
-  }
+}
 
   displayInterviewerFeedback(feedback) {
     const answerId = feedback.answerId || feedback.id;
