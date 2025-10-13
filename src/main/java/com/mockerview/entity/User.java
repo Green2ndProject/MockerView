@@ -6,13 +6,11 @@ import lombok.*;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Where(clause = "IS_DELETED = 0")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -46,14 +44,22 @@ public class User {
         STUDENT, HOST, REVIEWER
     }
 
-    @Column(name = "IS_DELETED", nullable = false, precision = 1)
+    @Column(name = "IS_DELETED", nullable = false)
     @ColumnDefault("0")
     @Builder.Default
-    private Boolean isDeleted = false;
+    private Short isDeleted = 0;
 
     @Column(name = "DELETED_AT")
     private LocalDateTime deletedAt;
 
     @Column(name = "WITHDRAWAL_REASON", length = 255)
     private String withdrawalReason;
+    
+    public boolean isDeleted() {
+        return isDeleted != null && isDeleted == 1;
+    }
+    
+    public void setDeleted(boolean deleted) {
+        this.isDeleted = deleted ? (short) 1 : (short) 0;
+    }
 }
