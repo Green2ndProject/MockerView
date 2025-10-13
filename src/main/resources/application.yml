@@ -37,8 +37,17 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
+  web:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
 server:
   port: 8080
+  address: 0.0.0.0
 
 logging:
   level:
