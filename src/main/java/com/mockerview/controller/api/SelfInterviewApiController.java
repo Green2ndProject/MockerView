@@ -89,7 +89,7 @@ public class SelfInterviewApiController {
             @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
-        Session session = sessionRepository.findById(sessionId).orElse(null);
+        Session session = sessionRepository.findByIdWithHost(sessionId).orElse(null);
         
         if (session == null || session.getHost() == null) {
             log.warn("Session not found - sessionId: {}", sessionId);

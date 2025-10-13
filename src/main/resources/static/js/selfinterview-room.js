@@ -310,11 +310,20 @@ function completeInterview() {
     document.querySelector('.current-question').style.display = 'none';
     document.getElementById('result-section').style.display = 'block';
 
-    document.getElementById('avg-score').textContent = `${avgScore}점`;
-    document.getElementById('answered-count').textContent = `${answers.length}개`;
-    document.getElementById('total-time').textContent = `${totalTime}분`;
+    const avgScoreEl = document.getElementById('avg-score');
+    const answeredCountEl = document.getElementById('answered-count');
+    const totalTimeEl = document.getElementById('total-time');
+    
+    if (avgScoreEl) avgScoreEl.textContent = `${avgScore}점`;
+    if (answeredCountEl) answeredCountEl.textContent = `${answers.length}개`;
+    if (totalTimeEl) totalTimeEl.textContent = `${totalTime}분`;
+    
+    console.log('✅ 면접 완료 통계:', {
+        평균점수: avgScore,
+        답변수: answers.length,
+        소요시간: totalTime
+    });
 }
-
 function toggleResultView() {
     completeInterview();
 }
@@ -323,4 +332,42 @@ function viewDetailedResults() {
     if (SESSION_DATA && SESSION_DATA.sessionId) {
         window.location.href = `/session/detail/${SESSION_DATA.sessionId}`;
     }
+
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    window.toggleRecording = async function() {
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await submitVoiceAnswerSelf(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                document.getElementById('recordingStatus').textContent = '🔴 녹음 중...';
+                document.getElementById('toggleRecording').textContent = '⏹️ 녹음 중지';
+                
+            } catch (error) {
+                console.error('마이크 접근 실패:', error);
+                alert('마이크 권한을 허용해주세요.');
+            }
+        } else {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            isRecording = false;
+            document.getElementById('recordingStatus').textContent = '처리 중...';
+            document.getElementById('toggleRecording').textContent = '🎤 녹음 시작';
+        }
+    };
 }
