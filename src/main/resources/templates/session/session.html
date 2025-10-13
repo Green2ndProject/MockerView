@@ -817,49 +817,74 @@
             font-weight: 500;
         }
         
-        .participants-list {
-            max-height: 300px;
-            overflow-y: auto;
+        .participant-roles-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        
-        .participant-item {
+
+        .role-group {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .role-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .role-member {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-bottom: 1px solid #f3f4f6;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
         }
-        
-        .participant-item:last-child {
-            border-bottom: none;
+
+        .role-member:last-child {
+            margin-bottom: 0;
         }
-        
+
+        .empty-role {
+            color: #999;
+            font-size: 14px;
+            padding: 10px;
+            text-align: center;
+        }
+
         .participant-avatar {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 16px;
+            font-weight: bold;
+            flex-shrink: 0;
         }
-        
-        .participant-info {
-            flex: 1;
+
+        .participants-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        
-        .participant-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-        }
-        
-        .participant-status {
-            font-size: 12px;
-            color: #10b981;
+
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
         }
 
         .video-answer-area {
@@ -982,7 +1007,7 @@
             <div class="video-display-area" id="videoDisplayArea">
                 <div id="local-video" style="width: 100%; height: 100%; position: relative;">
                     <div th:class="${isHost} ? 'local-video-label host' : 'local-video-label student'">
-                        <span th:text="${isHost} ? '🎯 면접관 (나)' : '🎓 지원자 (나)'">나</span>
+                        <span th:text="${userName}">나</span>
                     </div>
                     <div class="video-placeholder">
                         <span>📹 화상 연결 중...</span>
@@ -1003,12 +1028,26 @@
 
         <div class="card">
             <div class="card-header">
-                <h4>참가자</h4>
+                <h4>👥 참가자</h4>
                 <span id="participant-count" class="badge-waiting">0명</span>
             </div>
             <div class="card-body">
-                <div id="participants-list" class="participants-list">
-                    <div class="empty-state">참가자 없음</div>
+                <div class="participant-roles-section">
+                    <div class="role-group">
+                        <h5 class="role-title">🎤 면접관</h5>
+                        <div class="role-member" th:if="${sessionHost != null}">
+                            <div class="participant-avatar" th:text="${#strings.substring(sessionHost.name, 0, 1)}"></div>
+                            <span th:text="${sessionHost.name}"></span>
+                        </div>
+                        <div class="empty-role" th:if="${sessionHost == null}">배정된 면접관 없음</div>
+                    </div>
+                    
+                    <div class="role-group">
+                        <h5 class="role-title">💼 면접자</h5>
+                        <div id="participants-list" class="participants-list">
+                            <div class="empty-state">대기 중...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1156,12 +1195,26 @@
 
         <div class="card">
             <div class="card-header">
-                <h4>참가자</h4>
+                <h4>👥 참가자</h4>
                 <span id="participant-count" class="badge-waiting">0명</span>
             </div>
             <div class="card-body">
-                <div id="participants-list" class="participants-list">
-                    <div class="empty-state">참가자 없음</div>
+                <div class="participant-roles-section">
+                    <div class="role-group">
+                        <h5 class="role-title">🎤 면접관</h5>
+                        <div class="role-member" th:if="${sessionHost != null}">
+                            <div class="participant-avatar" th:text="${#strings.substring(sessionHost.name, 0, 1)}"></div>
+                            <span th:text="${sessionHost.name}"></span>
+                        </div>
+                        <div class="empty-role" th:if="${sessionHost == null}">배정된 면접관 없음</div>
+                    </div>
+                    
+                    <div class="role-group">
+                        <h5 class="role-title">💼 면접자</h5>
+                        <div id="participants-list" class="participants-list">
+                            <div class="empty-state">대기 중...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
