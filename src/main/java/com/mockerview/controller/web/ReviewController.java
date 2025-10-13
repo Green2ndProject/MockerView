@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -112,6 +113,20 @@ public class ReviewController {
             return "review/detail";
         } catch (Exception e) {
             log.error("리뷰 상세 로드 실패", e);
+            return "redirect:/review/list";
+        }
+    }
+
+    @GetMapping("/create")
+    public String showReviewForm(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            model.addAttribute("currentUser", currentUser);
+            return "review/create";
+        } catch (Exception e) {
+            log.error("리뷰 작성 페이지 로드 실패", e);
             return "redirect:/review/list";
         }
     }
