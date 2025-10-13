@@ -2,9 +2,11 @@ package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.Answer;
+import com.mockerview.entity.Question;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.repository.AnswerRepository;
+import com.mockerview.repository.QuestionRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ public class StatsController {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
     private final AnswerRepository answerRepository;
+    private final QuestionRepository questionRepository;
 
     @GetMapping("/stats")
     @Transactional(readOnly = true)
@@ -42,7 +44,7 @@ public class StatsController {
             
             model.addAttribute("currentUser", currentUser);
             
-            if (currentUser.getRole() == User.UserRole.HOST) {
+            if (currentUser.getRole() == User.Role.HOST || currentUser.getRole() == User.Role.REVIEWER) {
                 return loadInterviewerStats(model, currentUser);
             } else {
                 return loadStudentStats(model, currentUser);
@@ -123,10 +125,9 @@ public class StatsController {
             }
             
             long totalSessions = hostedSessions.size();
-            long totalQuestions = hostedSessions.stream()
-                .filter(s -> s.getQuestions() != null)
-                .mapToLong(s -> s.getQuestions().size())
-                .sum();
+            
+            Long totalQuestions = questionRepository.countByQuestionerIdAndSessionIsSelfInterview(
+                currentUser.getId(), "N");
             
             List<Session> recentSessions = hostedSessions.stream()
                 .sorted(Comparator.comparing(Session::getCreatedAt).reversed())
@@ -146,6 +147,7 @@ public class StatsController {
             model.addAttribute("endedSessions", endedSessions);
             model.addAttribute("plannedSessions", plannedSessions);
             model.addAttribute("recentSessions", recentSessions);
+            model.addAttribute("topInterviewees", new ArrayList<>());
             
             log.info("✅ 면접관 통계 로드 완료 - 세션: {}, 질문: {}", totalSessions, totalQuestions);
             
