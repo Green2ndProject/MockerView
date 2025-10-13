@@ -10,26 +10,22 @@
             background: #f5f5f5;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-
         .page-header {
             background: #667eea;
             color: white;
             padding: 2.5rem 0;
         }
-
         .page-header h1 {
             font-size: 2rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
-
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
             margin: 2rem 0;
         }
-
         .stat-card {
             background: white;
             border-radius: 8px;
@@ -38,7 +34,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid #e5e7eb;
         }
-
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
@@ -46,13 +41,11 @@
             display: block;
             margin-bottom: 0.5rem;
         }
-
         .stat-label {
             color: #6b7280;
             font-size: 0.875rem;
             font-weight: 500;
         }
-
         .ranking-card {
             background: white;
             border: 1px solid #e5e7eb;
@@ -63,12 +56,10 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
         .ranking-card:hover {
             border-color: #667eea;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
         }
-
         .rank-badge {
             position: absolute;
             top: -10px;
@@ -83,75 +74,62 @@
             color: white;
             font-size: 1.1rem;
         }
-
         .rank-1 { background: #ef4444; }
         .rank-2 { background: #3b82f6; }
         .rank-3 { background: #10b981; }
         .rank-other { background: #6b7280; }
-
         .card-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-
         .user-info {
             margin-left: 20px;
         }
-
         .user-name {
             font-size: 1.25rem;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 0.25rem;
         }
-
         .user-role {
             color: #6b7280;
             font-size: 0.875rem;
         }
-
         .score-stats {
             display: flex;
             gap: 2rem;
             align-items: center;
         }
-
         .stat-item {
             text-align: center;
         }
-
         .stat-item .number {
             font-size: 1.25rem;
             font-weight: 600;
             color: #1f2937;
         }
-
         .stat-item .label {
             font-size: 0.75rem;
             color: #6b7280;
             margin-top: 0.25rem;
         }
-
         .total-score-wrapper {
             text-align: right;
             margin-left: 2rem;
             padding-left: 2rem;
             border-left: 2px solid #e5e7eb;
         }
-
         .total-score {
             font-size: 2.5rem;
             font-weight: 700;
             color: #667eea;
         }
-
         .score-label {
             font-size: 0.875rem;
             color: #6b7280;
             margin-top: 0.25rem;
         }
-
         .answer-details {
             display: none;
             margin-top: 1.5rem;
@@ -160,24 +138,20 @@
             border-radius: 8px;
             border: 1px solid #e5e7eb;
         }
-
         .answer-details.show {
             display: block;
             animation: fadeIn 0.2s;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .details-title {
             font-size: 1rem;
             font-weight: 600;
             color: #374151;
             margin-bottom: 1rem;
         }
-
         .answer-item {
             padding: 1.25rem;
             margin-bottom: 1rem;
@@ -185,21 +159,18 @@
             border-radius: 8px;
             border: 1px solid #e5e7eb;
         }
-
         .question-text {
             font-weight: 600;
             color: #374151;
             margin-bottom: 0.75rem;
             font-size: 0.95rem;
         }
-
         .answer-text {
             color: #6b7280;
             margin-bottom: 1rem;
             line-height: 1.6;
             font-size: 0.9rem;
         }
-
         .feedback-item {
             background: #eff6ff;
             border: 1px solid #dbeafe;
@@ -208,48 +179,59 @@
             margin-top: 0.75rem;
             font-size: 0.875rem;
         }
-
         .feedback-item.interviewer {
             background: #fef3c7;
             border-color: #fde68a;
         }
-
         .feedback-header {
             font-weight: 600;
             color: #374151;
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
         }
-
         .feedback-item.interviewer .feedback-header {
             color: #92400e;
         }
-
         .feedback-section {
             margin-top: 0.5rem;
             padding: 0.5rem 0;
         }
-
         .feedback-section strong {
             display: block;
             margin-bottom: 0.25rem;
             color: #374151;
         }
-
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
         }
-
         .empty-state h3 {
             color: #9ca3af;
             font-weight: 500;
             margin-bottom: 0.5rem;
         }
-
         .empty-state p {
             color: #9ca3af;
             font-size: 0.875rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .badge-live {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-ended {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-waiting {
+            background: #f3f4f6;
+            color: #666;
         }
     </style>
 </head>
@@ -266,31 +248,37 @@
         </div>
     </nav>
 
-    <div style="margin-top: 1rem;">
-        <a th:if="${interviewSession.isSelfInterview == 'Y'}"
-            href="/selfinterview/list"
-            class="btn btn-secondary">목록으로 돌아가기</a>
-        <a th:if="${interviewSession.isSelfInterview != 'Y'}"
-            href="/session/list"
-            class="btn btn-secondary">세션 목록으로</a>
+    <div class="page-header">
+        <div class="container">
+            <h1 th:text="${interviewSession.title}">세션 제목</h1>
+            <p>실시간 점수판</p>
+        </div>
     </div>
 
-    <div class="container" style="padding: 2rem 1rem;">
+    <div class="container" style="padding: 2rem 1rem; margin-bottom: 2rem;">
+        <div style="margin-bottom: 1rem;">
+            <a th:if="${interviewSession.isSelfInterview == 'Y'}"
+                th:href="@{/selfinterview/list}"
+                class="btn btn-secondary">← 목록으로</a>
+            <a th:if="${interviewSession.isSelfInterview != 'Y'}"
+                th:href="@{/session/list}"
+                class="btn btn-secondary">← 세션 목록</a>
+        </div>
+
         <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-number" th:text="${#lists.size(userScores)}">0</span>
-                    <div class="stat-label">참가자</div>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number" th:text="${totalQuestions}">0</span>
-                    <div class="stat-label">질문 수</div>
-                </div>
-                <div class="stat-card">
-                    <span class="badge" 
-                        th:classappend="${interviewSession.sessionStatus.toString() == 'RUNNING' ? 'badge-live' : (interviewSession.sessionStatus.toString() == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
-                        th:text="${interviewSession.sessionStatus}">PLANNED</span>
-                    <div class="stat-label">세션 상태</div>
-                </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${#lists.size(userScores)}">0</span>
+                <div class="stat-label">참가자</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalQuestions}">0</span>
+                <div class="stat-label">질문 수</div>
+            </div>
+            <div class="stat-card">
+                <span class="badge" 
+                    th:classappend="${interviewSession.sessionStatus.toString() == 'RUNNING' ? 'badge-live' : (interviewSession.sessionStatus.toString() == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
+                    th:text="${interviewSession.sessionStatus}">PLANNED</span>
+                <div class="stat-label">세션 상태</div>
             </div>
         </div>
 
@@ -317,7 +305,7 @@
                             <div class="label">답변</div>
                         </div>
                         <div class="stat-item">
-                            <div class="number" style="color: #10b981;" th:text="${userScore.avgAiScore}">0</div>
+                            <div class="number" style="color: #3b82f6;" th:text="${userScore.avgAiScore}">0</div>
                             <div class="label">AI 평균</div>
                         </div>
                         <div class="stat-item">
@@ -332,7 +320,7 @@
                 </div>
                 
                 <div th:id="'details-' + ${iterStat.index}" class="answer-details">
-                    <h4 class="details-title">답변 상세</h4>
+                    <h4 class="details-title">📝 답변 상세</h4>
                     <div th:each="answer : ${userScore.answers}" class="answer-item">
                         <div class="question-text" th:text="'Q. ' + ${answer.question.text}">질문</div>
                         <div class="answer-text" th:text="'A. ' + ${answer.answerText}">답변</div>
@@ -340,9 +328,10 @@
                         <div th:if="${!#lists.isEmpty(answer.feedbacks)}">
                             <div th:each="feedback : ${answer.feedbacks}" 
                                 th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-item' : 'feedback-item interviewer'}">
-                                <div class="feedback-header" th:text="${feedback.feedbackType.toString() == 'AI' ? '🤖 AI 피드백' : '👤 면접관 피드백'}">피드백</div>
+                                <div class="feedback-header" 
+                                    th:text="${feedback.feedbackType.toString() == 'AI' ? '🤖 AI 피드백 (점수: ' + (feedback.score != null ? feedback.score : 'N/A') + '/100)' : '👤 면접관 피드백 (점수: ' + (feedback.score != null ? feedback.score : 'N/A') + '/100)'}">피드백</div>
                                 
-                                <div class="feedback-section">
+                                <div class="feedback-section" th:if="${feedback.summary != null and !feedback.summary.isEmpty()}">
                                     <strong>요약</strong>
                                     <div th:text="${feedback.summary}">요약 내용</div>
                                 </div>
@@ -352,20 +341,29 @@
                                     <div th:text="${feedback.strengths}">강점 내용</div>
                                 </div>
                                 
+                                <div class="feedback-section" th:if="${feedback.weaknesses != null and !feedback.weaknesses.isEmpty()}">
+                                    <strong>약점</strong>
+                                    <div th:text="${feedback.weaknesses}">약점 내용</div>
+                                </div>
+                                
                                 <div class="feedback-section" th:if="${feedback.improvement != null and !feedback.improvement.isEmpty()}">
                                     <strong>개선점</strong>
                                     <div th:text="${feedback.improvement}">개선점 내용</div>
                                 </div>
                                 
+                                <div class="feedback-section" th:if="${feedback.reviewerComment != null and !feedback.reviewerComment.isEmpty()}">
+                                    <strong>코멘트</strong>
+                                    <div th:text="${feedback.reviewerComment}">코멘트 내용</div>
+                                </div>
+                                
                                 <div class="feedback-section" th:if="${feedback.model != null}">
-                                    <strong>모델</strong>
-                                    <div th:text="${feedback.model}">GPT-4O-MINI</div>
+                                    <small style="color: #9ca3af;" th:text="'모델: ' + ${feedback.model}">GPT-4O-MINI</small>
                                 </div>
                             </div>
                         </div>
                         
                         <div th:if="${#lists.isEmpty(answer.feedbacks)}" style="color: #9ca3af; font-size: 0.875rem; margin-top: 0.5rem;">
-                            아직 피드백이 없습니다
+                            💬 아직 피드백이 없습니다
                         </div>
                     </div>
                 </div>
@@ -373,7 +371,7 @@
         </div>
 
         <div th:if="${#lists.isEmpty(userScores)}" class="empty-state">
-            <h3>아직 점수 데이터가 없습니다</h3>
+            <h3>📊 아직 점수 데이터가 없습니다</h3>
             <p>면접이 진행되면 점수판이 업데이트됩니다</p>
         </div>
     </div>
