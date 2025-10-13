@@ -825,36 +825,51 @@
             color: #10b981;
         }
 
-        .speech-recognition-area {
+        .video-answer-area {
             text-align: center;
             padding: 32px;
             background: #f9fafb;
             border-radius: 8px;
         }
 
-        .recognized-text-box {
+        .answer-complete-message {
             min-height: 120px;
             background: white;
             border: 2px solid #e5e7eb;
             border-radius: 6px;
-            padding: 16px;
-            text-align: left;
+            padding: 32px 16px;
+            text-align: center;
             margin: 16px 0;
             line-height: 1.6;
             color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
         }
 
-        .recognition-status {
+        .answer-complete-message .icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .answer-complete-message .message {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .answer-status {
             color: #666;
             margin: 16px 0;
             font-weight: 500;
         }
 
-        .recognition-status.active {
-            color: #ef4444;
+        .answer-status.active {
+            color: #667eea;
         }
 
-        .recognition-status.success {
+        .answer-status.success {
             color: #10b981;
         }
         
@@ -1062,20 +1077,16 @@
                         <button id="textAnswerModeBtn" class="btn btn-secondary" onclick="switchVideoAnswerMode('text')">💬 텍스트 답변</button>
                     </div>
 
-                    <div id="video-answer-area" class="speech-recognition-area">
-                        <div style="margin-bottom: 16px;">
-                            <button id="startRecognitionBtn" onclick="startSpeechRecognition()" class="btn btn-success btn-lg">
-                                🎤 음성 인식 시작
-                            </button>
+                    <div id="video-answer-area" class="video-answer-area">
+                        <div id="answerCompleteMessage" class="answer-complete-message">
+                            <div class="icon">🎤</div>
+                            <div class="message">화상으로 답변하신 후 아래 버튼을 눌러주세요</div>
                         </div>
-                        <div id="recognitionStatus" class="recognition-status">
-                            음성 인식을 시작하면 자동으로 텍스트로 변환됩니다
+                        <div id="answerStatus" class="answer-status">
+                            답변을 완료하면 제출 버튼을 눌러주세요
                         </div>
-                        <div id="recognizedText" class="recognized-text-box">
-                            <em style="color: #999;">인식된 텍스트가 여기에 표시됩니다...</em>
-                        </div>
-                        <button id="submitRecognizedBtn" onclick="submitRecognizedAnswer()" class="btn btn-primary btn-lg" style="display: none;">
-                            답변 제출
+                        <button id="submitVideoAnswerBtn" onclick="submitVideoAnswer()" class="btn btn-success btn-lg">
+                            ✅ 답변 완료
                         </button>
                     </div>
 
@@ -1275,8 +1286,7 @@
         let audioBlob = null;
         let audioChunks = [];
         let answerCount = 0;
-        let recognition = null;
-        let recognizedFullText = '';
+        let videoAnswerStartTime = null;
         
         function getToken() {
             const cookies = document.cookie.split(';');
@@ -1505,98 +1515,52 @@
                 document.getElementById('textAnswerModeBtn').classList.remove('active');
                 document.getElementById('video-answer-area').style.display = 'block';
                 document.getElementById('text-answer-area').style.display = 'none';
+                videoAnswerStartTime = new Date();
             } else {
                 document.getElementById('videoAnswerModeBtn').classList.remove('active');
                 document.getElementById('textAnswerModeBtn').classList.add('active');
                 document.getElementById('video-answer-area').style.display = 'none';
                 document.getElementById('text-answer-area').style.display = 'block';
+                videoAnswerStartTime = null;
             }
         }
 
-        function startSpeechRecognition() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome을 사용해주세요.');
-                return;
-            }
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'ko-KR';
-            recognition.continuous = true;
-            recognition.interimResults = true;
-
-            const statusDiv = document.getElementById('recognitionStatus');
-            const textDiv = document.getElementById('recognizedText');
-            const submitBtn = document.getElementById('submitRecognizedBtn');
-            const startBtn = document.getElementById('startRecognitionBtn');
-
-            recognizedFullText = '';
-
-            recognition.onstart = function() {
-                statusDiv.textContent = '🎤 음성 인식 중... 답변을 말씀해주세요';
-                statusDiv.className = 'recognition-status active';
-                startBtn.textContent = '⏹️ 인식 중지';
-                startBtn.onclick = stopSpeechRecognition;
-                submitBtn.style.display = 'none';
-            };
-
-            recognition.onresult = function(event) {
-                let interimTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        recognizedFullText += transcript + ' ';
-                    } else {
-                        interimTranscript += transcript;
-                    }
-                }
-                textDiv.innerHTML = recognizedFullText + '<span style="color: #999;">' + interimTranscript + '</span>';
-            };
-
-            recognition.onerror = function(event) {
-                console.error('음성 인식 오류:', event.error);
-                statusDiv.textContent = '❌ 오류: ' + event.error;
-                statusDiv.className = 'recognition-status';
-            };
-
-            recognition.onend = function() {
-                statusDiv.textContent = '✅ 인식 완료! 제출 버튼을 눌러주세요';
-                statusDiv.className = 'recognition-status success';
-                startBtn.textContent = '🎤 음성 인식 시작';
-                startBtn.onclick = startSpeechRecognition;
-                if (recognizedFullText.trim()) {
-                    submitBtn.style.display = 'inline-block';
-                }
-            };
-
-            recognition.start();
-        }
-
-        function stopSpeechRecognition() {
-            if (recognition) {
-                recognition.stop();
-            }
-        }
-
-        function submitRecognizedAnswer() {
+        function submitVideoAnswer() {
             const questionId = document.getElementById('currentQuestionId').value;
-            if (!recognizedFullText.trim()) {
-                alert('인식된 텍스트가 없습니다.');
-                return;
-            }
             if (!questionId) {
                 alert('현재 답변할 질문이 없습니다.');
                 return;
             }
 
+            const answerText = '[구두 답변 완료]';
+            
             if (window.mockerViewWS && window.mockerViewWS.connected) {
-                window.mockerViewWS.submitAnswer(questionId, recognizedFullText.trim());
-                document.getElementById('recognizedText').innerHTML = '<em style="color: #10b981;">✅ 답변이 제출되었습니다</em>';
-                document.getElementById('submitRecognizedBtn').style.display = 'none';
-                document.getElementById('recognitionStatus').textContent = '답변이 제출되었습니다';
-                document.getElementById('recognitionStatus').className = 'recognition-status success';
-                recognizedFullText = '';
-                alert('답변이 제출되었습니다!');
+                window.mockerViewWS.submitAnswer(questionId, answerText);
+                
+                const messageDiv = document.getElementById('answerCompleteMessage');
+                messageDiv.innerHTML = `
+                    <div class="icon">✅</div>
+                    <div class="message">답변이 제출되었습니다</div>
+                `;
+                
+                const statusDiv = document.getElementById('answerStatus');
+                statusDiv.textContent = '답변 제출 완료!';
+                statusDiv.className = 'answer-status success';
+                
+                const submitBtn = document.getElementById('submitVideoAnswerBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = '제출 완료';
+                
+                setTimeout(() => {
+                    messageDiv.innerHTML = `
+                        <div class="icon">🎤</div>
+                        <div class="message">화상으로 답변하신 후 아래 버튼을 눌러주세요</div>
+                    `;
+                    statusDiv.textContent = '답변을 완료하면 제출 버튼을 눌러주세요';
+                    statusDiv.className = 'answer-status';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '✅ 답변 완료';
+                }, 3000);
             }
         }
 
@@ -1712,8 +1676,7 @@
                 window.mockerViewWS.submitInterviewerFeedback(answerId, parseInt(score), feedbackText);
                 
                 const evaluationDiv = document.getElementById(`evaluation-${answerId}`);
-                evaluationDiv.innerHTML = `
-                    <div class="submitted-evaluation">
+                evaluationDiv.innerHTML = `<div class="submitted-evaluation">
                         ✅ 평가 완료 (점수: ${score}/100)
                     </div>
                 `;
@@ -1733,17 +1696,26 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM 로드 완료');
-            console.log('현재 sessionType:', SESSION_DATA.sessionType);
+            console.log('🚀 DOM 로드 완료');
+            console.log('📊 SESSION_DATA:', SESSION_DATA);
             
             startCountdown();
             
-            if (SESSION_DATA.sessionType === 'AUDIO' || SESSION_DATA.sessionType === 'VIDEO') {
-                initializeMedia();
-            }
+            console.log('🔌 WebSocket 초기화 시작...');
+            const ws = new MockerViewWebSocket(
+                SESSION_DATA.sessionId, 
+                SESSION_DATA.userId, 
+                SESSION_DATA.userName
+            );
+            window.mockerViewWS = ws;
+            ws.connect();
+            console.log('✅ WebSocket connect() 호출 완료');
             
-            if (typeof initializeWebSocket === 'function') {
-                initializeWebSocket(SESSION_DATA.sessionId, SESSION_DATA.userId, SESSION_DATA.userName);
+            if (SESSION_DATA.sessionType === 'AUDIO' || SESSION_DATA.sessionType === 'VIDEO') {
+                setTimeout(() => {
+                    console.log('🎬 미디어 초기화 시작...');
+                    initializeMedia();
+                }, 1000);
             }
         });
     </script>
