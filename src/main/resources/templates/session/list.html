@@ -9,6 +9,33 @@
     <link rel="stylesheet" href="/css/pagination.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script>
+    function switchSectionTab(tabName, event) {
+        document.querySelectorAll(".tab-btn").forEach((btn) => btn.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach((content) => content.classList.remove("active"));
+        event.target.classList.add("active");
+        document.getElementById(tabName + "-tab").classList.add("active");
+    }
+    
+    function filterByStatus(status) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("page");
+        if (status) {
+            url.searchParams.set("status", status);
+        } else {
+            url.searchParams.delete("status");
+        }
+        window.location.href = url.toString();
+    }
+    
+    function createNewSession() {
+        document.getElementById("sessionModal").style.display = "flex";
+    }
+    
+    function resetSearch() {
+        window.location.href = "/session/list";
+    }
+    </script>
     <style>
       :root {
         --primary-color: #667eea;
@@ -508,34 +535,6 @@
     const currentStatusFilter = /*[[${statusFilter}]]*/ "";
     const sessions = /*[[${sessions}]]*/ [];
     let stompClient = null;
-    
-    function switchSectionTab(tabName, event) {
-        console.log('switchSectionTab:', tabName);
-        document.querySelectorAll(".tab-btn").forEach((btn) => btn.classList.remove("active"));
-        document.querySelectorAll(".tab-content").forEach((content) => content.classList.remove("active"));
-        event.target.classList.add("active");
-        document.getElementById(tabName + "-tab").classList.add("active");
-    }
-    
-    function filterByStatus(status) {
-        console.log('filterByStatus:', status);
-        const url = new URL(window.location.href);
-        url.searchParams.delete("page");
-        if (status) {
-            url.searchParams.set("status", status);
-        } else {
-            url.searchParams.delete("status");
-        }
-        window.location.href = url.toString();
-    }
-    
-    function createNewSession() {
-        document.getElementById("sessionModal").style.display = "flex";
-    }
-    
-    function resetSearch() {
-        window.location.href = "/session/list";
-    }
     
     function hideElement(element) {
         if (element) element.classList.add("hidden");
