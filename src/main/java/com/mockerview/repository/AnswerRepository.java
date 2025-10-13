@@ -14,6 +14,9 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId ORDER BY a.createdAt ASC")
     List<Answer> findBySessionIdOrderByCreatedAtAsc(@Param("sessionId") Long sessionId);
     
+    @Query("SELECT a FROM Answer a JOIN a.question q WHERE q.session.id = :sessionId ORDER BY a.createdAt")
+    List<Answer> findBySessionIdOrderByCreatedAt(@Param("sessionId") Long sessionId);
+    
     @Query("SELECT a FROM Answer a WHERE a.question.id = :questionId ORDER BY a.createdAt ASC")
     List<Answer> findByQuestionIdOrderByCreatedAtAsc(@Param("questionId") Long questionId);
     
@@ -51,5 +54,26 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
         "LEFT JOIN FETCH a.user " +
         "WHERE q.session.id = :sessionId " +
         "ORDER BY q.orderNo, a.createdAt")
-List<Answer> findAllBySessionIdWithFeedbacks(@Param("sessionId") Long sessionId);
+    List<Answer> findAllBySessionIdWithFeedbacks(@Param("sessionId") Long sessionId);
+    
+    @Query("SELECT u.id, u.name, AVG(CAST(f.score AS double)), COUNT(DISTINCT a.id) " +
+            "FROM Answer a " +
+            "JOIN a.user u " +
+            "LEFT JOIN a.feedbacks f " +
+            "WHERE f.score IS NOT NULL " +
+            "GROUP BY u.id, u.name " +
+            "ORDER BY AVG(CAST(f.score AS double)) DESC")
+    List<Object[]> findAllUserAverageScores();
+    
+    @Query(value = "SELECT * FROM ( " +
+            "SELECT u.id, u.name, AVG(f.score) as avgScore, COUNT(DISTINCT a.id) as answerCount " +
+            "FROM answers a " +
+            "JOIN users u ON a.user_id = u.id " +
+            "LEFT JOIN feedbacks f ON f.answer_id = a.id " +
+            "WHERE f.score IS NOT NULL " +
+            "GROUP BY u.id, u.name " +
+            "ORDER BY avgScore DESC " +
+            ") WHERE ROWNUM <= 10",
+            nativeQuery = true)
+    List<Object[]> findTopScoredInterviewees();
 }

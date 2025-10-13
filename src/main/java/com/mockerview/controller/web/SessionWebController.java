@@ -2,10 +2,12 @@ package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.Answer;
+import com.mockerview.entity.Feedback;
 import com.mockerview.entity.Question;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
-import com.mockerview.entity.User.UserRole;
+import com.mockerview.repository.AnswerRepository;
+import com.mockerview.repository.QuestionRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.SessionService;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,20 +27,20 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
 @RequestMapping("/session")
 @RequiredArgsConstructor
-@Slf4j
 public class SessionWebController {
-    
+
     private final SessionService sessionService;
-    private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
+    private final QuestionRepository questionRepository;
+    private final AnswerRepository answerRepository;
+    private final UserRepository userRepository;
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -190,10 +193,10 @@ public class SessionWebController {
                 })
                 .collect(Collectors.toList());
             
-            long totalCount = sessionRepository.count();
-            long plannedCount = sessionRepository.countBySessionStatus(Session.SessionStatus.PLANNED);
-            long runningCount = sessionRepository.countBySessionStatus(Session.SessionStatus.RUNNING);
-            long endedCount = sessionRepository.countBySessionStatus(Session.SessionStatus.ENDED);
+            long totalCount = sessionRepository.countNonSelfInterviewSessions();
+            long plannedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.PLANNED, "N");
+            long runningCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.RUNNING, "N");
+            long endedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.ENDED, "N");
             
             model.addAttribute("sessions", sessionList);
             model.addAttribute("currentUser", currentUser);
@@ -254,41 +257,67 @@ public class SessionWebController {
     }
 
     @GetMapping("/detail/{id}")
-    public String sessionDetail(@PathVariable Long id, Model model) {
-        try {
-            Session sess = sessionService.findById(id);
+    public String showSessionDetail(@PathVariable("id") Long sessionId, Model model, 
+                                    @AuthenticationPrincipal CustomUserDetails userDetails) {
+        log.info("세션 상세 로드 시작 - sessionId: {}", sessionId);
+        
+        Session session = sessionRepository.findById(sessionId)
+            .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
+        
+        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
+        List<Answer> answers = answerRepository.findBySessionIdOrderByCreatedAt(sessionId);
+        
+        Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
+        
+        for (Answer answer : answers) {
+            Long questionId = answer.getQuestion().getId();
             
-            if (sess == null) {
-                model.addAttribute("error", "세션을 찾을 수 없습니다.");
-                return "redirect:/session/list";
+            Map<String, Object> data = new HashMap<>();
+            data.put("answer", answer);
+            
+            boolean hasAiFeedback = answer.getFeedbacks().stream()
+                .anyMatch(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null);
+            data.put("hasAiFeedback", hasAiFeedback);
+            
+            if (hasAiFeedback) {
+                Feedback aiFeedback = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
+                    .findFirst()
+                    .orElse(null);
+                data.put("aiFeedback", aiFeedback);
             }
             
-            List<Question> questions = sessionService.getSessionQuestions(id);
-            List<Answer> answers = sessionService.getSessionAnswers(id);
+            boolean hasInterviewerFeedback = answer.getFeedbacks().stream()
+                .anyMatch(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null);
+            data.put("hasInterviewerFeedback", hasInterviewerFeedback);
             
-            Map<Long, List<Answer>> answersByQuestion = answers.stream()
-                .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
+            if (hasInterviewerFeedback) {
+                Feedback interviewerFeedback = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
+                    .findFirst()
+                    .orElse(null);
+                data.put("interviewerFeedback", interviewerFeedback);
+            }
             
-            User currentUser = getCurrentUser();
-            
-            int totalAnswerCount = answers.size();
-            int answeredQuestionCount = answersByQuestion.size();
-            
-            model.addAttribute("interviewSession", sess);
-            model.addAttribute("questions", questions);
-            model.addAttribute("answersByQuestion", answersByQuestion);
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("totalAnswerCount", totalAnswerCount);
-            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
-            
-            log.info("세션 상세 로드 완료 - sessionId: {}", id);
-            
-            return "session/detail";
-            
-        } catch (Exception e) {
-            log.error("세션 상세 조회 오류: ", e);
-            model.addAttribute("error", "세션 상세 정보를 불러올 수 없습니다: " + e.getMessage());
-            return "redirect:/session/list";
+            answersByQuestion.computeIfAbsent(questionId, k -> new ArrayList<>()).add(data);
         }
+        
+        long totalAnswerCount = answers.size();
+        long answeredQuestionCount = answersByQuestion.size();
+        
+        model.addAttribute("interviewSession", session);
+        model.addAttribute("questions", questions);
+        model.addAttribute("answersByQuestion", answersByQuestion);
+        model.addAttribute("totalAnswerCount", totalAnswerCount);
+        model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+        
+        if (userDetails != null) {
+            User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElse(null);
+            model.addAttribute("currentUser", currentUser);
+        }
+        
+        log.info("세션 상세 로드 완료 - sessionId: {}", sessionId);
+        return "session/detail";
     }
 }
