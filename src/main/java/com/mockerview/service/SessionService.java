@@ -158,7 +158,7 @@ public class SessionService {
                 .host(host)
                 .sessionStatus(Session.SessionStatus.PLANNED)
                 .sessionType(validSessionType)
-                .mediaEnabled(!"TEXT".equals(validSessionType))
+                .mediaEnabled((short) (!"TEXT".equals(validSessionType) ? 1 : 0))
                 .isReviewable("Y")
                 .createdAt(LocalDateTime.now())
                 .lastActivity(LocalDateTime.now())
