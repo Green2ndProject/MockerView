@@ -357,13 +357,16 @@
                         </thead>
                         <tbody>
                             <tr th:each="answer : ${userAnswers}">
-                                <td th:text="${answer.question.session.title}">세션 제목</td>
-                                <td th:text="${answer.question.text}">질문 내용</td>
+                                <td th:text="${answer.question != null && answer.question.session != null ? answer.question.session.title : '세션 정보 없음'}">세션 제목</td>
+                                <td th:text="${answer.question != null ? answer.question.text : '질문 정보 없음'}">질문 내용</td>
                                 <td class="answer-text" th:text="${answer.answerText}">답변 내용</td>
                                 <td th:text="${#temporals.format(answer.createdAt, 'MM-dd HH:mm')}">01-15 14:30</td>
                                 <td>
-                                    <a th:href="@{/session/detail/{id}(id=${answer.question.session.id})}"
+                                    <a th:if="${answer.question != null && answer.question.session != null}"
+                                        th:href="@{/session/detail/{id}(id=${answer.question.session.id})}"
                                         class="btn btn-sm btn-primary">상세</a>
+                                    <span th:unless="${answer.question != null && answer.question.session != null}"
+                                            style="color: #9ca3af;">정보 없음</span>
                                 </td>
                             </tr>
                         </tbody>

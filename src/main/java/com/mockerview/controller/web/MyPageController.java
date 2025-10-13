@@ -61,7 +61,7 @@ public class MyPageController {
             return "user/mypage";
         } catch (Exception e) {
             log.error("마이페이지 로드 실패", e);
-            model.addAttribute("error", "데이터를 불러오는데 실패했습니다.");
+            model.addAttribute("error", "데이터를 불러오는데 실패했습니다: " + e.getMessage());
             return "error";
         }
     }
@@ -120,6 +120,7 @@ public class MyPageController {
             }
         } catch (Exception e) {
             log.error("통계 페이지 로드 실패", e);
+            model.addAttribute("error", "통계를 불러오는데 실패했습니다: " + e.getMessage());
             return "redirect:/auth/mypage";
         }
     }

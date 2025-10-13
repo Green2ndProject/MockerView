@@ -1,6 +1,7 @@
 package com.mockerview.repository;
 
 import com.mockerview.entity.Answer;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,7 +47,9 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "ORDER BY a.createdAt DESC")
     List<Answer> findByUserIdWithFeedbacks(@Param("userId") Long userId);
     
-    List<Answer> findByUserIdOrderByCreatedAtDesc(Long userId);
+    @EntityGraph(attributePaths = {"question", "question.session", "user"})
+    @Query("SELECT a FROM Answer a WHERE a.user.id = :userId ORDER BY a.createdAt DESC")
+    List<Answer> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
 
     List<Answer> findByQuestionSessionIdAndUserId(Long sessionId, Long userId);
 
