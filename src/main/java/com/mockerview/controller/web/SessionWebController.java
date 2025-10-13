@@ -107,8 +107,9 @@ public class SessionWebController {
             Session session = sessionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
             
-            if (session.getSessionStatus() == Session.SessionStatus.ENDED && 
-                !session.getHost().getId().equals(user.getId())) {
+            boolean isHost = session.getHost().getId().equals(user.getId());
+            
+            if (session.getSessionStatus() == Session.SessionStatus.ENDED && !isHost) {
                 redirectAttributes.addFlashAttribute("error", "종료된 세션에는 참가할 수 없습니다.");
                 return "redirect:/session/list";
             }

@@ -454,8 +454,8 @@
                 <div class="session-meta">
                   <span
                     class="badge"
-                    th:classappend="${sessionItem.sessionStatus == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
-                    th:text="${sessionItem.sessionStatus != null ? sessionItem.sessionStatus : 'PLANNED'}"
+                    th:class="${'badge ' + (sessionItem.sessionStatus.name() == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus.name() == 'ENDED' ? 'badge-ended' : 'badge-waiting'))}"
+                    th:text="${sessionItem.sessionStatus.name() == 'PLANNED' ? '예정' : (sessionItem.sessionStatus.name() == 'RUNNING' ? '진행중' : '종료')}"
                   >
                     PLANNED
                   </span>
@@ -487,51 +487,55 @@
               </span>
             </div>
 
-            <div style="margin-top: 1rem">
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'HOST' and sessionItem.isSelfInterview != 'Y'}"
-                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='HOST')}"
-                class="btn btn-success"
-              >
-                면접관으로 참가
-              </a>
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.isSelfInterview == 'Y'}"
-                th:href="@{/selfinterview/room/{id}(id=${sessionItem.id})}"
-                class="btn btn-primary"
-              >
-                셀프 면접 입장
-              </a>
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.isSelfInterview != 'Y' and sessionItem.sessionStatus != 'ENDED' }"
-                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='STUDENT')}"
-                class="btn btn-primary"
-              >
-                학생으로 참가
-              </a>
-              <a
-                th:if="${sessionItem.sessionStatus == 'ENDED' and currentUser.role.name() != 'HOST' and  sessionItem.isSelfInterview != 'Y' }"
-                class="btn btn-primary"
-                disabled="disabled"
-                style="background-color: #707070; cursor: default"
-              >
-                종료된 세션
-              </a>
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'REVIEWER'}"
-                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='REVIEWER')}"
-                class="btn btn-info"
-              >
-                리뷰어로 참가
-              </a>
-
-              <div
-                th:if="${currentUser == null}"
-                style="text-align: center; color: #6c757d"
-              >
-                로그인 후 참가할 수 있습니다
+              <div style="margin-top: 1rem">
+                <a
+                  th:if="${currentUser != null and currentUser.role.name() == 'HOST' and sessionItem.isSelfInterview != 'Y'}"
+                  th:href="@{/session/{id}/join(id=${sessionItem.id}, role='HOST')}"
+                  class="btn btn-success"
+                >
+                  면접관으로 참가
+                </a>
+                
+                <a
+                  th:if="${currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.isSelfInterview == 'Y'}"
+                  th:href="@{/selfinterview/room/{id}(id=${sessionItem.id})}"
+                  class="btn btn-primary"
+                >
+                  셀프 면접 입장
+                </a>
+                
+                <a
+                  th:if="${currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.isSelfInterview != 'Y' and sessionItem.sessionStatus.name() != 'ENDED'}"
+                  th:href="@{/session/{id}/join(id=${sessionItem.id}, role='STUDENT')}"
+                  class="btn btn-primary"
+                >
+                  학생으로 참가
+                </a>
+                
+                <button
+                  th:if="${sessionItem.sessionStatus.name() == 'ENDED' and currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.isSelfInterview != 'Y'}"
+                  class="btn btn-secondary"
+                  disabled
+                  style="background-color: #707070; cursor: not-allowed; opacity: 0.6;"
+                >
+                  종료된 세션
+                </button>
+                
+                <a
+                  th:if="${currentUser != null and currentUser.role.name() == 'REVIEWER'}"
+                  th:href="@{/session/{id}/join(id=${sessionItem.id}, role='REVIEWER')}"
+                  class="btn btn-info"
+                >
+                  리뷰어로 참가
+                </a>
+              
+                <div
+                  th:if="${currentUser == null}"
+                  style="text-align: center; color: #6c757d"
+                >
+                  로그인 후 참가할 수 있습니다
+                </div>
               </div>
-            </div>
           </div>
         </div>
 
