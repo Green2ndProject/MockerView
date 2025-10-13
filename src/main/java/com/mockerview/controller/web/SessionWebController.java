@@ -140,8 +140,9 @@ public class SessionWebController {
             Session session = sessionRepository.findByIdWithHost(id)
                 .orElseThrow(() -> new RuntimeException("Session not found: " + id));
             
-            if (session.getSessionStatus() == Session.SessionStatus.ENDED && 
-                !session.getHost().getId().equals(currentUser.getId())) {
+            boolean isHost = session.getHost().getId().equals(currentUser.getId());
+            
+            if (session.getSessionStatus() == Session.SessionStatus.ENDED && !isHost) {
                 model.addAttribute("error", "종료된 세션에는 접근할 수 없습니다.");
                 return "redirect:/session/list";
             }
@@ -162,13 +163,8 @@ public class SessionWebController {
                 answer.getAnswerText();
             }
             
-            boolean isHost = session.getHost() != null && 
-                            session.getHost().getId().equals(currentUser.getId());
-            
             String userRole = role != null ? role : (isHost ? "HOST" : "STUDENT");
-            
-            String sessionType = session.getSessionType() != null ? 
-                                session.getSessionType() : "TEXT";
+            String sessionType = session.getSessionType() != null ? session.getSessionType() : "TEXT";
             
             String agoraChannel = null;
             if ("VIDEO".equals(sessionType)) {
@@ -330,7 +326,7 @@ public class SessionWebController {
                             .put(questionId, answer);
             }
             
-            model.addAttribute("session", session);
+            model.addAttribute("interviewSession", session);
             model.addAttribute("questions", questions);
             model.addAttribute("answers", answers);
             model.addAttribute("scoreBoard", scoreBoard);
