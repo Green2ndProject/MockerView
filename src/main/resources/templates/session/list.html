@@ -35,6 +35,44 @@
     function resetSearch() {
         window.location.href = "/session/list";
     }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const title = document.getElementById("sessionTitle").value;
+      const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
+      const scheduledStartTime = document.getElementById("scheduledStartTime").value;
+  
+      if (title && title.trim() !== "") {
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = "/session/create";
+  
+          const titleInput = document.createElement("input");
+          titleInput.type = "hidden";
+          titleInput.name = "title";
+          titleInput.value = title.trim();
+          form.appendChild(titleInput);
+  
+          const typeInput = document.createElement("input");
+          typeInput.type = "hidden";
+          typeInput.name = "sessionType";
+          typeInput.value = sessionType;
+          form.appendChild(typeInput);
+  
+          if (scheduledStartTime) {
+              const timeInput = document.createElement("input");
+              timeInput.type = "hidden";
+              timeInput.name = "scheduledStartTime";
+              timeInput.value = scheduledStartTime;
+              form.appendChild(timeInput);
+          }
+  
+          document.body.appendChild(form);
+          form.submit();
+      } else {
+          alert("세션 제목을 입력해주세요!");
+      }
+  }
     </script>
     <style>
       :root {
@@ -476,7 +514,7 @@
           <span class="close-modal">&times;</span>
         </div>
         <div class="modal-body">
-          <form id="createSessionForm">
+          <form id="createSessionForm" onsubmit="handleFormSubmit(event)">
             <div class="form-group">
               <label for="sessionTitle">세션 제목</label>
               <input type="text" id="sessionTitle" name="title" class="form-control" placeholder="모의면접 세션 제목" required />
