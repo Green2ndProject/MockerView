@@ -33,7 +33,7 @@ public class UserService {
 
         User user                 = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
         // 멱등성 검사
-        if(user.getIsDeleted()){
+        if(user.getIsDeleted() == 1){
             throw new AlreadyDeletedException("이미 탈퇴 처리된 계정입니다"); // 409 처리
         }
 
@@ -58,7 +58,7 @@ public class UserService {
         user.setEmail(anonymizedEmail);
         user.setUsername(anonymizedUsername);
         user.setName("탈퇴회원");
-        user.setIsDeleted(true);
+        user.setIsDeleted(1);
 
         userRepository.save(user);
 
