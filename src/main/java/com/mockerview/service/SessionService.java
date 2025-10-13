@@ -95,22 +95,24 @@ public class SessionService {
 
     @Transactional(readOnly = true)
     public Page<Session> searchSessionsPageable(String keyword, Session.SessionStatus status, Pageable pageable) {
-        log.info("Searching paginated sessions - keyword: {}, status: {}, Page: {}, Size: {}", 
-                keyword, status, pageable.getPageNumber(), pageable.getPageSize());
-        
-        Page<Session> sessionPage = sessionRepository.searchSessionsPageable(
-            keyword != null && !keyword.isEmpty() ? keyword : null,
-            status,
-            pageable
-        );
-        
-        log.info("Search result: {} total sessions across {} pages.", 
-                sessionPage.getTotalElements(), sessionPage.getTotalPages());
-        
-        return sessionPage;
-    } catch (Exception e) {
-        log.error("Error searching paginated sessions: ", e);
-        throw new RuntimeException("Failed to search paginated sessions", e);
+        try {
+            log.info("Searching paginated sessions - keyword: {}, status: {}, Page: {}, Size: {}", 
+                    keyword, status, pageable.getPageNumber(), pageable.getPageSize());
+            
+            Page<Session> sessionPage = sessionRepository.searchSessionsPageable(
+                keyword != null && !keyword.isEmpty() ? keyword : null,
+                status,
+                pageable
+            );
+            
+            log.info("Search result: {} total sessions across {} pages.", 
+                    sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            
+            return sessionPage;
+        } catch (Exception e) {
+            log.error("Error searching paginated sessions: ", e);
+            throw new RuntimeException("Failed to search paginated sessions", e);
+        }
     }
 
     @Transactional(readOnly = true)
