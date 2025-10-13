@@ -34,10 +34,10 @@ public class SessionService {
     @Transactional(readOnly = true)
     public Page<Session> getSelfInterviewRecords(Long hostId, Pageable pageable) {
         try {
-            log.info("Getting paginated self-interview records for host {}. Page: {}, Size: {}", 
+            log.info("Getting paginated self-interview records for host {}. Page: {}, Size: {}",
             hostId, pageable.getPageNumber(), pageable.getPageSize());
 
-        String isSelfInterview = "Y"; 
+        String isSelfInterview = "Y";
 
         Page<Session> sessionPage = sessionRepository.findByHostIdAndIsSelfInterviewPageable(
             hostId, isSelfInterview, pageable

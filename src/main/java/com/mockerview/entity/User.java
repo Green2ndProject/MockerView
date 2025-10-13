@@ -53,4 +53,12 @@ public class User {
 
     @Column(name = "WITHDRAWAL_REASON", length = 255)
     private String withdrawalReason;
+    
+    public boolean isDeleted() {
+        return this.isDeleted != null && this.isDeleted == 1;
+    }
+    
+    public void setDeletedBoolean(boolean deleted) {
+        this.isDeleted = deleted ? 1 : 0;
+    }
 }
