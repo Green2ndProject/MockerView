@@ -79,8 +79,16 @@ function loadQuestion(index) {
 
     document.getElementById('question-number').textContent = `Q${index + 1}`;
     document.getElementById('current-question-text').textContent = question.questionText;
-    document.getElementById('answerText').value = '';
-    document.getElementById('charCount').textContent = '0';
+    
+    const answerTextArea = document.getElementById('answerText');
+    if (answerTextArea) {
+        answerTextArea.value = '';
+    }
+    
+    const charCount = document.getElementById('charCount');
+    if (charCount) {
+        charCount.textContent = '0';
+    }
 
     updateProgress();
     updateQuestionListUI();
@@ -219,7 +227,11 @@ window.submitVoiceAnswerSelf = async function(audioBlob) {
         document.getElementById('ai-status').style.color = '#10b981';
         
         window.audioBlob = null;
-        document.getElementById('recordingStatus').textContent = '녹음 시작하려면 클릭';
+        
+        const recordingStatus = document.getElementById('recordingStatus');
+        if (recordingStatus) {
+            recordingStatus.textContent = '녹음 시작하려면 클릭';
+        }
         
         updateProgress();
         

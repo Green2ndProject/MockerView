@@ -18,5 +18,7 @@ public class SessionStatusMessage {
     private Integer questionCount;
     private Integer answerCount;
     private List<String> participants;
+    private String action;
+    private String userName;
     private LocalDateTime timestamp;
 }

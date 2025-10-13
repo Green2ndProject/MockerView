@@ -7,6 +7,7 @@ import com.mockerview.entity.Feedback;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.repository.AnswerRepository;
+import com.mockerview.repository.FeedbackRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,9 @@ public class UserController {
     
     @Autowired
     private AnswerRepository answerRepository;
+    
+    @Autowired
+    private FeedbackRepository feedbackRepository;
 
     @GetMapping("/login")
     public String loginForm() {
@@ -185,82 +189,18 @@ public class UserController {
             User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
-            List<Answer> myAnswers = answerRepository.findByUserIdWithFeedbacks(currentUser.getId());
-            myAnswers.sort(Comparator.comparing(Answer::getCreatedAt));
-            log.info("답변 {} 개 조회됨", myAnswers.size());
-            
-            List<Feedback> allFeedbacks = new ArrayList<>();
-            for (Answer answer : myAnswers) {
-                if (answer.getFeedbacks() != null) {
-                    allFeedbacks.addAll(answer.getFeedbacks());
-                }
-            }
-            
-            long aiFeedbackCount = allFeedbacks.stream()
-                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
-                .count();
-            
-            long interviewerFeedbackCount = allFeedbacks.stream()
-                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
-                .count();
-            
-            Double avgAiScore = allFeedbacks.stream()
-                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
-                .mapToInt(Feedback::getScore)
-                .average()
-                .orElse(0.0);
-            
-            Double avgInterviewerScore = allFeedbacks.stream()
-                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
-                .mapToInt(Feedback::getScore)
-                .average()
-                .orElse(0.0);
-            
-            Map<String, Long> answersByMonth = new LinkedHashMap<>();
-            for (Answer answer : myAnswers) {
-                if (answer.getCreatedAt() != null) {
-                    String month = answer.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM"));
-                    answersByMonth.put(month, answersByMonth.getOrDefault(month, 0L) + 1);
-                }
-            }
-            
-            List<Map<String, Object>> growthData = new ArrayList<>();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd");
-            
-            for (Answer answer : myAnswers) {
-                Map<String, Object> point = new HashMap<>();
-                point.put("date", answer.getCreatedAt().format(formatter));
-                
-                Double aiScore = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
-                    .mapToInt(Feedback::getScore)
-                    .average()
-                    .orElse(0.0);
-                
-                Double interviewerScore = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
-                    .mapToInt(Feedback::getScore)
-                    .average()
-                    .orElse(0.0);
-                
-                point.put("aiScore", aiScore);
-                point.put("interviewerScore", interviewerScore);
-                
-                growthData.add(point);
-            }
-            
             model.addAttribute("user", currentUser);
-            model.addAttribute("totalAnswers", myAnswers.size());
-            model.addAttribute("aiFeedbackCount", aiFeedbackCount);
-            model.addAttribute("interviewerFeedbackCount", interviewerFeedbackCount);
-            model.addAttribute("avgAiScore", String.format("%.1f", avgAiScore));
-            model.addAttribute("avgInterviewerScore", String.format("%.1f", avgInterviewerScore));
-            model.addAttribute("answersByMonth", answersByMonth);
-            model.addAttribute("myAnswers", myAnswers);
-            model.addAttribute("growthData", growthData);
             
-            log.info("Stats 데이터 처리 완료");
-            return "user/myStats";
+            log.info("현재 사용자 Role: {}", currentUser.getRole());
+            
+            User.UserRole role = currentUser.getRole();
+            if (role == User.UserRole.HOST || role == User.UserRole.REVIEWER) {
+                log.info("면접관 통계 페이지로 이동");
+                return loadInterviewerStats(currentUser, model);
+            } else {
+                log.info("면접자 통계 페이지로 이동");
+                return loadIntervieweeStats(currentUser, model);
+            }
             
         } catch (Exception e) {
             log.error("Stats 페이지 오류: ", e);
@@ -269,6 +209,242 @@ public class UserController {
         }
     }
 
+    private String loadInterviewerStats(User currentUser, Model model) {
+        List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
+        
+        long totalHostedSessions = hostedSessions.size();
+        
+        long endedSessionsCount = hostedSessions.stream()
+            .filter(s -> s.getStatus() == Session.SessionStatus.ENDED)
+            .count();
+        
+        List<Feedback> givenFeedbacks = feedbackRepository.findByReviewerId(currentUser.getId());
+        long totalFeedbacksGiven = givenFeedbacks.size();
+        
+        Double avgGivenScore = givenFeedbacks.stream()
+            .filter(f -> f.getScore() != null)
+            .mapToInt(Feedback::getScore)
+            .average()
+            .orElse(0.0);
+        
+        Map<String, Long> sessionsByMonth = new LinkedHashMap<>();
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        for (Session session : hostedSessions) {
+            if (session.getCreatedAt() != null) {
+                String month = session.getCreatedAt().format(monthFormatter);
+                sessionsByMonth.put(month, sessionsByMonth.getOrDefault(month, 0L) + 1);
+            }
+        }
+        
+        List<Object[]> topInterviewees = answerRepository.findTopScoredInterviewees();
+        
+        model.addAttribute("totalHostedSessions", totalHostedSessions);
+        model.addAttribute("endedSessionsCount", endedSessionsCount);
+        model.addAttribute("totalFeedbacksGiven", totalFeedbacksGiven);
+        model.addAttribute("avgGivenScore", String.format("%.1f", avgGivenScore));
+        model.addAttribute("sessionsByMonth", sessionsByMonth);
+        model.addAttribute("hostedSessions", hostedSessions);
+        model.addAttribute("givenFeedbacks", givenFeedbacks);
+        model.addAttribute("topInterviewees", topInterviewees);
+        
+        log.info("면접관 통계 로드 완료");
+        return "user/myStatsInterviewer";
+    }
+
+    private String loadIntervieweeStats(User currentUser, Model model) {
+        List<Answer> myAnswers = answerRepository.findByUserIdWithFeedbacks(currentUser.getId());
+        myAnswers.sort(Comparator.comparing(Answer::getCreatedAt).reversed());
+        log.info("답변 {} 개 조회됨", myAnswers.size());
+        
+        for (Answer answer : myAnswers) {
+            log.info("답변 ID: {}, 피드백 개수: {}", answer.getId(), 
+                answer.getFeedbacks() != null ? answer.getFeedbacks().size() : 0);
+            if (answer.getFeedbacks() != null) {
+                for (Feedback f : answer.getFeedbacks()) {
+                    log.info("  - 피드백 타입: {}, 점수: {}", f.getFeedbackType(), f.getScore());
+                }
+            }
+        }
+        
+        List<Feedback> allFeedbacks = new ArrayList<>();
+        for (Answer answer : myAnswers) {
+            if (answer.getFeedbacks() != null) {
+                allFeedbacks.addAll(answer.getFeedbacks());
+            }
+        }
+        
+        log.info("전체 피드백 개수: {}", allFeedbacks.size());
+        
+        long aiFeedbackCount = allFeedbacks.stream()
+            .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+            .count();
+        
+        long interviewerFeedbackCount = allFeedbacks.stream()
+            .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+            .count();
+        
+        log.info("AI 피드백: {}, 면접관 피드백: {}", aiFeedbackCount, interviewerFeedbackCount);
+        
+        
+        Double avgAiScore = allFeedbacks.stream()
+            .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
+            .mapToInt(Feedback::getScore)
+            .average()
+            .orElse(0.0);
+        
+        Double avgInterviewerScore = allFeedbacks.stream()
+            .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
+            .mapToInt(Feedback::getScore)
+            .average()
+            .orElse(0.0);
+        
+        Map<String, Long> answersByMonth = new LinkedHashMap<>();
+        for (Answer answer : myAnswers) {
+            if (answer.getCreatedAt() != null) {
+                String month = answer.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+                answersByMonth.put(month, answersByMonth.getOrDefault(month, 0L) + 1);
+            }
+        }
+        
+        List<Map<String, Object>> growthData = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd");
+        
+        List<Answer> sortedAnswers = new ArrayList<>(myAnswers);
+        sortedAnswers.sort(Comparator.comparing(Answer::getCreatedAt));
+        
+        for (Answer answer : sortedAnswers) {
+            Map<String, Object> point = new HashMap<>();
+            point.put("date", answer.getCreatedAt().format(formatter));
+            
+            OptionalDouble aiScoreOpt = OptionalDouble.empty();
+            OptionalDouble interviewerScoreOpt = OptionalDouble.empty();
+            
+            if (answer.getFeedbacks() != null && !answer.getFeedbacks().isEmpty()) {
+                aiScoreOpt = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
+                    .mapToInt(Feedback::getScore)
+                    .average();
+                
+                interviewerScoreOpt = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
+                    .mapToInt(Feedback::getScore)
+                    .average();
+            }
+            
+            point.put("aiScore", aiScoreOpt.isPresent() ? aiScoreOpt.getAsDouble() : null);
+            point.put("interviewerScore", interviewerScoreOpt.isPresent() ? interviewerScoreOpt.getAsDouble() : null);
+            
+            growthData.add(point);
+        }
+        
+        List<Map<String, Object>> rankings = calculateUserRankings(currentUser.getId());
+        
+        model.addAttribute("totalAnswers", myAnswers.size());
+        model.addAttribute("aiFeedbackCount", aiFeedbackCount);
+        model.addAttribute("interviewerFeedbackCount", interviewerFeedbackCount);
+        model.addAttribute("avgAiScore", String.format("%.1f", avgAiScore));
+        model.addAttribute("avgInterviewerScore", String.format("%.1f", avgInterviewerScore));
+        model.addAttribute("answersByMonth", answersByMonth);
+        model.addAttribute("myAnswers", myAnswers);
+        model.addAttribute("growthData", growthData);
+        model.addAttribute("rankings", rankings);
+        
+        log.info("면접자 통계 로드 완료");
+        return "user/myStats";
+    }
+
+    private List<Map<String, Object>> calculateUserRankings(Long currentUserId) {
+        List<Answer> allAnswers = answerRepository.findAll();
+        
+        Map<Long, List<Answer>> answersByUser = allAnswers.stream()
+            .collect(Collectors.groupingBy(answer -> answer.getUser().getId()));
+        
+        List<Map<String, Object>> rankings = new ArrayList<>();
+        
+        for (Map.Entry<Long, List<Answer>> entry : answersByUser.entrySet()) {
+            Long userId = entry.getKey();
+            List<Answer> userAnswers = entry.getValue();
+            
+            try {
+                User user = userAnswers.get(0).getUser();
+                
+                if (user == null) {
+                    log.warn("User is null for userId: {}, skipping", userId);
+                    continue;
+                }
+                
+                String userName;
+                try {
+                    userName = user.getName();
+                    if (userName == null) {
+                        log.warn("User name is null for userId: {}, skipping", userId);
+                        continue;
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to get user name for userId: {}, skipping. Error: {}", userId, e.getMessage());
+                    continue;
+                }
+                
+                List<Feedback> allFeedbacks = new ArrayList<>();
+                for (Answer answer : userAnswers) {
+                    if (answer.getFeedbacks() != null) {
+                        allFeedbacks.addAll(answer.getFeedbacks());
+                    }
+                }
+                
+                Double avgAiScore = allFeedbacks.stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
+                    .mapToInt(Feedback::getScore)
+                    .average()
+                    .orElse(0.0);
+                
+                Double avgInterviewerScore = allFeedbacks.stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
+                    .mapToInt(Feedback::getScore)
+                    .average()
+                    .orElse(0.0);
+                
+                double totalScore = 0.0;
+                int scoreCount = 0;
+                
+                if (avgAiScore > 0) {
+                    totalScore += avgAiScore;
+                    scoreCount++;
+                }
+                if (avgInterviewerScore > 0) {
+                    totalScore += avgInterviewerScore;
+                    scoreCount++;
+                }
+                
+                double finalAvgScore = scoreCount > 0 ? totalScore / scoreCount : 0.0;
+                
+                Map<String, Object> rankData = new HashMap<>();
+                rankData.put("userId", userId);
+                rankData.put("userName", userName);
+                rankData.put("avgScore", Math.round(finalAvgScore * 10) / 10.0);
+                rankData.put("answerCount", userAnswers.size());
+                rankData.put("isCurrentUser", userId.equals(currentUserId));
+                
+                rankings.add(rankData);
+                
+            } catch (Exception e) {
+                log.error("Error processing user ranking for userId: {}, skipping this user. Error: {}", userId, e.getMessage());
+                continue;
+            }
+        }
+        
+        rankings.sort((a, b) -> Double.compare(
+            (Double) b.get("avgScore"), 
+            (Double) a.get("avgScore")
+        ));
+        
+        for (int i = 0; i < rankings.size(); i++) {
+            rankings.get(i).put("rank", i + 1);
+        }
+        
+        return rankings;
+    }
+    
     @GetMapping("/mypage/stats/export-csv")
     public void exportStatsCSV(@AuthenticationPrincipal CustomUserDetails userDetails, 
                                 HttpServletResponse response) throws IOException {

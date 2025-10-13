@@ -102,13 +102,22 @@
             font-weight: 600;
             color: #4b5563;
         }
+        .score-group {
+            display: flex;
+            gap: 8px;
+        }
         .answer-score {
-            background: #667eea;
-            color: white;
             padding: 0.25rem 0.75rem;
             border-radius: 6px;
             font-size: 0.875rem;
             font-weight: 500;
+            color: white;
+        }
+        .answer-score.ai {
+            background: #3b82f6;
+        }
+        .answer-score.interviewer {
+            background: #f59e0b;
         }
         .answer-text {
             color: #6b7280;
@@ -220,31 +229,44 @@
                         <p>아직 답변이 없습니다</p>
                     </div>
                     
-                    <div th:each="answer : ${answersByQuestion.get(question.id)}" class="answer-card">
+                    <div th:each="item : ${answersByQuestion.get(question.id)}" class="answer-card">
                         <div class="answer-header">
-                            <span class="answer-author" th:text="${answer.user?.name ?: '익명'}">답변자</span>
-                            <span class="answer-score" th:if="${answer.score != null}" 
-                                th:text="${'점수: ' + answer.score}">점수: 0</span>
+                            <span class="answer-author" th:text="${item.answer.user?.name ?: '익명'}">답변자</span>
+                            <div class="score-group">
+                                <span class="answer-score ai" th:if="${item.hasAiFeedback}"
+                                    th:text="${'AI: ' + item.aiFeedback.score + '점'}">AI: 0점</span>
+                                <span class="answer-score interviewer" th:if="${item.hasInterviewerFeedback}"
+                                    th:text="${'면접관: ' + item.interviewerFeedback.score + '점'}">면접관: 0점</span>
+                            </div>
                         </div>
-                        <div class="answer-text" th:text="${answer.answerText}">답변 내용</div>
+                        <div class="answer-text" th:text="${item.answer.answerText}">답변 내용</div>
                         
-                        <div class="feedback-section" th:if="${answer.feedbacks != null and !answer.feedbacks.isEmpty()}">
+                        <div class="feedback-section" th:if="${item.answer.feedbacks != null and !item.answer.feedbacks.isEmpty()}">
                             <div class="feedback-title">받은 피드백</div>
-                            <div th:each="feedback : ${answer.feedbacks}" 
+                            <div th:each="feedback : ${item.answer.feedbacks}"
                                 th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-card ai' : 'feedback-card'}">
-                                <div class="feedback-author-tag" 
-                                    th:text="${feedback.feedbackType.toString() == 'AI' ? 'AI 코치' : (feedback.reviewer != null ? feedback.reviewer.name + ' (면접관)' : '면접관')}">피드백 작성자</div>
-                                    <div class="feedback-content">
-                                        <div class="feedback-summary" th:text="${feedback.summary}">요약</div>
-                                        <div class="feedback-section" th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}">
-                                            <strong>강점:</strong>
-                                            <div th:text="${feedback.strengths}">강점 내용</div>
-                                        </div>
-                                        <div class="feedback-section" th:if="${feedback.improvement != null and !feedback.improvement.isEmpty()}">
-                                            <strong>개선점:</strong>
-                                            <div th:text="${feedback.improvement}">개선점 내용</div>
-                                        </div>
+                                <div class="feedback-author-tag">
+                                    <span th:if="${feedback.feedbackType.toString() == 'AI'}">
+                                        AI 코치 <span th:if="${feedback.score != null}" th:text="${'(점수: ' + feedback.score + '/100)'}"></span>
+                                    </span>
+                                    <span th:if="${feedback.feedbackType.toString() == 'INTERVIEWER'}">
+                                        <span th:text="${feedback.reviewer != null ? feedback.reviewer.name + ' (면접관)' : '면접관'}"></span>
+                                        <span th:if="${feedback.score != null}" th:text="${' (점수: ' + feedback.score + '/100)'}"></span>
+                                    </span>
+                                </div>
+                                <div class="feedback-content">
+                                    <div class="feedback-summary" th:if="${feedback.summary != null and !feedback.summary.isEmpty()}">
+                                        <strong>요약:</strong> <span th:text="${feedback.summary}">요약</span>
                                     </div>
+                                    <div class="feedback-section" th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}" style="margin-top: 8px;">
+                                        <strong>강점:</strong>
+                                        <div th:text="${feedback.strengths}">강점 내용</div>
+                                    </div>
+                                    <div class="feedback-section" th:if="${feedback.improvement != null and !feedback.improvement.isEmpty()}" style="margin-top: 8px;">
+                                        <strong>개선점:</strong>
+                                        <div th:text="${feedback.improvement}">개선점 내용</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

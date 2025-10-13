@@ -55,7 +55,7 @@ CREATE TABLE answers (
     answer_text TEXT NOT NULL,
     score INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 10)
+    CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 100)
 );
 
 CREATE TABLE feedbacks (

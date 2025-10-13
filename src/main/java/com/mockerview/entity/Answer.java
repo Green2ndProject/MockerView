@@ -15,7 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "answers")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})

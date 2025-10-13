@@ -110,7 +110,7 @@ UPDATE sessions SET expires_at = created_at + INTERVAL '3' HOUR WHERE expires_at
 CREATE INDEX idx_sessions_expires ON sessions(expires_at);
 CREATE INDEX idx_sessions_status_expires ON sessions(status, expires_at);
 
-ALTER TABLE answers ADD CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 10);
+ALTER TABLE answers ADD CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 100);
 
 ALTER TABLE feedbacks ADD CONSTRAINT chk_feedback_type CHECK (feedback_type IN ('AI','INTERVIEWER'));
 
