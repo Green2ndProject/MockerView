@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -83,14 +84,21 @@ public class SelfInterviewApiController {
     }
 
     @GetMapping("/{sessionId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getSessionData(
             @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
         Session session = sessionRepository.findById(sessionId).orElse(null);
         
-        if (session == null || !session.getHost().getId().equals(userDetails.getUserId())) {
-            log.warn("Session not found or unauthorized - sessionId: {}, userId: {}", sessionId, userDetails.getUserId());
+        if (session == null || session.getHost() == null) {
+            log.warn("Session not found - sessionId: {}", sessionId);
+            return ResponseEntity.notFound().build();
+        }
+        
+        if (!session.getHost().getId().equals(userDetails.getUserId())) {
+            log.warn("Unauthorized - sessionId: {}, userId: {}", 
+                    sessionId, userDetails.getUserId());
             return ResponseEntity.notFound().build();
         }
 
@@ -460,40 +468,5 @@ public class SelfInterviewApiController {
             log.warn("Failed to extract section: " + section, e);
         }
         return "분석 중...";
-    }
-
-    @GetMapping("/{sessionId}")
-    @Transactional(readOnly = true)  // 추가!
-    public ResponseEntity<Map<String, Object>> getSessionData(
-            @PathVariable Long sessionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        Session session = sessionRepository.findById(sessionId).orElse(null);
-        
-        if (session == null || !session.getHost().getId().equals(userDetails.getUserId())) {
-            log.warn("Session not found or unauthorized - sessionId: {}, userId: {}", 
-                    sessionId, userDetails.getUserId());
-            return ResponseEntity.notFound().build();
-        }
-
-        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
-        
-        List<Map<String, Object>> questionMaps = questions.stream().map(q -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", q.getId());
-            map.put("questionText", q.getText());
-            map.put("orderNumber", q.getOrderNo());
-            return map;
-        }).collect(Collectors.toList());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("sessionId", session.getId());
-        response.put("userId", userDetails.getUserId());
-        response.put("title", session.getTitle());
-        response.put("questions", questionMaps);
-
-        log.info("Session data sent - sessionId: {}, questions: {}", sessionId, questionMaps.size());
-
-        return ResponseEntity.ok(response);
     }
 }
