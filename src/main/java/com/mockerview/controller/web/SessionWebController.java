@@ -262,7 +262,7 @@ public class SessionWebController {
     public String showSessionDetail(@PathVariable("id") Long sessionId, Model model, 
                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
-            log.info("세션 상세 조회 - sessionId: {}", sessionId);
+            log.info("=== 세션 상세 조회 시작 - sessionId: {} ===", sessionId);
             
             Session session = sessionRepository.findByIdWithHostAndQuestions(sessionId)
                 .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
@@ -273,8 +273,18 @@ public class SessionWebController {
             if (questions == null) {
                 questions = new ArrayList<>();
             }
+            log.info("질문 수: {}", questions.size());
             
             List<Answer> answers = answerRepository.findBySessionIdOrderByCreatedAt(sessionId);
+            log.info("답변 수: {}", answers.size());
+            
+            for (Answer answer : answers) {
+                log.info("답변 ID: {}, 질문 ID: {}, 사용자: {}, 피드백 수: {}", 
+                    answer.getId(), 
+                    answer.getQuestion().getId(),
+                    answer.getUser().getName(),
+                    answer.getFeedbacks().size());
+            }
             
             Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
             
@@ -314,6 +324,8 @@ public class SessionWebController {
             long totalAnswerCount = answers.size();
             long answeredQuestionCount = answersByQuestion.size();
             
+            log.info("답변 통계 - 전체: {}, 질문별: {}", totalAnswerCount, answeredQuestionCount);
+            
             model.addAttribute("interviewSession", session);
             model.addAttribute("questions", questions);
             model.addAttribute("answersByQuestion", answersByQuestion);
@@ -326,7 +338,7 @@ public class SessionWebController {
                 model.addAttribute("currentUser", currentUser);
             }
             
-            log.info("세션 상세 로드 완료 - sessionId: {}, questions: {}", sessionId, questions.size());
+            log.info("=== 세션 상세 조회 완료 ===");
             return "session/detail";
             
         } catch (Exception e) {

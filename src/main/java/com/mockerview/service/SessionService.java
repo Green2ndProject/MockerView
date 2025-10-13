@@ -323,4 +323,21 @@ public class SessionService {
         
         return session;
     }
+
+    @Transactional(readOnly = true)
+    public Page<Session> getReviewableSessionsPageable(Pageable pageable) {
+        log.info("Getting paginated reviewable sessions. Page: {}, Size: {}", 
+                pageable.getPageNumber(), pageable.getPageSize());
+        
+        Page<Session> sessionPage = sessionRepository.findByStatusAndIsReviewablePageable(
+            Session.SessionStatus.ENDED,
+            "Y",
+            pageable
+        );
+        
+        log.info("Found {} total reviewable sessions across {} pages.", 
+                sessionPage.getTotalElements(), sessionPage.getTotalPages());
+        
+        return sessionPage;
+    }
 }
