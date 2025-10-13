@@ -34,22 +34,31 @@ public class MyPageController {
 
     @GetMapping("/mypage")
     public String showMyPage(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
-        List<Answer> userAnswers = answerRepository.findByUserId(currentUser.getId());
-        
-        long participatedSessionCount = answerRepository.countDistinctSessionsByUserId(currentUser.getId());
-        long answerCount = answerRepository.countByUserId(currentUser.getId());
-        
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("hostedSessions", hostedSessions);
-        model.addAttribute("userAnswers", userAnswers);
-        model.addAttribute("participatedSessionCount", participatedSessionCount);
-        model.addAttribute("answerCount", answerCount);
-        
-        return "user/mypage";
+        try {
+            User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
+            List<Answer> userAnswers = answerRepository.findByUserId(currentUser.getId());
+            
+            long participatedSessionCount = answerRepository.countDistinctSessionsByUserId(currentUser.getId());
+            long answerCount = answerRepository.countByUserId(currentUser.getId());
+            
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("hostedSessions", hostedSessions);
+            model.addAttribute("userAnswers", userAnswers);
+            model.addAttribute("participatedSessionCount", participatedSessionCount);
+            model.addAttribute("answerCount", answerCount);
+            
+            log.info("마이페이지 로드: userId={}, 참가세션={}, 답변수={}", 
+                currentUser.getId(), participatedSessionCount, answerCount);
+            
+            return "user/mypage";
+        } catch (Exception e) {
+            log.error("마이페이지 로드 실패", e);
+            model.addAttribute("error", "데이터를 불러오는데 실패했습니다.");
+            return "error";
+        }
     }
 
     @PostMapping("/update")
@@ -93,15 +102,20 @@ public class MyPageController {
 
     @GetMapping("/stats")
     public String showStats(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        model.addAttribute("currentUser", currentUser);
-        
-        if (currentUser.getRole() == User.UserRole.HOST) {
-            return "user/myStatsInterviewer";
-        } else {
-            return "user/myStats";
+        try {
+            User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            model.addAttribute("currentUser", currentUser);
+            
+            if (currentUser.getRole() == User.UserRole.HOST) {
+                return "user/myStatsInterviewer";
+            } else {
+                return "user/myStats";
+            }
+        } catch (Exception e) {
+            log.error("통계 페이지 로드 실패", e);
+            return "redirect:/auth/mypage";
         }
     }
 }

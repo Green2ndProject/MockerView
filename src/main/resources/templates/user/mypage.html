@@ -6,62 +6,95 @@
     <title>마이페이지 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css">
     <style>
+        body {
+            background: #f5f7fa;
+        }
         .profile-header {
             background: white;
-            border-bottom: 1px solid var(--gray-200);
-            padding: 2rem 0;
+            color: #667eea;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
         }
         .profile-avatar {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             background: #667eea;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            color: white;
             margin: 0 auto 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .profile-name {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 600;
             text-align: center;
-            color: var(--gray-900);
+            margin-bottom: 0.5rem;
         }
         .profile-role {
             text-align: center;
-            color: var(--gray-600);
-            margin-top: 0.5rem;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.95rem;
         }
         .session-history {
             margin-top: 2rem;
         }
         .session-history-title {
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--gray-900);
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #667eea;
         }
         .history-item {
             background: white;
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         .history-info h4 {
             margin: 0 0 0.5rem 0;
             font-size: 1.125rem;
-            color: var(--gray-900);
+            color: #1f2937;
         }
         .history-meta {
             font-size: 0.875rem;
-            color: var(--gray-600);
+            color: #6b7280;
         }
         .answer-table {
             width: 100%;
@@ -72,15 +105,15 @@
         .answer-table td {
             padding: 0.75rem;
             text-align: left;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid #e5e7eb;
         }
         .answer-table th {
-            background-color: #f8f9fa;
+            background-color: #f9fafb;
             font-weight: 600;
-            color: #495057;
+            color: #374151;
         }
         .answer-table tr:hover {
-            background-color: #f8f9fa;
+            background-color: #f9fafb;
         }
         .answer-text {
             max-width: 300px;
@@ -98,6 +131,21 @@
             .profile-actions-grid {
                 grid-template-columns: 2fr 1fr;
             }
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            font-size: 1.125rem;
+            color: #1f2937;
+        }
+        .card-body {
+            padding: 1.5rem;
         }
         .btn-danger {
             background-color: #E74C3C;
@@ -129,17 +177,16 @@
             height: auto;
             overflow: hidden;
             background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             box-sizing: border-box;
         }
         .custom-modal-card, .success-modal-card {
             width: 100%;
             height: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
             box-sizing: border-box;
-            padding: 20px;
+            padding: 2rem;
         }
         .custom-modal-card {
             display: block;
@@ -148,51 +195,43 @@
             display: none;
         }
         .modal-title {
-            font-size: 1.5em;
+            font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
         }
         .modal-instruction {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 0.95em;
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
         }
         .modal-reason-label {
-            color: #888;
-            margin: 20px 0 10px 0;
-            font-size: 0.85em;
-            padding-left: 5px;
+            color: #6b7280;
+            margin: 1.5rem 0 0.75rem 0;
+            font-size: 0.875rem;
             text-align: left;
-        }
-        .input-field {
-            margin-bottom: 25px;
-        }
-        .select-field {
-            margin-bottom: 0;
         }
         .input-field, .select-field {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
             box-sizing: border-box;
-            font-size: 1em;
+            font-size: 1rem;
+            margin-bottom: 1rem;
         }
         .wmodal-actions {
             display: flex;
             justify-content: space-between;
-            margin-top: 30px;
-            gap: 10px;
-            padding: 0 10px;
+            margin-top: 2rem;
+            gap: 1rem;
         }
         .wmodal-actions button {
-            width: 50%;
-            padding: 12px;
+            flex: 1;
+            padding: 0.75rem;
             border-radius: 8px;
-            font-size: 1em;
+            font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.2s;
             font-weight: 600;
         }
         .danger-btn {
@@ -205,19 +244,19 @@
         }
         .secondary-btn {
             background-color: transparent;
-            color: #7F78FF;
-            border: 2px solid #7F78FF;
+            color: #667eea;
+            border: 2px solid #667eea;
         }
         .secondary-btn:hover {
-            background-color: #F0F0FF;
+            background-color: #f0f0ff;
         }
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 30px;
             height: 30px;
             border-radius: 50%;
-            border-left-color: #f34d3d;
-            margin: 15px auto 0;
+            border-left-color: #667eea;
+            margin: 1rem auto 0;
             animation: spin 1s ease-in-out infinite;
         }
         @keyframes spin {
@@ -227,11 +266,10 @@
         .form-actions {
             display: flex;
             gap: 1rem;
-            flex-wrap: wrap;
+            margin-top: 1.5rem;
         }
         .form-actions .btn {
             flex: 1;
-            min-width: 150px;
         }
     </style>
 </head>
@@ -258,7 +296,7 @@
                 <span th:if="${currentUser.role.name() == 'HOST'}">면접관</span>
                 <span th:text="' • ' + ${currentUser.email}"></span>
             </div>
-            <div style="text-align: center; margin-top: 1rem;">
+            <div style="text-align: center; margin-top: 1.5rem;">
                 <a href="/auth/stats" class="btn btn-primary">내 활동 통계 보기</a>
             </div>
         </div>
@@ -299,7 +337,7 @@
                         <span th:text="${hostedSession.sessionStatus}">ENDED</span>
                     </div>
                 </div>
-                <a th:href="@{/session/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
+                <a th:href="@{/review/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
             </div>
         </div>
 
@@ -324,14 +362,14 @@
                                 <td class="answer-text" th:text="${answer.answerText}">답변 내용</td>
                                 <td th:text="${#temporals.format(answer.createdAt, 'MM-dd HH:mm')}">01-15 14:30</td>
                                 <td>
-                                    <a th:href="@{/session/detail/{id}(id=${answer.question.session.id})}"
+                                    <a th:href="@{/review/detail/{id}(id=${answer.question.session.id})}"
                                         class="btn btn-sm btn-primary">상세</a>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                     <div th:if="${userAnswers == null or userAnswers.empty}"
-                        style="text-align: center; padding: 2rem; color: #6c757d;">
+                        style="text-align: center; padding: 3rem; color: #9ca3af;">
                         아직 작성한 답변이 없습니다
                     </div>
                 </div>
@@ -356,7 +394,7 @@
                         <div class="form-group">
                             <label for="newPassword" class="form-label">새 비밀번호 (변경시에만 입력)</label>
                             <input type="password" class="form-control" id="newPassword" name="newPassword" placeholder="새 비밀번호">
-                            <small style="color: var(--gray-500); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                            <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
                                 비밀번호를 변경하지 않으려면 비워두세요.
                             </small>
                         </div>
@@ -414,18 +452,18 @@
                 <div class="card-body">
                     <div style="margin-bottom: 1rem;">
                         <strong>아이디:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${currentUser.username}">username</div>
+                        <div style="color: #6b7280; margin-top: 0.5rem;" th:text="${currentUser.username}">username</div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <strong>역할:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;">
+                        <div style="color: #6b7280; margin-top: 0.5rem;">
                             <span th:if="${currentUser.role.name() == 'STUDENT'}">면접자</span>
                             <span th:if="${currentUser.role.name() == 'HOST'}">면접관</span>
                         </div>
                     </div>
                     <div>
                         <strong>가입일:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${#temporals.format(currentUser.createdAt, 'yyyy-MM-dd')}">2025-01-01</div>
+                        <div style="color: #6b7280; margin-top: 0.5rem;" th:text="${#temporals.format(currentUser.createdAt, 'yyyy-MM-dd')}">2025-01-01</div>
                     </div>
                 </div>
             </div>
