@@ -457,7 +457,7 @@
                     th:class="${'badge ' + (sessionItem.sessionStatus.name() == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus.name() == 'ENDED' ? 'badge-ended' : 'badge-waiting'))}"
                     th:text="${sessionItem.sessionStatus.name() == 'PLANNED' ? '예정' : (sessionItem.sessionStatus.name() == 'RUNNING' ? '진행중' : '종료')}"
                   >
-                    PLANNED
+                    예정
                   </span>
                   <span
                     class="badge"
