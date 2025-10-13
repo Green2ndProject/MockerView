@@ -3,25 +3,28 @@ package com.mockerview.controller.web;
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.User;
 import com.mockerview.entity.Session;
+import com.mockerview.entity.Question;
+import com.mockerview.entity.Answer;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
+import com.mockerview.repository.QuestionRepository;
+import com.mockerview.repository.AnswerRepository;
+import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-
-import com.mockerview.service.SessionService;
 
 import java.util.List;
 
@@ -33,7 +36,9 @@ public class SelfInterviewController {
     
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
-    private final SessionService sessionService; 
+    private final SessionService sessionService;
+    private final QuestionRepository questionRepository;
+    private final AnswerRepository answerRepository;
 
     @GetMapping("/create")
     public String createPage(Authentication authentication, Model model) {
@@ -116,6 +121,53 @@ public class SelfInterviewController {
             return "selfinterview/room";
         } catch (Exception e) {
             log.error("셀프면접 룸 조회 오류", e);
+            model.addAttribute("error", e.getMessage());
+            return "error";
+        }
+    }
+
+    @GetMapping("/detail/{id}")
+    @Transactional(readOnly = true)
+    public String detailPage(@PathVariable Long id, Authentication authentication, Model model) {
+        try {
+            if (authentication == null) {
+                return "redirect:/auth/login";
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            
+            Session session = sessionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            if (!session.getHost().getId().equals(userDetails.getUserId())) {
+                log.warn("Unauthorized access attempt - sessionId: {}, userId: {}", id, userDetails.getUserId());
+                return "redirect:/selfinterview/list";
+            }
+            
+            if (session.getHost() != null) {
+                session.getHost().getName();
+            }
+            
+            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(id);
+            for (Question question : questions) {
+                question.getText();
+            }
+            
+            List<Answer> answers = answerRepository.findByQuestionSessionId(id);
+            for (Answer answer : answers) {
+                if (answer.getUser() != null) {
+                    answer.getUser().getName();
+                }
+                answer.getAnswerText();
+            }
+            
+            model.addAttribute("session", session);
+            model.addAttribute("questions", questions);
+            model.addAttribute("answers", answers);
+            
+            return "selfinterview/detail";
+        } catch (Exception e) {
+            log.error("셀프면접 상세 조회 오류", e);
             model.addAttribute("error", e.getMessage());
             return "error";
         }

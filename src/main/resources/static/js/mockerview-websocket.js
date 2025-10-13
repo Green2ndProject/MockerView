@@ -1,7 +1,7 @@
 class MockerViewWebSocket {
   constructor(sessionId, userId, userName) {
-    this.sessionId = sessionId;
-    this.userId = userId;
+    this.sessionId = parseInt(sessionId);
+    this.userId = parseInt(userId);
     this.userName = userName;
     this.stompClient = null;
     this.connected = false;
@@ -115,8 +115,8 @@ class MockerViewWebSocket {
     }
     
     const joinMessage = {
-      sessionId: this.sessionId,
-      userId: this.userId,
+      sessionId: parseInt(this.sessionId),
+      userId: parseInt(this.userId),
       userName: this.userName,
       action: "JOIN"
     };
@@ -143,9 +143,9 @@ class MockerViewWebSocket {
     }
     
     const payload = {
-      sessionId: this.sessionId,
+      sessionId: parseInt(this.sessionId),
       questionId: parseInt(questionId),
-      userId: this.userId,
+      userId: parseInt(this.userId),
       userName: this.userName,
       answerText: answerText
     };
