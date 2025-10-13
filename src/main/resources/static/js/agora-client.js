@@ -19,8 +19,6 @@ class AgoraClient {
             await this.client.subscribe(user, mediaType);
             console.log('✅ 구독 완료:', user.uid);
             
-            this.remoteUsers.set(user.uid, user);
-            
             if (mediaType === 'video') {
                 const remoteContainer = document.getElementById('remote-videos');
                 if (!remoteContainer) return;
@@ -30,8 +28,10 @@ class AgoraClient {
                     remoteVideoDiv = document.createElement('div');
                     remoteVideoDiv.id = `remote-video-${user.uid}`;
                     remoteVideoDiv.className = 'remote-video-container';
+                    
+                    const userName = this.remoteUsers.get(user.uid) || `참가자 ${user.uid}`;
                     remoteVideoDiv.innerHTML = `
-                        <div class="remote-video-label">참가자 ${user.uid}</div>
+                        <div class="remote-video-label" data-uid="${user.uid}">${userName}</div>
                     `;
                     remoteContainer.appendChild(remoteVideoDiv);
                 }
@@ -42,7 +42,7 @@ class AgoraClient {
                 user.audioTrack.play();
             }
         });
-
+    
         this.client.on('user-unpublished', (user, mediaType) => {
             console.log('👋 사용자 발행 취소:', user.uid, mediaType);
             if (mediaType === 'video') {
@@ -53,7 +53,7 @@ class AgoraClient {
             }
             this.remoteUsers.delete(user.uid);
         });
-
+    
         this.client.on('user-left', (user) => {
             console.log('🚪 사용자 퇴장:', user.uid);
             const remoteVideoDiv = document.getElementById(`remote-video-${user.uid}`);
@@ -62,7 +62,7 @@ class AgoraClient {
             }
             this.remoteUsers.delete(user.uid);
         });
-
+    
         this.client.on('connection-state-change', (curState, prevState, reason) => {
             console.log('🔌 연결 상태 변경:', {
                 from: prevState,
@@ -70,6 +70,14 @@ class AgoraClient {
                 reason: reason
             });
         });
+    }
+    
+    updateRemoteUserName(uid, userName) {
+        this.remoteUsers.set(uid, userName);
+        const label = document.querySelector(`[data-uid="${uid}"]`);
+        if (label) {
+            label.textContent = userName;
+        }
     }
 
     async join(channel, token, uid) {

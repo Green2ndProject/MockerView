@@ -57,6 +57,14 @@ class MockerViewWebSocket {
   subscribeToTopics() {
     console.log('📡 토픽 구독 시작...');
     
+    this.stompClient.subscribe(`/topic/session/${this.sessionId}/user-mapping`, (message) => {
+      console.log('👤 사용자 매핑 수신');
+      const data = JSON.parse(message.body);
+      if (window.agoraClient && data.userId && data.userName) {
+        window.agoraClient.updateRemoteUserName(data.userId, data.userName);
+      }
+    });
+    
     this.stompClient.subscribe(`/topic/session/${this.sessionId}/status`, (message) => {
       console.log('📊 Status 메시지 수신');
       this.handleStatusUpdate(JSON.parse(message.body));
@@ -367,7 +375,7 @@ class MockerViewWebSocket {
         return;
     }
     
-    const hostName = document.querySelector('.role-title:first-child + .role-member span')?.textContent;
+    const hostName = document.querySelector('.role-group:first-child .role-member span')?.textContent;
     
     const students = participants.filter(p => p !== hostName);
     
@@ -386,7 +394,7 @@ class MockerViewWebSocket {
     if (participantCount) {
         participantCount.textContent = `${participants.length}명`;
     }
-}
+  }
 
   updateSessionStats(questionCount, answerCount) {
     const statsDiv = document.getElementById("session-stats");
@@ -465,7 +473,7 @@ class MockerViewWebSocket {
                 <div class="ai-feedback-header">🤖 AI 분석 결과</div>
                 <div class="ai-score">점수: ${feedback.score || 75}/100</div>
                 <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
-                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || feedback.improvementSuggestions || '분석 중...'}</div>
             </div>
         `;
     }
@@ -477,11 +485,11 @@ class MockerViewWebSocket {
                 <div class="ai-feedback-header">🤖 AI 분석 결과</div>
                 <div class="ai-score">점수: ${feedback.score || 75}/100</div>
                 <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
-                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || feedback.improvementSuggestions || '분석 중...'}</div>
             </div>
         `;
     }
-}
+  }
 
   displayInterviewerFeedback(feedback) {
     const answerId = feedback.answerId || feedback.id;
