@@ -131,25 +131,4 @@ public class MyPageController {
         
         return "redirect:/auth/mypage";
     }
-
-    @GetMapping("/stats")
-    @Transactional(readOnly = true)
-    public String showStats(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        try {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            model.addAttribute("currentUser", currentUser);
-            
-            if (currentUser.getRole() == User.UserRole.HOST) {
-                return "user/myStatsInterviewer";
-            } else {
-                return "user/myStats";
-            }
-        } catch (Exception e) {
-            log.error("통계 페이지 로드 실패", e);
-            model.addAttribute("error", "통계 로드 실패: " + e.getMessage());
-            return "redirect:/auth/mypage";
-        }
-    }
 }
