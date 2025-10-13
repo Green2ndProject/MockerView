@@ -244,8 +244,40 @@ public class SessionWebController {
         
         List<Answer> answers = answerRepository.findAllBySessionIdWithFeedbacks(id);
         
+        Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
+        for (Answer answer : answers) {
+            if (answer.getQuestion() != null) {
+                Long questionId = answer.getQuestion().getId();
+                answersByQuestion.putIfAbsent(questionId, new ArrayList<>());
+                
+                Map<String, Object> answerItem = new HashMap<>();
+                answerItem.put("answer", answer);
+                
+                Feedback aiFeedback = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+                    .findFirst().orElse(null);
+                Feedback interviewerFeedback = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+                    .findFirst().orElse(null);
+                
+                answerItem.put("aiFeedback", aiFeedback);
+                answerItem.put("interviewerFeedback", interviewerFeedback);
+                answerItem.put("hasAiFeedback", aiFeedback != null);
+                answerItem.put("hasInterviewerFeedback", interviewerFeedback != null);
+                
+                answersByQuestion.get(questionId).add(answerItem);
+            }
+        }
+        
+        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(session.getId());
+        long totalAnswerCount = answers.size();
+        long answeredQuestionCount = answersByQuestion.size();
+        
         model.addAttribute("session", session);
-        model.addAttribute("answers", answers);
+        model.addAttribute("questions", questions);
+        model.addAttribute("answersByQuestion", answersByQuestion);
+        model.addAttribute("totalAnswerCount", totalAnswerCount);
+        model.addAttribute("answeredQuestionCount", answeredQuestionCount);
         
         return "session/detail";
     }
