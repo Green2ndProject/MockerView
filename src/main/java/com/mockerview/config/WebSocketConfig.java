@@ -52,7 +52,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         return scheduler;
     }
 
-    @Override
+    @Override되
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue")
             .setHeartbeatValue(new long[]{25000, 25000})
