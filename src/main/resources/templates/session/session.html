@@ -271,6 +271,27 @@
             font-size: 18px;
         }
         
+        .local-video-label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        .local-video-label.host {
+            background: rgba(239, 68, 68, 0.9);
+        }
+        
+        .local-video-label.student {
+            background: rgba(59, 130, 246, 0.9);
+        }
+        
         .media-controls {
             position: absolute;
             bottom: 20px;
@@ -335,6 +356,19 @@
             aspect-ratio: 16/9;
             position: relative;
             overflow: hidden;
+        }
+        
+        .remote-video-label {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
         }
         
         .card {
@@ -588,6 +622,9 @@
             font-weight: 600;
             color: #667eea;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .ai-score {
@@ -895,7 +932,7 @@
                     <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
                     <div class="user-info">
                         <span class="user-name" th:text="${userName}">사용자</span>
-                        <span class="user-role" th:text="${isHost} ? '면접관' : '지원자'">역할</span>
+                        <span class="user-role" th:text="${isHost} ? '🎯 면접관' : '🎓 지원자'">역할</span>
                     </div>
                 </div>
             </div>
@@ -944,6 +981,9 @@
         <div class="video-main-section">
             <div class="video-display-area" id="videoDisplayArea">
                 <div id="local-video" style="width: 100%; height: 100%; position: relative;">
+                    <div th:class="${isHost} ? 'local-video-label host' : 'local-video-label student'">
+                        <span th:text="${isHost} ? '🎯 면접관 (나)' : '🎓 지원자 (나)'">나</span>
+                    </div>
                     <div class="video-placeholder">
                         <span>📹 화상 연결 중...</span>
                     </div>
@@ -1093,7 +1133,8 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h4>AI 피드백</h4>
+                    <h4>🤖 AI 피드백</h4>
+                    <span style="font-size: 14px; font-weight: normal; color: #667eea;">실시간 분석</span>
                 </div>
                 <div class="card-body">
                     <div id="ai-feedback-list" class="feedback-list scrollable">
@@ -1237,8 +1278,8 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h4>AI 피드백</h4>
-                        <span style="font-size: 14px; font-weight: normal; color: #999;">대기중</span>
+                        <h4>🤖 AI 피드백</h4>
+                        <span style="font-size: 14px; font-weight: normal; color: #667eea;">실시간 분석</span>
                     </div>
                     <div class="card-body">
                         <div id="ai-feedback-list" class="feedback-list scrollable">
@@ -1678,7 +1719,8 @@
                     method: 'POST',
                     headers: {
                         'Authorization': token
-                    },body: formData
+                    },
+                    body: formData
                 });
                 const result = await response.json();
                 if (response.ok && result.success) {
