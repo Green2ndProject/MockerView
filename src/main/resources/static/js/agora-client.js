@@ -8,7 +8,6 @@ class AgoraClient {
         this.audioEnabled = true;
         this.videoEnabled = true;
         this.isJoined = false;
-        this.userRoles = new Map();
         this.setupEventHandlers();
     }
 
@@ -22,13 +21,6 @@ class AgoraClient {
                 const remoteVideoDiv = document.createElement('div');
                 remoteVideoDiv.id = `remote-video-${user.uid}`;
                 remoteVideoDiv.className = 'remote-video-container';
-                remoteVideoDiv.style.position = 'relative';
-                
-                const roleLabel = document.createElement('div');
-                roleLabel.className = 'remote-video-label';
-                roleLabel.textContent = this.getUserRole(user.uid);
-                remoteVideoDiv.appendChild(roleLabel);
-                
                 document.getElementById('remote-videos')?.appendChild(remoteVideoDiv);
                 user.videoTrack.play(remoteVideoDiv.id);
             }
@@ -55,17 +47,6 @@ class AgoraClient {
                 reason: reason
             });
         });
-    }
-
-    getUserRole(uid) {
-        if (this.userRoles.has(uid)) {
-            return this.userRoles.get(uid);
-        }
-        return '참가자';
-    }
-
-    setUserRole(uid, role) {
-        this.userRoles.set(uid, role);
     }
 
     async join(channel, token, uid) {

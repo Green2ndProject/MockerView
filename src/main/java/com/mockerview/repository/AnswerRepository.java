@@ -67,16 +67,4 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "GROUP BY u.id, u.name " +
             "ORDER BY AVG(CAST(f.score AS double)) DESC")
     List<Object[]> findAllUserAverageScores();
-    
-    @Query(value = "SELECT * FROM ( " +
-            "SELECT u.id, u.name, AVG(f.score) as avgScore, COUNT(DISTINCT a.id) as answerCount " +
-            "FROM answers a " +
-            "JOIN users u ON a.user_id = u.id " +
-            "LEFT JOIN feedbacks f ON f.answer_id = a.id " +
-            "WHERE f.score IS NOT NULL " +
-            "GROUP BY u.id, u.name " +
-            "ORDER BY avgScore DESC " +
-            ") WHERE ROWNUM <= 10",
-            nativeQuery = true)
-    List<Object[]> findTopScoredInterviewees();
 }
