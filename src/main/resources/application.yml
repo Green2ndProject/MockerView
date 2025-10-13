@@ -118,6 +118,10 @@ spring:
   datasource:
     url: ${DATABASE_URL}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
 
   servlet:
     multipart:
@@ -134,6 +138,8 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+        enable_lazy_load_no_trans: true
+        default_batch_fetch_size: 100
 
   thymeleaf:
     cache: true
@@ -145,4 +151,5 @@ logging:
   level:
     com.mockerview: INFO
     org.springframework.web.socket: INFO
+    org.hibernate.SQL: ERROR
     root: INFO
