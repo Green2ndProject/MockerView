@@ -44,7 +44,7 @@ public class MyPageController {
             List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
             log.info("호스팅 세션: {}", hostedSessions.size());
             
-            List<Answer> userAnswers = answerRepository.findByUserId(currentUser.getId());
+            List<Answer> userAnswers = answerRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
             log.info("답변: {}", userAnswers.size());
             
             long participatedSessionCount = answerRepository.countDistinctSessionsByUserId(currentUser.getId());

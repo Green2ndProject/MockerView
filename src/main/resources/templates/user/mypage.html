@@ -337,7 +337,7 @@
                         <span th:text="${hostedSession.sessionStatus}">ENDED</span>
                     </div>
                 </div>
-                <a th:href="@{/review/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
+                <a th:href="@{/session/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
             </div>
         </div>
 
@@ -362,7 +362,7 @@
                                 <td class="answer-text" th:text="${answer.answerText}">답변 내용</td>
                                 <td th:text="${#temporals.format(answer.createdAt, 'MM-dd HH:mm')}">01-15 14:30</td>
                                 <td>
-                                    <a th:href="@{/review/detail/{id}(id=${answer.question.session.id})}"
+                                    <a th:href="@{/session/detail/{id}(id=${answer.question.session.id})}"
                                         class="btn btn-sm btn-primary">상세</a>
                                 </td>
                             </tr>
