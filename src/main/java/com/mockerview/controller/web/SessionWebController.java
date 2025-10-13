@@ -104,6 +104,15 @@ public class SessionWebController {
             User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
+            Session session = sessionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            if (session.getSessionStatus() == Session.SessionStatus.ENDED && 
+                !session.getHost().getId().equals(user.getId())) {
+                redirectAttributes.addFlashAttribute("error", "종료된 세션에는 참가할 수 없습니다.");
+                return "redirect:/session/list";
+            }
+            
             log.info("세션 역할 설정 - userId: {}, role: {}", user.getId(), role);
             
             return "redirect:/session/" + id + (role != null ? "?role=" + role : "");
@@ -129,6 +138,12 @@ public class SessionWebController {
             
             Session session = sessionRepository.findByIdWithHost(id)
                 .orElseThrow(() -> new RuntimeException("Session not found: " + id));
+            
+            if (session.getSessionStatus() == Session.SessionStatus.ENDED && 
+                !session.getHost().getId().equals(currentUser.getId())) {
+                model.addAttribute("error", "종료된 세션에는 접근할 수 없습니다.");
+                return "redirect:/session/list";
+            }
             
             List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(id);
             for (Question question : questions) {
@@ -222,6 +237,7 @@ public class SessionWebController {
             session.setHost(host);
             session.setCreatedAt(LocalDateTime.now());
             session.setSessionStatus(Session.SessionStatus.PLANNED);
+            session.setIsSelfInterview("N");
             
             if (session.getExpiresAt() == null) {
                 session.setExpiresAt(LocalDateTime.now().plusHours(3));
@@ -310,7 +326,7 @@ public class SessionWebController {
                 Long questionId = answer.getQuestion().getId();
                 
                 scoreBoard.computeIfAbsent(userId, k -> new HashMap<>())
-                        .put(questionId, answer);
+                            .put(questionId, answer);
             }
             
             model.addAttribute("session", session);
