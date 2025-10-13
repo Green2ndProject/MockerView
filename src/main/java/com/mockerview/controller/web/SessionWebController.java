@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -257,67 +258,81 @@ public class SessionWebController {
     }
 
     @GetMapping("/detail/{id}")
+    @Transactional(readOnly = true)
     public String showSessionDetail(@PathVariable("id") Long sessionId, Model model, 
                                     @AuthenticationPrincipal CustomUserDetails userDetails) {
-        log.info("세션 상세 로드 시작 - sessionId: {}", sessionId);
-        
-        Session session = sessionRepository.findById(sessionId)
-            .orElseThrow(() -> new IllegalArgumentException("세션을 찾을 수 없습니다."));
-        
-        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
-        List<Answer> answers = answerRepository.findBySessionIdOrderByCreatedAt(sessionId);
-        
-        Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
-        
-        for (Answer answer : answers) {
-            Long questionId = answer.getQuestion().getId();
+        try {
+            log.info("세션 상세 조회 - sessionId: {}", sessionId);
             
-            Map<String, Object> data = new HashMap<>();
-            data.put("answer", answer);
+            Session session = sessionRepository.findByIdWithHostAndQuestions(sessionId)
+                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
             
-            boolean hasAiFeedback = answer.getFeedbacks().stream()
-                .anyMatch(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null);
-            data.put("hasAiFeedback", hasAiFeedback);
+            log.info("세션 로드 완료 - title: {}", session.getTitle());
             
-            if (hasAiFeedback) {
-                Feedback aiFeedback = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
-                    .findFirst()
-                    .orElse(null);
-                data.put("aiFeedback", aiFeedback);
+            List<Question> questions = session.getQuestions();
+            if (questions == null) {
+                questions = new ArrayList<>();
             }
             
-            boolean hasInterviewerFeedback = answer.getFeedbacks().stream()
-                .anyMatch(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null);
-            data.put("hasInterviewerFeedback", hasInterviewerFeedback);
+            List<Answer> answers = answerRepository.findBySessionIdOrderByCreatedAt(sessionId);
             
-            if (hasInterviewerFeedback) {
-                Feedback interviewerFeedback = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
-                    .findFirst()
-                    .orElse(null);
-                data.put("interviewerFeedback", interviewerFeedback);
+            Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
+            
+            for (Answer answer : answers) {
+                Long questionId = answer.getQuestion().getId();
+                
+                Map<String, Object> data = new HashMap<>();
+                data.put("answer", answer);
+                
+                boolean hasAiFeedback = answer.getFeedbacks().stream()
+                    .anyMatch(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null);
+                data.put("hasAiFeedback", hasAiFeedback);
+                
+                if (hasAiFeedback) {
+                    Feedback aiFeedback = answer.getFeedbacks().stream()
+                        .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
+                        .findFirst()
+                        .orElse(null);
+                    data.put("aiFeedback", aiFeedback);
+                }
+                
+                boolean hasInterviewerFeedback = answer.getFeedbacks().stream()
+                    .anyMatch(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null);
+                data.put("hasInterviewerFeedback", hasInterviewerFeedback);
+                
+                if (hasInterviewerFeedback) {
+                    Feedback interviewerFeedback = answer.getFeedbacks().stream()
+                        .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
+                        .findFirst()
+                        .orElse(null);
+                    data.put("interviewerFeedback", interviewerFeedback);
+                }
+                
+                answersByQuestion.computeIfAbsent(questionId, k -> new ArrayList<>()).add(data);
             }
             
-            answersByQuestion.computeIfAbsent(questionId, k -> new ArrayList<>()).add(data);
+            long totalAnswerCount = answers.size();
+            long answeredQuestionCount = answersByQuestion.size();
+            
+            model.addAttribute("interviewSession", session);
+            model.addAttribute("questions", questions);
+            model.addAttribute("answersByQuestion", answersByQuestion);
+            model.addAttribute("totalAnswerCount", totalAnswerCount);
+            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+            
+            if (userDetails != null) {
+                User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                    .orElse(null);
+                model.addAttribute("currentUser", currentUser);
+            }
+            
+            log.info("세션 상세 로드 완료 - sessionId: {}, questions: {}", sessionId, questions.size());
+            return "session/detail";
+            
+        } catch (Exception e) {
+            log.error("세션 상세 조회 실패 - sessionId: {}", sessionId, e);
+            model.addAttribute("error", "세션을 불러올 수 없습니다: " + e.getMessage());
+            return "error/500";
         }
-        
-        long totalAnswerCount = answers.size();
-        long answeredQuestionCount = answersByQuestion.size();
-        
-        model.addAttribute("interviewSession", session);
-        model.addAttribute("questions", questions);
-        model.addAttribute("answersByQuestion", answersByQuestion);
-        model.addAttribute("totalAnswerCount", totalAnswerCount);
-        model.addAttribute("answeredQuestionCount", answeredQuestionCount);
-        
-        if (userDetails != null) {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElse(null);
-            model.addAttribute("currentUser", currentUser);
-        }
-        
-        log.info("세션 상세 로드 완료 - sessionId: {}", sessionId);
-        return "session/detail";
     }
 }
