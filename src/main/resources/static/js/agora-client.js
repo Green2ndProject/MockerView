@@ -34,15 +34,6 @@ class AgoraClient {
                         <div class="remote-video-label" data-uid="${user.uid}">${userName}</div>
                     `;
                     remoteContainer.appendChild(remoteVideoDiv);
-                    
-                    setTimeout(() => {
-                        if (window.mockerViewWS && window.mockerViewWS.participantNames) {
-                            const wsUserName = window.mockerViewWS.participantNames.get(user.uid);
-                            if (wsUserName) {
-                                this.updateRemoteUserName(user.uid, wsUserName);
-                            }
-                        }
-                    }, 500);
                 }
                 user.videoTrack.play(remoteVideoDiv.id);
             }

@@ -62,10 +62,13 @@ class MockerViewWebSocket {
       console.log('👤 사용자 매핑 수신');
       const data = JSON.parse(message.body);
       if (window.agoraClient && data.userId && data.userName) {
-        window.agoraClient.updateRemoteUserName(data.userId, data.userName);
+          window.agoraClient.updateRemoteUserName(data.userId, data.userName);
+      }
+      if (!this.participantNames) {
+          this.participantNames = new Map();
       }
       this.participantNames.set(data.userId, data.userName);
-    });
+  });
     
     this.stompClient.subscribe(`/topic/session/${this.sessionId}/status`, (message) => {
       console.log('📊 Status 메시지 수신');
