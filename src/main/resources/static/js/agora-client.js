@@ -29,11 +29,20 @@ class AgoraClient {
                     remoteVideoDiv.id = `remote-video-${user.uid}`;
                     remoteVideoDiv.className = 'remote-video-container';
                     
-                    const userName = this.remoteUsers.get(user.uid) || `참가자 ${user.uid}`;
+                    const userName = this.remoteUsers.get(user.uid) || `참가자`;
                     remoteVideoDiv.innerHTML = `
                         <div class="remote-video-label" data-uid="${user.uid}">${userName}</div>
                     `;
                     remoteContainer.appendChild(remoteVideoDiv);
+                    
+                    setTimeout(() => {
+                        if (window.mockerViewWS && window.mockerViewWS.participantNames) {
+                            const wsUserName = window.mockerViewWS.participantNames.get(user.uid);
+                            if (wsUserName) {
+                                this.updateRemoteUserName(user.uid, wsUserName);
+                            }
+                        }
+                    }, 500);
                 }
                 user.videoTrack.play(remoteVideoDiv.id);
             }
@@ -77,6 +86,7 @@ class AgoraClient {
         const label = document.querySelector(`[data-uid="${uid}"]`);
         if (label) {
             label.textContent = userName;
+            console.log(`✅ 이름 업데이트: UID ${uid} → ${userName}`);
         }
     }
 
