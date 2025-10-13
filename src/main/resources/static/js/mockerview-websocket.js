@@ -363,25 +363,22 @@ class MockerViewWebSocket {
     if (!participantsListDiv) return;
     
     if (!participants || participants.length === 0) {
-      participantsListDiv.innerHTML = '<div class="empty-state">참가자 없음</div>';
-      return;
+        participantsListDiv.innerHTML = '<div class="empty-state">대기 중...</div>';
+        return;
     }
     
     participantsListDiv.innerHTML = participants.map(participant => 
-      `<div class="participant-item">
-        <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
-        <div class="participant-info">
-          <div class="participant-name">${participant}</div>
-          <div class="participant-status">🟢 온라인</div>
-        </div>
-      </div>`
+        `<div class="participant-item">
+            <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
+            <span>${participant}</span>
+        </div>`
     ).join("");
     
     const participantCount = document.getElementById("participant-count");
     if (participantCount) {
-      participantCount.textContent = participants.length + "명";
+        participantCount.textContent = (participants.length + 1) + "명";
     }
-  }
+}
 
   updateSessionStats(questionCount, answerCount) {
     const statsDiv = document.getElementById("session-stats");

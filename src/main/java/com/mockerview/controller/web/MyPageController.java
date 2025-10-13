@@ -157,14 +157,14 @@ public class MyPageController {
             model.addAttribute("givenFeedbacks", givenFeedbacks);
             model.addAttribute("topInterviewees", topInterviewees);
             
-            return "user/myStatsInterviewer";
+            return "user/mystatsinterviewer";
         } catch (Exception e) {
             log.error("면접관 통계 로드 실패", e);
             model.addAttribute("error", "통계를 불러올 수 없습니다.");
             return "redirect:/auth/mypage";
         }
     }
-
+    
     private String loadIntervieweeStats(User currentUser, Model model) {
         try {
             List<Answer> myAnswers = answerRepository.findByUserIdWithFeedbacks(currentUser.getId());
@@ -252,7 +252,7 @@ public class MyPageController {
             model.addAttribute("growthData", growthData);
             model.addAttribute("rankings", rankings);
             
-            return "user/myStats";
+            return "user/mystats";
         } catch (Exception e) {
             log.error("면접자 통계 로드 실패", e);
             model.addAttribute("error", "통계를 불러올 수 없습니다.");
