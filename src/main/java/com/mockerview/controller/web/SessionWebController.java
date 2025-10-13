@@ -3,7 +3,6 @@ package com.mockerview.controller.web;
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.*;
 import com.mockerview.repository.*;
-import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +32,6 @@ public class SessionWebController {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
-    private final SessionService sessionService;
 
     @Value("${agora.app-id}")
     private String agoraAppId;
@@ -58,11 +56,11 @@ public class SessionWebController {
         
         if (status != null && !status.isEmpty()) {
             Session.SessionStatus sessionStatus = Session.SessionStatus.valueOf(status);
-            sessionPage = sessionService.getSessionsByStatus(sessionStatus, pageable);
+            sessionPage = sessionRepository.findByStatusPageable(sessionStatus, pageable);
         } else if (keyword != null && !keyword.isEmpty()) {
-            sessionPage = sessionService.searchSessions(keyword, pageable);
+            sessionPage = sessionRepository.searchSessionsPageable(keyword, null, pageable);
         } else {
-            sessionPage = sessionService.getAllSessions(pageable);
+            sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
         }
         
         for (Session session : sessionPage.getContent()) {
@@ -108,9 +106,9 @@ public class SessionWebController {
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public String showSession(@PathVariable Long id,
-                                @RequestParam(required = false) String role,
-                                @AuthenticationPrincipal CustomUserDetails userDetails,
-                                Model model) {
+                            @RequestParam(required = false) String role,
+                            @AuthenticationPrincipal CustomUserDetails userDetails,
+                            Model model) {
         try {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
