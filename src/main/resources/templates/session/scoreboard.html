@@ -380,7 +380,11 @@
         function toggleDetails(index) {
             const detailsEl = document.getElementById('details-' + index);
             if (detailsEl) {
-                detailsEl.classList.toggle('show');
+                if (detailsEl.classList.contains('show')) {
+                    detailsEl.classList.remove('show');
+                } else {
+                    detailsEl.classList.add('show');
+                }
             }
         }
     </script>
