@@ -43,8 +43,7 @@ public class InterviewerFeedbackService {
                 .summary(feedbackMessage.getComment())
                 .strengths(null)
                 .weaknesses(null)
-                .improvement(null)
-                .model("INTERVIEWER")
+                .improvementSuggestions(null)
                 .build();
             
             feedbackRepository.save(feedback);
