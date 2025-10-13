@@ -89,82 +89,108 @@
             white-space: nowrap;
         }
 
-        /* 탈퇴 모달 */
-        .custom-modal-backdrop {
-            position : fixed;
-            z-index : 1000;
-            left : 0;
-            top : 0;
-            width : 100%;
-            height : 100%;
-            background-color : rgba(0,0,0,0.4);
-            display : flex;
-            justify-content: center;
-            align-items : center;
+        .profile-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
         }
 
-        .custom-modal-container {            
-            width : 450px;
-            max-width : 90%;
-            height : auto;
-            overflow: hidden; 
-            background-color : white;
+        @media (min-width: 768px) {
+            .profile-actions-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .btn-danger {
+            background-color: #E74C3C;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-danger:hover {
+            background-color: #C0392B;
+        }
+
+        .custom-modal-backdrop {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .custom-modal-container {
+            width: 450px;
+            max-width: 90%;
+            height: auto;
+            overflow: hidden;
+            background-color: white;
             border-radius: 8px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             box-sizing: border-box;
         }
 
         .custom-modal-card, .success-modal-card {
-            width : 100%;
-            height : auto;
+            width: 100%;
+            height: auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align : center;
+            text-align: center;
             box-sizing: border-box;
-            padding : 20px;  
+            padding: 20px;
         }
 
         .custom-modal-card {
-            display : block;
+            display: block;
         }
 
         .success-modal-card {
-            display : none;
-        }        
-        
+            display: none;
+        }
+
         .modal-title {
-            font-size : 1.5em;
-            font-weight : 600;
-            margin-bottom : 20px;
-            color : #333;
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
         }
 
         .modal-instruction {
-            color : #666;
-            margin-bottom : 20px;
-            font-size : 0.95em;
-        }  
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
 
         .modal-reason-label {
-            color : #888;
-            margin : 20px 0 10px 0;
-            font-size : 0.85em;
-            padding-left : 5px;
-            text-align : left;
+            color: #888;
+            margin: 20px 0 10px 0;
+            font-size: 0.85em;
+            padding-left: 5px;
+            text-align: left;
         }
 
         .input-field {
-            margin-bottom : 25px;
+            margin-bottom: 25px;
         }
         .select-field {
-            margin-bottom : 0;
+            margin-bottom: 0;
         }
         .input-field, .select-field {
-            width : 100%;
-            padding : 12px 15px;
-            border : 1px solid #ddd;
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            box-sizing : border-box;
-            font-size : 1em;
+            box-sizing: border-box;
+            font-size: 1em;
         }
 
         .wmodal-actions {
@@ -172,22 +198,22 @@
             justify-content: space-between;
             margin-top: 30px;
             gap: 10px;
-            padding : 0 10px;
+            padding: 0 10px;
         }
         .wmodal-actions button {
-            width : 50%;
-            padding : 12px;
-            border-radius : 8px;
-            font-size : 1em;
-            cursor : pointer;
-            transition : background-color 0.2s;
-            font-weight : 600;
+            width: 50%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 600;
         }
 
         .danger-btn {
             background-color: #E74C3C;
-            color : white;
-            border : none;
+            color: white;
+            border: none;
         }
         .danger-btn:hover {
             background-color: #C0392B;
@@ -195,28 +221,38 @@
 
         .secondary-btn {
             background-color: transparent;
-            color: #7F78FF; 
+            color: #7F78FF;
             border: 2px solid #7F78FF;
         }
 
         .secondary-btn:hover {
-            background-color: #F0F0FF; 
+            background-color: #F0F0FF;
         }
 
-        /* Spinner CSS */
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 30px;
             height: 30px;
             border-radius: 50%;
-            border-left-color: #f34d3d; /* 탈퇴 버튼 색깔과 맞추면 예쁩니다. */
-            margin: 15px auto 0; /* 중앙 정렬 */
+            border-left-color: #f34d3d;
+            margin: 15px auto 0;
             animation: spin 1s ease-in-out infinite;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .form-actions .btn {
+            flex: 1;
+            min-width: 150px;
         }
     </style>
 </head>
@@ -253,7 +289,7 @@
         <div th:if="${success}" class="alert alert-success">
             <span th:text="${success}"></span>
         </div>
-        
+
         <div th:if="${error}" class="alert alert-error">
             <span th:text="${error}"></span>
         </div>
@@ -309,13 +345,13 @@
                                 <td class="answer-text" th:text="${answer.answerText}">답변 내용</td>
                                 <td th:text="${#temporals.format(answer.createdAt, 'MM-dd HH:mm')}">01-15 14:30</td>
                                 <td>
-                                    <a th:href="@{/session/detail/{id}(id=${answer.question.session.id})}" 
+                                    <a th:href="@{/session/detail/{id}(id=${answer.question.session.id})}"
                                         class="btn btn-sm btn-primary">상세</a>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
-                    <div th:if="${userAnswers == null or userAnswers.empty}" 
+                    <div th:if="${userAnswers == null or userAnswers.empty}"
                         style="text-align: center; padding: 2rem; color: #6c757d;">
                         아직 작성한 답변이 없습니다
                     </div>
@@ -323,7 +359,7 @@
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-top: 2rem;">
+        <div class="profile-actions-grid">
             <div class="card">
                 <div class="card-header">프로필 수정</div>
                 <div class="card-body">
@@ -332,12 +368,12 @@
                             <label for="name" class="form-label">이름</label>
                             <input type="text" class="form-control" id="name" name="name" th:value="${user.name}" required>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="email" class="form-label">이메일</label>
                             <input type="email" class="form-control" id="email" name="email" th:value="${user.email}" required>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="password" class="form-label">새 비밀번호 (변경시에만 입력)</label>
                             <input type="password" class="form-control" id="password" name="password" placeholder="새 비밀번호">
@@ -345,9 +381,11 @@
                                 비밀번호를 변경하지 않으려면 비워두세요.
                             </small>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary">프로필 업데이트</button>
-                        <button type="button" class="btn btn-primary" id="withdraw-btn">회원 탈퇴</button>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">프로필 업데이트</button>
+                            <button type="button" class="btn btn-danger" id="withdraw-btn">회원 탈퇴</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -364,14 +402,14 @@
                             <p class="modal-reason-label">탈퇴 사유를 선택해주세요</p>
                             <select id="reason-select" class="select-field">
                                 <option value="">선택안함</option>
-                                <option value="no">하고싶지않아요</option>
-                                <option value="dontneed">날 그만 보내주세요</option>
-                                <option value="letmego">히히히</option>
+                                <option value="no">더 좋은 사이트를 발견함</option>
+                                <option value="dontneed">서비스 불만</option>
+                                <option value="letmego">답하고 싶지 않음</option>
                                 <option value="other">기타</option>
                             </select>
                         </div>
                         <div class="wmodal-actions">
-                            <button id="confirm-withdraw-btn" class="danger-btn" >탈퇴하기</button>
+                            <button id="confirm-withdraw-btn" class="danger-btn">탈퇴하기</button>
                             <button id="cancel-btn" class="secondary-btn">취소</button>
                         </div>
                     </div>
@@ -380,13 +418,13 @@
                         <h3 class="modal-title">탈퇴되었습니다</h3>
                         <div class="modal-body">
                             <p class="modal-instruction">잠시만 기다려주세요</p>
-                            <p class="modal-instruction">이용해주셔서 감사합니다</p>                            
+                            <p class="modal-instruction">이용해주셔서 감사합니다</p>
                         </div>
                         <div class="spinner"></div>
                     </div>
-                </div>    
+                </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header">계정 정보</div>
                 <div class="card-body">
@@ -415,20 +453,20 @@
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
+
             if (!name.trim() || !email.trim()) {
                 e.preventDefault();
                 alert('이름과 이메일을 입력해주세요.');
                 return;
             }
-            
+
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 e.preventDefault();
                 alert('올바른 이메일 형식을 입력해주세요.');
                 return;
             }
-            
+
             if (password && password.length < 6) {
                 e.preventDefault();
                 alert('새 비밀번호는 6자 이상이어야 합니다.');
@@ -479,12 +517,12 @@
             console.log("탈퇴 사유 : " + reason);
             console.log("실제 전송 비밀번호:", password);
             console.log("비밀번호 길이:", password.length);
-            
+
             try {
-                
+
                 const response = await fetch('/api/user/withdraw', {
                     method  : 'POST',
-                    headers : { 
+                    headers : {
                         'Content-Type' : 'application/json'
                     },
                     credentials : 'include',
@@ -495,7 +533,6 @@
                 });
 
                 if(response.ok){
-                    //alert("회원 탙퇴가 성공적으로 완료되었습니다. 이용해 주셔서 감사합니다.");
                     const data        = response.json();
                     const redirectUrl = data.redirectUrl || "/";
 
@@ -505,9 +542,9 @@
 
                     setTimeout(()=> {
                         withdrawalModal.style.display = 'none';
-                        window.location.href = redirectUrl; 
-                    }, 2000);                   
-                    
+                        window.location.href = redirectUrl;
+                    }, 2000);
+
                 } else if (response.status >= 400 && response.status < 500) {
 
                     const message = getErrorMessage(response.status);
@@ -528,10 +565,9 @@
                 confirmWithdrawBtn.textContent = '탈퇴하기';
             }
 
-            
-        }); 
 
-    // 탈퇴폼 리셋처리
+        });
+
     function resetWithdrawForm(){
 
         if(withdrawalPasswordInput){
@@ -540,21 +576,21 @@
 
         if(reasonSelect){
             reasonSelect.selectedIndex = 0;
-        }        
+        }
     }
-    // 탈퇴 후 에러 처리
+
     function getErrorMessage(statusCode){
 
         switch(statusCode){
             case 400 :
                 return "비밀번호가 일치하지 않습니다. 다시 확인해주세요";
-            case 401 : 
+            case 401 :
                 return "세션이 만료되었습니다. 다시 로그인해주세요.";
             case 403 :
                 return "탈퇴회원이거나 접근 권한이 없습니다. 다시 로그인해주세요";
             case 409 :
                 return "이미 탈퇴한 회원입니다. (중복요청)";
-            default : 
+            default :
                 return "처리중 오류 발생. 잠시 후 다시 시도해주세요. (Code : " + statusCode + ")";
         }
     }
