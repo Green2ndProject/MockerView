@@ -143,8 +143,20 @@ public class SessionWebController {
             String sessionType = session.getSessionType() != null ? 
                                 session.getSessionType() : "TEXT";
             
-            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}", 
-                    currentUser.getName(), userRole, isHost, sessionType);
+            String agoraChannel = null;
+            if ("VIDEO".equals(sessionType)) {
+                if (session.getAgoraChannel() == null || session.getAgoraChannel().isEmpty()) {
+                    agoraChannel = "session_" + id;
+                    session.setAgoraChannel(agoraChannel);
+                    sessionRepository.save(session);
+                    log.info("Agora 채널 자동 생성 - sessionId: {}, channel: {}", id, agoraChannel);
+                } else {
+                    agoraChannel = session.getAgoraChannel();
+                }
+            }
+            
+            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}, 채널: {}", 
+                    currentUser.getName(), userRole, isHost, sessionType, agoraChannel);
             
             model.addAttribute("session", session);
             model.addAttribute("currentUser", currentUser);
@@ -155,9 +167,10 @@ public class SessionWebController {
             model.addAttribute("sessionType", sessionType);
             model.addAttribute("sessionHost", session.getHost());
             model.addAttribute("hostName", session.getHost() != null ? session.getHost().getName() : "알 수 없음");
+            model.addAttribute("sessionId", id);
             
-            if ("VIDEO".equals(sessionType) && session.getAgoraChannel() != null) {
-                model.addAttribute("agoraChannel", session.getAgoraChannel());
+            if ("VIDEO".equals(sessionType) && agoraChannel != null) {
+                model.addAttribute("agoraChannel", agoraChannel);
                 model.addAttribute("agoraAppId", agoraAppId);
             }
             
