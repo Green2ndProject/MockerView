@@ -5,11 +5,10 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     email VARCHAR(255),
     password VARCHAR(255),
-    username VARCHAR(255),
-    is_deleted SMALLINT DEFAULT 0 NOT NULL,
+    username VARCHAR(255) UNIQUE,
+    is_deleted INTEGER DEFAULT 0 NOT NULL,
     deleted_at TIMESTAMP,
-    withdrawal_reason VARCHAR(255),
-    CONSTRAINT chk_is_deleted CHECK (is_deleted IN (0, 1))
+    withdrawal_reason VARCHAR(255)
 );
 
 CREATE TABLE sessions (
@@ -28,11 +27,7 @@ CREATE TABLE sessions (
     expires_at TIMESTAMP,
     difficulty VARCHAR(20),
     category VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_status CHECK (status IN ('PLANNED','RUNNING','ENDED')),
-    CONSTRAINT chk_session_type CHECK (session_type IN ('GROUP','SELF','TEXT','AUDIO','VIDEO')),
-    CONSTRAINT chk_is_reviewable CHECK (is_reviewable IN ('Y','N')),
-    CONSTRAINT chk_media_enabled CHECK (media_enabled IN (0,1))
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_sessions_expires ON sessions(expires_at);
@@ -54,8 +49,7 @@ CREATE TABLE answers (
     user_id BIGINT REFERENCES users(id),
     answer_text TEXT NOT NULL,
     score INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 100)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE feedbacks (
@@ -70,8 +64,7 @@ CREATE TABLE feedbacks (
     reviewer_id BIGINT,
     reviewer_comment TEXT,
     score INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_feedback_type CHECK (feedback_type IN ('AI','INTERVIEWER'))
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE question_pool (
@@ -79,8 +72,7 @@ CREATE TABLE question_pool (
     category VARCHAR(50) NOT NULL,
     difficulty VARCHAR(20),
     question_text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_difficulty CHECK (difficulty IN ('EASY','MEDIUM','HARD'))
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE reviews (
@@ -90,8 +82,7 @@ CREATE TABLE reviews (
     answer_id BIGINT REFERENCES answers(id),
     review_comment TEXT,
     rating DECIMAL(2,1),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_rating CHECK (rating BETWEEN 0.0 AND 5.0)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO question_pool (category, difficulty, question_text) VALUES ('기술', 'EASY', 'Java의 JVM 구조에 대해 설명해주세요.');
