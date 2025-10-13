@@ -2,7 +2,6 @@ package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.Answer;
-import com.mockerview.entity.Question;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.repository.AnswerRepository;
@@ -44,7 +43,7 @@ public class StatsController {
             
             model.addAttribute("currentUser", currentUser);
             
-            if (currentUser.getRole() == User.Role.HOST || currentUser.getRole() == User.Role.REVIEWER) {
+            if (currentUser.getRole() == User.UserRole.HOST || currentUser.getRole() == User.UserRole.REVIEWER) {
                 return loadInterviewerStats(model, currentUser);
             } else {
                 return loadStudentStats(model, currentUser);
@@ -126,8 +125,10 @@ public class StatsController {
             
             long totalSessions = hostedSessions.size();
             
-            Long totalQuestions = questionRepository.countByQuestionerIdAndSessionIsSelfInterview(
-                currentUser.getId(), "N");
+            long totalQuestions = hostedSessions.stream()
+                .filter(s -> s.getQuestions() != null)
+                .mapToLong(s -> s.getQuestions().size())
+                .sum();
             
             List<Session> recentSessions = hostedSessions.stream()
                 .sorted(Comparator.comparing(Session::getCreatedAt).reversed())
