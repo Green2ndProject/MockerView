@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -33,6 +35,7 @@ public class MyPageController {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @GetMapping("/mypage")
+    @Transactional(readOnly = true)
     public String showMyPage(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
@@ -42,13 +45,36 @@ public class MyPageController {
             log.info("사용자: {}, 역할: {}", currentUser.getName(), currentUser.getRole());
             
             List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
-            log.info("호스팅 세션: {}", hostedSessions.size());
+            log.info("호스팅 세션: {} 개", hostedSessions.size());
             
-            List<Answer> userAnswers = answerRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
-            log.info("답변: {}", userAnswers.size());
+            List<Answer> userAnswers = new ArrayList<>();
+            try {
+                userAnswers = answerRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
+                
+                for (Answer answer : userAnswers) {
+                    if (answer.getQuestion() != null) {
+                        answer.getQuestion().getText();
+                        if (answer.getQuestion().getSession() != null) {
+                            answer.getQuestion().getSession().getTitle();
+                        }
+                    }
+                }
+                
+                log.info("답변: {} 개", userAnswers.size());
+            } catch (Exception e) {
+                log.error("❌ 답변 로드 실패: {}", e.getMessage());
+                userAnswers = new ArrayList<>();
+            }
             
-            long participatedSessionCount = answerRepository.countDistinctSessionsByUserId(currentUser.getId());
-            long answerCount = answerRepository.countByUserId(currentUser.getId());
+            long participatedSessionCount = 0;
+            long answerCount = 0;
+            
+            try {
+                participatedSessionCount = answerRepository.countDistinctSessionsByUserId(currentUser.getId());
+                answerCount = answerRepository.countByUserId(currentUser.getId());
+            } catch (Exception e) {
+                log.error("❌ 통계 로드 실패: {}", e.getMessage());
+            }
             
             log.info("참가 세션: {}, 답변 수: {}", participatedSessionCount, answerCount);
             
@@ -60,13 +86,14 @@ public class MyPageController {
             
             return "user/mypage";
         } catch (Exception e) {
-            log.error("마이페이지 로드 실패", e);
-            model.addAttribute("error", "데이터를 불러오는데 실패했습니다: " + e.getMessage());
+            log.error("❌❌❌ 마이페이지 완전 실패 ❌❌❌", e);
+            model.addAttribute("error", "데이터 로드 실패: " + e.getMessage());
             return "error";
         }
     }
 
     @PostMapping("/update")
+    @Transactional
     public String updateProfile(@RequestParam String name,
                                 @RequestParam String email,
                                 @RequestParam(required = false) String newPassword,
@@ -106,6 +133,7 @@ public class MyPageController {
     }
 
     @GetMapping("/stats")
+    @Transactional(readOnly = true)
     public String showStats(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
@@ -120,7 +148,7 @@ public class MyPageController {
             }
         } catch (Exception e) {
             log.error("통계 페이지 로드 실패", e);
-            model.addAttribute("error", "통계를 불러오는데 실패했습니다: " + e.getMessage());
+            model.addAttribute("error", "통계 로드 실패: " + e.getMessage());
             return "redirect:/auth/mypage";
         }
     }

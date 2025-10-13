@@ -26,12 +26,19 @@ public class ReviewController {
     private final QuestionRepository questionRepository;
 
     @GetMapping("/list")
+    @Transactional(readOnly = true)
     public String listReviews(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
             List<Session> sessions = sessionRepository.findAll();
+            
+            for (Session session : sessions) {
+                if (session.getQuestions() != null) {
+                    session.getQuestions().size();
+                }
+            }
             
             model.addAttribute("currentUser", currentUser);
             model.addAttribute("sessions", sessions);
