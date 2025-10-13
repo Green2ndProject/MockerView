@@ -311,4 +311,16 @@ public class SessionService {
     public List<Answer> getSessionAnswers(Long sessionId) {
         return answerRepository.findByQuestionSessionIdOrderByCreatedAt(sessionId);
     }
+    
+    @Transactional(readOnly = true)
+    public Session getSessionIfOwner(Long sessionId, Long userId) {
+        Session session = sessionRepository.findById(sessionId)
+            .orElseThrow(() -> new RuntimeException("세션 없음"));
+        
+        if (!session.getHost().getId().equals(userId)) {
+            throw new RuntimeException("접근 권한 없음");
+        }
+        
+        return session;
+    }
 }

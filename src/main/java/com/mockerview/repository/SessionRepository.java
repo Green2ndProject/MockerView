@@ -1,6 +1,8 @@
 package com.mockerview.repository;
 
 import com.mockerview.entity.Session;
+import com.mockerview.entity.Session.SessionStatus;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -47,17 +49,18 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
                                 @Param("sortOrder") String sortOrder);
 
     @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host " +
-                "WHERE (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
+                "WHERE s.isSelfInterview = 'N' " +
+                "AND (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
                 "AND (:status IS NULL OR s.sessionStatus = :status) ", 
-        countQuery = "SELECT COUNT(s) FROM Session s WHERE " +
-                    "(:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
+        countQuery = "SELECT COUNT(s) FROM Session s WHERE s.isSelfInterview = 'N' " +
+                    "AND (:keyword IS NULL OR :keyword = '' OR s.title LIKE %:keyword%) " +
                     "AND (:status IS NULL OR s.sessionStatus = :status) ")
     Page<Session> searchSessionsPageable(@Param("keyword") String keyword, 
                                         @Param("status") Session.SessionStatus status, 
                                         Pageable pageable);
 
-    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host", 
-        countQuery = "SELECT COUNT(s) FROM Session s")
+    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.isSelfInterview = 'N'", 
+        countQuery = "SELECT COUNT(s) FROM Session s WHERE s.isSelfInterview = 'N'")
     Page<Session> findAllSessionsWithHost(Pageable pageable);
     
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId AND s.sessionType = :sessionType ORDER BY s.createdAt DESC")
@@ -87,8 +90,10 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
             "FROM Session s WHERE s.id = :sessionId AND s.host.id = :hostId")
     boolean isHost(@Param("sessionId") Long sessionId, @Param("hostId") Long hostId);
     
-    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.sessionStatus = :status",
-        countQuery = "SELECT COUNT(s) FROM Session s WHERE s.sessionStatus = :status")
+    @Query(value = "SELECT s FROM Session s LEFT JOIN FETCH s.host " +
+                "WHERE s.isSelfInterview = 'N' AND s.sessionStatus = :status",
+        countQuery = "SELECT COUNT(s) FROM Session s " +
+                    "WHERE s.isSelfInterview = 'N' AND s.sessionStatus = :status")
     Page<Session> findByStatusPageable(@Param("status") Session.SessionStatus status, Pageable pageable);
     
     Long countBySessionStatus(Session.SessionStatus status);
@@ -112,4 +117,12 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
                     @Param("hostId") Long hostId, 
                     @Param("isSelfInterview") String isSelfInterview,
                     Pageable pageable);
+    @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId AND s.isSelfInterview = 'Y' ORDER BY s.createdAt DESC")
+    List<Session> findSelfInterviewsByHostId(@Param("hostId") Long hostId);
+
+    @Query("SELECT COUNT(s) FROM Session s WHERE s.isSelfInterview = 'N'")
+    Long countNonSelfInterviewSessions();
+
+    @Query("SELECT COUNT(s) FROM Session s WHERE s.sessionStatus = :status AND s.isSelfInterview = :isSelfInterview")
+    Long countBySessionStatusAndIsSelfInterview(@Param("status") SessionStatus status, @Param("isSelfInterview") String isSelfInterview);
 }

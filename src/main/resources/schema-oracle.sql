@@ -65,7 +65,7 @@ CREATE TABLE answers (
     created_at TIMESTAMP DEFAULT SYSTIMESTAMP,
     CONSTRAINT fk_answers_question FOREIGN KEY (question_id) REFERENCES questions(id),
     CONSTRAINT fk_answers_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 10)
+    CONSTRAINT chk_score CHECK (score BETWEEN 1 AND 100)
 );
 
 CREATE TABLE feedbacks (

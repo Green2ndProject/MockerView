@@ -7,6 +7,7 @@ import com.mockerview.service.SelfInterviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,15 +239,15 @@ public class SelfInterviewApiController {
     @PostMapping("/{sessionId}/video-answer")
     public ResponseEntity<Map<String, Object>> submitVideoAnswer(
             @PathVariable Long sessionId,
-            @RequestParam("audio") MultipartFile audioFile,
+            @RequestParam("audio") MultipartFile videoFile,
             @RequestParam("questionId") Long questionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
         try {
-            log.info("비디오 답변 수신 - 크기: {} bytes", audioFile.getSize());
+            log.info("비디오 답변 수신 - 크기: {} bytes", videoFile.getSize());
 
-            String transcribedText = transcribeWithWhisper(audioFile);
-            log.info("음성 변환 완료: {}", transcribedText.substring(0, Math.min(50, transcribedText.length())));
+            String transcribedText = transcribeWithWhisper(videoFile);
+            log.info("음성 변환 완료: {}", transcribedText);
 
             Question question = questionRepository.findById(questionId).orElseThrow();
             User user = userRepository.findById(userDetails.getUserId()).orElseThrow();
@@ -295,14 +299,33 @@ public class SelfInterviewApiController {
         }
     }
 
-    private String transcribeWithWhisper(MultipartFile audioFile) {
+    private String transcribeWithWhisper(MultipartFile videoFile) {
+        File tempVideoFile = null;
+        File audioFile = null;
+        
         try {
+            tempVideoFile = File.createTempFile("video_", ".webm");
+            videoFile.transferTo(tempVideoFile);
+            
+            long fileSizeInMB = tempVideoFile.length() / (1024 * 1024);
+            log.info("원본 비디오 크기: {}MB", fileSizeInMB);
+            
+            audioFile = convertToCompressedAudio(tempVideoFile);
+            
+            long audioSizeInMB = audioFile.length() / (1024 * 1024);
+            log.info("압축된 오디오 크기: {}MB", audioSizeInMB);
+            
+            if (audioSizeInMB > 24) {
+                log.error("압축 후에도 파일이 너무 큽니다: {}MB", audioSizeInMB);
+                return "음성 파일이 너무 커서 인식할 수 없습니다. 답변을 짧게 해주세요.";
+            }
+
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(openaiApiKey.replace("Bearer ", ""));
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            headers.setBearerAuth(openaiApiKey.replace("Bearer ", ""));
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", audioFile.getResource());
+            body.add("file", new FileSystemResource(audioFile));
             body.add("model", "whisper-1");
             body.add("language", "ko");
 
@@ -314,13 +337,66 @@ public class SelfInterviewApiController {
                 Map.class
             );
 
-            Map<String, Object> responseBody = response.getBody();
-            return (String) responseBody.get("text");
-
+            String transcription = (String) response.getBody().get("text");
+            
+            if (transcription == null || transcription.trim().isEmpty()) {
+                return "음성을 인식하지 못했습니다. 더 크게 말씀해주세요.";
+            }
+            
+            return transcription;
+            
         } catch (Exception e) {
             log.error("Whisper API 호출 실패", e);
-            return "음성 인식에 실패했습니다.";
+            return "음성 인식에 실패했습니다: " + e.getMessage();
+        } finally {
+            if (audioFile != null && audioFile.exists()) {
+                audioFile.delete();
+            }
+            if (tempVideoFile != null && tempVideoFile.exists()) {
+                tempVideoFile.delete();
+            }
         }
+    }
+
+    private File convertToCompressedAudio(File videoFile) throws Exception {
+        File audioFile = File.createTempFile("audio_compressed_", ".mp3");
+        
+        ProcessBuilder pb = new ProcessBuilder(
+            "ffmpeg",
+            "-i", videoFile.getAbsolutePath(),
+            "-vn",
+            "-ar", "16000",
+            "-ac", "1",
+            "-b:a", "24k",
+            "-f", "mp3",
+            "-y",
+            audioFile.getAbsolutePath()
+        );
+        
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+                log.debug("FFmpeg: {}", line);
+            }
+        }
+        
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            log.error("FFmpeg 실패 출력:\n{}", output.toString());
+            throw new RuntimeException("FFmpeg 변환 실패: exit code " + exitCode);
+        }
+        
+        if (!audioFile.exists() || audioFile.length() == 0) {
+            throw new RuntimeException("오디오 파일 생성 실패");
+        }
+        
+        return audioFile;
     }
 
     private String generateAIFeedback(String questionText, String answerText) {

@@ -24,7 +24,6 @@ import org.springframework.data.domain.Sort;
 import com.mockerview.service.SessionService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/selfinterview")
@@ -64,6 +63,22 @@ public class SelfInterviewController {
             Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
             
             Page<Session> sessionPage = sessionService.getSelfInterviewRecords(hostId, pageable);
+            log.info("=== DEBUG: User ID: {}", user.getId());
+            
+            List<Session> allSessions = sessionRepository.findByHostId(user.getId());
+            log.info("=== DEBUG: Total sessions by host: {}", allSessions.size());
+            
+            for (Session s : allSessions) {
+                log.info("=== DEBUG: Session {} - title: {}, isSelfInterview: {}, sessionType: {}", 
+                    s.getId(), s.getTitle(), s.getIsSelfInterview(), s.getSessionType());
+            }
+            
+            List<Session> selfSessions = sessionRepository.findSelfInterviewsByHostId(user.getId());
+            log.info("=== DEBUG: Self interview sessions: {}", selfSessions.size());
+            
+            for (Session s : selfSessions) {
+                log.info("=== DEBUG: Self Session {} - title: {}", s.getId(), s.getTitle());
+            }
             
             model.addAttribute("username", username);
             model.addAttribute("sessions", sessionPage.getContent());
@@ -86,8 +101,15 @@ public class SelfInterviewController {
                 return "redirect:/auth/login";
             }
             
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            
             Session session = sessionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            if (!session.getHost().getId().equals(userDetails.getUserId())) {
+                log.warn("Unauthorized access attempt - sessionId: {}, userId: {}", id, userDetails.getUserId());
+                return "redirect:/selfinterview/list";
+            }
             
             model.addAttribute("session", session);
             
@@ -108,11 +130,7 @@ public class SelfInterviewController {
             
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
             
-            List<Session> allSessions = sessionRepository.findByHostId(userDetails.getUserId());
-            List<Session> selfSessions = allSessions.stream()
-                .filter(s -> "Y".equals(s.getIsSelfInterview()))
-                .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
-                .collect(Collectors.toList());
+            List<Session> selfSessions = sessionRepository.findSelfInterviewsByHostId(userDetails.getUserId());
             
             model.addAttribute("sessions", selfSessions);
             return "selfinterview/history";

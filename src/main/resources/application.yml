@@ -6,7 +6,7 @@ spring:
     secret: 0y0KPgwYtmYq1AoSfRRJav2/ImhCV6ueHW0Le+MEeCQ=
 
   profiles:
-    active: dev-school
+    active: dev
 
   servlet:
     multipart:
@@ -115,6 +115,11 @@ spring:
     username: ${DB_USERNAME:mockerview}
     password: ${DB_PASSWORD:mockerview}
     driver-class-name: org.postgresql.Driver
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 150MB
 
   jpa:
     hibernate:
