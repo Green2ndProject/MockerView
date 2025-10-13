@@ -20,6 +20,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        enable_lazy_load_no_trans: true
 
   thymeleaf:
     cache: false
@@ -127,6 +131,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
   thymeleaf:
     cache: true
