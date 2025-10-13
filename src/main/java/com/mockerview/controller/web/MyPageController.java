@@ -87,6 +87,7 @@ public class MyPageController {
     }
 
     @GetMapping("/auth/mypage/stats")
+    @Transactional(readOnly = true)
     public String showMyStats(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         try {
             log.info("Stats 페이지 진입");
@@ -268,7 +269,8 @@ public class MyPageController {
             return "user/myStats";
         } catch (Exception e) {
             log.error("면접자 통계 로드 실패", e);
-            throw e;
+            model.addAttribute("error", "통계를 불러올 수 없습니다: " + e.getMessage());
+            return "redirect:/auth/mypage";
         }
     }
 
@@ -360,6 +362,7 @@ public class MyPageController {
     }
 
     @GetMapping("/auth/mypage/stats/export-csv")
+    @Transactional(readOnly = true)
     public void exportStatsCSV(@AuthenticationPrincipal CustomUserDetails userDetails, 
                                 HttpServletResponse response) throws IOException {
         try {
