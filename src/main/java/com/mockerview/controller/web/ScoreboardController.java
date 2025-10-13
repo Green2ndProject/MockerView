@@ -42,7 +42,6 @@ public class ScoreboardController {
                 model.addAttribute("interviewSession", interviewSession);
                 model.addAttribute("userScores", new ArrayList<>());
                 model.addAttribute("totalQuestions", 0L);
-                log.info("답변이 없어서 빈 스코어보드 반환");
                 return "session/scoreboard";
             }
             
@@ -53,43 +52,38 @@ public class ScoreboardController {
             List<UserScoreDTO> userScores = new ArrayList<>();
             
             for (Map.Entry<Long, List<Answer>> entry : answersByUser.entrySet()) {
-                try {
-                    List<Answer> userAnswers = entry.getValue();
-                    if (userAnswers.isEmpty()) continue;
-                    
-                    User user = userAnswers.get(0).getUser();
-                    if (user == null) continue;
-                    
-                    List<Feedback> aiFeedbacks = feedbackRepository.findByAnswerInAndFeedbackType(
-                        userAnswers, Feedback.FeedbackType.AI);
-                    List<Feedback> interviewerFeedbacks = feedbackRepository.findByAnswerInAndFeedbackType(
-                        userAnswers, Feedback.FeedbackType.INTERVIEWER);
-                    
-                    double avgAiScore = aiFeedbacks.stream()
-                            .filter(f -> f.getScore() != null)
-                            .mapToDouble(Feedback::getScore)
-                            .average()
-                            .orElse(0.0);
-                    
-                    double avgInterviewerScore = interviewerFeedbacks.stream()
-                            .filter(f -> f.getScore() != null)
-                            .mapToDouble(Feedback::getScore)
-                            .average()
-                            .orElse(0.0);
-                    
-                    UserScoreDTO dto = new UserScoreDTO();
-                    dto.setUser(user);
-                    dto.setAnswerCount(userAnswers.size());
-                    dto.setAvgAiScore(Math.round(avgAiScore * 10) / 10.0);
-                    dto.setAvgInterviewerScore(Math.round(avgInterviewerScore * 10) / 10.0);
-                    dto.setTotalScore(Math.round((avgAiScore + avgInterviewerScore) / 2 * 10) / 10.0);
-                    dto.setAnswers(userAnswers);
-                    
-                    userScores.add(dto);
-                } catch (Exception e) {
-                    log.warn("사용자 점수 계산 중 오류: {}", e.getMessage());
-                    continue;
-                }
+                List<Answer> userAnswers = entry.getValue();
+                if (userAnswers.isEmpty()) continue;
+                
+                User user = userAnswers.get(0).getUser();
+                if (user == null) continue;
+                
+                List<Feedback> aiFeedbacks = feedbackRepository.findByAnswerInAndFeedbackType(
+                    userAnswers, Feedback.FeedbackType.AI);
+                List<Feedback> interviewerFeedbacks = feedbackRepository.findByAnswerInAndFeedbackType(
+                    userAnswers, Feedback.FeedbackType.INTERVIEWER);
+                
+                double avgAiScore = aiFeedbacks.stream()
+                        .filter(f -> f.getScore() != null)
+                        .mapToDouble(Feedback::getScore)
+                        .average()
+                        .orElse(0.0);
+                
+                double avgInterviewerScore = interviewerFeedbacks.stream()
+                        .filter(f -> f.getScore() != null)
+                        .mapToDouble(Feedback::getScore)
+                        .average()
+                        .orElse(0.0);
+                
+                UserScoreDTO dto = new UserScoreDTO();
+                dto.setUser(user);
+                dto.setAnswerCount(userAnswers.size());
+                dto.setAvgAiScore(Math.round(avgAiScore * 10) / 10.0);
+                dto.setAvgInterviewerScore(Math.round(avgInterviewerScore * 10) / 10.0);
+                dto.setTotalScore(Math.round((avgAiScore + avgInterviewerScore) / 2 * 10) / 10.0);
+                dto.setAnswers(userAnswers);
+                
+                userScores.add(dto);
             }
             
             userScores.sort((a, b) -> Double.compare(b.getTotalScore(), a.getTotalScore()));
@@ -99,8 +93,6 @@ public class ScoreboardController {
             
             Long totalQuestions = questionRepository.countBySessionId(sessionId);
             model.addAttribute("totalQuestions", totalQuestions);
-            
-            log.info("스코어보드 로드 완료 - sessionId: {}, 참가자: {}명", sessionId, userScores.size());
             
             return "session/scoreboard";
             
