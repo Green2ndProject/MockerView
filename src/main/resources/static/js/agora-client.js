@@ -8,6 +8,8 @@ class AgoraClient {
         this.audioEnabled = true;
         this.videoEnabled = true;
         this.isJoined = false;
+        this.localUid = null;
+        this.remoteUsers = new Map();
         this.setupEventHandlers();
     }
 
@@ -17,11 +19,22 @@ class AgoraClient {
             await this.client.subscribe(user, mediaType);
             console.log('✅ 구독 완료:', user.uid);
             
+            this.remoteUsers.set(user.uid, user);
+            
             if (mediaType === 'video') {
-                const remoteVideoDiv = document.createElement('div');
-                remoteVideoDiv.id = `remote-video-${user.uid}`;
-                remoteVideoDiv.className = 'remote-video-container';
-                document.getElementById('remote-videos')?.appendChild(remoteVideoDiv);
+                const remoteContainer = document.getElementById('remote-videos');
+                if (!remoteContainer) return;
+                
+                let remoteVideoDiv = document.getElementById(`remote-video-${user.uid}`);
+                if (!remoteVideoDiv) {
+                    remoteVideoDiv = document.createElement('div');
+                    remoteVideoDiv.id = `remote-video-${user.uid}`;
+                    remoteVideoDiv.className = 'remote-video-container';
+                    remoteVideoDiv.innerHTML = `
+                        <div class="remote-video-label">참가자 ${user.uid}</div>
+                    `;
+                    remoteContainer.appendChild(remoteVideoDiv);
+                }
                 user.videoTrack.play(remoteVideoDiv.id);
             }
             
@@ -38,6 +51,16 @@ class AgoraClient {
                     remoteVideoDiv.remove();
                 }
             }
+            this.remoteUsers.delete(user.uid);
+        });
+
+        this.client.on('user-left', (user) => {
+            console.log('🚪 사용자 퇴장:', user.uid);
+            const remoteVideoDiv = document.getElementById(`remote-video-${user.uid}`);
+            if (remoteVideoDiv) {
+                remoteVideoDiv.remove();
+            }
+            this.remoteUsers.delete(user.uid);
         });
 
         this.client.on('connection-state-change', (curState, prevState, reason) => {
@@ -58,10 +81,20 @@ class AgoraClient {
         });
         
         try {
-            const assignedUid = await this.client.join(this.appId, channel, token, uid);
+            this.localUid = await this.client.join(this.appId, channel, token, uid);
             this.isJoined = true;
-            console.log('✅ 채널 참가 성공! UID:', assignedUid);
-            return assignedUid;
+            console.log('✅ 채널 참가 성공! UID:', this.localUid);
+            
+            const userName = SESSION_DATA.userName || '나';
+            const isHost = SESSION_DATA.isHost;
+            
+            const localLabel = document.querySelector('.local-video-label');
+            if (localLabel) {
+                localLabel.textContent = userName + (isHost ? ' (면접관)' : ' (지원자)');
+                localLabel.className = isHost ? 'local-video-label host' : 'local-video-label student';
+            }
+            
+            return this.localUid;
         } catch (error) {
             console.error('❌ 채널 참가 실패:', error);
             console.error('  - 오류 코드:', error.code);
@@ -145,6 +178,8 @@ class AgoraClient {
                 this.isJoined = false;
                 console.log('✅ 채널 나감');
             }
+            
+            this.remoteUsers.clear();
         } catch (error) {
             console.error('⚠️ 종료 중 오류 (무시):', error);
         }

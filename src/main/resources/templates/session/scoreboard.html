@@ -381,10 +381,20 @@
     
     <div class="scoreboard-container">
         <div class="scoreboard-header">
-            <h1>🏆 점수판</h1>
-            <div class="session-info">
-                <strong th:text="${interviewSession.title}"></strong> | 
-                총 <span th:text="${totalQuestions}"></span>개 질문
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🏆 점수판</h1>
+                    <div class="session-info">
+                        <strong th:text="${interviewSession.title}"></strong> | 
+                        총 <span th:text="${totalQuestions}"></span>개 질문
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <a th:href="@{/session/scoreboard/{id}/download/csv(id=${interviewSession.id})}" 
+                        class="btn btn-secondary" style="text-decoration: none;">
+                        📥 CSV 다운로드
+                    </a>
+                </div>
             </div>
         </div>
         

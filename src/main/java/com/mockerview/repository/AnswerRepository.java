@@ -67,4 +67,7 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "GROUP BY u.id, u.name " +
             "ORDER BY AVG(CAST(f.score AS double)) DESC")
     List<Object[]> findAllUserAverageScores();
+
+    @Query("SELECT COUNT(a) FROM Answer a WHERE a.question.session.id = :sessionId")
+    Long countByQuestionSessionId(@Param("sessionId") Long sessionId);
 }
