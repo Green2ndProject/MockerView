@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,6 +52,7 @@ public class ReviewController {
     }
 
     @GetMapping("/my")
+    @Transactional(readOnly = true)
     public String myReviews(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
@@ -69,6 +71,7 @@ public class ReviewController {
     }
 
     @GetMapping("/detail/{id}")
+    @Transactional(readOnly = true)
     public String reviewDetail(@PathVariable Long id, Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
