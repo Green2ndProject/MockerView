@@ -69,13 +69,24 @@ public class SessionWebController {
             }
         }
         
+        Long totalCount = sessionRepository.countNonSelfInterviewSessions();
+        Long plannedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.PLANNED, "N");
+        Long runningCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.RUNNING, "N");
+        Long endedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.ENDED, "N");
+        
         model.addAttribute("sessions", sessionPage.getContent());
         model.addAttribute("currentPage", page);
+        model.addAttribute("serverCurrentPage", page);
         model.addAttribute("totalPages", sessionPage.getTotalPages());
         model.addAttribute("totalItems", sessionPage.getTotalElements());
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("status", status);
+        model.addAttribute("statusFilter", status);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("totalCount", totalCount);
+        model.addAttribute("plannedCount", plannedCount);
+        model.addAttribute("runningCount", runningCount);
+        model.addAttribute("endedCount", endedCount);
         
         log.info("세션 목록 로드 완료 - {} 개 세션. 현재 페이지: {}/{} 사용자: {}", 
                 sessionPage.getContent().size(), page + 1, sessionPage.getTotalPages(), 
@@ -106,9 +117,9 @@ public class SessionWebController {
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public String showSession(@PathVariable Long id,
-                            @RequestParam(required = false) String role,
-                            @AuthenticationPrincipal CustomUserDetails userDetails,
-                            Model model) {
+                                @RequestParam(required = false) String role,
+                                @AuthenticationPrincipal CustomUserDetails userDetails,
+                                Model model) {
         try {
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -180,6 +191,14 @@ public class SessionWebController {
             model.addAttribute("error", "세션을 불러오는데 실패했습니다: " + e.getMessage());
             return "redirect:/session/list";
         }
+    }
+
+    @GetMapping("/detail/{id}")
+    @Transactional(readOnly = true)
+    public String sessionDetail(@PathVariable Long id,
+                                @AuthenticationPrincipal CustomUserDetails userDetails,
+                                Model model) {
+        return showSession(id, null, userDetails, model);
     }
 
     @GetMapping("/create")
@@ -304,5 +323,11 @@ public class SessionWebController {
             log.error("점수판 로드 실패", e);
             return "redirect:/session/list";
         }
+    }
+
+    @GetMapping("/scoreboard/{id}")
+    @Transactional(readOnly = true)
+    public String sessionScoreboardAlias(@PathVariable Long id, Model model) {
+        return showScoreboard(id, model);
     }
 }
