@@ -15,7 +15,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -88,20 +88,17 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-
         .profile-actions-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 2rem;
             margin-top: 2rem;
         }
-
         @media (min-width: 768px) {
             .profile-actions-grid {
                 grid-template-columns: 2fr 1fr;
             }
         }
-
         .btn-danger {
             background-color: #E74C3C;
             color: white;
@@ -111,11 +108,9 @@
             cursor: pointer;
             font-weight: 600;
         }
-
         .btn-danger:hover {
             background-color: #C0392B;
         }
-
         .custom-modal-backdrop {
             position: fixed;
             z-index: 1000;
@@ -128,7 +123,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .custom-modal-container {
             width: 450px;
             max-width: 90%;
@@ -139,7 +133,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             box-sizing: border-box;
         }
-
         .custom-modal-card, .success-modal-card {
             width: 100%;
             height: auto;
@@ -148,28 +141,23 @@
             box-sizing: border-box;
             padding: 20px;
         }
-
         .custom-modal-card {
             display: block;
         }
-
         .success-modal-card {
             display: none;
         }
-
         .modal-title {
             font-size: 1.5em;
             font-weight: 600;
             margin-bottom: 20px;
             color: #333;
         }
-
         .modal-instruction {
             color: #666;
             margin-bottom: 20px;
             font-size: 0.95em;
         }
-
         .modal-reason-label {
             color: #888;
             margin: 20px 0 10px 0;
@@ -177,7 +165,6 @@
             padding-left: 5px;
             text-align: left;
         }
-
         .input-field {
             margin-bottom: 25px;
         }
@@ -192,7 +179,6 @@
             box-sizing: border-box;
             font-size: 1em;
         }
-
         .wmodal-actions {
             display: flex;
             justify-content: space-between;
@@ -209,7 +195,6 @@
             transition: background-color 0.2s;
             font-weight: 600;
         }
-
         .danger-btn {
             background-color: #E74C3C;
             color: white;
@@ -218,17 +203,14 @@
         .danger-btn:hover {
             background-color: #C0392B;
         }
-
         .secondary-btn {
             background-color: transparent;
             color: #7F78FF;
             border: 2px solid #7F78FF;
         }
-
         .secondary-btn:hover {
             background-color: #F0F0FF;
         }
-
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 30px;
@@ -238,18 +220,15 @@
             margin: 15px auto 0;
             animation: spin 1s ease-in-out infinite;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
         .form-actions {
             display: flex;
             gap: 1rem;
             flex-wrap: wrap;
         }
-
         .form-actions .btn {
             flex: 1;
             min-width: 150px;
@@ -272,15 +251,15 @@
 
     <div class="profile-header">
         <div class="container">
-            <div class="profile-avatar" th:text="${user.name.substring(0,1).toUpperCase()}">U</div>
-            <div class="profile-name" th:text="${user.name}">사용자명</div>
+            <div class="profile-avatar" th:text="${currentUser.name.substring(0,1).toUpperCase()}">U</div>
+            <div class="profile-name" th:text="${currentUser.name}">사용자명</div>
             <div class="profile-role">
-                <span th:if="${user.role.name() == 'STUDENT'}">면접자</span>
-                <span th:if="${user.role.name() == 'HOST'}">면접관</span>
-                <span th:text="' • ' + ${user.email}"></span>
+                <span th:if="${currentUser.role.name() == 'STUDENT'}">면접자</span>
+                <span th:if="${currentUser.role.name() == 'HOST'}">면접관</span>
+                <span th:text="' • ' + ${currentUser.email}"></span>
             </div>
             <div style="text-align: center; margin-top: 1rem;">
-                <a href="/auth/mypage/stats" class="btn btn-primary">내 활동 통계 보기</a>
+                <a href="/auth/stats" class="btn btn-primary">내 활동 통계 보기</a>
             </div>
         </div>
     </div>
@@ -317,7 +296,7 @@
                     <div class="history-meta">
                         <span th:text="${#temporals.format(hostedSession.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
                         <span> • </span>
-                        <span th:text="${hostedSession.status}">ENDED</span>
+                        <span th:text="${hostedSession.sessionStatus}">ENDED</span>
                     </div>
                 </div>
                 <a th:href="@{/session/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
@@ -363,23 +342,28 @@
             <div class="card">
                 <div class="card-header">프로필 수정</div>
                 <div class="card-body">
-                    <form th:action="@{/auth/mypage/update}" method="post" id="updateForm">
+                    <form th:action="@{/auth/update}" method="post" id="updateForm">
                         <div class="form-group">
                             <label for="name" class="form-label">이름</label>
-                            <input type="text" class="form-control" id="name" name="name" th:value="${user.name}" required>
+                            <input type="text" class="form-control" id="name" name="name" th:value="${currentUser.name}" required>
                         </div>
 
                         <div class="form-group">
                             <label for="email" class="form-label">이메일</label>
-                            <input type="email" class="form-control" id="email" name="email" th:value="${user.email}" required>
+                            <input type="email" class="form-control" id="email" name="email" th:value="${currentUser.email}" required>
                         </div>
 
                         <div class="form-group">
-                            <label for="password" class="form-label">새 비밀번호 (변경시에만 입력)</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="새 비밀번호">
+                            <label for="newPassword" class="form-label">새 비밀번호 (변경시에만 입력)</label>
+                            <input type="password" class="form-control" id="newPassword" name="newPassword" placeholder="새 비밀번호">
                             <small style="color: var(--gray-500); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
                                 비밀번호를 변경하지 않으려면 비워두세요.
                             </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="currentPassword" class="form-label">현재 비밀번호 (비밀번호 변경시 필수)</label>
+                            <input type="password" class="form-control" id="currentPassword" name="currentPassword" placeholder="현재 비밀번호">
                         </div>
 
                         <div class="form-actions">
@@ -430,18 +414,18 @@
                 <div class="card-body">
                     <div style="margin-bottom: 1rem;">
                         <strong>아이디:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${user.username}">username</div>
+                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${currentUser.username}">username</div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <strong>역할:</strong>
                         <div style="color: var(--gray-600); margin-top: 0.25rem;">
-                            <span th:if="${user.role.name() == 'STUDENT'}">면접자</span>
-                            <span th:if="${user.role.name() == 'HOST'}">면접관</span>
+                            <span th:if="${currentUser.role.name() == 'STUDENT'}">면접자</span>
+                            <span th:if="${currentUser.role.name() == 'HOST'}">면접관</span>
                         </div>
                     </div>
                     <div>
                         <strong>가입일:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2025-01-01</div>
+                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${#temporals.format(currentUser.createdAt, 'yyyy-MM-dd')}">2025-01-01</div>
                     </div>
                 </div>
             </div>
@@ -452,7 +436,8 @@
         document.getElementById('updateForm').addEventListener('submit', function(e) {
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const currentPassword = document.getElementById('currentPassword').value;
 
             if (!name.trim() || !email.trim()) {
                 e.preventDefault();
@@ -467,23 +452,27 @@
                 return;
             }
 
-            if (password && password.length < 6) {
+            if (newPassword && !currentPassword) {
+                e.preventDefault();
+                alert('비밀번호를 변경하려면 현재 비밀번호를 입력해주세요.');
+                return;
+            }
+
+            if (newPassword && newPassword.length < 6) {
                 e.preventDefault();
                 alert('새 비밀번호는 6자 이상이어야 합니다.');
                 return;
             }
         });
-    </script>
 
-    <script>
-        const withdrawBtn             = document.getElementById('withdraw-btn');
-        const withdrawalModal         = document.getElementById('withdrawal-modal');
+        const withdrawBtn = document.getElementById('withdraw-btn');
+        const withdrawalModal = document.getElementById('withdrawal-modal');
         const withdrawalPasswordInput = document.getElementById('withdrawal-password');
-        const cancelBtn               = document.getElementById('cancel-btn');
-        const confirmWithdrawBtn      = document.getElementById('confirm-withdraw-btn');
-        const reasonSelect            = document.getElementById('reason-select');
-        const modalCard               = document.getElementById('custom-modal-card');
-        const successCard             = document.getElementById('success-modal-card');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const confirmWithdrawBtn = document.getElementById('confirm-withdraw-btn');
+        const reasonSelect = document.getElementById('reason-select');
+        const modalCard = document.getElementById('custom-modal-card');
+        const successCard = document.getElementById('success-modal-card');
 
         withdrawBtn.addEventListener('click', ()=>{
             withdrawalModal.style.display = 'flex';
@@ -502,9 +491,8 @@
         });
 
         confirmWithdrawBtn.addEventListener('click', async ()=>{
-
             const password = withdrawalPasswordInput.value;
-            const reason   = reasonSelect.value;
+            const reason = reasonSelect.value;
 
             if(!password) {
                 alert("비밀번호를 입력해주세요");
@@ -514,26 +502,16 @@
             confirmWithdrawBtn.disabled = true;
             confirmWithdrawBtn.textContent = '처리 중..';
 
-            console.log("탈퇴 사유 : " + reason);
-            console.log("실제 전송 비밀번호:", password);
-            console.log("비밀번호 길이:", password.length);
-
             try {
-
                 const response = await fetch('/api/user/withdraw', {
-                    method  : 'POST',
-                    headers : {
-                        'Content-Type' : 'application/json'
-                    },
-                    credentials : 'include',
-                    body : JSON.stringify({
-                        'password' : password,
-                        'reason'   : reason
-                    })
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({'password': password, 'reason': reason})
                 });
 
                 if(response.ok){
-                    const data        = response.json();
+                    const data = await response.json();
                     const redirectUrl = data.redirectUrl || "/";
 
                     modalCard.style.display = 'none';
@@ -544,57 +522,36 @@
                         withdrawalModal.style.display = 'none';
                         window.location.href = redirectUrl;
                     }, 2000);
-
-                } else if (response.status >= 400 && response.status < 500) {
-
+                } else {
                     const message = getErrorMessage(response.status);
                     alert(message);
-
                     if(response.status === 401 || response.status === 403){
                         window.location.href = '/auth/login';
                     }
-                } else {
-                    alert(`서버 오류가 발생했습니다. Code : ${response.status}`);
                 }
-
             } catch (error) {
-                console.error("탈퇴 요청 오류 : " , error);
+                console.error("탈퇴 요청 오류:", error);
                 alert("서버 통신에 실패했습니다.");
             } finally {
                 confirmWithdrawBtn.disabled = false;
                 confirmWithdrawBtn.textContent = '탈퇴하기';
             }
-
-
         });
 
-    function resetWithdrawForm(){
-
-        if(withdrawalPasswordInput){
-            withdrawalPasswordInput.value = '';
+        function resetWithdrawForm(){
+            if(withdrawalPasswordInput) withdrawalPasswordInput.value = '';
+            if(reasonSelect) reasonSelect.selectedIndex = 0;
         }
 
-        if(reasonSelect){
-            reasonSelect.selectedIndex = 0;
+        function getErrorMessage(statusCode){
+            switch(statusCode){
+                case 400: return "비밀번호가 일치하지 않습니다.";
+                case 401: return "세션이 만료되었습니다.";
+                case 403: return "접근 권한이 없습니다.";
+                case 409: return "이미 탈퇴한 회원입니다.";
+                default: return "처리 중 오류 발생 (" + statusCode + ")";
+            }
         }
-    }
-
-    function getErrorMessage(statusCode){
-
-        switch(statusCode){
-            case 400 :
-                return "비밀번호가 일치하지 않습니다. 다시 확인해주세요";
-            case 401 :
-                return "세션이 만료되었습니다. 다시 로그인해주세요.";
-            case 403 :
-                return "탈퇴회원이거나 접근 권한이 없습니다. 다시 로그인해주세요";
-            case 409 :
-                return "이미 탈퇴한 회원입니다. (중복요청)";
-            default :
-                return "처리중 오류 발생. 잠시 후 다시 시도해주세요. (Code : " + statusCode + ")";
-        }
-    }
-
     </script>
 </body>
 </html>

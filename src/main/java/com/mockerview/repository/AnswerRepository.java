@@ -70,4 +70,7 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
 
     @Query("SELECT COUNT(a) FROM Answer a WHERE a.question.session.id = :sessionId")
     Long countByQuestionSessionId(@Param("sessionId") Long sessionId);
+
+    @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId")
+    List<Answer> findByQuestionSessionId(@Param("sessionId") Long sessionId);
 }
