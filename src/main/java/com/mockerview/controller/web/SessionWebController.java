@@ -343,42 +343,57 @@ public class SessionWebController {
     }
 
     @GetMapping("/scoreboard/{id}/download/csv")
+    @Transactional(readOnly = true)
     public ResponseEntity<byte[]> downloadScoreboardCsv(@PathVariable Long id) {
         Session session = sessionRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Session not found"));
         
-        List<Answer> allAnswers = answerRepository.findAllBySessionIdWithFeedbacks(id);
-        Map<User, List<Answer>> answersByUser = allAnswers.stream()
-            .collect(Collectors.groupingBy(Answer::getUser));
+        List<Answer> allAnswers = answerRepository.findByQuestionSessionId(id);
+        
+        Map<Long, User> userMap = new HashMap<>();
+        Map<Long, List<Long>> userAnswerIds = new HashMap<>();
+        
+        for (Answer answer : allAnswers) {
+            Long userId = answer.getUser().getId();
+            userMap.put(userId, answer.getUser());
+            userAnswerIds.computeIfAbsent(userId, k -> new ArrayList<>()).add(answer.getId());
+        }
         
         StringBuilder csv = new StringBuilder();
         csv.append("순위,이름,답변수,AI평균,면접관평균,총점\n");
         
         List<Map<String, Object>> userScores = new ArrayList<>();
         
-        for (Map.Entry<User, List<Answer>> entry : answersByUser.entrySet()) {
-            User user = entry.getKey();
-            List<Answer> userAnswers = entry.getValue();
+        for (Map.Entry<Long, List<Long>> entry : userAnswerIds.entrySet()) {
+            Long userId = entry.getKey();
+            List<Long> answerIds = entry.getValue();
+            User user = userMap.get(userId);
             
-            double avgAiScore = userAnswers.stream()
-                .flatMap(a -> a.getFeedbacks().stream())
-                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
-                .mapToInt(Feedback::getScore)
-                .average()
-                .orElse(0.0);
+            double avgAiScore = 0;
+            double avgInterviewerScore = 0;
+            int aiCount = 0;
+            int interviewerCount = 0;
             
-            double avgInterviewerScore = userAnswers.stream()
-                .flatMap(a -> a.getFeedbacks().stream())
-                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
-                .mapToInt(Feedback::getScore)
-                .average()
-                .orElse(0.0);
+            for (Long answerId : answerIds) {
+                List<Feedback> feedbacks = feedbackRepository.findByAnswerId(answerId);
+                for (Feedback f : feedbacks) {
+                    if (f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null) {
+                        avgAiScore += f.getScore();
+                        aiCount++;
+                    } else if (f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null) {
+                        avgInterviewerScore += f.getScore();
+                        interviewerCount++;
+                    }
+                }
+            }
             
+            avgAiScore = aiCount > 0 ? avgAiScore / aiCount : 0;
+            avgInterviewerScore = interviewerCount > 0 ? avgInterviewerScore / interviewerCount : 0;
             double totalScore = (avgAiScore + avgInterviewerScore) / 2.0;
             
             Map<String, Object> scoreData = new HashMap<>();
             scoreData.put("user", user);
-            scoreData.put("answerCount", userAnswers.size());
+            scoreData.put("answerCount", answerIds.size());
             scoreData.put("avgAiScore", Math.round(avgAiScore));
             scoreData.put("avgInterviewerScore", Math.round(avgInterviewerScore));
             scoreData.put("totalScore", Math.round(totalScore));
@@ -394,11 +409,11 @@ public class SessionWebController {
         for (Map<String, Object> score : userScores) {
             User user = (User) score.get("user");
             csv.append(rank++).append(",")
-                .append(user.getName()).append(",")
-                .append(score.get("answerCount")).append(",")
-                .append(score.get("avgAiScore")).append(",")
-                .append(score.get("avgInterviewerScore")).append(",")
-                .append(score.get("totalScore")).append("\n");
+            .append(user.getName()).append(",")
+            .append(score.get("answerCount")).append(",")
+            .append(score.get("avgAiScore")).append(",")
+            .append(score.get("avgInterviewerScore")).append(",")
+            .append(score.get("totalScore")).append("\n");
         }
         
         HttpHeaders headers = new HttpHeaders();
@@ -409,5 +424,5 @@ public class SessionWebController {
         return ResponseEntity.ok()
             .headers(headers)
             .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+        }
     }
-}
