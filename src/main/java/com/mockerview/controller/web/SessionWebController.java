@@ -7,6 +7,7 @@ import com.mockerview.entity.Question;
 import com.mockerview.entity.Session;
 import com.mockerview.entity.User;
 import com.mockerview.repository.AnswerRepository;
+import com.mockerview.repository.FeedbackRepository;
 import com.mockerview.repository.QuestionRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
@@ -45,6 +46,7 @@ public class SessionWebController {
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
     private final UserRepository userRepository;
+    private final FeedbackRepository feedbackRepository;
 
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
