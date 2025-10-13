@@ -461,4 +461,39 @@ public class SelfInterviewApiController {
         }
         return "분석 중...";
     }
+
+    @GetMapping("/{sessionId}")
+    @Transactional(readOnly = true)  // 추가!
+    public ResponseEntity<Map<String, Object>> getSessionData(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        Session session = sessionRepository.findById(sessionId).orElse(null);
+        
+        if (session == null || !session.getHost().getId().equals(userDetails.getUserId())) {
+            log.warn("Session not found or unauthorized - sessionId: {}, userId: {}", 
+                    sessionId, userDetails.getUserId());
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
+        
+        List<Map<String, Object>> questionMaps = questions.stream().map(q -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", q.getId());
+            map.put("questionText", q.getText());
+            map.put("orderNumber", q.getOrderNo());
+            return map;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("sessionId", session.getId());
+        response.put("userId", userDetails.getUserId());
+        response.put("title", session.getTitle());
+        response.put("questions", questionMaps);
+
+        log.info("Session data sent - sessionId: {}, questions: {}", sessionId, questionMaps.size());
+
+        return ResponseEntity.ok(response);
+    }
 }
