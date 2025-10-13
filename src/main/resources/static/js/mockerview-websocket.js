@@ -370,7 +370,7 @@ class MockerViewWebSocket {
     participantsListDiv.innerHTML = participants.map(participant => 
         `<div class="participant-item">
             <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
-            <span>${participant}</span>
+            <span style="font-size: 14px; font-weight: 500;">${participant}</span>
         </div>`
     ).join("");
     
