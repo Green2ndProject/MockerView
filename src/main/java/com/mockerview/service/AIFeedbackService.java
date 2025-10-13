@@ -80,8 +80,6 @@ public class AIFeedbackService {
                 .summary(feedback.getSummary())
                 .strengths(feedback.getStrengths())
                 .weaknesses(feedback.getWeaknesses())
-                .improvement(feedback.getImprovement())
-                .model(feedback.getModel())
                 .timestamp(LocalDateTime.now())
                 .build();
             
@@ -128,8 +126,6 @@ public class AIFeedbackService {
                 .summary(feedback.getSummary())
                 .strengths(feedback.getStrengths())
                 .weaknesses(feedback.getWeaknesses())
-                .improvement(feedback.getImprovement())
-                .model(feedback.getModel())
                 .timestamp(LocalDateTime.now())
                 .build();
             
@@ -382,8 +378,7 @@ public class AIFeedbackService {
                 .summary("피드백 생성 중 오류가 발생했습니다.")
                 .strengths("답변을 제출해주셔서 감사합니다.")
                 .weaknesses("AI 서비스가 일시적으로 불안정합니다.")
-                .improvement("잠시 후 다시 시도해주세요. 오류: " + errorMsg)
-                .model("ERROR")
+                .improvementSuggestions("잠시 후 다시 시도해주세요. 오류: " + errorMsg)
                 .build();
             
             feedbackRepository.save(errorFeedback);
@@ -396,8 +391,6 @@ public class AIFeedbackService {
                 .summary(errorFeedback.getSummary())
                 .strengths(errorFeedback.getStrengths())
                 .weaknesses(errorFeedback.getWeaknesses())
-                .improvement(errorFeedback.getImprovement())
-                .model(errorFeedback.getModel())
                 .timestamp(LocalDateTime.now())
                 .build();
             
@@ -552,9 +545,8 @@ public class AIFeedbackService {
                 .summary(summary)
                 .strengths(strengths)
                 .weaknesses(weaknesses)
-                .improvement(improvement)
+                .improvementSuggestions(improvement)
                 .feedbackType(Feedback.FeedbackType.AI)
-                .model("GPT-4O-MINI")
                 .build();
                 
         } catch (Exception e) {
@@ -567,9 +559,8 @@ public class AIFeedbackService {
                 .summary("답변이 제출되었습니다.")
                 .strengths("답변해주셔서 감사합니다.")
                 .weaknesses("AI 응답 파싱 중 오류가 발생했습니다.")
-                .improvement("기술적인 문제로 상세 피드백을 제공할 수 없습니다.")
+                .improvementSuggestions("기술적인 문제로 상세 피드백을 제공할 수 없습니다.")
                 .feedbackType(Feedback.FeedbackType.AI)
-                .model("GPT-4O-MINI-ERROR")
                 .build();
         }
     }
@@ -592,9 +583,8 @@ public class AIFeedbackService {
                 .summary(feedback.path("summary").asText("멀티모달 루브릭 분석이 완료되었습니다."))
                 .strengths(feedback.path("strengths").asText("언어와 비언어 요소가 양호합니다."))
                 .weaknesses(feedback.path("weaknesses").asText("일부 개선이 필요합니다."))
-                .improvement(feedback.path("improvement").asText("STAR 구조와 표정을 함께 개선해보세요."))
+                .improvementSuggestions(feedback.path("improvement").asText("STAR 구조와 표정을 함께 개선해보세요."))
                 .feedbackType(Feedback.FeedbackType.AI)
-                .model("GPT-4O")
                 .build();
                 
         } catch (Exception e) {
@@ -606,9 +596,8 @@ public class AIFeedbackService {
                 .summary("멀티모달 루브릭 분석이 완료되었습니다.")
                 .strengths("답변이 제출되었습니다.")
                 .weaknesses("분석 중 일부 오류가 발생했습니다.")
-                .improvement("다음 답변에서 더 나은 결과를 기대합니다.")
+                .improvementSuggestions("다음 답변에서 더 나은 결과를 기대합니다.")
                 .feedbackType(Feedback.FeedbackType.AI)
-                .model("GPT-4O")
                 .build();
         }
     }

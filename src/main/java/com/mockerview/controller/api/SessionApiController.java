@@ -171,8 +171,7 @@ public class SessionApiController {
                 .score(score)
                 .strengths(strengths)
                 .weaknesses("")
-                .improvement(improvements)
-                .model("GPT-4O-MINI")
+                .improvementSuggestions(improvements)
                 .build();
             feedbackRepository.save(feedback);
 
