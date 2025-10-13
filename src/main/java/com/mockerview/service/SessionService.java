@@ -1,6 +1,7 @@
 package com.mockerview.service;
 
 import com.mockerview.dto.AnswerMessage;
+import com.mockerview.dto.SessionStatusMessage;
 import com.mockerview.entity.*;
 import com.mockerview.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -43,6 +45,11 @@ public class SessionService {
             log.error("Error getting self-interview records: ", e);
             throw new RuntimeException("Failed to get self-interview records", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Session> getSelfInterviewRecords(Long hostId, Pageable pageable) {
+        return getSelfInterviewsByHostIdPageable(hostId, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -172,12 +179,42 @@ public class SessionService {
     }
 
     @Transactional
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId, Integer timer) {
+        try {
+            Session session = findById(sessionId);
+            User questioner = userRepository.findById(questionerId)
+                .orElseThrow(() -> new RuntimeException("Questioner not found"));
+            
+            Question question = Question.builder()
+                .session(session)
+                .text(questionText)
+                .orderNo(orderNo)
+                .questioner(questioner)
+                .timer(timer)
+                .build();
+            
+            Question saved = questionRepository.save(question);
+            log.info("Question saved with ID: {}", saved.getId());
+            return saved.getId();
+            
+        } catch (Exception e) {
+            log.error("Error saving question: ", e);
+            throw new RuntimeException("Failed to save question", e);
+        }
+    }
+
+    @Transactional
+    public Long saveAnswer(AnswerMessage message) {
+        return saveAnswerAndRequestFeedback(message);
+    }
+
+    @Transactional
     public Long saveAnswerAndRequestFeedback(AnswerMessage message) {
         try {
             User user = userRepository.findById(message.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found: " + message.getUserId()));
             
-            Question question = questionRepository.findById(Long.parseLong(message.getQuestionId().toString()))
+            Question question = questionRepository.findById(message.getQuestionId())
                 .orElseThrow(() -> new RuntimeException("Question not found: " + message.getQuestionId()));
             
             Answer answer = Answer.builder()
@@ -194,6 +231,29 @@ public class SessionService {
         } catch (Exception e) {
             log.error("Error saving answer: ", e);
             throw new RuntimeException("Failed to save answer", e);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public SessionStatusMessage getSessionStatus(Long sessionId) {
+        try {
+            Session session = findById(sessionId);
+            
+            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
+            List<Answer> answers = answerRepository.findBySessionIdOrderByCreatedAt(sessionId);
+            
+            return SessionStatusMessage.builder()
+                .sessionId(sessionId)
+                .status(session.getSessionStatus().name())
+                .questionCount(questions.size())
+                .answerCount(answers.size())
+                .participants(new ArrayList<>())
+                .timestamp(LocalDateTime.now())
+                .build();
+                
+        } catch (Exception e) {
+            log.error("Error getting session status: ", e);
+            throw new RuntimeException("Failed to get session status", e);
         }
     }
 
