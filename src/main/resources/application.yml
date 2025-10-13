@@ -64,7 +64,7 @@ agora:
   token-expiration: 3600
 
 ---
-# 개발(Oracle) - 로컬
+#로컬
 spring:
   config:
     activate:
@@ -82,7 +82,7 @@ spring:
         dialect: org.hibernate.dialect.OracleDialect
 
 ---
-# 개발(Oracle) - 학원 서버
+#학원서버
 spring:
   config:
     activate:
@@ -109,7 +109,7 @@ logging:
     org.springframework.web.socket: DEBUG
 
 ---
-# 운영(PostgreSQL) - Heroku
+#운영환경
 spring:
   config:
     activate:
@@ -126,7 +126,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:

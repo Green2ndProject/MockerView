@@ -1,74 +1,61 @@
 package com.mockerview.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "feedbacks")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Feedback {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "answer_id")
-    @JsonIgnoreProperties({"feedbacks", "user", "question"})
+    @JoinColumn(name = "answer_id", nullable = false)
     private Answer answer;
-
-    @Lob
-    private String summary;
-
-    @Lob
-    private String strengths;
-
-    @Lob
-    private String weaknesses;
-
-    @Lob
-    private String improvement;
-
-    @Builder.Default
-    private String model = "GPT-4o-mini";
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id")
-    @JsonIgnoreProperties({"password"})
     private User reviewer;
-
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "feedback_type", nullable = false, length = 50)
+    private FeedbackType feedbackType;
+    
     @Column(name = "score")
     private Integer score;
-
-    @Lob
-    @Column(name = "reviewer_comment")
+    
+    @Column(name = "summary", columnDefinition = "TEXT")
+    private String summary;
+    
+    @Column(name = "strengths", columnDefinition = "TEXT")
+    private String strengths;
+    
+    @Column(name = "weaknesses", columnDefinition = "TEXT")
+    private String weaknesses;
+    
+    @Column(name = "improvement_suggestions", columnDefinition = "TEXT")
+    private String improvementSuggestions;
+    
+    @Column(name = "reviewer_comment", columnDefinition = "TEXT")
     private String reviewerComment;
-
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    @Column(name = "feedback_type", length = 20)
-    private FeedbackType feedbackType = FeedbackType.AI;
-
-    @Column(name = "created_at")
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
+    
+    public enum FeedbackType {
+        AI, INTERVIEWER
+    }
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-    }
-
-    public enum FeedbackType {
-        AI, INTERVIEWER
     }
 }
