@@ -78,60 +78,6 @@ public class SessionWebController {
         return "redirect:/session/" + sessionId + "?role=" + selectedRole.name();
     }
 
-    @GetMapping("/{sessionId}")
-    public String sessionRoom(@PathVariable Long sessionId, 
-                            @RequestParam(required = false) String role,
-                            Model model) {
-        
-        User currentUser = getCurrentUser();
-        
-        if (currentUser == null) {
-            log.warn("비로그인 사용자 세션 접근 시도");
-            return "redirect:/auth/login";
-        }
-        
-        User.UserRole sessionRole = User.UserRole.STUDENT;
-        if (role != null) {
-            try {
-                sessionRole = User.UserRole.valueOf(role);
-            } catch (IllegalArgumentException e) {
-                log.warn("잘못된 역할 파라미터: {}", role);
-            }
-        }
-        
-        try {
-            log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}", 
-                sessionId, currentUser.getId(), currentUser.getName(), sessionRole);
-            
-            Session session = sessionService.findById(sessionId);
-            if (session == null) {
-                model.addAttribute("error", "세션을 찾을 수 없습니다.");
-                return "error";
-            }
-            
-            boolean isHost = sessionRole.equals(User.UserRole.HOST);
-            
-            model.addAttribute("sessionId", sessionId);
-            model.addAttribute("sessionTitle", session.getTitle() != null ? session.getTitle() : "모의면접 세션");
-            model.addAttribute("sessionType", session.getSessionType() != null ? session.getSessionType() : "TEXT");
-            model.addAttribute("userId", currentUser.getId());
-            model.addAttribute("userName", currentUser.getName());
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("isHost", isHost);
-            model.addAttribute("session", session);
-            
-            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}", 
-                currentUser.getName(), sessionRole, isHost, session.getSessionType());
-            
-            return "session/session";
-            
-        } catch (Exception e) {
-            log.error("세션 로드 오류 - sessionId: {}, userId: {}: ", sessionId, currentUser.getId(), e);
-            model.addAttribute("error", "세션을 불러올 수 없습니다: " + e.getMessage());
-            return "error";
-        }
-    }
-
     @GetMapping("/list")
     public String sessionList(
             @RequestParam(defaultValue = "1") int page,
@@ -288,5 +234,19 @@ public class SessionWebController {
             currentUser.getName(), role, isHost, session.getSessionType());
         
         return "session/session";
+    }
+
+    @GetMapping("/detail/{id}")
+    @Transactional(readOnly = true)
+    public String sessionDetail(@PathVariable Long id, Model model) {
+        Session session = sessionRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
+        
+        List<Answer> answers = answerRepository.findAllBySessionIdWithFeedbacks(id);
+        
+        model.addAttribute("session", session);
+        model.addAttribute("answers", answers);
+        
+        return "session/detail";
     }
 }

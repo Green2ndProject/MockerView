@@ -157,7 +157,7 @@ public class MyPageController {
             model.addAttribute("givenFeedbacks", givenFeedbacks);
             model.addAttribute("topInterviewees", topInterviewees);
             
-            return "user/mystatsinterviewer";
+            return "user/myStatsInterviewer";
         } catch (Exception e) {
             log.error("면접관 통계 로드 실패", e);
             model.addAttribute("error", "통계를 불러올 수 없습니다.");
@@ -252,7 +252,7 @@ public class MyPageController {
             model.addAttribute("growthData", growthData);
             model.addAttribute("rankings", rankings);
             
-            return "user/mystats";
+            return "user/myStats";
         } catch (Exception e) {
             log.error("면접자 통계 로드 실패", e);
             model.addAttribute("error", "통계를 불러올 수 없습니다.");
