@@ -278,14 +278,14 @@ public class SessionWebController {
         model.addAttribute("session", session);
         model.addAttribute("sessionId", session.getId());
         model.addAttribute("sessionTitle", session.getTitle());
-        model.addAttribute("sessionType", session.getSessionType().name());
+        model.addAttribute("sessionType", session.getSessionType());
         model.addAttribute("userId", currentUser.getId());
         model.addAttribute("userName", currentUser.getName());
         model.addAttribute("isHost", isHost);
         model.addAttribute("sessionHost", session.getHost());
         
         log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}", 
-            currentUser.getName(), role, isHost, session.getSessionType().name());
+            currentUser.getName(), role, isHost, session.getSessionType());
         
         return "session/session";
     }
