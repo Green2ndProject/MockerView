@@ -281,4 +281,61 @@ public class SessionWebController {
         
         return "session/detail";
     }
+
+    @GetMapping("/scoreboard/{id}")
+    @Transactional(readOnly = true)
+    public String scoreboard(@PathVariable Long id, Model model) {
+        Session session = sessionRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
+        
+        List<Answer> allAnswers = answerRepository.findAllBySessionIdWithFeedbacks(id);
+        
+        Map<User, List<Answer>> answersByUser = allAnswers.stream()
+            .collect(Collectors.groupingBy(Answer::getUser));
+        
+        List<Map<String, Object>> userScores = new ArrayList<>();
+        
+        for (Map.Entry<User, List<Answer>> entry : answersByUser.entrySet()) {
+            User user = entry.getKey();
+            List<Answer> userAnswers = entry.getValue();
+            
+            double avgAiScore = userAnswers.stream()
+                .flatMap(a -> a.getFeedbacks().stream())
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+                .mapToInt(Feedback::getScore)
+                .average()
+                .orElse(0.0);
+            
+            double avgInterviewerScore = userAnswers.stream()
+                .flatMap(a -> a.getFeedbacks().stream())
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+                .mapToInt(Feedback::getScore)
+                .average()
+                .orElse(0.0);
+            
+            double totalScore = (avgAiScore + avgInterviewerScore) / 2.0;
+            
+            Map<String, Object> scoreData = new HashMap<>();
+            scoreData.put("user", user);
+            scoreData.put("answers", userAnswers);
+            scoreData.put("answerCount", userAnswers.size());
+            scoreData.put("avgAiScore", Math.round(avgAiScore));
+            scoreData.put("avgInterviewerScore", Math.round(avgInterviewerScore));
+            scoreData.put("totalScore", Math.round(totalScore));
+            
+            userScores.add(scoreData);
+        }
+        
+        userScores.sort((a, b) -> 
+            ((Integer) b.get("totalScore")).compareTo((Integer) a.get("totalScore"))
+        );
+        
+        long totalQuestions = questionRepository.countBySessionId(id);
+        
+        model.addAttribute("interviewSession", session);
+        model.addAttribute("userScores", userScores);
+        model.addAttribute("totalQuestions", totalQuestions);
+        
+        return "session/scoreboard";
+    }
 }
