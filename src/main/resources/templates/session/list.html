@@ -529,168 +529,166 @@
 
     <script th:src="@{/js/pagination.js}"></script>
     <script th:inline="javascript">
-    const serverCurrentPage = /*[[${serverCurrentPage}]]*/ 1;
-    const serverTotalPages = /*[[${totalPages}]]*/ 1;
-    const itemsPerPage = 6;
-    const currentStatusFilter = /*[[${statusFilter}]]*/ "";
-    const sessions = /*[[${sessions}]]*/ [];
-    let stompClient = null;
-    
-    function hideElement(element) {
-        if (element) element.classList.add("hidden");
-    }
-    
-    function showElement(element) {
-        if (element) element.classList.remove("hidden");
-    }
-    
-    function onPageChange(page) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("page", page);
-        url.searchParams.set("size", itemsPerPage);
-        window.location.href = url.toString();
-    }
-    
-    function connect() {
-        const socket = new SockJS("/ws");
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, onConnected, onError);
-    }
-    
-    function onConnected() {
-        console.log("WebSocket 연결 성공.");
-        if (sessions) {
-            sessions.forEach((session) => {
-                if (session && session.id) {
-                    stompClient.subscribe(`/topic/session/${session.id}/status`, onSessionStatusReceived);
-                    console.log(`[WebSocket] 세션 ${session.id} 상태 토픽 구독 완료.`);
-                }
-            });
-        }
-    }
-    
-    function onError(error) {
-        console.error("WebSocket 연결 실패:", error);
-    }
-    
-    function onSessionStatusReceived(payload) {
-        try {
-            const statusMessage = JSON.parse(payload.body);
-            const sessionId = statusMessage.sessionId;
-            const newStatus = statusMessage.status;
-            const sessionCard = document.querySelector(`.session-card[data-session-id='${sessionId}']`);
-    
-            if (sessionCard) {
-                const badge = sessionCard.querySelector(".session-meta .badge");
-                if (badge) {
-                    badge.textContent = newStatus;
-                    badge.classList.remove("badge-waiting", "badge-live", "badge-ended");
-                    if (newStatus === "RUNNING") {
-                        badge.classList.add("badge-live");
-                    } else if (newStatus === "ENDED") {
-                        badge.classList.add("badge-ended");
-                    } else {
-                        badge.classList.add("badge-waiting");
-                    }
-                }
-                sessionCard.setAttribute("data-session-status", newStatus);
-                if (currentStatusFilter && currentStatusFilter !== newStatus) {
-                    sessionCard.style.display = "none";
-                    const statusCounts = {
-                        PLANNED: parseInt(document.querySelector(".status-tab:nth-child(2) .count").textContent),
-                        RUNNING: parseInt(document.querySelector(".status-tab:nth-child(3) .count").textContent),
-                        ENDED: parseInt(document.querySelector(".status-tab:nth-child(4) .count").textContent),
-                    };
-                    if (statusCounts[newStatus] !== undefined) {
-                        statusCounts[newStatus]++;
-                    }
-                    if (statusCounts[currentStatusFilter] !== undefined) {
-                        statusCounts[currentStatusFilter]--;
-                    }
-                    document.querySelector(".status-tab:nth-child(2) .count").textContent = statusCounts["PLANNED"];
-                    document.querySelector(".status-tab:nth-child(3) .count").textContent = statusCounts["RUNNING"];
-                    document.querySelector(".status-tab:nth-child(4) .count").textContent = statusCounts["ENDED"];
-                }
-            }
-        } catch (e) {
-            console.error("세션 상태 메시지 처리 오류:", e);
-        }
-    }
-    
-    window.addEventListener("load", () => {
-        const paginationContainer = document.getElementById("pagination");
-        if (serverTotalPages > 1) {
-            showElement(paginationContainer);
-        } else {
-            hideElement(paginationContainer);
-        }
-        createPagination(serverCurrentPage || 1, serverTotalPages || 1, onPageChange, "#pagination");
-    });
-    
-    document.addEventListener("DOMContentLoaded", function () {
-        const modal = document.getElementById("sessionModal");
-        const closeBtns = document.getElementsByClassName("close-modal");
-    
-        for (let i = 0; i < closeBtns.length; i++) {
-            closeBtns[i].addEventListener("click", function () {
-                modal.style.display = "none";
-            });
-        }
-    
-        window.addEventListener("click", function (event) {
-            if (event.target === modal) {
-                modal.style.display = "none";
-            }
-        });
-    
-        document.querySelectorAll(".mode-option-card").forEach((card) => {
-            card.addEventListener("click", function () {
-                document.querySelectorAll(".mode-option-card").forEach((c) => c.classList.remove("active"));
-                this.classList.add("active");
-                this.querySelector("input").checked = true;
-            });
-        });
-    
-        document.getElementById("createSessionForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-            const title = document.getElementById("sessionTitle").value;
-            const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
-            const scheduledStartTime = document.getElementById("scheduledStartTime").value;
-    
-            if (title !== null && title.trim() !== "") {
-                const form = document.createElement("form");
-                form.method = "POST";
-                form.action = "/session/create";
-    
-                const titleInput = document.createElement("input");
-                titleInput.type = "hidden";
-                titleInput.name = "title";
-                titleInput.value = title.trim();
-                form.appendChild(titleInput);
-    
-                const typeInput = document.createElement("input");
-                typeInput.type = "hidden";
-                typeInput.name = "sessionType";
-                typeInput.value = sessionType;
-                form.appendChild(typeInput);
-    
-                if (scheduledStartTime) {
-                    const timeInput = document.createElement("input");
-                    timeInput.type = "hidden";
-                    timeInput.name = "scheduledStartTime";
-                    timeInput.value = scheduledStartTime;
-                    form.appendChild(timeInput);
-                }
-    
-                document.body.appendChild(form);
-                form.submit();
-            } else {
-                alert("세션 제목을 입력해주세요!");
-            }
-        });
-    
-        connect();
-    });
+      const serverCurrentPage = /*[[${serverCurrentPage}]]*/ 1;
+      const serverTotalPages = /*[[${totalPages}]]*/ 1;
+      const itemsPerPage = 6;
+      const currentStatusFilter = /*[[${statusFilter}]]*/ "";
+      const sessions = /*[[${sessions}]]*/ [];
+      let stompClient = null;
+      
+      function hideElement(element) {
+          if (element) element.classList.add("hidden");
+      }
+      
+      function showElement(element) {
+          if (element) element.classList.remove("hidden");
+      }
+      
+      function onPageChange(page) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("page", page);
+          url.searchParams.set("size", itemsPerPage);
+          window.location.href = url.toString();
+      }
+      
+      function connect() {
+          const socket = new SockJS("/ws");
+          stompClient = Stomp.over(socket);
+          stompClient.connect({}, onConnected, onError);
+      }
+      
+      function onConnected() {
+          console.log("WebSocket 연결 성공.");
+          if (sessions) {
+              sessions.forEach((session) => {
+                  if (session && session.id) {
+                      stompClient.subscribe(`/topic/session/${session.id}/status`, onSessionStatusReceived);
+                      console.log(`[WebSocket] 세션 ${session.id} 상태 토픽 구독 완료.`);
+                  }
+              });
+          }
+      }
+      
+      function onError(error) {
+          console.error("WebSocket 연결 실패:", error);
+      }
+      
+      function onSessionStatusReceived(payload) {
+          try {
+              const statusMessage = JSON.parse(payload.body);
+              const sessionId = statusMessage.sessionId;
+              const newStatus = statusMessage.status;
+              const sessionCard = document.querySelector(`.session-card[data-session-id='${sessionId}']`);
+      
+              if (sessionCard) {
+                  const badge = sessionCard.querySelector(".session-meta .badge");
+                  if (badge) {
+                      badge.textContent = newStatus;
+                      badge.classList.remove("badge-waiting", "badge-live", "badge-ended");
+                      if (newStatus === "RUNNING") {
+                          badge.classList.add("badge-live");
+                      } else if (newStatus === "ENDED") {
+                          badge.classList.add("badge-ended");
+                      } else {
+                          badge.classList.add("badge-waiting");
+                      }
+                  }
+                  sessionCard.setAttribute("data-session-status", newStatus);
+                  if (currentStatusFilter && currentStatusFilter !== newStatus) {
+                      sessionCard.style.display = "none";
+                      const statusCounts = {
+                          PLANNED: parseInt(document.querySelector(".status-tab:nth-child(2) .count").textContent),
+                          RUNNING: parseInt(document.querySelector(".status-tab:nth-child(3) .count").textContent),
+                          ENDED: parseInt(document.querySelector(".status-tab:nth-child(4) .count").textContent),
+                      };
+                      if (statusCounts[newStatus] !== undefined) {
+                          statusCounts[newStatus]++;
+                      }
+                      if (statusCounts[currentStatusFilter] !== undefined) {
+                          statusCounts[currentStatusFilter]--;
+                      }
+                      document.querySelector(".status-tab:nth-child(2) .count").textContent = statusCounts["PLANNED"];
+                      document.querySelector(".status-tab:nth-child(3) .count").textContent = statusCounts["RUNNING"];
+                      document.querySelector(".status-tab:nth-child(4) .count").textContent = statusCounts["ENDED"];
+                  }
+              }
+          } catch (e) {
+              console.error("세션 상태 메시지 처리 오류:", e);
+          }
+      }
+      
+      window.addEventListener("load", () => {
+          const paginationContainer = document.getElementById("pagination");
+          if (serverTotalPages > 1) {
+              showElement(paginationContainer);
+          } else {
+              hideElement(paginationContainer);
+          }
+          createPagination(serverCurrentPage || 1, serverTotalPages || 1, onPageChange, "#pagination");
+          
+          const modal = document.getElementById("sessionModal");
+          const closeBtns = document.getElementsByClassName("close-modal");
+      
+          for (let i = 0; i < closeBtns.length; i++) {
+              closeBtns[i].addEventListener("click", function () {
+                  modal.style.display = "none";
+              });
+          }
+      
+          window.addEventListener("click", function (event) {
+              if (event.target === modal) {
+                  modal.style.display = "none";
+              }
+          });
+      
+          document.querySelectorAll(".mode-option-card").forEach((card) => {
+              card.addEventListener("click", function () {
+                  document.querySelectorAll(".mode-option-card").forEach((c) => c.classList.remove("active"));
+                  this.classList.add("active");
+                  this.querySelector("input").checked = true;
+              });
+          });
+      
+          document.getElementById("createSessionForm").addEventListener("submit", function (e) {
+              e.preventDefault();
+              const title = document.getElementById("sessionTitle").value;
+              const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
+              const scheduledStartTime = document.getElementById("scheduledStartTime").value;
+      
+              if (title !== null && title.trim() !== "") {
+                  const form = document.createElement("form");
+                  form.method = "POST";
+                  form.action = "/session/create";
+      
+                  const titleInput = document.createElement("input");
+                  titleInput.type = "hidden";
+                  titleInput.name = "title";
+                  titleInput.value = title.trim();
+                  form.appendChild(titleInput);
+      
+                  const typeInput = document.createElement("input");
+                  typeInput.type = "hidden";
+                  typeInput.name = "sessionType";
+                  typeInput.value = sessionType;
+                  form.appendChild(typeInput);
+      
+                  if (scheduledStartTime) {
+                      const timeInput = document.createElement("input");
+                      timeInput.type = "hidden";
+                      timeInput.name = "scheduledStartTime";
+                      timeInput.value = scheduledStartTime;
+                      form.appendChild(timeInput);
+                  }
+      
+                  document.body.appendChild(form);
+                  form.submit();
+              } else {
+                  alert("세션 제목을 입력해주세요!");
+              }
+          });
+      
+          connect();
+      });
     </script>
   </body>
 </html>
