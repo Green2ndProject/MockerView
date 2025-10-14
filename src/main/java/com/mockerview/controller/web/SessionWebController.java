@@ -216,7 +216,11 @@ public class SessionWebController {
         Session session = sessionRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Session not found: " + id));
         
-        boolean isHost = session.getHost().getId().equals(currentUser.getId());
+        if (session.getHost() != null) {
+            session.getHost().getName();
+        }
+        
+        boolean isHost = session.getHost() != null && session.getHost().getId().equals(currentUser.getId());
         
         log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}", 
             id, currentUser.getId(), currentUser.getName(), role);
@@ -242,6 +246,10 @@ public class SessionWebController {
         try {
             Session session = sessionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            if (session.getHost() != null) {
+                session.getHost().getName();
+            }
             
             List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(id);
             
