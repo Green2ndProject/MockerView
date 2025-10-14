@@ -148,9 +148,14 @@ public class SessionService {
             User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("Host not found"));
             
-            String validSessionType = (sessionType != null && 
-                (sessionType.equals("TEXT") || sessionType.equals("VOICE") || sessionType.equals("VIDEO")))
-                ? sessionType : "TEXT";
+                String normalizedType = sessionType;
+                if ("VOICE".equals(sessionType)) {
+                    normalizedType = "AUDIO";
+                }
+                
+                String validSessionType = (normalizedType != null && 
+                    (normalizedType.equals("TEXT") || normalizedType.equals("AUDIO") || normalizedType.equals("VIDEO")))
+                    ? normalizedType : "TEXT";
             
             Session session = Session.builder()
                 .title(title)
@@ -158,7 +163,7 @@ public class SessionService {
                 .sessionStatus(Session.SessionStatus.PLANNED)
                 .sessionType(validSessionType)
                 .startTime(scheduledStartTime)
-                .mediaEnabled(validSessionType.equals("VIDEO") ? (short) 1 : (short) 0)
+                .mediaEnabled(validSessionType.equals("VIDEO") || validSessionType.equals("AUDIO") ? (short) 1 : (short) 0)
                 .build();
             
             Session saved = sessionRepository.save(session);
