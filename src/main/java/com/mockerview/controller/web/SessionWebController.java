@@ -307,4 +307,17 @@ public class SessionWebController {
             throw new RuntimeException("Failed to load session detail", e);
         }
     }
+
+    @PostMapping("/{id}/control/start")
+    @ResponseBody
+    public Map<String, String> startSession(@PathVariable Long id) {
+        try {
+            sessionService.startSession(id);
+            log.info("✅ 세션 시작됨 - sessionId: {}", id);
+            return Map.of("status", "success", "message", "세션이 시작되었습니다");
+        } catch (Exception e) {
+            log.error("❌ 세션 시작 실패: ", e);
+            return Map.of("status", "error", "message", e.getMessage());
+        }
+    }
 }
