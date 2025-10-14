@@ -1893,7 +1893,6 @@
             console.log('🚀 DOM 로드 완료');
             console.log('📊 SESSION_DATA:', SESSION_DATA);
             
-            // 세션 상태 확인해서 UI 업데이트
             checkSessionStatus();
             
             startCountdown();
@@ -1916,67 +1915,37 @@
             }
         });
         
-        async function checkSessionStatus() {
-            try {
-                const token = getToken();
-                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/status`, {
-                    headers: { 'Authorization': token }
-                });
+    async function checkSessionStatus() {
+        try {
+            const token = getToken();
+            const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/status`, {
+                headers: { 'Authorization': token }
+            });
+            
+            const data = await response.json();
+            console.log('📊 세션 상태:', data);
+            
+            if (data.status === 'RUNNING') {
+                const startBtn = document.getElementById('startInterviewBtn');
+                const pauseBtn = document.getElementById('pauseInterviewBtn');
+                const endBtn = document.getElementById('endInterviewBtn');
+                const badge = document.getElementById('sessionStatusBadge');
                 
-                const data = await response.json();
-                console.log('📊 세션 상태:', data);
+                if (startBtn) startBtn.style.display = 'none';
+                if (pauseBtn) pauseBtn.style.display = 'inline-block';
+                if (endBtn) endBtn.style.display = 'inline-block';
                 
-                if (data.status === 'RUNNING') {
-                    const startBtn = document.getElementById('startInterviewBtn');
-                    const pauseBtn = document.getElementById('pauseInterviewBtn');
-                    const endBtn = document.getElementById('endInterviewBtn');
-                    const badge = document.getElementById('sessionStatusBadge');
-                    
-                    if (startBtn) startBtn.style.display = 'none';
-                    if (pauseBtn) pauseBtn.style.display = 'inline-block';
-                    if (endBtn) endBtn.style.display = 'inline-block';
-                    
-                    if (badge) {
-                        badge.textContent = '진행중';
-                        badge.className = 'status-badge ongoing';
-                    }
+                if (badge) {
+                    badge.textContent = '진행중';
+                    badge.className = 'status-badge ongoing';
                 }
-            } catch (error) {
-                console.error('❌ 세션 상태 확인 실패:', error);
-            }
-        }
-
-        async function checkSessionStatus() {
-            try {
-                const token = getToken();
-                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/status`, {
-                    headers: { 'Authorization': token }
-                });
                 
-                const data = await response.json();
-                console.log('📊 세션 상태:', data);
-                
-                if (data.status === 'RUNNING') {
-                    const startBtn = document.getElementById('startInterviewBtn');
-                    const pauseBtn = document.getElementById('pauseInterviewBtn');
-                    const endBtn = document.getElementById('endInterviewBtn');
-                    const badge = document.getElementById('sessionStatusBadge');
-                    
-                    if (startBtn) startBtn.style.display = 'none';
-                    if (pauseBtn) pauseBtn.style.display = 'inline-block';
-                    if (endBtn) endBtn.style.display = 'inline-block';
-                    
-                    if (badge) {
-                        badge.textContent = '진행중';
-                        badge.className = 'status-badge ongoing';
-                    }
-                    
-                    console.log('✅ UI 업데이트 완료 - RUNNING 상태');
-                }
-            } catch (error) {
-                console.error('❌ 세션 상태 확인 실패:', error);
+                console.log('✅ UI 업데이트 완료 - RUNNING 상태');
             }
+        } catch (error) {
+            console.error('❌ 세션 상태 확인 실패:', error);
         }
+    }
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM 로드 완료');
