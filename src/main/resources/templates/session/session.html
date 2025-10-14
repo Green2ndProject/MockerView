@@ -1130,7 +1130,7 @@
                     <input type="hidden" id="currentQuestionId" value="">
                 </div>
             </div>
-
+        
             <div class="card answer-card">
                 <div class="card-header">
                     <h4>답변 작성</h4>
@@ -1141,7 +1141,7 @@
                         <button id="videoAnswerModeBtn" class="btn btn-secondary active" onclick="switchVideoAnswerMode('video')">🎥 구두 답변</button>
                         <button id="textAnswerModeBtn" class="btn btn-secondary" onclick="switchVideoAnswerMode('text')">💬 텍스트 답변</button>
                     </div>
-
+        
                     <div id="video-answer-area" class="video-answer-area">
                         <div style="margin-bottom: 16px;">
                             <button id="startVideoRecognitionBtn" onclick="startVideoSpeechRecognition()" class="btn btn-success btn-lg">
@@ -1154,11 +1154,16 @@
                         <div id="videoRecognizedText" class="answer-complete-message">
                             <em style="color: #999;">인식된 답변 내용이 여기에 표시됩니다...</em>
                         </div>
-                        <button id="submitVideoRecognizedBtn" onclick="submitVideoRecognizedAnswer()" class="btn btn-success btn-lg" style="display: none;">
-                            ✅ 답변 제출
-                        </button>
+                        <div style="display: flex; gap: 12px;">
+                            <button id="submitVideoRecognizedBtn" onclick="submitVideoRecognizedAnswer()" class="btn btn-success btn-lg" style="display: none; flex: 1;">
+                                ✅ 음성인식 답변 제출
+                            </button>
+                            <button id="submitVideoDirectBtn" onclick="submitVideoDirectAnswer()" class="btn btn-primary btn-lg" style="flex: 1;">
+                                📹 화상 답변 제출 (텍스트 없이)
+                            </button>
+                        </div>
                     </div>
-
+        
                     <div id="text-answer-area" style="display: none;">
                         <div class="form-group">
                             <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="5"></textarea>
@@ -1170,7 +1175,7 @@
                     </div>
                 </div>
             </div>
-
+        
             <div class="card">
                 <div class="card-header">
                     <h4>🤖 AI 피드백</h4>
@@ -1186,7 +1191,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <div th:unless="${sessionType == 'VIDEO'}" class="text-interview-mode container">
         <div class="mode-indicator">
@@ -1667,6 +1671,29 @@
             videoRecognition.start();
         }
 
+        function submitVideoDirectAnswer() {
+            const questionId = document.getElementById('currentQuestionId').value;
+            if (!questionId) {
+                alert('현재 답변할 질문이 없습니다.');
+                return;
+            }
+            
+            if (!confirm('화상으로 구두 답변을 완료하셨나요?\n텍스트 없이 화상 답변만 제출됩니다.')) {
+                return;
+            }
+        
+            const defaultText = '화상 면접으로 구두 답변함';
+            
+            if (window.mockerViewWS && window.mockerViewWS.connected) {
+                window.mockerViewWS.submitAnswer(questionId, defaultText);
+                
+                document.getElementById('videoRecognitionStatus').textContent = '답변이 제출되었습니다';
+                document.getElementById('videoRecognitionStatus').className = 'answer-status success';
+                
+                alert('화상 답변이 제출되었습니다!');
+            }
+        }
+        
         function stopVideoSpeechRecognition() {
             if (videoRecognition) {
                 videoRecognition.stop();
