@@ -87,6 +87,7 @@ public class MyPageController {
     }
 
     @GetMapping("/auth/mypage/stats")
+    @Transactional(readOnly = true)
     public String showMyStats(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         try {
             if (userDetails == null) {

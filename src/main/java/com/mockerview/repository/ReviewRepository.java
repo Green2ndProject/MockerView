@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findBySessionId(Long sessionId);
-    @EntityGraph(attributePaths = {"session", "reviewer"})
+    @EntityGraph(attributePaths = {"session", "reviewer", "answer"})
     List<Review> findByReviewerId(Long reviewerId);
     List<Review> findByAnswerId(Long answerId);
 }

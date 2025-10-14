@@ -21,9 +21,9 @@ public class ReviewService {
 
         @Transactional(readOnly = true)
         public List<Session> getReviewableSessions() {
-                List<Session> sessions = sessionRepository.findByStatusAndIsReviewable(Session.SessionStatus.ENDED, "Y");
-                for (Session session : sessions) {
-        if (session.getHost() != null) {
+        List<Session> sessions = sessionRepository.findByStatusAndIsReviewable(Session.SessionStatus.ENDED, "Y");
+        for (Session session : sessions) {
+                if (session.getHost() != null) {
                 session.getHost().getName();
                 }
                 session.getQuestions().size();
@@ -33,12 +33,12 @@ public class ReviewService {
 
         @Transactional
         public ReviewDTO createReview(Long sessionId, Long answerId, Long reviewerId, String comment, Double rating) {
-                Session session = sessionRepository.findById(sessionId)
-        .orElseThrow(() -> new RuntimeException("Session not found"));
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
         Answer answer = answerRepository.findById(answerId)
-        .orElseThrow(() -> new RuntimeException("Answer not found"));
+                .orElseThrow(() -> new RuntimeException("Answer not found"));
         User reviewer = userRepository.findById(reviewerId)
-        .orElseThrow(() -> new RuntimeException("Reviewer not found"));
+                .orElseThrow(() -> new RuntimeException("Reviewer not found"));
 
         Review review = Review.builder()
                 .session(session)
@@ -56,17 +56,17 @@ public class ReviewService {
 
         @Transactional
         public ReviewDTO createSimpleReview(Long sessionId, Long reviewerId, String comment, Double rating) {
-                Session session = sessionRepository.findById(sessionId)
+        Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
         User reviewer = userRepository.findById(reviewerId)
                 .orElseThrow(() -> new RuntimeException("Reviewer not found"));
 
         Review review = Review.builder()
-        .session(session)
-        .reviewer(reviewer)
-        .reviewComment(comment)
-        .rating(rating)
-        .build();
+                .session(session)
+                .reviewer(reviewer)
+                .reviewComment(comment)
+                .rating(rating)
+                .build();
         
         review = reviewRepository.save(review);
         log.info("간단 리뷰 생성 완료 - reviewId: {}, sessionId: {}", review.getId(), sessionId);
@@ -90,14 +90,14 @@ public class ReviewService {
 
         @Transactional(readOnly = true)
         public List<ReviewDTO> getReviewsByReviewer(Long reviewerId) {
-        return reviewRepository.findByReviewerId(reviewerId).stream() // N+1 문제 발생 가능
+        return reviewRepository.findByReviewerId(reviewerId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
         }
 
         @Transactional(readOnly = true)
         public Session getSessionWithDetails(Long sessionId) {
-                Session session = sessionRepository.findByIdWithHost(sessionId)
+        Session session = sessionRepository.findByIdWithHost(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
         if (session.getHost() != null) {
                 session.getHost().getName();
@@ -108,15 +108,15 @@ public class ReviewService {
 
         private ReviewDTO convertToDTO(Review review) {
         return ReviewDTO.builder()
-        .id(review.getId())
-        .sessionId(review.getSession().getId())
-        .sessionTitle(review.getSession() != null ? review.getSession().getTitle() : null)
-        .answerId(review.getAnswer() != null ? review.getAnswer().getId() : null)
-        .reviewerId(review.getReviewer().getId())
-        .reviewerName(review.getReviewer().getName())
-        .reviewComment(review.getReviewComment())
-        .rating(review.getRating())
-        .createdAt(review.getCreatedAt())
-        .build();
+                .id(review.getId())
+                .sessionId(review.getSession().getId())
+                .sessionTitle(review.getSession() != null ? review.getSession().getTitle() : null)
+                .answerId(review.getAnswer() != null ? review.getAnswer().getId() : null)
+                .reviewerId(review.getReviewer().getId())
+                .reviewerName(review.getReviewer().getName())
+                .reviewComment(review.getReviewComment())
+                .rating(review.getRating())
+                .createdAt(review.getCreatedAt())
+                .build();
         }
 }
