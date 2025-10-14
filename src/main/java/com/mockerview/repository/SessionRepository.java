@@ -74,7 +74,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host LEFT JOIN FETCH s.questions WHERE s.id = :id")
     Optional<Session> findByIdWithHostAndQuestions(@Param("id") Long id);
 
-    @Query("SELECT s FROM Session s WHERE s.status = :status AND (s.startTime IS NULL OR s.startTime <= :now)")
+    @Query("SELECT s FROM Session s WHERE s.sessionStatus = :status AND (s.startTime IS NULL OR s.startTime <= :now)")
     List<Session> findByStatusAndStartTimeBefore(
         @Param("status") Session.SessionStatus status,
         @Param("now") LocalDateTime now
