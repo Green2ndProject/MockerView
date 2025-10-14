@@ -5,7 +5,6 @@ import com.mockerview.jwt.JWTUtil;
 import com.mockerview.entity.User;
 import com.mockerview.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -15,14 +14,11 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.socket.WebSocketHandler;
@@ -43,28 +39,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Autowired
     private UserRepository userRepository;
 
-    @Bean
-    public TaskScheduler taskScheduler() {
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(10);
-        scheduler.setThreadNamePrefix("ws-heartbeat-");
-        scheduler.initialize();
-        return scheduler;
-    }
-
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[]{25000, 25000})
-                .setTaskScheduler(taskScheduler());
+        config.enableSimpleBroker("/topic");
         config.setApplicationDestinationPrefixes("/app");
-    }
-
-    @Override
-    public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
-        registry.setMessageSizeLimit(128 * 1024)
-                .setSendBufferSizeLimit(512 * 1024)
-                .setSendTimeLimit(20000);
     }
 
     @Override
@@ -188,9 +166,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         return null;
                     }
                 })
-                .withSockJS()
-                .setHeartbeatTime(25000)
-                .setDisconnectDelay(5000)
-                .setSessionCookieNeeded(false);
+                .withSockJS();
     }
 }

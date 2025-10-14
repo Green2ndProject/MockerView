@@ -691,40 +691,4 @@ public class AIFeedbackService {
         
         return feedback;
     }
-
-    @Transactional
-    public Feedback generateFeedback(Long answerId, String questionText, String answerText) {
-        log.info("Generating synchronous feedback for answerId: {}", answerId);
-        
-        try {
-            Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new RuntimeException("Answer not found: " + answerId));
-            
-            String prompt = createStructuredFeedbackPrompt(answer);
-            String aiResponse = callOpenAI(prompt);
-            
-            Feedback feedback = parseFeedbackResponse(aiResponse, answer);
-            feedback = feedbackRepository.save(feedback);
-            
-            log.info("Feedback saved successfully with ID: {}", feedback.getId());
-            return feedback;
-            
-        } catch (Exception e) {
-            log.error("Error generating feedback: ", e);
-            
-            Answer answer = answerRepository.findById(answerId).orElseThrow();
-            
-            Feedback errorFeedback = Feedback.builder()
-                .answer(answer)
-                .score(0)
-                .summary("AI 피드백 생성 중 오류가 발생했습니다.")
-                .strengths("답변해주셔서 감사합니다.")
-                .weaknesses("일시적인 오류가 발생했습니다.")
-                .improvementSuggestions("잠시 후 다시 시도해주세요.")
-                .feedbackType(Feedback.FeedbackType.AI)
-                .build();
-            
-            return feedbackRepository.save(errorFeedback);
-        }
-    }
 }

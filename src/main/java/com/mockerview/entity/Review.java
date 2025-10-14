@@ -28,7 +28,8 @@ public class Review {
     @JoinColumn(name = "answer_id")
     private Answer answer;
 
-    @Column(name = "review_comment", columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "review_comment")
     private String reviewComment;
 
     private Double rating;
