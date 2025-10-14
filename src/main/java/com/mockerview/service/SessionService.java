@@ -281,7 +281,7 @@ public class SessionService {
     @Transactional
     public void startSession(Long sessionId) {
         Session session = findById(sessionId);
-        ession.setStatus(Session.SessionStatus.RUNNING);
+        session.setStatus(Session.SessionStatus.RUNNING);
         session.setSessionStatus(Session.SessionStatus.RUNNING);
         session.setStartTime(LocalDateTime.now());
         sessionRepository.save(session);
