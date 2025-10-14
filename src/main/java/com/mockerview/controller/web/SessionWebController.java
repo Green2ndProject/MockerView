@@ -239,46 +239,67 @@ public class SessionWebController {
     @GetMapping("/detail/{id}")
     @Transactional(readOnly = true)
     public String sessionDetail(@PathVariable Long id, Model model) {
-        Session session = sessionRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Session not found"));
-        
-        List<Answer> answers = answerRepository.findAllBySessionIdWithFeedbacks(id);
-        
-        Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
-        for (Answer answer : answers) {
-            if (answer.getQuestion() != null) {
-                Long questionId = answer.getQuestion().getId();
-                answersByQuestion.putIfAbsent(questionId, new ArrayList<>());
-                
-                Map<String, Object> answerItem = new HashMap<>();
-                answerItem.put("answer", answer);
-                
-                Feedback aiFeedback = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
-                    .findFirst().orElse(null);
-                Feedback interviewerFeedback = answer.getFeedbacks().stream()
-                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
-                    .findFirst().orElse(null);
-                
-                answerItem.put("aiFeedback", aiFeedback);
-                answerItem.put("interviewerFeedback", interviewerFeedback);
-                answerItem.put("hasAiFeedback", aiFeedback != null);
-                answerItem.put("hasInterviewerFeedback", interviewerFeedback != null);
-                
-                answersByQuestion.get(questionId).add(answerItem);
+        try {
+            Session session = sessionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(id);
+            
+            for (Question q : questions) {
+                if (q.getText() == null) {
+                    log.warn("Question {} has null text field", q.getId());
+                } else {
+                    log.info("Question {} text: {}", q.getId(), q.getText().substring(0, Math.min(20, q.getText().length())));
+                }
             }
+            
+            List<Answer> answers = answerRepository.findAllBySessionIdWithFeedbacks(id);
+            
+            Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
+            for (Answer answer : answers) {
+                if (answer.getQuestion() != null) {
+                    Long questionId = answer.getQuestion().getId();
+                    answersByQuestion.putIfAbsent(questionId, new ArrayList<>());
+                    
+                    Map<String, Object> answerItem = new HashMap<>();
+                    answerItem.put("answer", answer);
+                    
+                    Feedback aiFeedback = answer.getFeedbacks().stream()
+                        .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+                        .findFirst().orElse(null);
+                    Feedback interviewerFeedback = answer.getFeedbacks().stream()
+                        .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+                        .findFirst().orElse(null);
+                    
+                    answerItem.put("aiFeedback", aiFeedback);
+                    answerItem.put("interviewerFeedback", interviewerFeedback);
+                    answerItem.put("hasAiFeedback", aiFeedback != null);
+                    answerItem.put("hasInterviewerFeedback", interviewerFeedback != null);
+                    
+                    answersByQuestion.get(questionId).add(answerItem);
+                }
+            }
+            
+            long totalAnswerCount = answers.size();
+            long answeredQuestionCount = answersByQuestion.size();
+            
+            User currentUser = getCurrentUser();
+            
+            model.addAttribute("session", session);
+            model.addAttribute("questions", questions);
+            model.addAttribute("answersByQuestion", answersByQuestion);
+            model.addAttribute("totalAnswerCount", totalAnswerCount);
+            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+            model.addAttribute("currentUser", currentUser);
+            
+            log.info("세션 상세 로드 완료 - sessionId: {}, 질문수: {}, 답변수: {}", 
+                id, questions.size(), totalAnswerCount);
+            
+            return "session/detail";
+            
+        } catch (Exception e) {
+            log.error("세션 상세 로드 실패 - sessionId: {}", id, e);
+            throw new RuntimeException("Failed to load session detail", e);
         }
-        
-        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(session.getId());
-        long totalAnswerCount = answers.size();
-        long answeredQuestionCount = answersByQuestion.size();
-        
-        model.addAttribute("session", session);
-        model.addAttribute("questions", questions);
-        model.addAttribute("answersByQuestion", answersByQuestion);
-        model.addAttribute("totalAnswerCount", totalAnswerCount);
-        model.addAttribute("answeredQuestionCount", answeredQuestionCount);
-        
-        return "session/detail";
     }
 }
