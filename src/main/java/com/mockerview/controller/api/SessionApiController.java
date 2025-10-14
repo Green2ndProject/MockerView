@@ -351,4 +351,58 @@ public class SessionApiController {
         }
         return "분석 중...";
     }
+
+    @PostMapping("/{sessionId}/start")
+    public ResponseEntity<Map<String, String>> startSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        Map<String, String> response = new HashMap<>();
+        
+        try {
+            log.info("✅ 세션 시작 요청 - sessionId: {}, userId: {}", 
+                    sessionId, userDetails.getUserId());
+            
+            if (!sessionRepository.isHost(sessionId, userDetails.getUserId())) {
+                response.put("status", "error");
+                response.put("message", "호스트만 세션을 시작할 수 있습니다");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            if (session.getSessionStatus() == Session.SessionStatus.RUNNING) {
+                response.put("status", "error");
+                response.put("message", "이미 진행 중인 세션입니다");
+                return ResponseEntity.ok(response);
+            }
+            
+            session.setSessionStatus(Session.SessionStatus.RUNNING);
+            session.setStartTime(LocalDateTime.now());
+            sessionRepository.save(session);
+            
+            log.info("✅ 세션 시작 완료 - sessionId: {}", sessionId);
+            
+            Map<String, Object> statusMessage = new HashMap<>();
+            statusMessage.put("sessionId", sessionId);
+            statusMessage.put("status", "RUNNING");
+            statusMessage.put("timestamp", LocalDateTime.now());
+            
+            messagingTemplate.convertAndSend(
+                "/topic/session/" + sessionId + "/status", 
+                statusMessage
+            );
+            
+            response.put("status", "success");
+            response.put("message", "세션이 시작되었습니다");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("❌ 세션 시작 실패: ", e);
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }

@@ -1559,7 +1559,7 @@
             if (confirm('면접을 시작하시겠습니까?')) {
                 try {
                     const token = getToken();
-                    const response = await fetch(`/session/${SESSION_DATA.sessionId}/control/start`, {
+                    const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/start`, {
                         method: 'POST',
                         headers: {
                             'Authorization': token,
@@ -1578,17 +1578,23 @@
                         document.getElementById('pauseInterviewBtn').style.display = 'inline-block';
                         document.getElementById('endInterviewBtn').style.display = 'inline-block';
                         
-                        alert('면접이 시작되었습니다!');
+                        const badge = document.getElementById('sessionStatusBadge');
+                        if (badge) {
+                            badge.textContent = '진행중';
+                            badge.className = 'status-badge ongoing';
+                        }
+                        
+                        alert('✅ 면접이 시작되었습니다!');
                     } else {
-                        alert('면접 시작 실패: ' + result.message);
+                        alert('❌ 면접 시작 실패: ' + result.message);
                     }
                 } catch (error) {
-                    console.error('면접 시작 오류:', error);
-                    alert('면접 시작 중 오류가 발생했습니다');
+                    console.error('❌ 면접 시작 오류:', error);
+                    alert('면접 시작 중 오류가 발생했습니다: ' + error.message);
                 }
             }
         };
-    
+
         window.pauseInterview = function() {
             if (confirm('면접을 일시정지하시겠습니까?')) {
                 if (window.mockerViewWS && window.mockerViewWS.connected) {
