@@ -29,6 +29,43 @@ public class SessionScheduler {
 
     @Scheduled(fixedRate = 60000)
     @Transactional
+    public void autoStartScheduledSessions() {
+        LocalDateTime now = LocalDateTime.now();
+        
+        List<Session> scheduledSessions = sessionRepository.findByStatusAndStartTimeBefore(
+            Session.SessionStatus.PLANNED, now
+        );
+        
+        if (!scheduledSessions.isEmpty()) {
+            log.info("🚀 예약 세션 자동 시작 체크 - {}개 발견", scheduledSessions.size());
+            
+            for (Session session : scheduledSessions) {
+                try {
+                    session.setSessionStatus(Session.SessionStatus.RUNNING);
+                    session.setStartTime(now);
+                    sessionRepository.save(session);
+                    
+                    Map<String, Object> message = new HashMap<>();
+                    message.put("sessionId", session.getId());
+                    message.put("status", "RUNNING");
+                    message.put("timestamp", now);
+                    
+                    messagingTemplate.convertAndSend(
+                        "/topic/session/" + session.getId() + "/status", 
+                        message
+                    );
+                    
+                    log.info("✅ 세션 자동 시작 완료 - ID: {}, 제목: {}", 
+                            session.getId(), session.getTitle());
+                } catch (Exception e) {
+                    log.error("❌ 세션 자동 시작 실패 - ID: {}", session.getId(), e);
+                }
+            }
+        }
+    }
+
+    @Scheduled(fixedRate = 60000)
+    @Transactional
     public void autoExpireSessions() {
         LocalDateTime now = LocalDateTime.now();
         
@@ -77,26 +114,6 @@ public class SessionScheduler {
         
         if (endedCount > 0) {
             log.info("💤 비활성으로 종료된 세션 수: {}", endedCount);
-        }
-    }
-    
-    @Scheduled(cron = "0 */1 * * * *")
-    @Transactional
-    public void autoStartScheduledSessions() {
-        LocalDateTime now = LocalDateTime.now();
-        
-        List<Session> scheduledSessions = sessionRepository.findByStatusAndStartTimeBefore(
-            Session.SessionStatus.PLANNED, now
-        );
-        
-        for (Session session : scheduledSessions) {
-            session.setSessionStatus(Session.SessionStatus.RUNNING);
-            log.info("🚀 예약 세션 자동 시작 - ID: {}, 제목: {}", 
-                    session.getId(), session.getTitle());
-        }
-        
-        if (!scheduledSessions.isEmpty()) {
-            sessionRepository.saveAll(scheduledSessions);
         }
     }
     
