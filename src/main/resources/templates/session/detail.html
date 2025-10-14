@@ -170,6 +170,35 @@
             padding: 2rem;
             color: #9ca3af;
         }
+
+        @media (max-width: 768px) {
+            .results-header { padding: 2rem 0; }
+            .results-header h1 { font-size: 24px; }
+            .session-meta { 
+                flex-direction: column; 
+                gap: 8px; 
+                font-size: 13px; 
+            }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .stat-card { padding: 20px; }
+            .stat-number { font-size: 32px; }
+            .qa-section { padding: 16px; }
+            .qa-item { padding-left: 12px; }
+            .question-text { font-size: 16px; }
+            .answer-card { padding: 12px; }
+            .feedback-grid { 
+                grid-template-columns: 1fr; 
+                gap: 12px; 
+            }
+            .action-buttons { 
+                flex-direction: column; 
+                gap: 8px; 
+            }
+            .action-buttons .btn { width: 100%; }
+        }
     </style>
 </head>
 <body>

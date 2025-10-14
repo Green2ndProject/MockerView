@@ -946,6 +946,379 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 12px;
+        }
+        
+        .navbar-brand {
+            font-size: 20px;
+        }
+        
+        .navbar-nav {
+            gap: 12px;
+        }
+        
+        .nav-link {
+            font-size: 13px;
+        }
+        
+        .user-name {
+            display: none; /* 모바일에서 이름 숨김 */
+        }
+        
+        .session-info-bar {
+            padding: 16px 0;
+        }
+        
+        .session-title-section h1 {
+            font-size: 22px;
+        }
+        
+        .session-meta {
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .session-actions {
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .session-actions .btn {
+            width: 100%;
+        }
+        
+        .video-main-section {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .video-display-area {
+            aspect-ratio: 4/3;
+        }
+        
+        .media-controls {
+            bottom: 12px;
+            gap: 8px;
+            padding: 8px;
+        }
+        
+        .media-btn {
+            padding: 10px 18px;
+            font-size: 16px;
+        }
+        
+        .remote-videos-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .card {
+            margin-bottom: 12px;
+        }
+        
+        .card-header {
+            padding: 12px 16px;
+        }
+        
+        .card-header h3,
+        .card-header h4 {
+            font-size: 16px;
+        }
+        
+        .card-body {
+            padding: 16px;
+        }
+        
+        .mode-indicator {
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .mode-indicator h3 {
+            font-size: 20px;
+        }
+        
+        .mode-indicator p {
+            font-size: 14px;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .control-buttons {
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-buttons .btn {
+            width: 100%;
+        }
+        
+        .answer-mode-toggle {
+            flex-direction: column;
+        }
+        
+        .question-display {
+            padding: 16px;
+            min-height: 80px;
+        }
+        
+        #current-question-text {
+            font-size: 16px;
+        }
+        
+        .participant-roles-section {
+            gap: 12px;
+        }
+        
+        .role-group {
+            padding: 12px;
+        }
+        
+        .answer-review-card {
+            padding: 16px;
+        }
+        
+        .answers-list {
+            max-height: 400px;
+        }
+        
+        .video-answer-area {
+            padding: 20px;
+        }
+        
+        .btn-lg {
+            padding: 12px 20px;
+            font-size: 15px;
+        }
+        
+        #recordBtn {
+            width: 80px;
+            height: 80px;
+            font-size: 28px;
+        }
+        
+        .audio-recorder-container {
+            padding: 24px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .navbar {
+            padding: 12px 0;
+        }
+        
+        .navbar-brand {
+            font-size: 18px;
+        }
+        
+        .navbar-nav {
+            gap: 8px;
+        }
+        
+        .nav-link {
+            font-size: 12px;
+        }
+        
+        .user-role {
+            padding: 3px 8px;
+            font-size: 11px;
+        }
+        
+        .session-title-section h1 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .session-meta {
+            font-size: 11px;
+            gap: 6px;
+        }
+        
+        .badge-live {
+            padding: 3px 8px;
+            font-size: 11px;
+        }
+        
+        .countdown-timer {
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+        
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+        
+        .btn-end-session {
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+        
+        .mode-indicator {
+            padding: 12px;
+        }
+        
+        .mode-indicator h3 {
+            font-size: 18px;
+        }
+        
+        .mode-indicator p {
+            font-size: 13px;
+        }
+        
+        .video-display-area {
+            aspect-ratio: 3/4;
+        }
+        
+        .local-video-label {
+            top: 8px;
+            left: 8px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .media-controls {
+            bottom: 8px;
+            gap: 6px;
+            padding: 6px;
+        }
+        
+        .media-btn {
+            padding: 8px 14px;
+            font-size: 14px;
+        }
+        
+        .remote-videos-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .card-header {
+            padding: 10px 12px;
+        }
+        
+        .card-header h3,
+        .card-header h4 {
+            font-size: 15px;
+        }
+        
+        .card-body {
+            padding: 12px;
+        }
+        
+        .question-display {
+            padding: 12px;
+        }
+        
+        #current-question-text {
+            font-size: 15px;
+        }
+        
+        .form-control,
+        .form-select {
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+        
+        textarea.form-control {
+            min-height: 80px;
+        }
+        
+        .form-label {
+            font-size: 13px;
+        }
+        
+        .participant-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+        }
+        
+        .role-title {
+            font-size: 12px;
+        }
+        
+        .role-member,
+        .participant-item {
+            padding: 8px;
+            font-size: 14px;
+        }
+        
+        .answer-review-card {
+            padding: 12px;
+        }
+        
+        .user-name-badge {
+            font-size: 13px;
+            padding: 3px 10px;
+        }
+        
+        .question-text,
+        .answer-text {
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        .ai-feedback-section {
+            padding: 12px;
+            font-size: 14px;
+        }
+        
+        .btn-lg {
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+        
+        #recordBtn {
+            width: 70px;
+            height: 70px;
+            font-size: 24px;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+        
+        .badge-waiting {
+            padding: 3px 8px;
+            font-size: 11px;
+        }
+        
+        .empty-state {
+            padding: 24px;
+            font-size: 14px;
+        }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape) {
+        .video-display-area {
+            aspect-ratio: 16/9;
+        }
+        
+        .card {
+            margin-bottom: 8px;
+        }
+        
+        .mode-indicator {
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .question-display {
+            min-height: 60px;
+        }
+    }
     </style>
 </head>
 <body>

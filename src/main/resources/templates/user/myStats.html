@@ -348,6 +348,42 @@
             color: #9ca3af;
             padding: 20px;
         }
+
+        @media (max-width: 768px) {
+            .stats-header { padding: 24px 0; }
+            .stats-header h1 { font-size: 24px; }
+            .export-buttons { 
+                flex-direction: column; 
+                gap: 8px; 
+            }
+            .export-buttons .btn { width: 100%; }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .stat-card { padding: 20px; }
+            .stat-number { font-size: 32px; }
+            .chart-container { padding: 20px; }
+            .chart-title { font-size: 18px; }
+            div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+            .ranking-item { 
+                padding: 12px; 
+                font-size: 14px; 
+            }
+            .rank-number { font-size: 20px; }
+            .rank-score { font-size: 20px; }
+            .answer-item { padding: 12px 16px; }
+            .modal-content { 
+                width: 95%; 
+                margin: 10% auto; 
+                padding: 20px; 
+            }
+            .feedback-grid { 
+                grid-template-columns: 1fr; 
+            }
+        }
     </style>
 </head>
 <body>

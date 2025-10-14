@@ -189,6 +189,29 @@
             color: #9ca3af;
             padding: 20px;
         }
+
+        @media (max-width: 768px) {
+            .stats-header { padding: 24px 0; }
+            .stats-header h1 { font-size: 24px; }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .stat-card { padding: 20px; }
+            .stat-number { font-size: 32px; }
+            div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+            .chart-container { padding: 20px; }
+            .chart-title { font-size: 18px; }
+            .interviewee-item { 
+                padding: 12px; 
+                font-size: 14px; 
+            }
+            .interviewee-rank { font-size: 20px; }
+            .interviewee-score { font-size: 20px; }
+            .session-item { padding: 12px 16px; }
+        }
     </style>
 </head>
 <body>
