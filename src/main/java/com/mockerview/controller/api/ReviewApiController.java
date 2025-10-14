@@ -13,6 +13,7 @@ import com.mockerview.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public class ReviewApiController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<Map<String, Object>> createReview(
             @RequestBody ReviewRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -93,6 +95,7 @@ public class ReviewApiController {
     }
 
     @GetMapping("/session/{sessionId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<ReviewDTO>> getReviewsBySession(@PathVariable Long sessionId) {
         List<Review> reviews = reviewRepository.findBySessionId(sessionId);
         
