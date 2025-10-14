@@ -64,13 +64,6 @@ public class SessionService {
                 pageable
             );
             
-            for (Session session : sessionPage.getContent()) {
-                session.getQuestions().size();
-                if (session.getHost() != null) {
-                    session.getHost().getName();
-                }
-            }
-            
             log.info("Found {} total reviewable sessions across {} pages.", 
                     sessionPage.getTotalElements(), sessionPage.getTotalPages());
             
