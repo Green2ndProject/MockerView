@@ -1743,6 +1743,7 @@
         let warningShown = false;
         let agoraClient = null;
         let mediaEnabled = false;
+        let mediaInitialized = false;
         let interviewStatus = 'waiting';
         let currentAnswerMode = 'text';
         let audioRecorder = null;
@@ -1762,8 +1763,13 @@
             }
             return '';
         }
-
+        
         async function initializeMedia() {
+            if (mediaInitialized) {
+                console.log('⚠️ 이미 미디어 초기화됨 - 중복 호출 방지');
+                return;
+            }
+            
             if (SESSION_DATA.sessionType !== 'VIDEO' && SESSION_DATA.sessionType !== 'AUDIO') {
                 console.log('❌ 미디어 타입이 아님:', SESSION_DATA.sessionType);
                 return;
@@ -1803,6 +1809,12 @@
                 const tokenData = await response.json();
                 console.log('3️⃣ Agora 토큰 데이터:', tokenData);
                 
+                if (agoraClient) {
+                    console.log('🧹 기존 클라이언트 정리...');
+                    await agoraClient.leave();
+                    agoraClient = null;
+                }
+                
                 console.log('4️⃣ AgoraClient 생성...');
                 agoraClient = new AgoraClient(tokenData.appId);
                 console.log('✅ AgoraClient 생성 완료');
@@ -1827,16 +1839,24 @@
                 }
                 
                 mediaEnabled = true;
+                mediaInitialized = true;
                 console.log('🎉 미디어 초기화 완료!');
                 
             } catch (error) {
                 console.error('💥 미디어 초기화 실패:', error);
                 console.error('  - 오류 코드:', error.code);
                 console.error('  - 오류 메시지:', error.message);
+                
+                if (agoraClient) {
+                    await agoraClient.leave();
+                    agoraClient = null;
+                }
+                mediaInitialized = false;
+                
                 alert('화상/음성 연결 실패:\n' + error.message);
             }
         }
-
+        
         async function stopMedia() {
             console.log('🛑 미디어 중지 요청...');
             if (agoraClient) {
@@ -1846,7 +1866,7 @@
             mediaEnabled = false;
             console.log('✅ 미디어 중지 완료');
         }
-
+        
         function toggleAudio() {
             if (agoraClient) {
                 const enabled = agoraClient.toggleAudio();
@@ -1855,7 +1875,7 @@
                 btn.innerHTML = enabled ? '🎤' : '🔇';
             }
         }
-
+        
         function toggleVideo() {
             if (agoraClient && SESSION_DATA.sessionType === 'VIDEO') {
                 const enabled = agoraClient.toggleVideo();
@@ -1864,7 +1884,7 @@
                 btn.innerHTML = enabled ? '📹' : '🚫';
             }
         }
-
+        
         function startCountdown() {
             if (!SESSION_DATA.expiresAt) return;
             const expiresAt = new Date(SESSION_DATA.expiresAt).getTime();
@@ -1893,7 +1913,7 @@
                 }
             }, 1000);
         }
-
+        
         async function endSessionManually() {
             if (!confirm('정말로 세션을 종료하시겠습니까?')) return;
             try {
@@ -1917,7 +1937,7 @@
                 alert('세션 종료 중 오류가 발생했습니다');
             }
         }
-
+        
         const answerTextArea = document.getElementById('answerText');
         if (answerTextArea) {
             answerTextArea.addEventListener('input', function() {
@@ -1929,7 +1949,7 @@
                 }
             });
         }
-
+        
         window.startInterview = async function() {
             if (confirm('면접을 시작하시겠습니까?')) {
                 try {
@@ -1969,7 +1989,7 @@
                 }
             }
         };
-
+        
         window.pauseInterview = function() {
             if (confirm('면접을 일시정지하시겠습니까?')) {
                 if (window.mockerViewWS && window.mockerViewWS.connected) {
@@ -2001,7 +2021,7 @@
                 }
             }
         };
-
+        
         function switchVideoAnswerMode(mode) {
             if (mode === 'video') {
                 document.getElementById('videoAnswerModeBtn').classList.add('active');
@@ -2015,26 +2035,26 @@
                 document.getElementById('text-answer-area').style.display = 'block';
             }
         }
-
+        
         function startVideoSpeechRecognition() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome을 사용해주세요.');
                 return;
             }
-
+        
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             videoRecognition = new SpeechRecognition();
             videoRecognition.lang = 'ko-KR';
             videoRecognition.continuous = true;
             videoRecognition.interimResults = true;
-
+        
             const statusDiv = document.getElementById('videoRecognitionStatus');
             const textDiv = document.getElementById('videoRecognizedText');
             const submitBtn = document.getElementById('submitVideoRecognizedBtn');
             const startBtn = document.getElementById('startVideoRecognitionBtn');
-
+        
             videoRecognizedFullText = '';
-
+        
             videoRecognition.onstart = function() {
                 statusDiv.textContent = '🎤 음성 인식 중... 화상으로 답변해주세요';
                 statusDiv.className = 'answer-status active';
@@ -2042,7 +2062,7 @@
                 startBtn.onclick = stopVideoSpeechRecognition;
                 submitBtn.style.display = 'none';
             };
-
+        
             videoRecognition.onresult = function(event) {
                 let interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -2055,13 +2075,13 @@
                 }
                 textDiv.innerHTML = videoRecognizedFullText + '<span style="color: #999;">' + interimTranscript + '</span>';
             };
-
+        
             videoRecognition.onerror = function(event) {
                 console.error('음성 인식 오류:', event.error);
-                statusDiv.textContent = '❌ 오류: ' +event.error;
+                statusDiv.textContent = '❌ 오류: ' + event.error;
                 statusDiv.className = 'answer-status';
             };
-
+        
             videoRecognition.onend = function() {
                 statusDiv.textContent = '✅ 인식 완료! 제출 버튼을 눌러주세요';
                 statusDiv.className = 'answer-status success';
@@ -2071,10 +2091,10 @@
                     submitBtn.style.display = 'inline-block';
                 }
             };
-
+        
             videoRecognition.start();
         }
-
+        
         function submitVideoDirectAnswer() {
             const questionId = document.getElementById('currentQuestionId').value;
             if (!questionId) {
@@ -2103,7 +2123,7 @@
                 videoRecognition.stop();
             }
         }
-
+        
         function submitVideoRecognizedAnswer() {
             const questionId = document.getElementById('currentQuestionId').value;
             if (!videoRecognizedFullText.trim()) {
@@ -2114,7 +2134,7 @@
                 alert('현재 답변할 질문이 없습니다.');
                 return;
             }
-
+        
             if (window.mockerViewWS && window.mockerViewWS.connected) {
                 window.mockerViewWS.submitAnswer(questionId, videoRecognizedFullText.trim());
                 
@@ -2129,7 +2149,7 @@
                 alert('답변이 제출되었습니다!');
             }
         }
-
+        
         function switchAnswerMode(mode) {
             currentAnswerMode = mode;
             if (mode === 'text') {
@@ -2147,7 +2167,7 @@
                 document.getElementById('voice-answer-area').style.display = 'block';
             }
         }
-
+        
         async function toggleRecording() {
             const recordBtn = document.getElementById('recordBtn');
             const recordingStatus = document.getElementById('recordingStatus');
@@ -2181,7 +2201,7 @@
                 recordBtn.textContent = '🎤';
             }
         }
-
+        
         async function submitVoiceAnswer() {
             const questionId = document.getElementById('currentQuestionId').value;
             if (!audioBlob) {
@@ -2229,7 +2249,7 @@
                 submitBtn.textContent = '답변 제출';
             }
         }
-
+        
         function submitInterviewerFeedback(answerId) {
             const score = document.getElementById(`score-${answerId}`).value;
             const feedbackText = document.getElementById(`feedback-${answerId}`).value;
@@ -2250,7 +2270,7 @@
                 alert('평가가 제출되었습니다!');
             }
         }
-
+        
         window.addEventListener('beforeunload', function() {
             console.log('🚪 페이지 종료 감지...');
             if (agoraClient && agoraClient.isJoined) {
@@ -2261,64 +2281,6 @@
                 }
             }
         });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM 로드 완료');
-            console.log('📊 SESSION_DATA:', SESSION_DATA);
-            
-            checkSessionStatus();
-            
-            startCountdown();
-            
-            console.log('🔌 WebSocket 초기화 시작...');
-            const ws = new MockerViewWebSocket(
-                SESSION_DATA.sessionId, 
-                SESSION_DATA.userId, 
-                SESSION_DATA.userName
-            );
-            window.mockerViewWS = ws;
-            ws.connect();
-            console.log('✅ WebSocket connect() 호출 완료');
-            
-            if (SESSION_DATA.sessionType === 'AUDIO' || SESSION_DATA.sessionType === 'VIDEO') {
-                setTimeout(() => {
-                    console.log('🎬 미디어 초기화 시작...');
-                    initializeMedia();
-                }, 1000);
-            }
-        });
-        
-    async function checkSessionStatus() {
-        try {
-            const token = getToken();
-            const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/status`, {
-                headers: { 'Authorization': token }
-            });
-            
-            const data = await response.json();
-            console.log('📊 세션 상태:', data);
-            
-            if (data.status === 'RUNNING') {
-                const startBtn = document.getElementById('startInterviewBtn');
-                const pauseBtn = document.getElementById('pauseInterviewBtn');
-                const endBtn = document.getElementById('endInterviewBtn');
-                const badge = document.getElementById('sessionStatusBadge');
-                
-                if (startBtn) startBtn.style.display = 'none';
-                if (pauseBtn) pauseBtn.style.display = 'inline-block';
-                if (endBtn) endBtn.style.display = 'inline-block';
-                
-                if (badge) {
-                    badge.textContent = '진행중';
-                    badge.className = 'status-badge ongoing';
-                }
-                
-                console.log('✅ UI 업데이트 완료 - RUNNING 상태');
-            }
-        } catch (error) {
-            console.error('❌ 세션 상태 확인 실패:', error);
-        }
-    }
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 DOM 로드 완료');
@@ -2340,13 +2302,45 @@
             ws.connect();
             console.log('✅ WebSocket connect() 호출 완료');
             
-            if (SESSION_DATA.sessionType === 'AUDIO' || SESSION_DATA.sessionType === 'VIDEO') {
+            if ((SESSION_DATA.sessionType === 'AUDIO' || SESSION_DATA.sessionType === 'VIDEO') && !mediaInitialized) {
                 setTimeout(() => {
                     console.log('🎬 미디어 초기화 시작...');
                     initializeMedia();
                 }, 1000);
             }
         });
+        
+        async function checkSessionStatus() {
+            try {
+                const token = getToken();
+                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/status`, {
+                    headers: { 'Authorization': token }
+                });
+                
+                const data = await response.json();
+                console.log('📊 세션 상태:', data);
+                
+                if (data.status === 'RUNNING') {
+                    const startBtn = document.getElementById('startInterviewBtn');
+                    const pauseBtn = document.getElementById('pauseInterviewBtn');
+                    const endBtn = document.getElementById('endInterviewBtn');
+                    const badge = document.getElementById('sessionStatusBadge');
+                    
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (pauseBtn) pauseBtn.style.display = 'inline-block';
+                    if (endBtn) endBtn.style.display = 'inline-block';
+                    
+                    if (badge) {
+                        badge.textContent = '진행중';
+                        badge.className = 'status-badge ongoing';
+                    }
+                    
+                    console.log('✅ UI 업데이트 완료 - RUNNING 상태');
+                }
+            } catch (error) {
+                console.error('❌ 세션 상태 확인 실패:', error);
+            }
+        }
     </script>
 </body>
 </html>
