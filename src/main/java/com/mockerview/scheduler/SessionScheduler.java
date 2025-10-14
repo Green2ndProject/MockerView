@@ -25,29 +25,37 @@ public class SessionScheduler {
                             SimpMessagingTemplate messagingTemplate) {
         this.sessionRepository = sessionRepository;
         this.messagingTemplate = messagingTemplate;
+        log.info("🎬 SessionScheduler 초기화 완료!");
     }
 
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void autoStartScheduledSessions() {
-        LocalDateTime now = LocalDateTime.now();
-        log.info("⏰ 스케줄러 실행 - 현재 시각: {}", now);
-        
-        List<Session> scheduledSessions = sessionRepository.findByStatusAndStartTimeBefore(
-            Session.SessionStatus.PLANNED, now
-        );
-        
-        log.info("🔍 자동 시작 대상 세션 검색 - {}개 발견", scheduledSessions.size());
-        
-        if (!scheduledSessions.isEmpty()) {
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            log.info("⏰ 스케줄러 실행 중 - 현재 시각: {}", now);
+            
+            List<Session> scheduledSessions = sessionRepository.findByStatusAndStartTimeBefore(
+                Session.SessionStatus.PLANNED, now
+            );
+            
+            log.info("🔍 자동 시작 대상 세션: {}개", scheduledSessions.size());
+            
+            if (scheduledSessions.isEmpty()) {
+                log.info("✅ 자동 시작할 세션 없음");
+                return;
+            }
+            
             for (Session session : scheduledSessions) {
                 try {
-                    log.info("🚀 세션 자동 시작 시도 - ID: {}, 제목: {}, 예정 시각: {}", 
+                    log.info("🚀 세션 자동 시작 - ID: {}, 제목: {}, 예정: {}", 
                             session.getId(), session.getTitle(), session.getStartTime());
                     
                     session.setStatus(Session.SessionStatus.RUNNING);
                     session.setStartTime(now);
-                    sessionRepository.save(session);
+                    Session saved = sessionRepository.save(session);
+                    
+                    log.info("💾 DB 저장 완료 - ID: {}, 새 상태: {}", saved.getId(), saved.getStatus());
                     
                     Map<String, Object> message = new HashMap<>();
                     message.put("sessionId", session.getId());
@@ -64,6 +72,8 @@ public class SessionScheduler {
                     log.error("❌ 세션 자동 시작 실패 - ID: {}", session.getId(), e);
                 }
             }
+        } catch (Exception e) {
+            log.error("💥 스케줄러 실행 오류", e);
         }
     }
 
