@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>점수판</title>
-    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <title>점수판 - Mockerview</title>
     <style>
         * {
             margin: 0;
@@ -13,21 +12,21 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
         }
         
         .navbar {
             background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 2px solid #e9ecef;
             padding: 16px 0;
         }
         
         .navbar-content {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -35,216 +34,238 @@
         
         .navbar-brand {
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
             color: #667eea;
             text-decoration: none;
         }
         
         .navbar-nav {
             display: flex;
-            gap: 24px;
-            align-items: center;
+            gap: 32px;
         }
         
         .nav-link {
-            color: #666;
+            color: #495057;
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.2s;
+            font-size: 15px;
         }
         
         .nav-link:hover {
             color: #667eea;
         }
         
-        .scoreboard-container {
-            max-width: 1400px;
-            margin: 40px auto;
-            padding: 20px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
         }
         
-        .scoreboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .page-header {
+            background: #667eea;
             color: white;
-            padding: 30px;
+            padding: 40px 32px;
             border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            margin-bottom: 32px;
         }
         
-        .scoreboard-header h1 {
-            margin: 0 0 10px 0;
+        .page-header h1 {
             font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
         
-        .session-info {
-            opacity: 0.95;
+        .session-meta {
             font-size: 16px;
+            opacity: 0.9;
         }
         
-        .leaderboard {
+        .scoreboard {
             background: white;
             border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .leaderboard-item {
+        .score-row {
             display: grid;
-            grid-template-columns: 60px 1fr 120px 120px 120px 100px;
-            gap: 20px;
-            padding: 20px 25px;
-            border-bottom: 1px solid #f0f0f0;
+            grid-template-columns: 80px 1fr 110px 110px 110px 120px;
             align-items: center;
-            transition: background 0.2s;
+            padding: 24px 28px;
+            gap: 20px;
+            border-bottom: 1px solid #f1f3f5;
         }
         
-        .leaderboard-item:hover {
-            background: #f8f9ff;
-        }
-        
-        .leaderboard-item:last-child {
+        .score-row:last-child {
             border-bottom: none;
         }
         
-        .rank {
-            font-size: 28px;
-            font-weight: bold;
-            color: #667eea;
-            text-align: center;
+        .score-row:hover {
+            background: #f8f9fa;
         }
         
-        .rank.gold { color: #FFD700; }
-        .rank.silver { color: #C0C0C0; }
-        .rank.bronze { color: #CD7F32; }
+        .rank-badge {
+            font-size: 36px;
+            font-weight: 800;
+            text-align: center;
+            color: #667eea;
+        }
         
-        .user-info {
+        .rank-badge.first { color: #ffd700; }
+        .rank-badge.second { color: #c0c0c0; }
+        .rank-badge.third { color: #cd7f32; }
+        
+        .user-section {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
         }
         
-        .user-avatar {
-            width: 48px;
-            height: 48px;
+        .user-icon {
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 22px;
+            font-weight: 700;
             flex-shrink: 0;
         }
         
-        .user-details {
+        .user-data {
             flex: 1;
         }
         
         .user-name {
             font-size: 18px;
             font-weight: 600;
-            color: #333;
+            color: #212529;
             margin-bottom: 4px;
         }
         
-        .user-stats {
+        .answer-count {
             font-size: 14px;
-            color: #666;
+            color: #6c757d;
         }
         
-        .score-box {
+        .score-item {
             text-align: center;
         }
         
-        .score-label {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 4px;
+        .score-title {
+            font-size: 11px;
+            color: #868e96;
             text-transform: uppercase;
+            font-weight: 600;
             letter-spacing: 0.5px;
+            margin-bottom: 6px;
         }
         
-        .score-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
+        .score-number {
+            font-size: 26px;
+            font-weight: 700;
+            color: #212529;
         }
         
-        .score-ai { color: #667eea; }
-        .score-interviewer { color: #764ba2; }
-        .score-total { 
-            color: #10b981; 
-            font-size: 28px;
-        }
+        .score-ai { color: #3b82f6; }
+        .score-interviewer { color: #8b5cf6; }
+        .score-total { color: #10b981; font-size: 30px; }
         
-        .details-btn {
+        .view-btn {
             background: #667eea;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 8px;
-            cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            transition: all 0.2s;
+            cursor: pointer;
+            transition: background 0.2s;
         }
         
-        .details-btn:hover {
+        .view-btn:hover {
             background: #5568d3;
-            transform: translateY(-1px);
         }
         
-        .modal {
+        .empty-box {
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            color: #868e96;
+        }
+        
+        .overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            overflow-y: auto;
-            padding: 40px 20px;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
         }
         
-        .modal.show {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
+        .overlay.active {
+            display: block;
         }
         
-        .modal-content {
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background: white;
             border-radius: 12px;
+            width: 90%;
             max-width: 900px;
-            width: 100%;
             max-height: 85vh;
             overflow-y: auto;
-            position: relative;
-            margin: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
         
-        .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .popup.active {
+            display: block;
+        }
+        
+        .popup-header {
+            background: #667eea;
             color: white;
-            padding: 25px 30px;
-            border-radius: 12px 12px 0 0;
+            padding: 28px 32px;
             position: sticky;
             top: 0;
             z-index: 10;
         }
         
-        .modal-header h2 {
-            margin: 0;
+        .popup-title {
             font-size: 24px;
+            font-weight: 700;
+            margin: 0;
         }
         
-        .close-modal {
+        .close-btn {
             position: absolute;
-            top: 20px;
-            right: 25px;
+            top: 24px;
+            right: 28px;
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
@@ -256,113 +277,87 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
         }
         
-        .close-modal:hover {
+        .close-btn:hover {
             background: rgba(255,255,255,0.3);
-            transform: rotate(90deg);
         }
         
-        .modal-body {
-            padding: 30px;
+        .popup-body {
+            padding: 32px;
         }
         
-        .answer-item {
+        .answer-block {
             background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
             border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
         }
         
-        .answer-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .question-text {
+        .question-label {
+            font-size: 17px;
             font-weight: 600;
-            color: #333;
+            color: #212529;
             margin-bottom: 12px;
-            font-size: 16px;
         }
         
-        .answer-text {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            padding: 15px;
+        .answer-content {
             background: white;
+            border: 1px solid #dee2e6;
             border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            color: #495057;
+            line-height: 1.6;
         }
         
-        .feedback-section {
+        .feedback-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 16px;
         }
         
-        .feedback-card {
+        .feedback-box {
             background: white;
-            padding: 15px;
+            border: 1px solid #dee2e6;
             border-radius: 6px;
-            border: 1px solid #e5e7eb;
+            padding: 16px;
         }
         
-        .feedback-title {
+        .feedback-header {
+            font-size: 14px;
             font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
             color: #667eea;
+            margin-bottom: 10px;
         }
         
-        .feedback-score {
+        .feedback-score-display {
             font-size: 20px;
-            font-weight: bold;
+            font-weight: 700;
             color: #10b981;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         
-        .feedback-text {
+        .feedback-content {
             font-size: 14px;
-            color: #666;
+            color: #495057;
             line-height: 1.5;
         }
         
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-        
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-        }
-        
-        @media (max-width: 1024px) {
-            .leaderboard-item {
-                grid-template-columns: 50px 1fr 100px 100px;
-            }
-            
-            .score-box:nth-child(3) {
-                display: none;
-            }
-        }
-        
         @media (max-width: 768px) {
-            .leaderboard-item {
-                grid-template-columns: 40px 1fr 80px;
-                gap: 15px;
-                padding: 15px;
+            .score-row {
+                grid-template-columns: 60px 1fr 90px 110px;
+                padding: 20px;
+                gap: 12px;
             }
             
-            .score-box:nth-child(3),
-            .score-box:nth-child(4) {
+            .score-item:nth-child(3),
+            .score-item:nth-child(4) {
                 display: none;
             }
             
-            .feedback-section {
+            .feedback-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -379,84 +374,80 @@
         </div>
     </nav>
     
-    <div class="scoreboard-container">
-        <div class="scoreboard-header">
-            <h1>🏆 점수판</h1>
-            <div class="session-info">
-                <strong th:text="${interviewSession.title}"></strong> | 
-                총 <span th:text="${totalQuestions}"></span>개 질문
+    <div class="container">
+        <div class="page-header">
+            <h1>🏆 면접 점수판</h1>
+            <div class="session-meta">
+                <strong th:text="${interviewSession.title}">세션명</strong> • 
+                질문 <span th:text="${totalQuestions}">0</span>개
             </div>
         </div>
         
-        <div class="leaderboard" th:if="${userScores != null and !userScores.isEmpty()}">
-            <div class="leaderboard-item" th:each="score, iterStat : ${userScores}">
-                <div class="rank" 
-                    th:classappend="${iterStat.index == 0} ? 'gold' : (${iterStat.index == 1} ? 'silver' : (${iterStat.index == 2} ? 'bronze' : ''))">
-                    <span th:text="${iterStat.index + 1}"></span>
+        <div class="scoreboard" th:if="${userScores != null and !userScores.isEmpty()}">
+            <div class="score-row" th:each="item, iter : ${userScores}">
+                <div class="rank-badge" 
+                        th:classappend="${iter.index == 0} ? 'first' : (${iter.index == 1} ? 'second' : (${iter.index == 2} ? 'third' : ''))">
+                    <span th:text="${iter.index + 1}">1</span>
                 </div>
                 
-                <div class="user-info">
-                    <div class="user-avatar" th:text="${#strings.substring(score.user.name, 0, 1)}"></div>
-                    <div class="user-details">
-                        <div class="user-name" th:text="${score.user.name}"></div>
-                        <div class="user-stats">
-                            답변 <span th:text="${score.answerCount}"></span>개
-                        </div>
+                <div class="user-section">
+                    <div class="user-icon" th:text="${#strings.substring(item.user.name, 0, 1)}">A</div>
+                    <div class="user-data">
+                        <div class="user-name" th:text="${item.user.name}">이름</div>
+                        <div class="answer-count">답변 <span th:text="${item.answerCount}">0</span>개</div>
                     </div>
                 </div>
                 
-                <div class="score-box">
-                    <div class="score-label">AI 점수</div>
-                    <div class="score-value score-ai" th:text="${score.avgAiScore}"></div>
+                <div class="score-item">
+                    <div class="score-title">AI 점수</div>
+                    <div class="score-number score-ai" th:text="${item.avgAiScore}">0</div>
                 </div>
                 
-                <div class="score-box">
-                    <div class="score-label">면접관 점수</div>
-                    <div class="score-value score-interviewer" th:text="${score.avgInterviewerScore}"></div>
+                <div class="score-item">
+                    <div class="score-title">면접관</div>
+                    <div class="score-number score-interviewer" th:text="${item.avgInterviewerScore}">0</div>
                 </div>
                 
-                <div class="score-box">
-                    <div class="score-label">총점</div>
-                    <div class="score-value score-total" th:text="${score.totalScore}"></div>
+                <div class="score-item">
+                    <div class="score-title">총점</div>
+                    <div class="score-number score-total" th:text="${item.totalScore}">0</div>
                 </div>
                 
                 <div>
-                    <button class="details-btn" th:onclick="'openModal(' + ${iterStat.index} + ')'">
-                        상세보기
-                    </button>
+                    <button class="view-btn" th:onclick="'showPopup(' + ${iter.index} + ')'">상세보기</button>
                 </div>
             </div>
         </div>
         
-        <div class="empty-state" th:if="${userScores == null or userScores.isEmpty()}">
-            <div class="empty-state-icon">📊</div>
-            <h3>아직 제출된 답변이 없습니다</h3>
-            <p>면접이 진행되면 점수판이 표시됩니다</p>
+        <div class="empty-box" th:if="${userScores == null or userScores.isEmpty()}">
+            <div class="empty-icon">📊</div>
+            <div class="empty-title">아직 제출된 답변이 없습니다</div>
+            <div class="empty-text">면접이 진행되면 점수가 표시됩니다</div>
         </div>
     </div>
     
-    <div th:each="score, iterStat : ${userScores}" th:id="'modal-' + ${iterStat.index}" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 th:text="${score.user.name} + '님의 답변 상세'"></h2>
-                <button class="close-modal" th:onclick="'closeModal(' + ${iterStat.index} + ')'">&times;</button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="answer-item" th:each="answer : ${score.answers}">
-                    <div class="question-text" th:text="'Q. ' + ${answer.question.text}"></div>
-                    <div class="answer-text" th:text="${answer.answerText}"></div>
-                    
-                    <div class="feedback-section" th:if="${answer.feedbacks != null and !answer.feedbacks.empty}">
-                        <div class="feedback-card" th:each="feedback : ${answer.feedbacks}">
-                            <div class="feedback-title" 
-                                th:text="${feedback.feedbackType.name() == 'AI'} ? '🤖 AI 피드백' : '👔 면접관 피드백'"></div>
-                            <div class="feedback-score" th:if="${feedback.score != null}">
-                                점수: <span th:text="${feedback.score}"></span>/100
-                            </div>
-                            <div class="feedback-text" 
-                                th:text="${feedback.feedbackType.name() == 'AI'} ? ${feedback.summary} : ${feedback.reviewerComment}"></div>
+    <div class="overlay" id="overlay" onclick="hideAllPopups()"></div>
+    
+    <div th:each="item, iter : ${userScores}" th:id="'popup-' + ${iter.index}" class="popup">
+        <div class="popup-header">
+            <h2 class="popup-title" th:text="${item.user.name} + '님의 답변 상세'">답변 상세</h2>
+            <button class="close-btn" th:onclick="'hidePopup(' + ${iter.index} + ')'">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div class="answer-block" th:each="ans : ${item.answers}">
+                <div class="question-label" th:text="'Q. ' + ${ans.question.text}">질문</div>
+                <div class="answer-content" th:text="${ans.answerText}">답변</div>
+                
+                <div class="feedback-grid" th:if="${ans.feedbacks != null and !ans.feedbacks.empty}">
+                    <div class="feedback-box" th:each="fb : ${ans.feedbacks}">
+                        <div class="feedback-header" 
+                                th:text="${fb.feedbackType.name() == 'AI'} ? '🤖 AI 피드백' : '👔 면접관 피드백'">피드백</div>
+                        <div class="feedback-score-display" th:if="${fb.score != null}">
+                            점수: <span th:text="${fb.score}">0</span>/100
                         </div>
+                        <div class="feedback-content" 
+                                th:text="${fb.feedbackType.name() == 'AI'} ? ${fb.summary} : ${fb.reviewerComment}">내용</div>
                     </div>
                 </div>
             </div>
@@ -464,24 +455,23 @@
     </div>
     
     <script>
-        function openModal(index) {
-            document.getElementById('modal-' + index).classList.add('show');
+        function showPopup(index) {
+            document.getElementById('popup-' + index).classList.add('active');
+            document.getElementById('overlay').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
         
-        function closeModal(index) {
-            document.getElementById('modal-' + index).classList.remove('show');
+        function hidePopup(index) {
+            document.getElementById('popup-' + index).classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
             document.body.style.overflow = 'auto';
         }
         
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('show');
-                    document.body.style.overflow = 'auto';
-                }
-            });
-        });
+        function hideAllPopups() {
+            document.querySelectorAll('.popup').forEach(p => p.classList.remove('active'));
+            document.getElementById('overlay').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
     </script>
 </body>
 </html>
