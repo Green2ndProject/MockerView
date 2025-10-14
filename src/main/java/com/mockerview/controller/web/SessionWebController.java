@@ -213,17 +213,13 @@ public class SessionWebController {
         User currentUser = userRepository.findByUsername(userDetails.getUsername())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        Session session = sessionRepository.findById(id)
+        Session session = sessionRepository.findByIdWithHost(id)
             .orElseThrow(() -> new RuntimeException("Session not found: " + id));
-        
-        if (session.getHost() != null) {
-            session.getHost().getName();
-        }
         
         boolean isHost = session.getHost() != null && session.getHost().getId().equals(currentUser.getId());
         
-        log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}", 
-            id, currentUser.getId(), currentUser.getName(), role);
+        log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}, sessionType: {}", 
+            id, currentUser.getId(), currentUser.getName(), role, session.getSessionType());
         
         model.addAttribute("session", session);
         model.addAttribute("sessionId", session.getId());
@@ -234,8 +230,9 @@ public class SessionWebController {
         model.addAttribute("isHost", isHost);
         model.addAttribute("sessionHost", session.getHost());
         
-        log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}", 
-            currentUser.getName(), role, isHost, session.getSessionType());
+        log.info("세션 로드 완료 - 호스트: {}, 타입: {}", 
+            session.getHost() != null ? session.getHost().getName() : "없음", 
+            session.getSessionType());
         
         return "session/session";
     }
