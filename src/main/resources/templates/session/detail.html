@@ -193,7 +193,7 @@
         <div class="session-meta">
             <span th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
             <span>호스트: <span th:text="${session.host?.name}">면접관</span></span>
-            <span th:text="${session.sessionStatus}">ENDED</span>
+            <span th:text="${session.status}">ENDED</span>
         </div>
     </div>
 

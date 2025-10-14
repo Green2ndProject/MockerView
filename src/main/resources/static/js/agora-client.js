@@ -8,8 +8,6 @@ class AgoraClient {
         this.audioEnabled = true;
         this.videoEnabled = true;
         this.isJoined = false;
-        this.localUid = null;
-        this.remoteUsers = new Map();
         this.setupEventHandlers();
     }
 
@@ -20,21 +18,10 @@ class AgoraClient {
             console.log('✅ 구독 완료:', user.uid);
             
             if (mediaType === 'video') {
-                const remoteContainer = document.getElementById('remote-videos');
-                if (!remoteContainer) return;
-                
-                let remoteVideoDiv = document.getElementById(`remote-video-${user.uid}`);
-                if (!remoteVideoDiv) {
-                    remoteVideoDiv = document.createElement('div');
-                    remoteVideoDiv.id = `remote-video-${user.uid}`;
-                    remoteVideoDiv.className = 'remote-video-container';
-                    
-                    const userName = this.remoteUsers.get(user.uid) || `참가자`;
-                    remoteVideoDiv.innerHTML = `
-                        <div class="remote-video-label" data-uid="${user.uid}">${userName}</div>
-                    `;
-                    remoteContainer.appendChild(remoteVideoDiv);
-                }
+                const remoteVideoDiv = document.createElement('div');
+                remoteVideoDiv.id = `remote-video-${user.uid}`;
+                remoteVideoDiv.className = 'remote-video-container';
+                document.getElementById('remote-videos')?.appendChild(remoteVideoDiv);
                 user.videoTrack.play(remoteVideoDiv.id);
             }
             
@@ -42,7 +29,7 @@ class AgoraClient {
                 user.audioTrack.play();
             }
         });
-    
+
         this.client.on('user-unpublished', (user, mediaType) => {
             console.log('👋 사용자 발행 취소:', user.uid, mediaType);
             if (mediaType === 'video') {
@@ -51,18 +38,8 @@ class AgoraClient {
                     remoteVideoDiv.remove();
                 }
             }
-            this.remoteUsers.delete(user.uid);
         });
-    
-        this.client.on('user-left', (user) => {
-            console.log('🚪 사용자 퇴장:', user.uid);
-            const remoteVideoDiv = document.getElementById(`remote-video-${user.uid}`);
-            if (remoteVideoDiv) {
-                remoteVideoDiv.remove();
-            }
-            this.remoteUsers.delete(user.uid);
-        });
-    
+
         this.client.on('connection-state-change', (curState, prevState, reason) => {
             console.log('🔌 연결 상태 변경:', {
                 from: prevState,
@@ -70,15 +47,6 @@ class AgoraClient {
                 reason: reason
             });
         });
-    }
-    
-    updateRemoteUserName(uid, userName) {
-        this.remoteUsers.set(uid, userName);
-        const label = document.querySelector(`[data-uid="${uid}"]`);
-        if (label) {
-            label.textContent = userName;
-            console.log(`✅ 이름 업데이트: UID ${uid} → ${userName}`);
-        }
     }
 
     async join(channel, token, uid) {
@@ -90,20 +58,10 @@ class AgoraClient {
         });
         
         try {
-            this.localUid = await this.client.join(this.appId, channel, token, uid);
+            const assignedUid = await this.client.join(this.appId, channel, token, uid);
             this.isJoined = true;
-            console.log('✅ 채널 참가 성공! UID:', this.localUid);
-            
-            const userName = SESSION_DATA.userName || '나';
-            const isHost = SESSION_DATA.isHost;
-            
-            const localLabel = document.querySelector('.local-video-label');
-            if (localLabel) {
-                localLabel.textContent = userName + (isHost ? ' (면접관)' : ' (지원자)');
-                localLabel.className = isHost ? 'local-video-label host' : 'local-video-label student';
-            }
-            
-            return this.localUid;
+            console.log('✅ 채널 참가 성공! UID:', assignedUid);
+            return assignedUid;
         } catch (error) {
             console.error('❌ 채널 참가 실패:', error);
             console.error('  - 오류 코드:', error.code);
@@ -187,8 +145,6 @@ class AgoraClient {
                 this.isJoined = false;
                 console.log('✅ 채널 나감');
             }
-            
-            this.remoteUsers.clear();
         } catch (error) {
             console.error('⚠️ 종료 중 오류 (무시):', error);
         }

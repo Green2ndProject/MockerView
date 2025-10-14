@@ -23,7 +23,8 @@ public class QuestionPool {
     @Column(name = "DIFFICULTY", length = 20)
     private String difficulty;
 
-    @Column(name = "QUESTION_TEXT", nullable = false, columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "QUESTION_TEXT", nullable = false)
     private String text;
 
     @Column(name = "CREATED_AT")

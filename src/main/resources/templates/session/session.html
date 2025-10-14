@@ -1197,17 +1197,17 @@
         <div class="card">
             <div class="card-header">
                 <h4>👥 참가자</h4>
-                <span id="participant-count" class="badge-waiting">1명</span>
+                <span id="participant-count" class="badge-waiting">0명</span>
             </div>
             <div class="card-body">
                 <div class="participant-roles-section">
                     <div class="role-group">
                         <h5 class="role-title">🎤 면접관</h5>
-                        <div class="role-member">
-                            <div class="participant-avatar" th:text="${#strings.substring(sessionHost.name, 0, 1)}">H</div>
-                            <span th:text="${sessionHost.name}">면접관</span>
-                            <span style="font-size: 12px; color: #667eea; margin-left: 8px;">호스트</span>
+                        <div class="role-member" th:if="${sessionHost != null}">
+                            <div class="participant-avatar" th:text="${#strings.substring(sessionHost.name, 0, 1)}"></div>
+                            <span th:text="${sessionHost.name}"></span>
                         </div>
+                        <div class="empty-role" th:if="${sessionHost == null}">배정된 면접관 없음</div>
                     </div>
                     
                     <div class="role-group">

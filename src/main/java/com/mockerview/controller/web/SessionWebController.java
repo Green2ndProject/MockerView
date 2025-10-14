@@ -1,26 +1,35 @@
 package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.entity.*;
-import com.mockerview.repository.*;
+import com.mockerview.entity.Answer;
+import com.mockerview.entity.Feedback;
+import com.mockerview.entity.Question;
+import com.mockerview.entity.Session;
+import com.mockerview.entity.User;
+import com.mockerview.repository.AnswerRepository;
+import com.mockerview.repository.QuestionRepository;
+import com.mockerview.repository.SessionRepository;
+import com.mockerview.repository.UserRepository;
+import com.mockerview.service.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -28,319 +37,305 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SessionWebController {
 
+    private final SessionService sessionService;
     private final SessionRepository sessionRepository;
-    private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
+    private final UserRepository userRepository;
 
-    @Value("${agora.app-id}")
-    private String agoraAppId;
-
-    @GetMapping("/list")
-    @Transactional(readOnly = true)
-    public String listSessions(
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            Model model) {
-        
-        log.info("세션 목록 로드 중 - status: {}, keyword: {}", status, keyword);
-        
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Session> sessionPage;
-        
-        if (status != null && !status.isEmpty()) {
-            Session.SessionStatus sessionStatus = Session.SessionStatus.valueOf(status);
-            sessionPage = sessionRepository.findByStatusPageable(sessionStatus, pageable);
-        } else if (keyword != null && !keyword.isEmpty()) {
-            sessionPage = sessionRepository.searchSessionsPageable(keyword, null, pageable);
-        } else {
-            sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+            return null;
         }
-        
-        for (Session session : sessionPage.getContent()) {
-            if (session.getHost() != null) {
-                session.getHost().getName();
-            }
-        }
-        
-        Long totalCount = sessionRepository.countNonSelfInterviewSessions();
-        Long plannedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.PLANNED, "N");
-        Long runningCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.RUNNING, "N");
-        Long endedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.ENDED, "N");
-        
-        model.addAttribute("sessions", sessionPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("serverCurrentPage", page);
-        model.addAttribute("totalPages", sessionPage.getTotalPages());
-        model.addAttribute("totalItems", sessionPage.getTotalElements());
-        model.addAttribute("currentUser", currentUser);
-        model.addAttribute("status", status);
-        model.addAttribute("statusFilter", status);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("totalCount", totalCount);
-        model.addAttribute("plannedCount", plannedCount);
-        model.addAttribute("runningCount", runningCount);
-        model.addAttribute("endedCount", endedCount);
-        
-        log.info("세션 목록 로드 완료 - {} 개 세션. 현재 페이지: {}/{} 사용자: {}", 
-                sessionPage.getContent().size(), page + 1, sessionPage.getTotalPages(), 
-                currentUser.getUsername());
-        
-        return "session/list";
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElse(null);
     }
 
-    @GetMapping("/{id}/join")
-    public String joinSession(@PathVariable Long id,
-                            @RequestParam(required = false) String role,
-                            @AuthenticationPrincipal CustomUserDetails userDetails,
-                            RedirectAttributes redirectAttributes) {
+    @GetMapping("/{sessionId}/join")
+    public String joinSession(@PathVariable Long sessionId,
+                                @RequestParam String role,
+                                Model model) {
+        
+        User currentUser = getCurrentUser();
+        
+        if (currentUser == null) {
+            log.warn("비로그인 사용자 세션 접근 시도");
+            return "redirect:/auth/login";
+        }
+        
+        User.UserRole selectedRole;
         try {
-            User user = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            selectedRole = User.UserRole.valueOf(role);
+        } catch (IllegalArgumentException e) {
+            selectedRole = User.UserRole.STUDENT;
+        }
+        
+        model.addAttribute("selectedRole", selectedRole);
+        log.info("세션 역할 설정 - userId: {}, role: {}", currentUser.getId(), selectedRole);
+        
+        return "redirect:/session/" + sessionId + "?role=" + selectedRole.name();
+    }
+
+    @GetMapping("/list")
+    public String sessionList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortOrder,
+            Model model) {
+        
+        try {
+            log.info("세션 목록 로드 중 - status: {}, keyword: {}", status, keyword);
             
-            Session session = sessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
+            User currentUser = getCurrentUser();
+            String currentUsername = currentUser != null ? currentUser.getUsername() : "guest";
             
-            boolean isHost = session.getHost().getId().equals(user.getId());
+            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+            Page<Session> sessionPage;
             
-            if (session.getSessionStatus() == Session.SessionStatus.ENDED && !isHost) {
-                redirectAttributes.addFlashAttribute("error", "종료된 세션에는 참가할 수 없습니다.");
-                return "redirect:/session/list";
+            if (status != null && !status.isEmpty()) {
+                Session.SessionStatus sessionStatus = Session.SessionStatus.valueOf(status);
+                if (keyword != null && !keyword.isEmpty()) {
+                    sessionPage = sessionRepository.searchSessionsPageable(keyword, sessionStatus, pageable);
+                } else {
+                    sessionPage = sessionRepository.findByStatusPageable(sessionStatus, pageable);
+                }
+            } else if (keyword != null && !keyword.isEmpty()) {
+                sessionPage = sessionRepository.searchSessionsPageable(keyword, null, pageable);
+            } else {
+                sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
             }
             
-            log.info("세션 역할 설정 - userId: {}, role: {}", user.getId(), role);
+            List<Map<String, Object>> sessionList = sessionPage.getContent().stream()
+                .map(session -> {
+                    Map<String, Object> sessionMap = new HashMap<>();
+                    sessionMap.put("id", session.getId());
+                    sessionMap.put("title", session.getTitle());
+                    sessionMap.put("sessionType", session.getSessionType());
+                    sessionMap.put("sessionStatus", session.getSessionStatus().toString());
+                    sessionMap.put("createdAt", session.getCreatedAt());
+                    sessionMap.put("expiresAt", session.getExpiresAt());
+                    sessionMap.put("startTime", session.getStartTime());
+                    sessionMap.put("endTime", session.getEndTime());
+                    sessionMap.put("mediaEnabled", session.getMediaEnabled());
+                    sessionMap.put("agoraChannel", session.getAgoraChannel());
+                    sessionMap.put("isSelfInterview", session.getIsSelfInterview());
+                    
+                    if (session.getHost() != null) {
+                        Map<String, Object> hostMap = new HashMap<>();
+                        hostMap.put("id", session.getHost().getId());
+                        hostMap.put("name", session.getHost().getName());
+                        hostMap.put("username", session.getHost().getUsername());
+                        hostMap.put("role", session.getHost().getRole().toString());
+                        sessionMap.put("host", hostMap);
+                    } else {
+                        sessionMap.put("host", null);
+                    }
+                    
+                    return sessionMap;
+                })
+                .collect(Collectors.toList());
             
-            return "redirect:/session/" + id + (role != null ? "?role=" + role : "");
+            long totalCount = sessionRepository.countNonSelfInterviewSessions();
+            long plannedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.PLANNED, "N");
+            long runningCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.RUNNING, "N");
+            long endedCount = sessionRepository.countBySessionStatusAndIsSelfInterview(Session.SessionStatus.ENDED, "N");
+            
+            model.addAttribute("sessions", sessionList);
+            model.addAttribute("currentUser", currentUser);
+            model.addAttribute("currentPage", page);
+            model.addAttribute("serverCurrentPage", page);
+            model.addAttribute("totalPages", sessionPage.getTotalPages());
+            model.addAttribute("totalItems", sessionPage.getTotalElements());
+            model.addAttribute("pageSize", size);
+            model.addAttribute("statusFilter", status);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("totalCount", totalCount);
+            model.addAttribute("plannedCount", plannedCount);
+            model.addAttribute("runningCount", runningCount);
+            model.addAttribute("endedCount", endedCount);
+            
+            log.info("세션 목록 로드 완료 - {}개 세션. 현재 페이지: {}/{} 사용자: {}", 
+                    sessionList.size(), page, sessionPage.getTotalPages(), currentUsername);
+            
+            return "session/list";
+            
         } catch (Exception e) {
-            log.error("세션 참가 실패", e);
-            redirectAttributes.addFlashAttribute("error", "세션 참가에 실패했습니다.");
-            return "redirect:/session/list";
+            log.error("세션 목록 로드 실패", e);
+            model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
+            return "error";
+        }
+    }
+
+    @PostMapping("/create")
+    public String createSession(@RequestParam String title,
+                                @RequestParam(defaultValue = "TEXT") String sessionType,
+                                @RequestParam(required = false) String scheduledStartTime) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            if (currentUser == null) {
+                return "redirect:/auth/login";
+            }
+            
+            LocalDateTime startTime = null;
+            if (scheduledStartTime != null && !scheduledStartTime.isEmpty()) {
+                startTime = LocalDateTime.parse(scheduledStartTime);
+            }
+            
+            log.info("세션 생성 요청 - title: {}, hostId: {}, type: {}, scheduled: {}", 
+                    title, currentUser.getId(), sessionType, startTime);
+            sessionService.createSession(title, currentUser.getId(), sessionType, startTime);
+            log.info("세션 생성 완료");
+
+            String successMessage = "세션이 생성되었습니다";
+            String encodedMessage = URLEncoder.encode(successMessage, StandardCharsets.UTF_8.toString());
+
+            return "redirect:/session/list?success=" + encodedMessage;
+
+        } catch (Exception e) {
+            log.error("세션 생성 오류: ", e);
+            return "redirect:/session/list?error=" + e.getMessage();
         }
     }
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public String showSession(@PathVariable Long id,
-                                @RequestParam(required = false) String role,
-                                @AuthenticationPrincipal CustomUserDetails userDetails,
-                                Model model) {
-        try {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}", 
-                    id, currentUser.getId(), currentUser.getName(), role);
-            
-            Session session = sessionRepository.findByIdWithHost(id)
-                .orElseThrow(() -> new RuntimeException("Session not found: " + id));
-            
-            boolean isHost = session.getHost().getId().equals(currentUser.getId());
-            
-            if (session.getSessionStatus() == Session.SessionStatus.ENDED && !isHost) {
-                model.addAttribute("error", "종료된 세션에는 접근할 수 없습니다.");
-                return "redirect:/session/list";
-            }
-            
-            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(id);
-            for (Question question : questions) {
-                question.getText();
-                if (question.getQuestioner() != null) {
-                    question.getQuestioner().getName();
-                }
-            }
-            
-            List<Answer> answers = answerRepository.findByQuestionSessionId(id);
-            for (Answer answer : answers) {
-                if (answer.getUser() != null) {
-                    answer.getUser().getName();
-                }
-                answer.getAnswerText();
-            }
-            
-            String userRole = role != null ? role : (isHost ? "HOST" : "STUDENT");
-            String sessionType = session.getSessionType() != null ? session.getSessionType() : "TEXT";
-            
-            String agoraChannel = null;
-            if ("VIDEO".equals(sessionType)) {
-                if (session.getAgoraChannel() == null || session.getAgoraChannel().isEmpty()) {
-                    agoraChannel = "session_" + id;
-                    session.setAgoraChannel(agoraChannel);
-                    sessionRepository.save(session);
-                    log.info("Agora 채널 자동 생성 - sessionId: {}, channel: {}", id, agoraChannel);
-                } else {
-                    agoraChannel = session.getAgoraChannel();
-                }
-            }
-            
-            log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}, 채널: {}", 
-                    currentUser.getName(), userRole, isHost, sessionType, agoraChannel);
-            
-            model.addAttribute("session", session);
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("isHost", isHost);
-            model.addAttribute("userRole", userRole);
-            model.addAttribute("questions", questions);
-            model.addAttribute("answers", answers);
-            model.addAttribute("sessionType", sessionType);
-            model.addAttribute("sessionHost", session.getHost());
-            model.addAttribute("hostName", session.getHost() != null ? session.getHost().getName() : "알 수 없음");
-            model.addAttribute("sessionId", id);
-            
-            if ("VIDEO".equals(sessionType) && agoraChannel != null) {
-                model.addAttribute("agoraChannel", agoraChannel);
-                model.addAttribute("agoraAppId", agoraAppId);
-            }
-            
-            return "session/session";
-        } catch (Exception e) {
-            log.error("❌ 세션 로드 실패 - sessionId: {}, error: {}", id, e.getMessage(), e);
-            model.addAttribute("error", "세션을 불러오는데 실패했습니다: " + e.getMessage());
-            return "redirect:/session/list";
-        }
+                            @RequestParam(required = false) String role,
+                            @AuthenticationPrincipal CustomUserDetails userDetails,
+                            Model model) {
+        
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Session session = sessionRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Session not found: " + id));
+        
+        boolean isHost = session.getHost().getId().equals(currentUser.getId());
+        
+        log.info("세션 접속 - sessionId: {}, userId: {}, userName: {}, role: {}", 
+            id, currentUser.getId(), currentUser.getName(), role);
+        
+        model.addAttribute("session", session);
+        model.addAttribute("sessionId", session.getId());
+        model.addAttribute("sessionTitle", session.getTitle());
+        model.addAttribute("sessionType", session.getSessionType());
+        model.addAttribute("userId", currentUser.getId());
+        model.addAttribute("userName", currentUser.getName());
+        model.addAttribute("isHost", isHost);
+        model.addAttribute("sessionHost", session.getHost());
+        
+        log.info("세션 로드 완료 - 사용자: {}, 역할: {}, 호스트여부: {}, 타입: {}", 
+            currentUser.getName(), role, isHost, session.getSessionType());
+        
+        return "session/session";
     }
 
     @GetMapping("/detail/{id}")
     @Transactional(readOnly = true)
-    public String sessionDetail(@PathVariable Long id,
-                                @AuthenticationPrincipal CustomUserDetails userDetails,
-                                Model model) {
-        return showSession(id, null, userDetails, model);
-    }
-
-    @GetMapping("/create")
-    public String showCreateForm(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    public String sessionDetail(@PathVariable Long id, Model model) {
+        Session session = sessionRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
         
-        model.addAttribute("currentUser", currentUser);
-        return "session/create";
-    }
-
-    @PostMapping("/create")
-    @Transactional
-    public String createSession(@ModelAttribute Session session,
-                                @AuthenticationPrincipal CustomUserDetails userDetails,
-                                RedirectAttributes redirectAttributes) {
-        try {
-            User host = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            session.setHost(host);
-            session.setCreatedAt(LocalDateTime.now());
-            session.setSessionStatus(Session.SessionStatus.PLANNED);
-            session.setIsSelfInterview("N");
-            
-            if (session.getExpiresAt() == null) {
-                session.setExpiresAt(LocalDateTime.now().plusHours(3));
-            }
-            
-            if (session.getSessionType() == null) {
-                session.setSessionType("TEXT");
-            }
-            
-            if ("VIDEO".equals(session.getSessionType())) {
-                session.setAgoraChannel("session_" + System.currentTimeMillis());
-                session.setMediaEnabledBoolean(true);
-            }
-            
-            Session savedSession = sessionRepository.save(session);
-            
-            log.info("세션 생성 완료 - ID: {}, 호스트: {}, 타입: {}", 
-                    savedSession.getId(), host.getName(), savedSession.getSessionType());
-            
-            redirectAttributes.addFlashAttribute("message", "세션이 생성되었습니다.");
-            return "redirect:/session/" + savedSession.getId() + "/join?role=HOST";
-        } catch (Exception e) {
-            log.error("세션 생성 실패", e);
-            redirectAttributes.addFlashAttribute("error", "세션 생성에 실패했습니다.");
-            return "redirect:/session/create";
-        }
-    }
-
-    @PostMapping("/{id}/end")
-    @Transactional
-    public String endSession(@PathVariable Long id,
-                            @AuthenticationPrincipal CustomUserDetails userDetails,
-                            RedirectAttributes redirectAttributes) {
-        try {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            Session session = sessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
-            
-            if (!session.getHost().getId().equals(currentUser.getId())) {
-                throw new RuntimeException("권한이 없습니다.");
-            }
-            
-            session.setSessionStatus(Session.SessionStatus.ENDED);
-            session.setEndTime(LocalDateTime.now());
-            sessionRepository.save(session);
-            
-            log.info("세션 종료 - sessionId: {}, 호스트: {}", id, currentUser.getName());
-            
-            redirectAttributes.addFlashAttribute("message", "세션이 종료되었습니다.");
-            return "redirect:/session/list";
-        } catch (Exception e) {
-            log.error("세션 종료 실패", e);
-            redirectAttributes.addFlashAttribute("error", "세션 종료에 실패했습니다.");
-            return "redirect:/session/" + id;
-        }
-    }
-
-    @GetMapping("/{id}/scoreboard")
-    @Transactional(readOnly = true)
-    public String showScoreboard(@PathVariable Long id, Model model) {
-        try {
-            Session session = sessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
-            
-            if (session.getHost() != null) {
-                session.getHost().getName();
-            }
-            
-            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(id);
-            for (Question question : questions) {
-                question.getText();
-            }
-            
-            List<Answer> answers = answerRepository.findByQuestionSessionId(id);
-            
-            Map<Long, Map<Long, Answer>> scoreBoard = new HashMap<>();
-            for (Answer answer : answers) {
-                if (answer.getUser() != null) {
-                    answer.getUser().getName();
-                }
-                answer.getAnswerText();
-                
-                Long userId = answer.getUser().getId();
+        List<Answer> answers = answerRepository.findAllBySessionIdWithFeedbacks(id);
+        
+        Map<Long, List<Map<String, Object>>> answersByQuestion = new HashMap<>();
+        for (Answer answer : answers) {
+            if (answer.getQuestion() != null) {
                 Long questionId = answer.getQuestion().getId();
+                answersByQuestion.putIfAbsent(questionId, new ArrayList<>());
                 
-                scoreBoard.computeIfAbsent(userId, k -> new HashMap<>())
-                            .put(questionId, answer);
+                Map<String, Object> answerItem = new HashMap<>();
+                answerItem.put("answer", answer);
+                
+                Feedback aiFeedback = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+                    .findFirst().orElse(null);
+                Feedback interviewerFeedback = answer.getFeedbacks().stream()
+                    .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+                    .findFirst().orElse(null);
+                
+                answerItem.put("aiFeedback", aiFeedback);
+                answerItem.put("interviewerFeedback", interviewerFeedback);
+                answerItem.put("hasAiFeedback", aiFeedback != null);
+                answerItem.put("hasInterviewerFeedback", interviewerFeedback != null);
+                
+                answersByQuestion.get(questionId).add(answerItem);
             }
-            
-            model.addAttribute("interviewSession", session);
-            model.addAttribute("questions", questions);
-            model.addAttribute("answers", answers);
-            model.addAttribute("scoreBoard", scoreBoard);
-            
-            return "session/scoreboard";
-        } catch (Exception e) {
-            log.error("점수판 로드 실패", e);
-            return "redirect:/session/list";
         }
+        
+        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(session.getId());
+        long totalAnswerCount = answers.size();
+        long answeredQuestionCount = answersByQuestion.size();
+        
+        model.addAttribute("session", session);
+        model.addAttribute("questions", questions);
+        model.addAttribute("answersByQuestion", answersByQuestion);
+        model.addAttribute("totalAnswerCount", totalAnswerCount);
+        model.addAttribute("answeredQuestionCount", answeredQuestionCount);
+        
+        return "session/detail";
     }
 
     @GetMapping("/scoreboard/{id}")
     @Transactional(readOnly = true)
-    public String sessionScoreboardAlias(@PathVariable Long id, Model model) {
-        return showScoreboard(id, model);
+    public String scoreboard(@PathVariable Long id, Model model) {
+        Session session = sessionRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
+        
+        List<Answer> allAnswers = answerRepository.findAllBySessionIdWithFeedbacks(id);
+        
+        Map<User, List<Answer>> answersByUser = allAnswers.stream()
+            .collect(Collectors.groupingBy(Answer::getUser));
+        
+        List<Map<String, Object>> userScores = new ArrayList<>();
+        
+        for (Map.Entry<User, List<Answer>> entry : answersByUser.entrySet()) {
+            User user = entry.getKey();
+            List<Answer> userAnswers = entry.getValue();
+            
+            double avgAiScore = userAnswers.stream()
+                .flatMap(a -> a.getFeedbacks().stream())
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+                .mapToInt(Feedback::getScore)
+                .average()
+                .orElse(0.0);
+            
+            double avgInterviewerScore = userAnswers.stream()
+                .flatMap(a -> a.getFeedbacks().stream())
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+                .mapToInt(Feedback::getScore)
+                .average()
+                .orElse(0.0);
+            
+            double totalScore = (avgAiScore + avgInterviewerScore) / 2.0;
+            
+            Map<String, Object> scoreData = new HashMap<>();
+            scoreData.put("user", user);
+            scoreData.put("answers", userAnswers);
+            scoreData.put("answerCount", userAnswers.size());
+            scoreData.put("avgAiScore", Math.round(avgAiScore));
+            scoreData.put("avgInterviewerScore", Math.round(avgInterviewerScore));
+            scoreData.put("totalScore", Math.round(totalScore));
+            
+            userScores.add(scoreData);
+        }
+        
+        userScores.sort((a, b) -> 
+            ((Integer) b.get("totalScore")).compareTo((Integer) a.get("totalScore"))
+        );
+        
+        long totalQuestions = questionRepository.countBySessionId(id);
+        
+        model.addAttribute("interviewSession", session);
+        model.addAttribute("userScores", userScores);
+        model.addAttribute("totalQuestions", totalQuestions);
+        
+        return "session/scoreboard";
     }
 }

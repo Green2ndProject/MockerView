@@ -1,7 +1,6 @@
 package com.mockerview.repository;
 
 import com.mockerview.entity.Answer;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -33,12 +32,6 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     @Query("SELECT a FROM Answer a WHERE a.user.id = :userId ORDER BY a.createdAt DESC")
     List<Answer> findByUserId(@Param("userId") Long userId);
     
-    @Query("SELECT COUNT(a) FROM Answer a WHERE a.user.id = :userId")
-    long countByUserId(@Param("userId") Long userId);
-    
-    @Query("SELECT COUNT(DISTINCT a.question.session.id) FROM Answer a WHERE a.user.id = :userId")
-    long countDistinctSessionsByUserId(@Param("userId") Long userId);
-    
     @Query("SELECT DISTINCT a FROM Answer a " +
             "LEFT JOIN FETCH a.feedbacks f " +
             "LEFT JOIN FETCH a.question q " +
@@ -47,9 +40,7 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "ORDER BY a.createdAt DESC")
     List<Answer> findByUserIdWithFeedbacks(@Param("userId") Long userId);
     
-    @EntityGraph(attributePaths = {"question", "question.session", "user"})
-    @Query("SELECT a FROM Answer a WHERE a.user.id = :userId ORDER BY a.createdAt DESC")
-    List<Answer> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
+    List<Answer> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<Answer> findByQuestionSessionIdAndUserId(Long sessionId, Long userId);
 
@@ -76,10 +67,4 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "GROUP BY u.id, u.name " +
             "ORDER BY AVG(CAST(f.score AS double)) DESC")
     List<Object[]> findAllUserAverageScores();
-
-    @Query("SELECT COUNT(a) FROM Answer a WHERE a.question.session.id = :sessionId")
-    Long countByQuestionSessionId(@Param("sessionId") Long sessionId);
-
-    @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId")
-    List<Answer> findByQuestionSessionId(@Param("sessionId") Long sessionId);
 }

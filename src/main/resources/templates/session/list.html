@@ -728,8 +728,7 @@
       }
 
       function createNewSession() {
-        const modal = document.getElementById("sessionModal");
-        modal.style.display = "flex";
+        document.getElementById("sessionModal").style.display = "flex";
       }
 
       function resetSearch() {
@@ -837,7 +836,7 @@
         }
       }
 
-      (function() {
+      document.addEventListener("DOMContentLoaded", function () {
         const modal = document.getElementById("sessionModal");
         const closeBtns = document.getElementsByClassName("close-modal");
 
@@ -863,9 +862,9 @@
           });
         });
 
-        const form = document.getElementById("createSessionForm");
-        if (form) {
-          form.addEventListener("submit", function (e) {
+        document
+          .getElementById("createSessionForm")
+          .addEventListener("submit", function (e) {
             e.preventDefault();
             const title = document.getElementById("sessionTitle").value;
             const sessionType = document.querySelector(
@@ -874,41 +873,40 @@
             const scheduledStartTime =
               document.getElementById("scheduledStartTime").value;
 
-            if (title && title.trim() !== "") {
-              const newForm = document.createElement("form");
-              newForm.method = "POST";
-              newForm.action = "/session/create";
+            if (title !== null && title.trim() !== "") {
+              const form = document.createElement("form");
+              form.method = "POST";
+              form.action = "/session/create";
 
               const titleInput = document.createElement("input");
               titleInput.type = "hidden";
               titleInput.name = "title";
               titleInput.value = title.trim();
-              newForm.appendChild(titleInput);
+              form.appendChild(titleInput);
 
               const typeInput = document.createElement("input");
               typeInput.type = "hidden";
               typeInput.name = "sessionType";
               typeInput.value = sessionType;
-              newForm.appendChild(typeInput);
+              form.appendChild(typeInput);
 
               if (scheduledStartTime) {
                 const timeInput = document.createElement("input");
                 timeInput.type = "hidden";
                 timeInput.name = "scheduledStartTime";
                 timeInput.value = scheduledStartTime;
-                newForm.appendChild(timeInput);
+                form.appendChild(timeInput);
               }
 
-              document.body.appendChild(newForm);
-              newForm.submit();
+              document.body.appendChild(form);
+              form.submit();
             } else {
               alert("세션 제목을 입력해주세요!");
             }
           });
-        }
 
         connect();
-      })();
+      });
     </script>
   </body>
 </html>

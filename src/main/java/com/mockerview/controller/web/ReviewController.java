@@ -1,208 +1,134 @@
 package com.mockerview.controller.web;
 
-import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.entity.*;
-import com.mockerview.repository.*;
+import com.mockerview.entity.User;
+import com.mockerview.entity.Answer;
+import com.mockerview.entity.Review;
+import com.mockerview.entity.Session;
+import com.mockerview.service.ReviewService;
+import com.mockerview.service.SessionService;
+import com.mockerview.repository.UserRepository;
+import com.mockerview.repository.SessionRepository;
+import com.mockerview.repository.AnswerRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Controller
 @RequestMapping("/review")
 @RequiredArgsConstructor
 public class ReviewController {
-
+    private static final Logger log = LoggerFactory.getLogger(ReviewController.class);
+    
+    private final ReviewService reviewService;
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
     private final AnswerRepository answerRepository;
-    private final QuestionRepository questionRepository;
+    private final SessionService sessionService;
 
     @GetMapping("/list")
     @Transactional(readOnly = true)
-    public String listReviews(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public String listPage(@RequestParam(defaultValue = "1") int page,
+                            @RequestParam(defaultValue = "6") int size,
+                            @RequestParam(defaultValue = "desc") String sortOrder, 
+                            Model model) {
+    
         try {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            log.info("리뷰 가능 세션 목록 로드 중");
+        
+                Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "endTime"));
+                Page<Session> sessionPage = sessionService.getReviewableSessionsPageable(pageable); 
             
-            log.info("===== 리뷰 목록 로드 시작 =====");
-            
-            List<Session> sessions = sessionRepository.findAll();
-            
-            for (Session session : sessions) {
-                if (session.getHost() != null) {
+            for (Session session : sessionPage.getContent()) {
+                    session.getQuestions().size();
+                    if (session.getHost() != null) {
                     session.getHost().getName();
                 }
-                if (session.getQuestions() != null) {
-                    session.getQuestions().size();
-                }
             }
-            
-            log.info("✅ 리뷰 목록 로드 완료 - {} 개 세션", sessions.size());
-            
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("sessions", sessions);
+        
+            model.addAttribute("sessions", sessionPage.getContent());
+            model.addAttribute("serverCurrentPage", sessionPage.getNumber() + 1);
+            model.addAttribute("totalPages", sessionPage.getTotalPages());
+
+            log.info("리뷰 가능 세션 목록 로드 완료. TotalPages: {}", sessionPage.getTotalPages());
             
             return "review/list";
+        
         } catch (Exception e) {
-            log.error("❌ 리뷰 목록 로드 실패", e);
-            model.addAttribute("error", "리뷰 목록을 불러오는데 실패했습니다.");
-            return "redirect:/session/list";
+            log.error("리뷰 가능 세션 목록 로드 실패", e);
+            model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
+            
+            return "error/500";
+        }
+    }
+
+
+    @GetMapping("/detail/{sessionId}")
+    @Transactional(readOnly = true)
+    public String detailPage(@PathVariable Long sessionId, Authentication authentication, Model model) {
+        try {
+            log.info("리뷰 상세 페이지 접근 - sessionId: {}", sessionId);
+            
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            var interviewSession = sessionRepository.findByIdWithHostAndQuestions(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            interviewSession.getQuestions().size();
+            
+            log.info("Questions: {}", interviewSession.getQuestions());
+            log.info("Questions size: {}", interviewSession.getQuestions().size());
+            
+            List<Answer> allAnswers = answerRepository.findAllBySessionIdWithFeedbacks(sessionId);
+            
+            Map<Long, List<Answer>> answersByQuestion = allAnswers.stream()
+                .collect(Collectors.groupingBy(a -> a.getQuestion().getId()));
+            
+            log.info("Total answers: {}", allAnswers.size());
+            
+            model.addAttribute("interviewSession", interviewSession);
+            model.addAttribute("questions", interviewSession.getQuestions());
+            model.addAttribute("answersByQuestion", answersByQuestion);
+            model.addAttribute("currentUser", currentUser);
+            
+            return "review/detail";
+        } catch (Exception e) {
+            log.error("리뷰 상세 페이지 오류", e);
+            model.addAttribute("error", "페이지를 불러올 수 없습니다: " + e.getMessage());
+            return "error/500";
         }
     }
 
     @GetMapping("/my")
     @Transactional(readOnly = true)
-    public String myReviews(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public String myReviewsPage(Authentication authentication, Model model) {
         try {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
-            log.info("===== 내 리뷰 로드 시작 =====");
-            
-            List<Answer> myAnswers = answerRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
-            
-            for (Answer answer : myAnswers) {
-                if (answer.getUser() != null) {
-                    answer.getUser().getName();
-                }
-                if (answer.getQuestion() != null) {
-                    answer.getQuestion().getText();
-                    if (answer.getQuestion().getSession() != null) {
-                        answer.getQuestion().getSession().getTitle();
-                    }
-                }
-                answer.getAnswerText();
-            }
-            
-            log.info("✅ 내 리뷰 로드 완료 - {} 개 답변", myAnswers.size());
-            
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("answers", myAnswers);
+            model.addAttribute("reviews", reviewService.getReviewsByReviewer(user.getId()));
+            model.addAttribute("username", username);
             
             return "review/my";
         } catch (Exception e) {
-            log.error("❌ 내 리뷰 로드 실패", e);
-            model.addAttribute("error", "내 리뷰를 불러오는데 실패했습니다.");
-            return "redirect:/review/list";
+            log.error("내 리뷰 목록 조회 오류", e);
+            model.addAttribute("error", e.getMessage());
+            return "error/500";
         }
-    }
-
-    @GetMapping("/detail/{id}")
-    @Transactional(readOnly = true)
-    public String reviewDetail(@PathVariable Long id, Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        try {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            log.info("===== 리뷰 상세 로드 시작 - Session ID: {} =====", id);
-            
-            Session session = sessionRepository.findByIdWithHostAndQuestions(id)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
-            
-            if (session.getHost() != null) {
-                session.getHost().getName();
-            }
-            
-            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(id);
-            for (Question question : questions) {
-                question.getText();
-            }
-            
-            List<Answer> answers = answerRepository.findAllBySessionIdWithFeedbacks(id);
-            for (Answer answer : answers) {
-                if (answer.getUser() != null) {
-                    answer.getUser().getName();
-                }
-                answer.getAnswerText();
-                if (answer.getFeedbacks() != null) {
-                    answer.getFeedbacks().size();
-                }
-            }
-            
-            Map<Long, List<AnswerWithFeedback>> answersByQuestion = new HashMap<>();
-            for (Question question : questions) {
-                List<AnswerWithFeedback> questionAnswers = answers.stream()
-                    .filter(a -> a.getQuestion() != null && a.getQuestion().getId().equals(question.getId()))
-                    .map(answer -> {
-                        AnswerWithFeedback awf = new AnswerWithFeedback();
-                        awf.setAnswer(answer);
-                        
-                        if (answer.getFeedbacks() != null) {
-                            answer.getFeedbacks().forEach(feedback -> {
-                                if (feedback.getFeedbackType() == Feedback.FeedbackType.AI) {
-                                    awf.setAiFeedback(feedback);
-                                } else if (feedback.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER) {
-                                    awf.setInterviewerFeedback(feedback);
-                                }
-                            });
-                        }
-                        
-                        return awf;
-                    })
-                    .collect(Collectors.toList());
-                
-                answersByQuestion.put(question.getId(), questionAnswers);
-            }
-            
-            long totalAnswerCount = answers.size();
-            long answeredQuestionCount = answersByQuestion.entrySet().stream()
-                .filter(entry -> !entry.getValue().isEmpty())
-                .count();
-            
-            log.info("✅ 리뷰 상세 로드 완료 - 질문: {}, 답변: {}", questions.size(), totalAnswerCount);
-            
-            model.addAttribute("currentUser", currentUser);
-            model.addAttribute("session", session);
-            model.addAttribute("questions", questions);
-            model.addAttribute("answersByQuestion", answersByQuestion);
-            model.addAttribute("totalAnswerCount", totalAnswerCount);
-            model.addAttribute("answeredQuestionCount", answeredQuestionCount);
-            
-            return "review/detail";
-        } catch (Exception e) {
-            log.error("❌ 리뷰 상세 로드 실패: {}", e.getMessage(), e);
-            model.addAttribute("error", "리뷰를 불러오는데 실패했습니다: " + e.getMessage());
-            return "redirect:/review/list";
-        }
-    }
-
-    @GetMapping("/create")
-    public String showReviewForm(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        try {
-            User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            model.addAttribute("currentUser", currentUser);
-            return "review/create";
-        } catch (Exception e) {
-            log.error("❌ 리뷰 작성 페이지 로드 실패", e);
-            return "redirect:/review/list";
-        }
-    }
-
-    public static class AnswerWithFeedback {
-        private Answer answer;
-        private Feedback aiFeedback;
-        private Feedback interviewerFeedback;
-
-        public Answer getAnswer() { return answer; }
-        public void setAnswer(Answer answer) { this.answer = answer; }
-        
-        public Feedback getAiFeedback() { return aiFeedback; }
-        public void setAiFeedback(Feedback aiFeedback) { this.aiFeedback = aiFeedback; }
-        
-        public Feedback getInterviewerFeedback() { return interviewerFeedback; }
-        public void setInterviewerFeedback(Feedback interviewerFeedback) { this.interviewerFeedback = interviewerFeedback; }
-        
-        public boolean hasAiFeedback() { return aiFeedback != null; }
-        public boolean hasInterviewerFeedback() { return interviewerFeedback != null; }
     }
 }

@@ -64,13 +64,13 @@
         }
         
         .scoreboard-header {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
             border-radius: 12px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }        
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
         
         .scoreboard-header h1 {
             margin: 0 0 10px 0;
@@ -227,7 +227,7 @@
         }
         
         .modal-header {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 25px 30px;
             border-radius: 12px 12px 0 0;
@@ -381,20 +381,10 @@
     
     <div class="scoreboard-container">
         <div class="scoreboard-header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1>🏆 점수판</h1>
-                    <div class="session-info">
-                        <strong th:text="${interviewSession.title}"></strong> | 
-                        총 <span th:text="${totalQuestions}"></span>개 질문
-                    </div>
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <a th:href="@{/session/scoreboard/{id}/download/csv(id=${interviewSession.id})}" 
-                        class="btn btn-secondary" style="text-decoration: none;">
-                        📥 CSV 다운로드
-                    </a>
-                </div>
+            <h1>🏆 점수판</h1>
+            <div class="session-info">
+                <strong th:text="${interviewSession.title}"></strong> | 
+                총 <span th:text="${totalQuestions}"></span>개 질문
             </div>
         </div>
         

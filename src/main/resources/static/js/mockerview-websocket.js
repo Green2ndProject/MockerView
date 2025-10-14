@@ -1,13 +1,12 @@
 class MockerViewWebSocket {
   constructor(sessionId, userId, userName) {
-    this.sessionId = parseInt(sessionId);
-    this.userId = parseInt(userId);
+    this.sessionId = sessionId;
+    this.userId = userId;
     this.userName = userName;
     this.stompClient = null;
     this.connected = false;
     this.timerInterval = null;
     this.currentSeconds = 0;
-    this.participantNames = new Map();
   }
 
   connect() {
@@ -58,18 +57,6 @@ class MockerViewWebSocket {
   subscribeToTopics() {
     console.log('📡 토픽 구독 시작...');
     
-    this.stompClient.subscribe(`/topic/session/${this.sessionId}/user-mapping`, (message) => {
-      console.log('👤 사용자 매핑 수신');
-      const data = JSON.parse(message.body);
-      if (window.agoraClient && data.userId && data.userName) {
-          window.agoraClient.updateRemoteUserName(data.userId, data.userName);
-      }
-      if (!this.participantNames) {
-          this.participantNames = new Map();
-      }
-      this.participantNames.set(data.userId, data.userName);
-    });
-    
     this.stompClient.subscribe(`/topic/session/${this.sessionId}/status`, (message) => {
       console.log('📊 Status 메시지 수신');
       this.handleStatusUpdate(JSON.parse(message.body));
@@ -115,18 +102,18 @@ class MockerViewWebSocket {
     }
     
     const joinMessage = {
-      sessionId: parseInt(this.sessionId),
-      userId: parseInt(this.userId),
+      sessionId: this.sessionId,
+      userId: this.userId,
       userName: this.userName,
       action: "JOIN"
     };
     
     console.log('📨 세션 참가 메시지 전송:', joinMessage);
-    console.log('🔍 userId 확인:', this.userId, 'userName 확인:', this.userName);
+    console.log('📍 전송 경로:', `/app/session/${this.sessionId}/join`);
     
     try {
       this.stompClient.send(
-        `/app/session/${this.sessionId}/join`,
+        `/app/session/${this.sessionId}/join`, 
         {}, 
         JSON.stringify(joinMessage)
       );
@@ -136,24 +123,35 @@ class MockerViewWebSocket {
     }
   }
 
-  submitAnswer(questionId, answerText) {
-    if (!this.connected) {
-      alert('WebSocket이 연결되지 않았습니다.');
-      return;
+  handleControlMessage(data) {
+    console.log('🎮 제어 메시지 처리:', data);
+    const badge = document.getElementById('sessionStatusBadge');
+    
+    if (data.action === 'START') {
+      alert('면접이 시작되었습니다!');
+      if (badge) {
+        badge.textContent = '진행중';
+        badge.className = 'status-badge ongoing';
+      }
+    } else if (data.action === 'PAUSE') {
+      alert('면접이 일시정지되었습니다.');
+      if (badge) {
+        badge.textContent = '일시정지';
+        badge.className = 'status-badge paused';
+      }
+    } else if (data.action === 'RESUME') {
+      alert('면접이 재개되었습니다.');
+      if (badge) {
+        badge.textContent = '진행중';
+        badge.className = 'status-badge ongoing';
+      }
+    } else if (data.action === 'END') {
+      alert('면접이 종료되었습니다.');
+      if (badge) {
+        badge.textContent = '종료됨';
+        badge.className = 'status-badge ended';
+      }
     }
-    
-    const payload = {
-      sessionId: parseInt(this.sessionId),
-      questionId: parseInt(questionId),
-      userId: parseInt(this.userId),
-      userName: this.userName,
-      answerText: answerText
-    };
-    
-    console.log('📤 답변 제출 payload 확인:', payload);
-    console.log('🔍 questionId:', payload.questionId, 'userId:', payload.userId);
-    
-    this.stompClient.send(`/app/session/${this.sessionId}/answer`, {}, JSON.stringify(payload));
   }
 
   leaveSession() {
@@ -369,18 +367,16 @@ class MockerViewWebSocket {
         return;
     }
     
-    const hostName = document.querySelector('.role-group:first-child .role-member span')?.textContent;
+    const hostName = document.querySelector('.role-title:first-child + .role-member span')?.textContent;
     
-    const students = participants.filter(p => p && p !== hostName);
+    const students = participants.filter(p => p !== hostName);
     
-    participantsListDiv.innerHTML = students
-        .filter(participant => participant && typeof participant === 'string')
-        .map(participant => 
-            `<div class="role-member">
-                <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
-                <span>${participant}</span>
-            </div>`
-        ).join("");
+    participantsListDiv.innerHTML = students.map(participant => 
+        `<div class="role-member">
+            <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
+            <span>${participant}</span>
+        </div>`
+    ).join("");
     
     if (students.length === 0) {
         participantsListDiv.innerHTML = '<div class="empty-role">대기 중...</div>';
@@ -390,7 +386,7 @@ class MockerViewWebSocket {
     if (participantCount) {
         participantCount.textContent = `${participants.length}명`;
     }
-  }
+}
 
   updateSessionStats(questionCount, answerCount) {
     const statsDiv = document.getElementById("session-stats");
@@ -469,7 +465,7 @@ class MockerViewWebSocket {
                 <div class="ai-feedback-header">🤖 AI 분석 결과</div>
                 <div class="ai-score">점수: ${feedback.score || 75}/100</div>
                 <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
-                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || feedback.improvementSuggestions || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
             </div>
         `;
     }
@@ -481,11 +477,11 @@ class MockerViewWebSocket {
                 <div class="ai-feedback-header">🤖 AI 분석 결과</div>
                 <div class="ai-score">점수: ${feedback.score || 75}/100</div>
                 <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
-                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || feedback.improvementSuggestions || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
             </div>
         `;
     }
-  }
+}
 
   displayInterviewerFeedback(feedback) {
     const answerId = feedback.answerId || feedback.id;

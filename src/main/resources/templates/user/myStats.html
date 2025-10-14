@@ -366,7 +366,7 @@
     <div class="stats-header">
         <div class="container">
             <h1>내 활동 통계</h1>
-            <p th:text="${currentUser.name} + '님의 면접 성장 추이 분석'">사용자님의 면접 성장 추이 분석</p>
+            <p th:text="${user.name} + '님의 면접 성장 추이 분석'">사용자님의 면접 성장 추이 분석</p>
             <div class="export-buttons">
                 <button onclick="downloadCSV()" class="btn btn-secondary">CSV 다운로드</button>
                 <button onclick="exportPDF()" class="btn btn-secondary">PDF 다운로드</button>

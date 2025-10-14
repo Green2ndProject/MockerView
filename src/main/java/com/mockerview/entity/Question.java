@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@ToString(exclude = {"session", "questioner", "answers"})
+@ToString(exclude = {"session", "questioner", "answers"})  // 🔥 추가!
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Question {
     @Id
@@ -27,7 +27,8 @@ public class Question {
     @JsonIgnoreProperties({"questions", "host"})
     private Session session;
     
-    @Column(name = "QUESTION_TEXT", nullable = false, columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "QUESTION_TEXT", nullable = false)
     private String text;
     
     @Column(name = "ORDER_NO")
