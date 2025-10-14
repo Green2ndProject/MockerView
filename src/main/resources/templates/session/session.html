@@ -1191,6 +1191,7 @@
                 </div>
             </div>
         </div>
+    </div>
 
     <div th:unless="${sessionType == 'VIDEO'}" class="text-interview-mode container">
         <div class="mode-indicator">
@@ -1351,6 +1352,7 @@
             </div>
         </div>
     </div>
+
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.0.js"></script>
     <script th:src="@{/js/agora-client.js}"></script>
     <script th:src="@{/js/mockerview-websocket.js}"></script>
@@ -1683,7 +1685,7 @@
 
             videoRecognition.onerror = function(event) {
                 console.error('음성 인식 오류:', event.error);
-                statusDiv.textContent = '❌ 오류: ' + event.error;
+                statusDiv.textContent = '❌ 오류: ' +event.error;
                 statusDiv.className = 'answer-status';
             };
 
