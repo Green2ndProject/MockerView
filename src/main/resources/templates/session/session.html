@@ -1893,6 +1893,99 @@
             console.log('🚀 DOM 로드 완료');
             console.log('📊 SESSION_DATA:', SESSION_DATA);
             
+            // 세션 상태 확인해서 UI 업데이트
+            checkSessionStatus();
+            
+            startCountdown();
+            
+            console.log('🔌 WebSocket 초기화 시작...');
+            const ws = new MockerViewWebSocket(
+                SESSION_DATA.sessionId, 
+                SESSION_DATA.userId, 
+                SESSION_DATA.userName
+            );
+            window.mockerViewWS = ws;
+            ws.connect();
+            console.log('✅ WebSocket connect() 호출 완료');
+            
+            if (SESSION_DATA.sessionType === 'AUDIO' || SESSION_DATA.sessionType === 'VIDEO') {
+                setTimeout(() => {
+                    console.log('🎬 미디어 초기화 시작...');
+                    initializeMedia();
+                }, 1000);
+            }
+        });
+        
+        async function checkSessionStatus() {
+            try {
+                const token = getToken();
+                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/status`, {
+                    headers: { 'Authorization': token }
+                });
+                
+                const data = await response.json();
+                console.log('📊 세션 상태:', data);
+                
+                if (data.status === 'RUNNING') {
+                    const startBtn = document.getElementById('startInterviewBtn');
+                    const pauseBtn = document.getElementById('pauseInterviewBtn');
+                    const endBtn = document.getElementById('endInterviewBtn');
+                    const badge = document.getElementById('sessionStatusBadge');
+                    
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (pauseBtn) pauseBtn.style.display = 'inline-block';
+                    if (endBtn) endBtn.style.display = 'inline-block';
+                    
+                    if (badge) {
+                        badge.textContent = '진행중';
+                        badge.className = 'status-badge ongoing';
+                    }
+                }
+            } catch (error) {
+                console.error('❌ 세션 상태 확인 실패:', error);
+            }
+        }
+
+        async function checkSessionStatus() {
+            try {
+                const token = getToken();
+                const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/status`, {
+                    headers: { 'Authorization': token }
+                });
+                
+                const data = await response.json();
+                console.log('📊 세션 상태:', data);
+                
+                if (data.status === 'RUNNING') {
+                    const startBtn = document.getElementById('startInterviewBtn');
+                    const pauseBtn = document.getElementById('pauseInterviewBtn');
+                    const endBtn = document.getElementById('endInterviewBtn');
+                    const badge = document.getElementById('sessionStatusBadge');
+                    
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (pauseBtn) pauseBtn.style.display = 'inline-block';
+                    if (endBtn) endBtn.style.display = 'inline-block';
+                    
+                    if (badge) {
+                        badge.textContent = '진행중';
+                        badge.className = 'status-badge ongoing';
+                    }
+                    
+                    console.log('✅ UI 업데이트 완료 - RUNNING 상태');
+                }
+            } catch (error) {
+                console.error('❌ 세션 상태 확인 실패:', error);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM 로드 완료');
+            console.log('📊 SESSION_DATA:', SESSION_DATA);
+            
+            if (SESSION_DATA.isHost) {
+                checkSessionStatus();
+            }
+            
             startCountdown();
             
             console.log('🔌 WebSocket 초기화 시작...');
