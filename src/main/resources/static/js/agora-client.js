@@ -8,6 +8,7 @@ class AgoraClient {
         this.audioEnabled = true;
         this.videoEnabled = true;
         this.isJoined = false;
+        this.isPublished = false;
         this.setupEventHandlers();
     }
 
@@ -50,6 +51,11 @@ class AgoraClient {
     }
 
     async join(channel, token, uid) {
+        if (this.isJoined) {
+            console.log('⚠️ 이미 채널에 참가되어 있음');
+            return;
+        }
+        
         console.log('🚀 채널 참가 시도:', {
             appId: this.appId,
             channel: channel,
@@ -71,6 +77,11 @@ class AgoraClient {
     }
 
     async publishAudioVideo() {
+        if (this.isPublished) {
+            console.log('⚠️ 이미 미디어가 발행되어 있음');
+            return;
+        }
+        
         console.log('🎤📹 오디오/비디오 발행 시작...');
         try {
             this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -83,6 +94,7 @@ class AgoraClient {
             console.log('✅ 로컬 비디오 재생');
             
             await this.client.publish([this.localAudioTrack, this.localVideoTrack]);
+            this.isPublished = true;
             console.log('✅ 오디오/비디오 발행 완료');
         } catch (error) {
             console.error('❌ 미디어 발행 실패:', error);
@@ -91,12 +103,18 @@ class AgoraClient {
     }
 
     async publishAudioOnly() {
+        if (this.isPublished) {
+            console.log('⚠️ 이미 오디오가 발행되어 있음');
+            return;
+        }
+        
         console.log('🎤 오디오 발행 시작...');
         try {
             this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
             console.log('✅ 마이크 트랙 생성');
             
             await this.client.publish([this.localAudioTrack]);
+            this.isPublished = true;
             console.log('✅ 오디오 발행 완료');
         } catch (error) {
             console.error('❌ 오디오 발행 실패:', error);
@@ -143,6 +161,7 @@ class AgoraClient {
             if (this.isJoined) {
                 await this.client.leave();
                 this.isJoined = false;
+                this.isPublished = false;
                 console.log('✅ 채널 나감');
             }
         } catch (error) {
