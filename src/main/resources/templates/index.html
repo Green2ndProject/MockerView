@@ -20,8 +20,7 @@
     }
     
     .btn-out:hover {
-        background: white;
-        color: #667eea;
+        background: #5568d3;
     }
     
     .btn-pri {
@@ -39,12 +38,141 @@
         background: #667eea;
         color: white;
     }
+
+    .session-explain {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+
+    .session-explain h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .session-explain .subtitle {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 3rem;
+    }
+
+    .session-types {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+
+    .session-type-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .session-type-card:hover {
+        transform: translateY(-8px);
+        border-color: #667eea;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+    }
+
+    .session-type-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .session-type-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #333;
+    }
+
+    .session-type-card p {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #666;
+    }
+
+    .session-flow {
+        margin-top: 4rem;
+        text-align: center;
+        background: white;
+        padding: 3rem;
+        border-radius: 16px;
+        border: 2px solid #e5e7eb;
+    }
+
+    .session-flow h3 {
+        font-size: 1.8rem;
+        margin-bottom: 2rem;
+        color: #333;
+    }
+
+    .flow-steps {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .flow-step {
+        background: #667eea;
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .flow-step:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .flow-arrow {
+        font-size: 1.5rem;
+        color: #667eea;
+    }
+
+    @media (max-width: 768px) {
+        .session-types {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .session-explain h2 {
+            font-size: 2rem;
+        }
+
+        .session-explain .subtitle {
+            font-size: 1rem;
+        }
+
+        .flow-steps {
+            flex-direction: column;
+        }
+
+        .flow-arrow {
+            transform: rotate(90deg);
+        }
+
+        .session-flow {
+            padding: 2rem 1rem;
+        }
+    }
 </style>
 <body>
     <nav class="navbar">
         <div class="container">
             <a class="logo" href="/">Mockerview</a>
             <div class="nav-menu">
+                <a href="#session">세션이란?</a>
                 <a href="#features">특징</a>
                 <a href="#how">사용방법</a>
                 <a th:href="@{/auth/login}" class="btn-out">로그인</a>
@@ -61,7 +189,7 @@
                     <p>혼자가 아닌 함께, AI와 면접관의 피드백으로 성장하세요</p>
                     <div class="hero-buttons">
                         <a th:href="@{/auth/register}" class="btn-primary">무료로 시작하기</a>
-                        <a href="#features" class="btn-outline">더 알아보기</a>
+                        <a href="#session" class="btn-outline">더 알아보기</a>
                     </div>
                 </div>
                 <div class="hero-visual">
@@ -77,6 +205,46 @@
                         <div class="icon">📊</div>
                         <div class="text">성장 추적</div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="session" class="session-explain">
+        <div class="container">
+            <h2>💡 세션이 뭔가요?</h2>
+            <p class="subtitle">세션은 온라인 모의면접을 진행하는 "가상 면접장"입니다</p>
+            
+            <div class="session-types">
+                <div class="session-type-card">
+                    <div class="session-type-icon">👥</div>
+                    <h3>그룹 세션</h3>
+                    <p>면접관과 여러 면접자가 함께 참여하는 실전 면접 연습장입니다. 친구들과 스터디처럼 모여서 면접 보는 느낌!</p>
+                </div>
+                <div class="session-type-card">
+                    <div class="session-type-icon">🎯</div>
+                    <h3>셀프 세션</h3>
+                    <p>AI와 1:1로 연습하는 혼자만의 면접 공간입니다. 부담 없이 혼자 연습하고 싶을 때 딱!</p>
+                </div>
+                <div class="session-type-card">
+                    <div class="session-type-icon">📝</div>
+                    <h3>리뷰 세션</h3>
+                    <p>종료된 면접을 다시 보면서 피드백을 작성하는 복습 공간입니다. 자기 답변 돌아보고 발전하기!</p>
+                </div>
+            </div>
+
+            <div class="session-flow">
+                <h3>세션 흐름은 이렇게!</h3>
+                <div class="flow-steps">
+                    <div class="flow-step">🏠 세션 생성</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">👋 참가자 입장</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">❓ 질문 & 답변</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">🤖 AI 피드백</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">🎉 점수판 확인</div>
                 </div>
             </div>
         </div>
