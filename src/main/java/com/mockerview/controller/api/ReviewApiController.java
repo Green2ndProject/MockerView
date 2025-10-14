@@ -13,6 +13,7 @@ import com.mockerview.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,7 +43,7 @@ public class ReviewApiController {
     }
 
     @PostMapping
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ResponseEntity<Map<String, Object>> createReview(
             @RequestBody ReviewRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -52,13 +53,13 @@ public class ReviewApiController {
         
         Map<String, Object> response = new HashMap<>();
         
-        if (request.getSessionId() == null) {
-            response.put("success", false);
-            response.put("message", "세션 ID가 필요합니다.");
-            return ResponseEntity.badRequest().body(response);
-        }
-        
         try {
+            if (request.getSessionId() == null) {
+                response.put("success", false);
+                response.put("message", "세션 ID가 필요합니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
             User reviewer = userRepository.findById(userDetails.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
             
@@ -78,14 +79,15 @@ public class ReviewApiController {
             }
             
             Review review = reviewBuilder.build();
-            reviewRepository.save(review);
+            Review savedReview = reviewRepository.saveAndFlush(review);
             
-            log.info("리뷰 생성 완료 - reviewId: {}", review.getId());
+            log.info("리뷰 생성 완료 - reviewId: {}", savedReview.getId());
             
             response.put("success", true);
-            response.put("reviewId", review.getId());
+            response.put("reviewId", savedReview.getId());
             
             return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
             log.error("리뷰 생성 중 오류", e);
             response.put("success", false);
