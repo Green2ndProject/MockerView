@@ -405,4 +405,23 @@ public class SessionApiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @GetMapping("/{sessionId}/status")
+    public ResponseEntity<Map<String, Object>> getSessionStatus(@PathVariable Long sessionId) {
+        try {
+            Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", session.getStatus().name());
+            response.put("sessionId", sessionId);
+            
+            log.info("세션 상태 조회 - sessionId: {}, status: {}", sessionId, session.getStatus());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("세션 상태 조회 실패: {}", sessionId, e);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
