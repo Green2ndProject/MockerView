@@ -361,6 +361,48 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        @media (max-width: 768px) {
+            .navbar-content { flex-direction: column; gap: 12px; }
+            .navbar-nav { gap: 12px; }
+            .page-header { padding: 24px 16px; }
+            .page-header h1 { font-size: 24px; }
+            .session-meta { font-size: 14px; }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .score-row { 
+                grid-template-columns: 50px 1fr 80px; 
+                padding: 16px; 
+                gap: 12px; 
+            }
+            .rank-badge { font-size: 28px; }
+            .user-icon { 
+                width: 40px; 
+                height: 40px; 
+                font-size: 18px; 
+            }
+            .user-name { font-size: 16px; }
+            .score-item:nth-child(3),
+            .score-item:nth-child(4),
+            .score-item:nth-child(5) { display: none; }
+            .score-number { font-size: 20px; }
+            .view-btn { 
+                padding: 8px 16px; 
+                font-size: 13px; 
+            }
+            .modal-content { 
+                width: 95%; 
+                margin: 10% auto; 
+                padding: 20px; 
+            }
+            .popup-header { padding: 20px; }
+            .popup-title { font-size: 18px; }
+            .feedback-grid { 
+                grid-template-columns: 1fr; 
+            }
+        }
     </style>
 </head>
 <body>

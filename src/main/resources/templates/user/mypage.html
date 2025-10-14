@@ -254,6 +254,50 @@
             flex: 1;
             min-width: 150px;
         }
+        
+        @media (max-width: 768px) {
+            .profile-avatar { 
+                width: 60px; 
+                height: 60px; 
+                font-size: 1.5rem; 
+            }
+            .profile-name { font-size: 20px; }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .stat-card { padding: 20px; }
+            .stat-number { font-size: 32px; }
+            .session-history-title { font-size: 18px; }
+            .history-item { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 12px; 
+            }
+            .history-info h4 { font-size: 16px; }
+            .answer-table { font-size: 13px; }
+            .answer-table th,
+            .answer-table td { padding: 8px; }
+            .profile-actions-grid { 
+                grid-template-columns: 1fr; 
+                gap: 1rem; 
+            }
+            .form-actions { 
+                flex-direction: column; 
+            }
+            .form-actions .btn { 
+                width: 100%; 
+                min-width: unset; 
+            }
+            .custom-modal-container { 
+                width: 95%; 
+                max-width: 95%; 
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .answer-table { display: block; overflow-x: auto; }
+        }
     </style>
 </head>
 <body>

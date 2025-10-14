@@ -6,6 +6,35 @@
     <title>셀프 면접</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/selfinterview.css">
+    <style>
+        @media (max-width: 768px) {
+            .selfinterview-layout { 
+                display: flex; 
+                flex-direction: column; 
+            }
+            .main-content { width: 100%; }
+            .feedback-panel { 
+                width: 100%; 
+                margin-top: 16px; 
+            }
+            .progress-bar-container { padding: 12px; }
+            .card-header h4 { font-size: 16px; }
+            .answer-mode-toggle { 
+                flex-direction: column; 
+                gap: 8px; 
+            }
+            .answer-mode-toggle .btn { width: 100%; }
+            .answer-actions { 
+                flex-direction: column; 
+                gap: 8px; 
+            }
+            .answer-actions .btn { width: 100%; }
+            #videoPreview { 
+                width: 100%; 
+                height: auto; 
+            }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
