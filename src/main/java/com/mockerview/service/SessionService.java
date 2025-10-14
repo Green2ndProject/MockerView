@@ -174,6 +174,9 @@ public class SessionService {
     @Transactional
     public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId, Integer timer) {
         try {
+            log.info("saveQuestion 호출 - questionText: '{}', orderNo: {}, timer: {}", 
+                questionText, orderNo, timer);
+            
             Session session = findById(sessionId);
             User questioner = userRepository.findById(questionerId)
                 .orElseThrow(() -> new RuntimeException("Questioner not found"));
@@ -186,8 +189,12 @@ public class SessionService {
                 .timer(timer)
                 .build();
             
+            log.info("Question 객체 생성 완료 - text 필드: '{}'", question.getText());
+            
             Question saved = questionRepository.save(question);
-            log.info("Question saved with ID: {}", saved.getId());
+            
+            log.info("Question 저장 완료 - ID: {}, text: '{}'", saved.getId(), saved.getText());
+            
             return saved.getId();
             
         } catch (Exception e) {
