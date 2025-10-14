@@ -148,27 +148,37 @@ public class SessionService {
             User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("Host not found"));
             
-                String normalizedType = sessionType;
-                if ("VOICE".equals(sessionType)) {
-                    normalizedType = "AUDIO";
-                }
-                
-                String validSessionType = (normalizedType != null && 
-                    (normalizedType.equals("TEXT") || normalizedType.equals("AUDIO") || normalizedType.equals("VIDEO")))
-                    ? normalizedType : "TEXT";
+            String normalizedType = sessionType;
+            if ("VOICE".equals(sessionType)) {
+                normalizedType = "AUDIO";
+            }
+            
+            String validSessionType = (normalizedType != null && 
+                (normalizedType.equals("TEXT") || normalizedType.equals("AUDIO") || normalizedType.equals("VIDEO")))
+                ? normalizedType : "TEXT";
+            
+            LocalDateTime now = LocalDateTime.now();
+            Session.SessionStatus initialStatus = Session.SessionStatus.PLANNED;
+            LocalDateTime effectiveStartTime = scheduledStartTime;
+            
+            if (scheduledStartTime == null || scheduledStartTime.isBefore(now) || scheduledStartTime.isEqual(now)) {
+                initialStatus = Session.SessionStatus.RUNNING;
+                effectiveStartTime = now;
+                log.info("세션 즉시 시작 - title: {}", title);
+            }
             
             Session session = Session.builder()
                 .title(title)
                 .host(host)
-                .sessionStatus(Session.SessionStatus.PLANNED)
+                .sessionStatus(initialStatus)
                 .sessionType(validSessionType)
-                .startTime(scheduledStartTime)
+                .startTime(effectiveStartTime)
                 .mediaEnabled(validSessionType.equals("VIDEO") || validSessionType.equals("AUDIO") ? (short) 1 : (short) 0)
                 .build();
             
             Session saved = sessionRepository.save(session);
-            log.info("Session created with ID: {}, type: {}, scheduled: {}", 
-                    saved.getId(), validSessionType, scheduledStartTime);
+            log.info("Session created - ID: {}, type: {}, status: {}, scheduled: {}", 
+                    saved.getId(), validSessionType, initialStatus, effectiveStartTime);
             
         } catch (Exception e) {
             log.error("Error creating session: ", e);
@@ -271,6 +281,7 @@ public class SessionService {
     @Transactional
     public void startSession(Long sessionId) {
         Session session = findById(sessionId);
+        ession.setStatus(Session.SessionStatus.RUNNING);
         session.setSessionStatus(Session.SessionStatus.RUNNING);
         session.setStartTime(LocalDateTime.now());
         sessionRepository.save(session);
@@ -280,7 +291,7 @@ public class SessionService {
     @Transactional
     public void endSession(Long sessionId) {
         Session session = findById(sessionId);
-        session.setSessionStatus(Session.SessionStatus.ENDED);
+        session.setStatus(Session.SessionStatus.ENDED);
         session.setEndTime(LocalDateTime.now());
         sessionRepository.save(session);
         log.info("Session {} ended", sessionId);

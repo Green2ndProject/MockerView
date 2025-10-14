@@ -31,17 +31,21 @@ public class SessionScheduler {
     @Transactional
     public void autoStartScheduledSessions() {
         LocalDateTime now = LocalDateTime.now();
+        log.info("⏰ 스케줄러 실행 - 현재 시각: {}", now);
         
         List<Session> scheduledSessions = sessionRepository.findByStatusAndStartTimeBefore(
             Session.SessionStatus.PLANNED, now
         );
         
+        log.info("🔍 자동 시작 대상 세션 검색 - {}개 발견", scheduledSessions.size());
+        
         if (!scheduledSessions.isEmpty()) {
-            log.info("🚀 예약 세션 자동 시작 체크 - {}개 발견", scheduledSessions.size());
-            
             for (Session session : scheduledSessions) {
                 try {
-                    session.setSessionStatus(Session.SessionStatus.RUNNING);
+                    log.info("🚀 세션 자동 시작 시도 - ID: {}, 제목: {}, 예정 시각: {}", 
+                            session.getId(), session.getTitle(), session.getStartTime());
+                    
+                    session.setStatus(Session.SessionStatus.RUNNING);
                     session.setStartTime(now);
                     sessionRepository.save(session);
                     
@@ -55,8 +59,7 @@ public class SessionScheduler {
                         message
                     );
                     
-                    log.info("✅ 세션 자동 시작 완료 - ID: {}, 제목: {}", 
-                            session.getId(), session.getTitle());
+                    log.info("✅ 세션 자동 시작 완료 - ID: {}", session.getId());
                 } catch (Exception e) {
                     log.error("❌ 세션 자동 시작 실패 - ID: {}", session.getId(), e);
                 }
@@ -76,7 +79,7 @@ public class SessionScheduler {
         
         int expiredCount = 0;
         for (Session session : expiredSessions) {
-            session.setSessionStatus(Session.SessionStatus.ENDED);
+            session.setStatus(Session.SessionStatus.ENDED);
             session.setEndTime(now);
             sessionRepository.save(session);
             
@@ -99,11 +102,11 @@ public class SessionScheduler {
         int endedCount = 0;
         
         for (Session session : sessions) {
-            if (session.getSessionStatus() == Session.SessionStatus.RUNNING && 
+            if (session.getStatus() == Session.SessionStatus.RUNNING && 
                 session.getLastActivity() != null && 
                 session.getLastActivity().isBefore(threshold)) {
                 
-                session.setSessionStatus(Session.SessionStatus.ENDED);
+                session.setStatus(Session.SessionStatus.ENDED);
                 session.setEndTime(LocalDateTime.now());
                 sessionRepository.save(session);
                 
