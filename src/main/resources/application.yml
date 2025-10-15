@@ -37,14 +37,6 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
-  web:
-    cors:
-      allowed-origins: "*"
-      allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
-      allowed-headers: "*"
-      allow-credentials: true
-      max-age: 3600
-
 server:
   port: 8080
   address: 0.0.0.0
@@ -113,16 +105,14 @@ logging:
     org.springframework.web.socket: DEBUG
 
 ---
-# 운영(PostgreSQL)
+# 운영(PostgreSQL) - Heroku
 spring:
   config:
     activate:
       on-profile: prod
 
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/mockerview}
-    username: ${DB_USERNAME:mockerview}
-    password: ${DB_PASSWORD:mockerview}
+    url: ${DATABASE_URL}
     driver-class-name: org.postgresql.Driver
 
   servlet:
@@ -132,7 +122,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
@@ -140,6 +130,9 @@ spring:
 
   thymeleaf:
     cache: true
+
+server:
+  port: ${PORT:8080}
 
 logging:
   level:
