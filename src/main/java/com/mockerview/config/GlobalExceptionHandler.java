@@ -1,6 +1,8 @@
 package com.mockerview.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,39 +11,56 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.mockerview.exception.AlreadyDeletedException;
 
+import java.util.HashMap;
 import java.util.Map;
 
-@RestControllerAdvice // 모든 @Controller, @RestController에서 발생하는 예외를 잡는 클래스임을 선언
+@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Service 계층 등에서 발생하는 IllegalArgumentException을 처리합니다.
-     * 주로 비밀번호 불일치, 유효하지 않은 요청 파라미터 등에 사용됩니다.
-     * HTTP 400 Bad Request를 반환합니다.
-     */
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> handleIllegalArgumentException(IllegalArgumentException e) {
-        // 클라이언트에게 { "message": "에러 메시지" } 형태로 JSON을 반환
         return Map.of("message", e.getMessage()); 
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED) // 401
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Map<String, String> handleBadCredentialsException(BadCredentialsException e) {
         return Map.of("message", "인증에 실패했습니다. 세션이 유효하지 않습니다.");
     }
 
     @ExceptionHandler(DisabledException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN) // 403
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public Map<String, String> handleDisabledException(DisabledException e) {
         return Map.of("message", "탈퇴한 회원이거나 접근 권한이 없습니다.");
     }
     
     @ExceptionHandler(AlreadyDeletedException.class)
-    @ResponseStatus(HttpStatus.CONFLICT) // 409
+    @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handleAlreadyDeletedException(AlreadyDeletedException e) {
         return Map.of("message", e.getMessage());
     }
-    // 필요하다면 다른 예외(NullPointerException, CustomException 등)도 추가할 수 있습니다.
+    
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleException(Exception e) {
+        log.error("=== 전체 예외 발생 ===");
+        log.error("예외 타입: {}", e.getClass().getName());
+        log.error("예외 메시지: {}", e.getMessage());
+        log.error("스택 트레이스:", e);
+        
+        Throwable cause = e.getCause();
+        int depth = 1;
+        while (cause != null && depth <= 5) {
+            log.error("원인 #{}: {} - {}", depth, cause.getClass().getName(), cause.getMessage());
+            cause = cause.getCause();
+            depth++;
+        }
+        
+        Map<String, String> error = new HashMap<>();
+        error.put("error", e.getMessage() != null ? e.getMessage() : "알 수 없는 오류");
+        error.put("type", e.getClass().getSimpleName());
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
 }

@@ -27,7 +27,7 @@ public class CustomUserDetailsService implements UserDetailsService{
         User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
         // isDeleted 검증
-        if(user.getIsDeleted()){
+        if(user.getIsDeleted() == 1){
             throw new DisabledException("탈퇴한 회원이거나 접근 권한이 없습니다.");
         }
 

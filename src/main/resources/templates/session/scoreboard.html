@@ -2,388 +2,517 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>MockerView - 점수판</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점수판 - Mockerview</title>
     <style>
-        body {
-            background: #f5f5f5;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+        }
+        
+        .navbar {
+            background: #ffffff;
+            border-bottom: 2px solid #e9ecef;
+            padding: 16px 0;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 32px;
+        }
+        
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .nav-link:hover {
+            color: #667eea;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
         .page-header {
             background: #667eea;
             color: white;
-            padding: 2.5rem 0;
+            padding: 40px 32px;
+            border-radius: 12px;
+            margin-bottom: 32px;
         }
-
+        
         .page-header h1 {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e5e7eb;
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
+            font-size: 32px;
             font-weight: 700;
-            color: #667eea;
-            display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
         }
-
-        .stat-label {
-            color: #6b7280;
-            font-size: 0.875rem;
-            font-weight: 500;
+        
+        .session-meta {
+            font-size: 16px;
+            opacity: 0.9;
         }
-
-        .ranking-card {
+        
+        .scoreboard {
             background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 2rem;
-            margin-bottom: 1rem;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow: hidden;
         }
-
-        .ranking-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        
+        .score-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 110px 110px 110px 120px;
+            align-items: center;
+            padding: 24px 28px;
+            gap: 20px;
+            border-bottom: 1px solid #f1f3f5;
         }
-
+        
+        .score-row:last-child {
+            border-bottom: none;
+        }
+        
+        .score-row:hover {
+            background: #f8f9fa;
+        }
+        
         .rank-badge {
-            position: absolute;
-            top: -10px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
+            font-size: 36px;
+            font-weight: 800;
+            text-align: center;
+            color: #667eea;
+        }
+        
+        .rank-badge.first { color: #ffd700; }
+        .rank-badge.second { color: #c0c0c0; }
+        .rank-badge.third { color: #cd7f32; }
+        
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-icon {
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
+            background: #667eea;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 22px;
             font-weight: 700;
-            color: white;
-            font-size: 1.1rem;
+            flex-shrink: 0;
         }
-
-        .rank-1 { background: #ef4444; }
-        .rank-2 { background: #3b82f6; }
-        .rank-3 { background: #10b981; }
-        .rank-other { background: #6b7280; }
-
-        .card-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        
+        .user-data {
+            flex: 1;
         }
-
-        .user-info {
-            margin-left: 20px;
-        }
-
+        
         .user-name {
-            font-size: 1.25rem;
+            font-size: 18px;
             font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 0.25rem;
+            color: #212529;
+            margin-bottom: 4px;
         }
-
-        .user-role {
-            color: #6b7280;
-            font-size: 0.875rem;
+        
+        .answer-count {
+            font-size: 14px;
+            color: #6c757d;
         }
-
-        .score-stats {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .stat-item {
+        
+        .score-item {
             text-align: center;
         }
-
-        .stat-item .number {
-            font-size: 1.25rem;
+        
+        .score-title {
+            font-size: 11px;
+            color: #868e96;
+            text-transform: uppercase;
             font-weight: 600;
-            color: #1f2937;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
         }
-
-        .stat-item .label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
-        }
-
-        .total-score-wrapper {
-            text-align: right;
-            margin-left: 2rem;
-            padding-left: 2rem;
-            border-left: 2px solid #e5e7eb;
-        }
-
-        .total-score {
-            font-size: 2.5rem;
+        
+        .score-number {
+            font-size: 26px;
             font-weight: 700;
-            color: #667eea;
+            color: #212529;
         }
-
-        .score-label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
-        }
-
-        .answer-details {
-            display: none;
-            margin-top: 1.5rem;
-            padding: 1.5rem;
-            background: #f9fafb;
+        
+        .score-ai { color: #3b82f6; }
+        .score-interviewer { color: #8b5cf6; }
+        .score-total { color: #10b981; font-size: 30px; }
+        
+        .view-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
             border-radius: 8px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .answer-details.show {
-            display: block;
-            animation: fadeIn 0.2s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .details-title {
-            font-size: 1rem;
+            font-size: 14px;
             font-weight: 600;
-            color: #374151;
-            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
         }
-
-        .answer-item {
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
+        
+        .view-btn:hover {
+            background: #5568d3;
         }
-
-        .question-text {
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.75rem;
-            font-size: 0.95rem;
-        }
-
-        .answer-text {
-            color: #6b7280;
-            margin-bottom: 1rem;
-            line-height: 1.6;
-            font-size: 0.9rem;
-        }
-
-        .feedback-item {
-            background: #eff6ff;
-            border: 1px solid #dbeafe;
-            border-radius: 6px;
-            padding: 1rem;
-            margin-top: 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        .feedback-item.interviewer {
-            background: #fef3c7;
-            border-color: #fde68a;
-        }
-
-        .feedback-header {
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .feedback-item.interviewer .feedback-header {
-            color: #92400e;
-        }
-
-        .feedback-section {
-            margin-top: 0.5rem;
-            padding: 0.5rem 0;
-        }
-
-        .feedback-section strong {
-            display: block;
-            margin-bottom: 0.25rem;
-            color: #374151;
-        }
-
-        .empty-state {
+        
+        .empty-box {
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 100px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+        
+        .empty-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        
+        .empty-text {
+            font-size: 16px;
+            color: #868e96;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .popup.active {
+            display: block;
+        }
+        
+        .popup-header {
+            background: #667eea;
+            color: white;
+            padding: 28px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .popup-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 24px;
+            right: 28px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .popup-body {
+            padding: 32px;
+        }
+        
+        .answer-block {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .question-label {
+            font-size: 17px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 12px;
+        }
+        
+        .answer-content {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            color: #495057;
+            line-height: 1.6;
+        }
+        
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .feedback-box {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 16px;
+        }
+        
+        .feedback-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .feedback-score-display {
+            font-size: 20px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+        
+        .feedback-content {
+            font-size: 14px;
+            color: #495057;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .score-row {
+                grid-template-columns: 60px 1fr 90px 110px;
+                padding: 20px;
+                gap: 12px;
+            }
+            
+            .score-item:nth-child(3),
+            .score-item:nth-child(4) {
+                display: none;
+            }
+            
+            .feedback-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .empty-state h3 {
-            color: #9ca3af;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .empty-state p {
-            color: #9ca3af;
-            font-size: 0.875rem;
+        @media (max-width: 768px) {
+            .navbar-content { flex-direction: column; gap: 12px; }
+            .navbar-nav { gap: 12px; }
+            .page-header { padding: 24px 16px; }
+            .page-header h1 { font-size: 24px; }
+            .session-meta { font-size: 14px; }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .score-row { 
+                grid-template-columns: 50px 1fr 80px; 
+                padding: 16px; 
+                gap: 12px; 
+            }
+            .rank-badge { font-size: 28px; }
+            .user-icon { 
+                width: 40px; 
+                height: 40px; 
+                font-size: 18px; 
+            }
+            .user-name { font-size: 16px; }
+            .score-item:nth-child(3),
+            .score-item:nth-child(4),
+            .score-item:nth-child(5) { display: none; }
+            .score-number { font-size: 20px; }
+            .view-btn { 
+                padding: 8px 16px; 
+                font-size: 13px; 
+            }
+            .modal-content { 
+                width: 95%; 
+                margin: 10% auto; 
+                padding: 20px; 
+            }
+            .popup-header { padding: 20px; }
+            .popup-title { font-size: 18px; }
+            .feedback-grid { 
+                grid-template-columns: 1fr; 
+            }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">Mockerview</a>
-                <div class="navbar-nav">
-                    <a class="nav-link" href="/session/list">세션 목록</a>
-                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
-                </div>
+        <div class="navbar-content">
+            <a class="navbar-brand" href="/session/list">Mockerview</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/session/list">세션 목록</a>
+                <a class="nav-link" href="/auth/mypage">마이페이지</a>
             </div>
         </div>
     </nav>
-
-    <div style="margin-top: 1rem;">
-        <a th:if="${interviewSession.isSelfInterview == 'Y'}"
-            href="/selfinterview/list"
-            class="btn btn-secondary">목록으로 돌아가기</a>
-        <a th:if="${interviewSession.isSelfInterview != 'Y'}"
-            href="/session/list"
-            class="btn btn-secondary">세션 목록으로</a>
-    </div>
-
-    <div class="container" style="padding: 2rem 1rem;">
-        <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-number" th:text="${#lists.size(userScores)}">0</span>
-                    <div class="stat-label">참가자</div>
+    
+    <div class="container">
+        <div class="page-header">
+            <h1>🏆 면접 점수판</h1>
+            <div class="session-meta">
+                <strong th:text="${interviewSession.title}">세션명</strong> • 
+                질문 <span th:text="${totalQuestions}">0</span>개
+            </div>
+        </div>
+        
+        <div class="scoreboard" th:if="${userScores != null and !userScores.isEmpty()}">
+            <div class="score-row" th:each="item, iter : ${userScores}">
+                <div class="rank-badge" 
+                        th:classappend="${iter.index == 0} ? 'first' : (${iter.index == 1} ? 'second' : (${iter.index == 2} ? 'third' : ''))">
+                    <span th:text="${iter.index + 1}">1</span>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-number" th:text="${totalQuestions}">0</span>
-                    <div class="stat-label">질문 수</div>
+                
+                <div class="user-section">
+                    <div class="user-icon" th:text="${#strings.substring(item.user.name, 0, 1)}">A</div>
+                    <div class="user-data">
+                        <div class="user-name" th:text="${item.user.name}">이름</div>
+                        <div class="answer-count">답변 <span th:text="${item.answerCount}">0</span>개</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <span class="badge" 
-                        th:classappend="${interviewSession.sessionStatus.toString() == 'RUNNING' ? 'badge-live' : (interviewSession.sessionStatus.toString() == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
-                        th:text="${interviewSession.sessionStatus}">PLANNED</span>
-                    <div class="stat-label">세션 상태</div>
+                
+                <div class="score-item">
+                    <div class="score-title">AI 점수</div>
+                    <div class="score-number score-ai" th:text="${item.avgAiScore}">0</div>
+                </div>
+                
+                <div class="score-item">
+                    <div class="score-title">면접관</div>
+                    <div class="score-number score-interviewer" th:text="${item.avgInterviewerScore}">0</div>
+                </div>
+                
+                <div class="score-item">
+                    <div class="score-title">총점</div>
+                    <div class="score-number score-total" th:text="${item.totalScore}">0</div>
+                </div>
+                
+                <div>
+                    <button class="view-btn" th:onclick="'showPopup(' + ${iter.index} + ')'">상세보기</button>
                 </div>
             </div>
         </div>
-
-        <div class="ranking-container">
-            <div th:each="userScore, iterStat : ${userScores}"
-                class="ranking-card"
-                th:onclick="'toggleDetails(' + ${iterStat.index} + ')'">
-                <div class="rank-badge"
-                    th:classappend="${iterStat.index == 0 ? 'rank-1' : (iterStat.index == 1 ? 'rank-2' : (iterStat.index == 2 ? 'rank-3' : 'rank-other'))}"
-                    th:text="${iterStat.index + 1}">1</div>
+        
+        <div class="empty-box" th:if="${userScores == null or userScores.isEmpty()}">
+            <div class="empty-icon">📊</div>
+            <div class="empty-title">아직 제출된 답변이 없습니다</div>
+            <div class="empty-text">면접이 진행되면 점수가 표시됩니다</div>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay" onclick="hideAllPopups()"></div>
+    
+    <div th:each="item, iter : ${userScores}" th:id="'popup-' + ${iter.index}" class="popup">
+        <div class="popup-header">
+            <h2 class="popup-title" th:text="${item.user.name} + '님의 답변 상세'">답변 상세</h2>
+            <button class="close-btn" th:onclick="'hidePopup(' + ${iter.index} + ')'">&times;</button>
+        </div>
+        
+        <div class="popup-body">
+            <div class="answer-block" th:each="ans : ${item.answers}">
+                <div class="question-label" th:text="'Q. ' + ${ans.question.text}">질문</div>
+                <div class="answer-content" th:text="${ans.answerText}">답변</div>
                 
-                <div class="card-content">
-                    <div class="user-info">
-                        <div class="user-name" th:text="${userScore.user.name}">사용자명</div>
-                        <div class="user-role">
-                            <span th:text="${userScore.user.role}">STUDENT</span>
-                            <span th:text="' • ' + ${userScore.user.email}"></span>
+                <div class="feedback-grid" th:if="${ans.feedbacks != null and !ans.feedbacks.empty}">
+                    <div class="feedback-box" th:each="fb : ${ans.feedbacks}">
+                        <div class="feedback-header" 
+                                th:text="${fb.feedbackType.name() == 'AI'} ? '🤖 AI 피드백' : '👔 면접관 피드백'">피드백</div>
+                        <div class="feedback-score-display" th:if="${fb.score != null}">
+                            점수: <span th:text="${fb.score}">0</span>/100
                         </div>
-                    </div>
-                    
-                    <div class="score-stats">
-                        <div class="stat-item">
-                            <div class="number" th:text="${userScore.answerCount}">0</div>
-                            <div class="label">답변</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="number" style="color: #10b981;" th:text="${userScore.avgAiScore}">0</div>
-                            <div class="label">AI 평균</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="number" style="color: #f59e0b;" th:text="${userScore.avgInterviewerScore}">0</div>
-                            <div class="label">면접관 평균</div>
-                        </div>
-                        <div class="total-score-wrapper">
-                            <div class="total-score" th:text="${userScore.totalScore}">0.0</div>
-                            <div class="score-label">총점</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div th:id="'details-' + ${iterStat.index}" class="answer-details">
-                    <h4 class="details-title">답변 상세</h4>
-                    <div th:each="answer : ${userScore.answers}" class="answer-item">
-                        <div class="question-text" th:text="'Q. ' + ${answer.question.text}">질문</div>
-                        <div class="answer-text" th:text="'A. ' + ${answer.answerText}">답변</div>
-                        
-                        <div th:if="${!#lists.isEmpty(answer.feedbacks)}">
-                            <div th:each="feedback : ${answer.feedbacks}" 
-                                th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-item' : 'feedback-item interviewer'}">
-                                <div class="feedback-header" th:text="${feedback.feedbackType.toString() == 'AI' ? '🤖 AI 피드백' : '👤 면접관 피드백'}">피드백</div>
-                                
-                                <div class="feedback-section">
-                                    <strong>요약</strong>
-                                    <div th:text="${feedback.summary}">요약 내용</div>
-                                </div>
-                                
-                                <div class="feedback-section" th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}">
-                                    <strong>강점</strong>
-                                    <div th:text="${feedback.strengths}">강점 내용</div>
-                                </div>
-                                
-                                <div class="feedback-section" th:if="${feedback.improvement != null and !feedback.improvement.isEmpty()}">
-                                    <strong>개선점</strong>
-                                    <div th:text="${feedback.improvement}">개선점 내용</div>
-                                </div>
-                                
-                                <div class="feedback-section" th:if="${feedback.model != null}">
-                                    <strong>모델</strong>
-                                    <div th:text="${feedback.model}">GPT-4O-MINI</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div th:if="${#lists.isEmpty(answer.feedbacks)}" style="color: #9ca3af; font-size: 0.875rem; margin-top: 0.5rem;">
-                            아직 피드백이 없습니다
-                        </div>
+                        <div class="feedback-content" 
+                                th:text="${fb.feedbackType.name() == 'AI'} ? ${fb.summary} : ${fb.reviewerComment}">내용</div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div th:if="${#lists.isEmpty(userScores)}" class="empty-state">
-            <h3>아직 점수 데이터가 없습니다</h3>
-            <p>면접이 진행되면 점수판이 업데이트됩니다</p>
-        </div>
     </div>
-
+    
     <script>
-        function toggleDetails(index) {
-            const detailsEl = document.getElementById('details-' + index);
-            if (detailsEl) {
-                detailsEl.classList.toggle('show');
-            }
+        function showPopup(index) {
+            document.getElementById('popup-' + index).classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function hidePopup(index) {
+            document.getElementById('popup-' + index).classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function hideAllPopups() {
+            document.querySelectorAll('.popup').forEach(p => p.classList.remove('active'));
+            document.getElementById('overlay').classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
     </script>
 </body>

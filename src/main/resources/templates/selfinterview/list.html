@@ -54,6 +54,16 @@
             font-size: 1.1rem;
             margin-bottom: 2rem;
         }
+
+        @media (max-width: 768px) {
+            .session-grid { 
+                grid-template-columns: 1fr; 
+                gap: 1rem; 
+            }
+            .session-card { padding: 1.25rem; }
+            .session-card h3 { font-size: 18px; }
+            .empty-state { padding: 2rem 1rem; }
+        }
     </style>
 </head>
 <body>

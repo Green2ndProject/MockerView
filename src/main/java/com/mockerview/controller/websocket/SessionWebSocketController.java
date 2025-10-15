@@ -137,9 +137,11 @@ public class SessionWebSocketController {
             
             messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/answer", message);
             
+            log.info("답변 저장 완료 - answerId: {}, AI 피드백 요청 시작", answerId);
+            
             aiFeedbackService.generateFeedbackAsync(answerId, sessionId);
             
-            log.info("답변 저장 및 AI 피드백 요청 완료 - answerId: {}", answerId);
+            log.info("AI 피드백 비동기 요청 완료 - answerId: {}", answerId);
             
         } catch (Exception e) {
             log.error("답변 처리 오류: ", e);
@@ -235,6 +237,10 @@ public class SessionWebSocketController {
         }
     }
 
+    /**
+     * 세션 제어 메시지를 처리하고 브로드캐스팅합니다.
+     * 타이머 시작/정지, 질문 전환 등의 제어 명령을 전달합니다.
+     */
     @MessageMapping("/session/{sessionId}/control")
     public void handleControl(
             @DestinationVariable Long sessionId,
