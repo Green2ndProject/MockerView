@@ -363,25 +363,30 @@ class MockerViewWebSocket {
     if (!participantsListDiv) return;
     
     if (!participants || participants.length === 0) {
-      participantsListDiv.innerHTML = '<div class="empty-state">참가자 없음</div>';
-      return;
+        participantsListDiv.innerHTML = '<div class="empty-state">대기 중...</div>';
+        return;
     }
     
-    participantsListDiv.innerHTML = participants.map(participant => 
-      `<div class="participant-item">
-        <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
-        <div class="participant-info">
-          <div class="participant-name">${participant}</div>
-          <div class="participant-status">🟢 온라인</div>
-        </div>
-      </div>`
+    const hostName = document.querySelector('.role-title:first-child + .role-member span')?.textContent;
+    
+    const students = participants.filter(p => p !== hostName);
+    
+    participantsListDiv.innerHTML = students.map(participant => 
+        `<div class="role-member">
+            <div class="participant-avatar">${participant.charAt(0).toUpperCase()}</div>
+            <span>${participant}</span>
+        </div>`
     ).join("");
+    
+    if (students.length === 0) {
+        participantsListDiv.innerHTML = '<div class="empty-role">대기 중...</div>';
+    }
     
     const participantCount = document.getElementById("participant-count");
     if (participantCount) {
-      participantCount.textContent = participants.length + "명";
+        participantCount.textContent = `${participants.length}명`;
     }
-  }
+}
 
   updateSessionStats(questionCount, answerCount) {
     const statsDiv = document.getElementById("session-stats");
@@ -452,24 +457,31 @@ class MockerViewWebSocket {
 
   displayAIFeedback(feedback) {
     const answerId = feedback.answerId || feedback.id;
-    const aiSection = document.getElementById("ai-feedback-" + answerId);
     
+    const aiSection = document.getElementById("ai-feedback-" + answerId);
     if (aiSection) {
-      aiSection.innerHTML = `
-        <div class="ai-feedback-content">
-          <div class="ai-feedback-header">🤖 AI 분석 결과</div>
-          <div class="ai-score">점수: ${feedback.score || 75}/100</div>
-          <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
-          <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
-        </div>
-      `;
+        aiSection.innerHTML = `
+            <div class="ai-feedback-content">
+                <div class="ai-feedback-header">🤖 AI 분석 결과</div>
+                <div class="ai-score">점수: ${feedback.score || 75}/100</div>
+                <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
+            </div>
+        `;
     }
     
     const studentAiSection = document.getElementById("student-ai-feedback-" + answerId);
     if (studentAiSection) {
-      studentAiSection.innerHTML = aiSection ? aiSection.innerHTML : '';
+        studentAiSection.innerHTML = `
+            <div class="ai-feedback-content">
+                <div class="ai-feedback-header">🤖 AI 분석 결과</div>
+                <div class="ai-score">점수: ${feedback.score || 75}/100</div>
+                <div class="ai-strengths"><strong>강점:</strong> ${feedback.strengths || '분석 중...'}</div>
+                <div class="ai-improvements"><strong>개선점:</strong> ${feedback.weaknesses || feedback.improvements || '분석 중...'}</div>
+            </div>
+        `;
     }
-  }
+}
 
   displayInterviewerFeedback(feedback) {
     const answerId = feedback.answerId || feedback.id;

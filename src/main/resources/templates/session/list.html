@@ -263,6 +263,41 @@
         font-weight: 600;
         font-size: 0.875rem;
       }
+
+      @media (max-width: 768px) {
+        .navbar-nav { gap: 12px; }
+        .page-header { padding: 24px 0; }
+        .page-title h1 { font-size: 24px; }
+        .section-tabs { gap: 8px; overflow-x: auto; }
+        .tab-btn { 
+            padding: 0.75rem 1rem; 
+            font-size: 14px; 
+            white-space: nowrap; 
+        }
+        .quick-action-cards { 
+            grid-template-columns: 1fr; 
+            gap: 1rem; 
+        }
+        .quick-card { padding: 1.5rem; }
+        .quick-card-icon { font-size: 2.5rem; }
+        .status-filter-tabs { 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        .status-tab { padding: 0.75rem 1rem; }
+        .search-form { flex-direction: column; }
+        .search-input { min-width: 100%; }
+        .btn-search, .btn-reset { width: 100%; }
+        .session-grid { 
+            grid-template-columns: 1fr; 
+            gap: 1rem; 
+        }
+        .session-card { padding: 16px; }
+        .session-header h3 { font-size: 18px; }
+        .interview-mode-options { 
+            flex-direction: column; 
+        }
+    }
     </style>
   </head>
   <body>

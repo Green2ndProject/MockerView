@@ -170,6 +170,35 @@
             padding: 2rem;
             color: #9ca3af;
         }
+
+        @media (max-width: 768px) {
+            .results-header { padding: 2rem 0; }
+            .results-header h1 { font-size: 24px; }
+            .session-meta { 
+                flex-direction: column; 
+                gap: 8px; 
+                font-size: 13px; 
+            }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .stat-card { padding: 20px; }
+            .stat-number { font-size: 32px; }
+            .qa-section { padding: 16px; }
+            .qa-item { padding-left: 12px; }
+            .question-text { font-size: 16px; }
+            .answer-card { padding: 12px; }
+            .feedback-grid { 
+                grid-template-columns: 1fr; 
+                gap: 12px; 
+            }
+            .action-buttons { 
+                flex-direction: column; 
+                gap: 8px; 
+            }
+            .action-buttons .btn { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -189,11 +218,11 @@
     </nav>
 
     <div class="results-header">
-        <h1 th:text="${interviewSession.title}">모의면접 세션</h1>
+        <h1 th:text="${session.title}">모의면접 세션</h1>
         <div class="session-meta">
-            <span th:text="${#temporals.format(interviewSession.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
-            <span>호스트: <span th:text="${interviewSession.host?.name}">면접관</span></span>
-            <span th:text="${interviewSession.status}">ENDED</span>
+            <span th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
+            <span>호스트: <span th:text="${session.host?.name}">면접관</span></span>
+            <span th:text="${session.status}">ENDED</span>
         </div>
     </div>
 
@@ -262,9 +291,9 @@
                                         <strong>강점:</strong>
                                         <div th:text="${feedback.strengths}">강점 내용</div>
                                     </div>
-                                    <div class="feedback-section" th:if="${feedback.improvement != null and !feedback.improvement.isEmpty()}" style="margin-top: 8px;">
+                                    <div class="feedback-section" th:if="${feedback.improvementSuggestions != null and !feedback.improvementSuggestions.isEmpty()}" style="margin-top: 8px;">
                                         <strong>개선점:</strong>
-                                        <div th:text="${feedback.improvement}">개선점 내용</div>
+                                        <div th:text="${feedback.improvementSuggestions}">개선점 내용</div>
                                     </div>
                                 </div>
                             </div>

@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,35 +39,44 @@ public class ReviewController {
     private final SessionService sessionService;
 
     @GetMapping("/list")
+    @Transactional(readOnly = true)
     public String listPage(@RequestParam(defaultValue = "1") int page,
-                           @RequestParam(defaultValue = "6") int size,
-                           @RequestParam(defaultValue = "desc") String sortOrder, 
-                           Model model) {
+                            @RequestParam(defaultValue = "6") int size,
+                            @RequestParam(defaultValue = "desc") String sortOrder, 
+                            Model model) {
     
         try {
-              log.info("리뷰 가능 세션 목록 로드 중");
+            log.info("리뷰 가능 세션 목록 로드 중");
         
-              Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "endTime"));
-              Page<Session> sessionPage = sessionService.getReviewableSessionsPageable(pageable); 
+                Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "endTime"));
+                Page<Session> sessionPage = sessionService.getReviewableSessionsPageable(pageable); 
+            
+            for (Session session : sessionPage.getContent()) {
+                    session.getQuestions().size();
+                    if (session.getHost() != null) {
+                    session.getHost().getName();
+                }
+            }
         
-              model.addAttribute("sessions", sessionPage.getContent());
-              model.addAttribute("serverCurrentPage", sessionPage.getNumber() + 1);
-              model.addAttribute("totalPages", sessionPage.getTotalPages());
+            model.addAttribute("sessions", sessionPage.getContent());
+            model.addAttribute("serverCurrentPage", sessionPage.getNumber() + 1);
+            model.addAttribute("totalPages", sessionPage.getTotalPages());
 
-              log.info("리뷰 가능 세션 목록 로드 완료. TotalPages: {}", sessionPage.getTotalPages());
-              
-              return "review/list";
+            log.info("리뷰 가능 세션 목록 로드 완료. TotalPages: {}", sessionPage.getTotalPages());
+            
+            return "review/list";
         
         } catch (Exception e) {
-              log.error("리뷰 가능 세션 목록 로드 실패", e);
-              model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
-              
-              return "error";
-          }
+            log.error("리뷰 가능 세션 목록 로드 실패", e);
+            model.addAttribute("error", "세션 목록을 불러올 수 없습니다: " + e.getMessage());
+            
+            return "error/500";
+        }
     }
 
 
     @GetMapping("/detail/{sessionId}")
+    @Transactional(readOnly = true)
     public String detailPage(@PathVariable Long sessionId, Authentication authentication, Model model) {
         try {
             log.info("리뷰 상세 페이지 접근 - sessionId: {}", sessionId);
@@ -77,6 +87,8 @@ public class ReviewController {
             
             var interviewSession = sessionRepository.findByIdWithHostAndQuestions(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            interviewSession.getQuestions().size();
             
             log.info("Questions: {}", interviewSession.getQuestions());
             log.info("Questions size: {}", interviewSession.getQuestions().size());
@@ -97,11 +109,12 @@ public class ReviewController {
         } catch (Exception e) {
             log.error("리뷰 상세 페이지 오류", e);
             model.addAttribute("error", "페이지를 불러올 수 없습니다: " + e.getMessage());
-            return "error";
+            return "error/500";
         }
     }
 
     @GetMapping("/my")
+    @Transactional(readOnly = true)
     public String myReviewsPage(Authentication authentication, Model model) {
         try {
             String username = authentication.getName();
@@ -115,7 +128,7 @@ public class ReviewController {
         } catch (Exception e) {
             log.error("내 리뷰 목록 조회 오류", e);
             model.addAttribute("error", e.getMessage());
-            return "error";
+            return "error/500";
         }
     }
 }

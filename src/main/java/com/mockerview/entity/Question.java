@@ -2,11 +2,7 @@ package com.mockerview.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
+@ToString(exclude = {"session", "questioner", "answers"})
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Question {
     @Id
@@ -30,8 +27,7 @@ public class Question {
     @JsonIgnoreProperties({"questions", "host"})
     private Session session;
     
-    @Lob
-    @Column(name = "QUESTION_TEXT", nullable = false)
+    @Column(name = "QUESTION_TEXT", nullable = false, columnDefinition = "TEXT")
     private String text;
     
     @Column(name = "ORDER_NO")

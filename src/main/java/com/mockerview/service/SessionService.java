@@ -2,120 +2,119 @@ package com.mockerview.service;
 
 import com.mockerview.dto.AnswerMessage;
 import com.mockerview.dto.SessionStatusMessage;
-import com.mockerview.entity.Answer;
-import com.mockerview.entity.Question;
-import com.mockerview.entity.Session;
-import com.mockerview.entity.User;
-import com.mockerview.repository.AnswerRepository;
-import com.mockerview.repository.QuestionRepository;
-import com.mockerview.repository.SessionRepository;
-import com.mockerview.repository.UserRepository;
+import com.mockerview.entity.*;
+import com.mockerview.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
-@Transactional
 public class SessionService {
-    
+
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
 
     @Transactional(readOnly = true)
-    public Page<Session> getSelfInterviewRecords(Long hostId, Pageable pageable) {
+    public Page<Session> getSelfInterviewsByHostIdPageable(Long hostId, Pageable pageable) {
         try {
-            log.info("Getting paginated self-interview records for host {}. Page: {}, Size: {}", 
-            hostId, pageable.getPageNumber(), pageable.getPageSize());
-
-        String isSelfInterview = "Y"; 
-
-        Page<Session> sessionPage = sessionRepository.findByHostIdAndIsSelfInterviewPageable(
-            hostId, isSelfInterview, pageable
-        );
-        
-        log.info("Found {} total self-interviews across {} pages.", 
-            sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            log.info("Getting paginated self-interview records for host {}. Page: {}, Size: {}",
+                    hostId, pageable.getPageNumber(), pageable.getPageSize());
             
-        return sessionPage;
+            Page<Session> sessionPage = sessionRepository.findByHostIdAndIsSelfInterviewPageable(
+                hostId,
+                "Y",
+                pageable
+            );
+            
+            log.info("Found {} total self-interviews across {} pages.", 
+                    sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            
+            return sessionPage;
         } catch (Exception e) {
             log.error("Error getting self-interview records: ", e);
-            throw new RuntimeException("페이지별 셀프 면접 기록 조회 실패", e);
+            throw new RuntimeException("Failed to get self-interview records", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Session> getSelfInterviewRecords(Long hostId, Pageable pageable) {
+        return getSelfInterviewsByHostIdPageable(hostId, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<Session> getReviewableSessionsPageable(Pageable pageable) {
         try {
             log.info("Getting paginated reviewable sessions. Page: {}, Size: {}", 
-            pageable.getPageNumber(), pageable.getPageSize());
-
-            Session.SessionStatus status = Session.SessionStatus.ENDED;
-            String isReviewable = "Y";
-
+                    pageable.getPageNumber(), pageable.getPageSize());
+            
             Page<Session> sessionPage = sessionRepository.findByStatusAndIsReviewablePageable(
-                                        status, isReviewable, pageable
+                Session.SessionStatus.ENDED,
+                "Y",
+                pageable
             );
-        
+            
             log.info("Found {} total reviewable sessions across {} pages.", 
                     sessionPage.getTotalElements(), sessionPage.getTotalPages());
             
-             return sessionPage;
+            return sessionPage;
+            
         } catch (Exception e) {
             log.error("Error getting reviewable sessions: ", e);
-            throw new RuntimeException("페이지별 리뷰 가능 세션 목록 조회 실패", e);
+            throw new RuntimeException("Failed to get reviewable sessions", e);
         }
     }
-    
+
     @Transactional(readOnly = true)
     public Page<Session> getSessionsPageable(Pageable pageable) {
         try {
             log.info("Getting paginated sessions with host information. Page: {}, Size: {}", 
-            pageable.getPageNumber(), pageable.getPageSize());
+                    pageable.getPageNumber(), pageable.getPageSize());
             
-        Page<Session> sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
-        
-        log.info("Found {} total sessions across {} pages.", 
-            sessionPage.getTotalElements(), sessionPage.getTotalPages());
-        
-        return sessionPage;
+            Page<Session> sessionPage = sessionRepository.findAllSessionsWithHost(pageable);
+            
+            log.info("Found {} total sessions across {} pages.", 
+                    sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            
+            return sessionPage;
         } catch (Exception e) {
             log.error("Error getting paginated sessions: ", e);
-            throw new RuntimeException("페이지별 세션 목록 조회 실패", e);
+            throw new RuntimeException("Failed to get paginated sessions", e);
         }
     }
 
-    public Page<Session> searchSessionsPageable(String keyword, String status, Pageable pageable) {
-    try {
-        log.info("Searching paginated sessions - keyword: {}, status: {}, Page: {}, Size: {}", 
-            keyword, status, pageable.getPageNumber(), pageable.getPageSize());
-        
-        Session.SessionStatus sessionStatus = null;
-        if (status != null && !status.isEmpty()) {
-            sessionStatus = Session.SessionStatus.valueOf(status);
-        }
-
-        Page<Session> sessionPage = sessionRepository.searchSessionsPageable(keyword, sessionStatus, pageable);
-        
-        log.info("Search result: {} total sessions across {} pages.", 
-            sessionPage.getTotalElements(), sessionPage.getTotalPages());
+    @Transactional(readOnly = true)
+    public Page<Session> searchSessionsPageable(String keyword, Session.SessionStatus status, Pageable pageable) {
+        try {
+            log.info("Searching paginated sessions - keyword: {}, status: {}, Page: {}, Size: {}", 
+                    keyword, status, pageable.getPageNumber(), pageable.getPageSize());
             
-        return sessionPage;
+            Page<Session> sessionPage = sessionRepository.searchSessionsPageable(
+                keyword != null && !keyword.isEmpty() ? keyword : null,
+                status,
+                pageable
+            );
+            
+            log.info("Search result: {} total sessions across {} pages.", 
+                    sessionPage.getTotalElements(), sessionPage.getTotalPages());
+            
+            return sessionPage;
         } catch (Exception e) {
             log.error("Error searching paginated sessions: ", e);
-            throw new RuntimeException("페이지별 세션 검색 실패", e);
+            throw new RuntimeException("Failed to search paginated sessions", e);
         }
     }
-    
+
     @Transactional(readOnly = true)
     public List<Session> getAllSessions() {
         try {
@@ -125,148 +124,151 @@ public class SessionService {
             return sessions;
         } catch (Exception e) {
             log.error("Error getting all sessions: ", e);
-            throw new RuntimeException("세션 목록 조회 실패", e);
+            throw new RuntimeException("Failed to get all sessions", e);
         }
     }
-    
+
     @Transactional(readOnly = true)
     public List<Session> searchSessions(String keyword, String status, String sortBy, String sortOrder) {
         try {
             log.info("Searching sessions - keyword: {}, status: {}, sortBy: {}, sortOrder: {}", 
-                keyword, status, sortBy, sortOrder);
+                    keyword, status, sortBy, sortOrder);
             List<Session> sessions = sessionRepository.searchSessions(keyword, status, sortBy, sortOrder);
             log.info("Search result: {} sessions", sessions.size());
             return sessions;
         } catch (Exception e) {
             log.error("Error searching sessions: ", e);
-            throw new RuntimeException("세션 검색 실패", e);
+            throw new RuntimeException("Failed to search sessions", e);
         }
     }
 
-    public Session createSession(String title, Long hostId, String sessionType, LocalDateTime scheduledStartTime) {
+    @Transactional
+    public void createSession(String title, Long hostId, String sessionType, LocalDateTime scheduledStartTime) {
         try {
             User host = userRepository.findById(hostId)
-                .orElseThrow(() -> new RuntimeException("Host not found: " + hostId));
+                .orElseThrow(() -> new RuntimeException("Host not found"));
             
-            String validSessionType = sessionType;
-            if (!"TEXT".equals(sessionType) && !"AUDIO".equals(sessionType) && !"VIDEO".equals(sessionType)) {
-                validSessionType = "TEXT";
+            String normalizedType = sessionType;
+            if ("VOICE".equals(sessionType)) {
+                normalizedType = "AUDIO";
+            }
+            
+            String validSessionType = (normalizedType != null && 
+                (normalizedType.equals("TEXT") || normalizedType.equals("AUDIO") || normalizedType.equals("VIDEO")))
+                ? normalizedType : "TEXT";
+            
+            LocalDateTime now = LocalDateTime.now();
+            Session.SessionStatus initialStatus = Session.SessionStatus.PLANNED;
+            LocalDateTime effectiveStartTime = scheduledStartTime;
+            
+            if (scheduledStartTime == null || scheduledStartTime.isBefore(now) || scheduledStartTime.isEqual(now)) {
+                initialStatus = Session.SessionStatus.RUNNING;
+                effectiveStartTime = now;
+                log.info("세션 즉시 시작 - title: {}", title);
             }
             
             Session session = Session.builder()
                 .title(title)
                 .host(host)
-                .sessionStatus(Session.SessionStatus.PLANNED)
+                .sessionStatus(initialStatus)
                 .sessionType(validSessionType)
-                .mediaEnabled(!"TEXT".equals(validSessionType))
-                .isReviewable("Y")
-                .createdAt(LocalDateTime.now())
-                .lastActivity(LocalDateTime.now())
-                .startTime(scheduledStartTime)
+                .startTime(effectiveStartTime)
+                .mediaEnabled(validSessionType.equals("VIDEO") || validSessionType.equals("AUDIO") ? (short) 1 : (short) 0)
                 .build();
             
             Session saved = sessionRepository.save(session);
-            log.info("Session created with ID: {}, type: {}, scheduled: {}", 
-                    saved.getId(), validSessionType, scheduledStartTime);
-            return saved;
+            log.info("Session created - ID: {}, type: {}, status: {}, scheduled: {}", 
+                    saved.getId(), validSessionType, initialStatus, effectiveStartTime);
+            
         } catch (Exception e) {
             log.error("Error creating session: ", e);
-            throw new RuntimeException("세션 생성 실패", e);
+            throw new RuntimeException("Failed to create session", e);
         }
     }
 
+    @Transactional
+    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId, Integer timer) {
+        try {
+            log.info("saveQuestion 호출 - questionText: '{}', orderNo: {}, timer: {}", 
+                questionText, orderNo, timer);
+            
+            Session session = findById(sessionId);
+            User questioner = userRepository.findById(questionerId)
+                .orElseThrow(() -> new RuntimeException("Questioner not found"));
+            
+            Question question = Question.builder()
+                .session(session)
+                .text(questionText)
+                .orderNo(orderNo)
+                .questioner(questioner)
+                .timer(timer)
+                .build();
+            
+            log.info("Question 객체 생성 완료 - text 필드: '{}'", question.getText());
+            
+            Question saved = questionRepository.save(question);
+            
+            log.info("Question 저장 완료 - ID: {}, text: '{}'", saved.getId(), saved.getText());
+            
+            return saved.getId();
+            
+        } catch (Exception e) {
+            log.error("Error saving question: ", e);
+            throw new RuntimeException("Failed to save question", e);
+        }
+    }
+
+    @Transactional
     public Long saveAnswer(AnswerMessage message) {
+        return saveAnswerAndRequestFeedback(message);
+    }
+
+    @Transactional
+    public Long saveAnswerAndRequestFeedback(AnswerMessage message) {
         try {
             User user = userRepository.findById(message.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found: " + message.getUserId()));
             
-            Question question = questionRepository.findById(Long.parseLong(message.getQuestionId().toString()))
+            Question question = questionRepository.findById(message.getQuestionId())
                 .orElseThrow(() -> new RuntimeException("Question not found: " + message.getQuestionId()));
             
             Answer answer = Answer.builder()
-                .user(user)
                 .question(question)
+                .user(user)
                 .answerText(message.getAnswerText())
                 .score(message.getScore())
                 .build();
             
             Answer saved = answerRepository.save(answer);
             log.info("Answer saved with ID: {}", saved.getId());
-            
-            Session session = question.getSession();
-            session.setLastActivity(LocalDateTime.now());
-            sessionRepository.save(session);
-            
             return saved.getId();
             
         } catch (Exception e) {
             log.error("Error saving answer: ", e);
-            throw new RuntimeException("답변 저장 실패", e);
+            throw new RuntimeException("Failed to save answer", e);
         }
-    }
-
-    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Long questionerId,  Integer timer ) {
-        try {
-            Session session = findById(sessionId);
-            
-            if (session.getSessionStatus() == Session.SessionStatus.PLANNED) {
-                log.info("세션 상태 변경: PLANNED -> RUNNING (Session ID: {})", sessionId);
-                session.setSessionStatus(Session.SessionStatus.RUNNING);
-                session.setStartTime(LocalDateTime.now());
-            }
-            
-            session.setLastActivity(LocalDateTime.now());
-            sessionRepository.save(session);
-
-            User questioner = userRepository.findById(questionerId)
-                .orElseThrow(() -> new RuntimeException("Questioner not found: " + questionerId));
-            
-            Question question = Question.builder()
-                .session(session)
-                .text(questionText)
-                .orderNo(orderNo != null ? orderNo : 1)
-                .questioner(questioner)
-                .timer(timer)
-                .build();
-            
-            Question saved = questionRepository.save(question);
-            log.info("Question saved with ID: {}", saved.getId());
-            
-            return saved.getId();
-            
-        } catch (Exception e) {
-            log.error("Error saving question: ", e);
-            throw new RuntimeException("질문 저장 실패", e);
-        }
-    }
-
-    public Long saveQuestion(Long sessionId, String questionText, Integer orderNo, Integer timer) {
-        return saveQuestion(sessionId, questionText, orderNo, 1L, timer); 
     }
 
     @Transactional(readOnly = true)
     public SessionStatusMessage getSessionStatus(Long sessionId) {
         try {
-            Session session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found: " + sessionId));
+            Session session = findById(sessionId);
             
-            List<String> participants = answerRepository.findDistinctUserNamesBySessionId(sessionId);
-            
-            Long questionCount = questionRepository.countBySessionId(sessionId);
-            Long answerCount = answerRepository.countBySessionId(sessionId);
+            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
+            List<Answer> answers = answerRepository.findBySessionIdOrderByCreatedAt(sessionId);
             
             return SessionStatusMessage.builder()
                 .sessionId(sessionId)
-                .status(session.getSessionStatus().toString())
-                .participants(participants)
-                .questionCount(questionCount.intValue())
-                .answerCount(answerCount.intValue())
+                .status(session.getSessionStatus().name())
+                .questionCount(questions.size())
+                .answerCount(answers.size())
+                .participants(new ArrayList<>())
                 .timestamp(LocalDateTime.now())
                 .build();
                 
         } catch (Exception e) {
             log.error("Error getting session status: ", e);
-            throw new RuntimeException("세션 상태 조회 실패", e);
+            throw new RuntimeException("Failed to get session status", e);
         }
     }
 
@@ -276,51 +278,72 @@ public class SessionService {
             .orElseThrow(() -> new RuntimeException("Session not found: " + sessionId));
     }
 
-    @Transactional(readOnly = true)
-    public List<Session> findAllSessions() {
-        return sessionRepository.findAll();
-    }
-
-    public Session startSession(Long sessionId) {
+    @Transactional
+    public void startSession(Long sessionId) {
         Session session = findById(sessionId);
+        session.setStatus(Session.SessionStatus.RUNNING);
         session.setSessionStatus(Session.SessionStatus.RUNNING);
         session.setStartTime(LocalDateTime.now());
-        session.setLastActivity(LocalDateTime.now());
-        return sessionRepository.save(session);
+        sessionRepository.save(session);
+        log.info("Session {} started", sessionId);
     }
 
-    public Session endSession(Long sessionId) {
+    @Transactional
+    public void endSession(Long sessionId) {
         Session session = findById(sessionId);
-        
-        if (session.getSessionStatus() != Session.SessionStatus.ENDED) {
-            log.info("세션 상태 변경: RUNNING -> ENDED (Session ID: {})", sessionId);
-            session.setSessionStatus(Session.SessionStatus.ENDED);
-            session.setEndTime(LocalDateTime.now());
-            return sessionRepository.save(session);
-        }
-        
-        return session;
+        session.setStatus(Session.SessionStatus.ENDED);
+        session.setEndTime(LocalDateTime.now());
+        sessionRepository.save(session);
+        log.info("Session {} ended", sessionId);
     }
 
     @Transactional(readOnly = true)
-    public List<Question> getSessionQuestions(Long sessionId) {
-        return questionRepository.findBySessionIdOrderByOrderNo(sessionId);
+    public List<Session> getSessionsByHostId(Long hostId) {
+        return sessionRepository.findByHostId(hostId);
     }
 
     @Transactional(readOnly = true)
-    public List<Answer> getSessionAnswers(Long sessionId) {
-        return answerRepository.findByQuestionSessionIdOrderByCreatedAt(sessionId);
+    public List<Session> getReviewableSessions() {
+        return sessionRepository.findByStatusAndIsReviewable(
+            Session.SessionStatus.ENDED,
+            "Y"
+        );
     }
-    
+
     @Transactional(readOnly = true)
-    public Session getSessionIfOwner(Long sessionId, Long userId) {
-        Session session = sessionRepository.findById(sessionId)
-            .orElseThrow(() -> new RuntimeException("세션 없음"));
-        
-        if (!session.getHost().getId().equals(userId)) {
-            throw new RuntimeException("접근 권한 없음");
-        }
-        
-        return session;
+    public List<Session> getSessionsByHostIdAndType(Long hostId, String sessionType) {
+        return sessionRepository.findByHostIdAndSessionType(hostId, sessionType);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isHost(Long sessionId, Long userId) {
+        return sessionRepository.isHost(sessionId, userId);
+    }
+
+    @Transactional(readOnly = true)
+    public Long countByStatus(Session.SessionStatus status) {
+        return sessionRepository.countBySessionStatus(status);
+    }
+
+    @Transactional
+    public void updateLastActivity(Long sessionId) {
+        Session session = findById(sessionId);
+        session.setLastActivity(LocalDateTime.now());
+        sessionRepository.save(session);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Session> getSelfInterviewsByHostId(Long hostId) {
+        return sessionRepository.findSelfInterviewsByHostId(hostId);
+    }
+
+    @Transactional(readOnly = true)
+    public Long countNonSelfInterviewSessions() {
+        return sessionRepository.countNonSelfInterviewSessions();
+    }
+
+    @Transactional(readOnly = true)
+    public Long countByStatusAndIsSelfInterview(Session.SessionStatus status, String isSelfInterview) {
+        return sessionRepository.countBySessionStatusAndIsSelfInterview(status, isSelfInterview);
     }
 }

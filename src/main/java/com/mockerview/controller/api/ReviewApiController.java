@@ -2,14 +2,7 @@ package com.mockerview.controller.api;
 
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.dto.ReviewDTO;
-import com.mockerview.entity.Answer;
-import com.mockerview.entity.Review;
-import com.mockerview.entity.Session;
-import com.mockerview.entity.User;
-import com.mockerview.repository.AnswerRepository;
-import com.mockerview.repository.ReviewRepository;
-import com.mockerview.repository.SessionRepository;
-import com.mockerview.repository.UserRepository;
+import com.mockerview.service.ReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,26 +11,16 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/review")
 @Slf4j
 public class ReviewApiController {
 
-    private final ReviewRepository reviewRepository;
-    private final SessionRepository sessionRepository;
-    private final AnswerRepository answerRepository;
-    private final UserRepository userRepository;
+    private final ReviewService reviewService;
 
-    public ReviewApiController(ReviewRepository reviewRepository,
-                                SessionRepository sessionRepository,
-                                AnswerRepository answerRepository,
-                                UserRepository userRepository) {
-        this.reviewRepository = reviewRepository;
-        this.sessionRepository = sessionRepository;
-        this.answerRepository = answerRepository;
-        this.userRepository = userRepository;
+    public ReviewApiController(ReviewService reviewService) {
+        this.reviewService = reviewService;
     }
 
     @PostMapping
@@ -50,40 +33,39 @@ public class ReviewApiController {
         
         Map<String, Object> response = new HashMap<>();
         
-        if (request.getSessionId() == null) {
-            response.put("success", false);
-            response.put("message", "세션 ID가 필요합니다.");
-            return ResponseEntity.badRequest().body(response);
-        }
-        
         try {
-            User reviewer = userRepository.findById(userDetails.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            Session session = sessionRepository.findById(request.getSessionId())
-                .orElseThrow(() -> new RuntimeException("Session not found"));
-            
-            Review.ReviewBuilder reviewBuilder = Review.builder()
-                .session(session)
-                .reviewer(reviewer)
-                .reviewComment(request.getComment())
-                .rating(request.getRating());
-            
-            if (request.getAnswerId() != null && request.getAnswerId() > 0) {
-                Answer answer = answerRepository.findById(request.getAnswerId())
-                    .orElseThrow(() -> new RuntimeException("Answer not found"));
-                reviewBuilder.answer(answer);
+            if (request.getSessionId() == null) {
+                response.put("success", false);
+                response.put("message", "세션 ID가 필요합니다.");
+                return ResponseEntity.badRequest().body(response);
             }
             
-            Review review = reviewBuilder.build();
-            reviewRepository.save(review);
+            ReviewDTO reviewDTO;
             
-            log.info("리뷰 생성 완료 - reviewId: {}", review.getId());
+            if (request.getAnswerId() != null && request.getAnswerId() > 0) {
+                reviewDTO = reviewService.createReview(
+                    request.getSessionId(),
+                    request.getAnswerId(),
+                    userDetails.getUserId(),
+                    request.getComment(),
+                    request.getRating()
+                );
+            } else {
+                reviewDTO = reviewService.createSimpleReview(
+                    request.getSessionId(),
+                    userDetails.getUserId(),
+                    request.getComment(),
+                    request.getRating()
+                );
+            }
+            
+            log.info("리뷰 생성 완료 - reviewId: {}", reviewDTO.getId());
             
             response.put("success", true);
-            response.put("reviewId", review.getId());
+            response.put("reviewId", reviewDTO.getId());
             
             return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
             log.error("리뷰 생성 중 오류", e);
             response.put("success", false);
@@ -94,22 +76,8 @@ public class ReviewApiController {
 
     @GetMapping("/session/{sessionId}")
     public ResponseEntity<List<ReviewDTO>> getReviewsBySession(@PathVariable Long sessionId) {
-        List<Review> reviews = reviewRepository.findBySessionId(sessionId);
-        
-        List<ReviewDTO> dtos = reviews.stream()
-            .map(r -> ReviewDTO.builder()
-                .id(r.getId())
-                .sessionId(r.getSession().getId())
-                .answerId(r.getAnswer() != null ? r.getAnswer().getId() : null)
-                .reviewerId(r.getReviewer().getId())
-                .reviewerName(r.getReviewer().getName())
-                .reviewComment(r.getReviewComment())
-                .rating(r.getRating())
-                .createdAt(r.getCreatedAt())
-                .build())
-            .collect(Collectors.toList());
-        
-        return ResponseEntity.ok(dtos);
+        List<ReviewDTO> reviews = reviewService.getReviewsBySession(sessionId);
+        return ResponseEntity.ok(reviews);
     }
 }
 

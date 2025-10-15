@@ -6,6 +6,17 @@
     <title>셀프 면접 기록 - Mockerview</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/selfinterview.css">
+    <style>
+        @media (max-width: 768px) {
+            .session-grid { 
+                grid-template-columns: 1fr; 
+                gap: 1rem; 
+            }
+            .session-card { padding: 1rem; }
+            .session-card-header h3 { font-size: 18px; }
+            .session-card-body { gap: 0.5rem; }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
