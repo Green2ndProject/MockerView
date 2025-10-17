@@ -1,0 +1,85 @@
+<div class="ai-control-panel" th:if="${isHost}">
+    <div class="card">
+        <div class="card-header">
+            <h5>AI 피드백 설정</h5>
+        </div>
+        <div class="card-body">
+            <div class="form-check form-switch mb-3">
+                <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="aiToggle" 
+                    th:checked="${session.aiEnabled}"
+                    onchange="toggleAI(this.checked)"
+                >
+                <label class="form-check-label" for="aiToggle">
+                    <i class="bi bi-robot"></i> AI 피드백 활성화
+                </label>
+            </div>
+            
+            <div id="aiModeSection" th:if="${session.aiEnabled}">
+                <label class="form-label">AI 모드</label>
+                <select class="form-select" id="aiMode" onchange="changeAiMode(this.value)">
+                    <option value="OFF" th:selected="${session.aiMode == 'OFF'}">꺼짐</option>
+                    <option value="BASIC" th:selected="${session.aiMode == 'BASIC'}">기본 (빠른 평가)</option>
+                    <option value="FULL" th:selected="${session.aiMode == 'FULL'}">전체 (STAR 분석)</option>
+                    <option value="CUSTOM" th:selected="${session.aiMode == 'CUSTOM'}">커스텀</option>
+                </select>
+                
+                <div class="mt-2 text-muted small">
+                    <div th:if="${session.aiMode == 'BASIC'}">
+                        • 간단한 점수와 한 줄 평가<br>
+                        • 응답 속도 빠름 (5초 내외)
+                    </div>
+                    <div th:if="${session.aiMode == 'FULL'}">
+                        • STAR 방식 상세 분석<br>
+                        • 강점/약점/개선방향 제시<br>
+                        • 응답 시간 10-15초
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="ai-status-badge" id="aiStatusBadge">
+    <span class="badge" id="aiStatusText"></span>
+</div>
+
+<input type="hidden" id="sessionId" th:value="${session.id}">
+
+<style>
+.ai-control-panel {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 320px;
+    z-index: 1000;
+}
+
+.ai-status-badge {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+}
+
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #333;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 9999;
+}
+
+.toast-notification.show {
+    opacity: 1;
+}
+</style>
+
+<script th:src="@{/js/ai-toggle.js}"></script>

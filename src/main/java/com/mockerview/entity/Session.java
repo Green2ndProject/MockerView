@@ -69,6 +69,22 @@ public class Session {
     @Column(name = "category")
     private String category;
 
+    @Column(name = "ai_enabled")
+    @Builder.Default
+    private Boolean aiEnabled = true;
+
+    @Column(name = "ai_mode")
+    @Builder.Default
+    private String aiMode = "FULL";
+
+    @Column(name = "ai_feedback_delay_seconds")
+    @Builder.Default
+    private Integer aiFeedbackDelaySeconds = 0;
+
+    @Column(name = "allow_participants_toggle_ai")
+    @Builder.Default
+    private Boolean allowParticipantsToggleAi = false;
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<Question> questions = new ArrayList<>();

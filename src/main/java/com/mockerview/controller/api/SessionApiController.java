@@ -13,6 +13,8 @@ import com.mockerview.repository.QuestionRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.AIFeedbackService;
+import com.mockerview.service.SessionService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +47,7 @@ public class SessionApiController {
     private final FeedbackRepository feedbackRepository;
     private final AIFeedbackService aiFeedbackService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SessionService sessionService;
     private final RestTemplate restTemplate = new RestTemplate();
     
     @Value("${openai.api.key}")
@@ -423,5 +426,37 @@ public class SessionApiController {
             log.error("세션 상태 조회 실패: {}", sessionId, e);
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @PostMapping("/{sessionId}/ai/toggle")
+    public ResponseEntity<?> toggleAI(
+        @PathVariable Long sessionId,
+        @RequestBody Map<String, Boolean> request,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        sessionService.toggleAI(sessionId, request.get("enabled"), userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+    
+    @PostMapping("/{sessionId}/ai/mode")
+    public ResponseEntity<?> changeAiMode(
+        @PathVariable Long sessionId,
+        @RequestBody Map<String, String> request,
+        @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        sessionService.updateAiMode(sessionId, request.get("mode"), userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+    
+    @GetMapping("/{sessionId}/ai/status")
+    public ResponseEntity<?> getAiStatus(@PathVariable Long sessionId) {
+        Session session = sessionRepository.findById(sessionId)
+            .orElseThrow(() -> new RuntimeException("Session not found"));
+        
+        return ResponseEntity.ok(Map.of(
+            "enabled", session.getAiEnabled(),
+            "mode", session.getAiMode(),
+            "allowParticipantsToggle", session.getAllowParticipantsToggleAi()
+        ));
     }
 }

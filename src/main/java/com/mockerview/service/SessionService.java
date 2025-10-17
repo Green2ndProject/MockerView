@@ -8,12 +8,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -24,6 +26,53 @@ public class SessionService {
     private final UserRepository userRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final SubscriptionService subscriptionService;
+
+    @Transactional
+    public void toggleAI(Long sessionId, Boolean enabled, String username) {
+        Session session = findById(sessionId);
+        session.setAiEnabled(enabled);
+        sessionRepository.save(session);
+        
+        messagingTemplate.convertAndSend(
+            "/topic/session/" + sessionId,
+            Map.of(
+                "type", "AI_TOGGLE",
+                "enabled", enabled,
+                "message", enabled ? "AI 피드백이 활성화되었습니다" : "AI 피드백이 비활성화되었습니다",
+                "changedBy", username
+            )
+        );
+        log.info("AI 토글: sessionId={}, enabled={}, user={}", sessionId, enabled, username);
+    }
+    
+    @Transactional
+    public void updateAiMode(Long sessionId, String mode, String username) {
+        Session session = findById(sessionId);
+        session.setAiMode(mode);
+        sessionRepository.save(session);
+        
+        messagingTemplate.convertAndSend(
+            "/topic/session/" + sessionId,
+            Map.of(
+                "type", "AI_MODE_CHANGE",
+                "mode", mode,
+                "message", getAiModeDescription(mode)
+            )
+        );
+        log.info("AI 모드 변경: sessionId={}, mode={}, user={}", sessionId, mode, username);
+    }
+    
+    private String getAiModeDescription(String mode) {
+        return switch(mode) {
+            case "OFF" -> "AI 피드백이 완전히 비활성화되었습니다";
+            case "BASIC" -> "AI가 기본 평가만 제공합니다";
+            case "FULL" -> "AI가 상세한 STAR 분석을 제공합니다";
+            case "CUSTOM" -> "사용자 정의 AI 설정이 적용되었습니다";
+            default -> "AI 모드가 변경되었습니다";
+        };
+    }
 
     @Transactional(readOnly = true)
     public Page<Session> getSelfInterviewsByHostIdPageable(Long hostId, Pageable pageable) {
@@ -145,6 +194,10 @@ public class SessionService {
     @Transactional
     public void createSession(String title, Long hostId, String sessionType, LocalDateTime scheduledStartTime) {
         try {
+            if (!subscriptionService.canCreateSession(hostId)) {
+                throw new RuntimeException("세션 생성 한도를 초과했습니다. 플랜을 업그레이드하세요.");
+            }
+            
             User host = userRepository.findById(hostId)
                 .orElseThrow(() -> new RuntimeException("Host not found"));
             
@@ -177,12 +230,15 @@ public class SessionService {
                 .build();
             
             Session saved = sessionRepository.save(session);
+            
+            subscriptionService.incrementUsedSessions(hostId);
+            
             log.info("Session created - ID: {}, type: {}, status: {}, scheduled: {}", 
                     saved.getId(), validSessionType, initialStatus, effectiveStartTime);
             
         } catch (Exception e) {
             log.error("Error creating session: ", e);
-            throw new RuntimeException("Failed to create session", e);
+            throw new RuntimeException("Failed to create session: " + e.getMessage(), e);
         }
     }
 

@@ -1725,7 +1725,34 @@
             </div>
         </div>
     </div>
-
+    <div th:if="${isHost}" style="position: fixed; top: 80px; right: 20px; width: 320px; z-index: 1000;">
+        <div class="card">
+            <div class="card-header">
+                <h5 style="margin: 0; font-size: 16px;">🤖 AI 설정</h5>
+            </div>
+            <div class="card-body">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                        <input type="checkbox" id="aiToggle" checked onchange="toggleAIFeature(this.checked)" style="width: 40px; height: 20px; cursor: pointer;">
+                        <span>AI 피드백 활성화</span>
+                    </label>
+                </div>
+                <div id="aiModeSection">
+                    <label class="form-label">AI 모드</label>
+                    <select class="form-select" id="aiMode" onchange="changeAIMode(this.value)">
+                        <option value="OFF">꺼짐</option>
+                        <option value="BASIC">기본</option>
+                        <option value="FULL" selected>상세</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 999;">
+        <span id="aiStatusText" style="display: inline-block; background: #10b981; color: white; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 500;">
+            🤖 AI 활성
+        </span>
+    </div>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.19.0.js"></script>
     <script th:src="@{/js/agora-client.js}"></script>
     <script th:src="@{/js/mockerview-websocket.js}"></script>
@@ -2340,6 +2367,47 @@
             } catch (error) {
                 console.error('❌ 세션 상태 확인 실패:', error);
             }
+        }
+    function toggleAIFeature(enabled) {
+            fetch(`/api/session/${SESSION_DATA.sessionId}/ai/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': getToken()
+                },
+                body: JSON.stringify({enabled: enabled})
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateAIStatusBadge(enabled);
+                alert(enabled ? '✅ AI 활성화' : '❌ AI 비활성화');
+            })
+            .catch(error => {
+                console.error('AI 토글 실패:', error);
+                document.getElementById('aiToggle').checked = !enabled;
+            });
+        }
+
+        function changeAIMode(mode) {
+            fetch(`/api/session/${SESSION_DATA.sessionId}/ai/mode`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': getToken()
+                },
+                body: JSON.stringify({mode: mode})
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('AI 모드: ' + mode);
+            })
+            .catch(error => console.error('실패:', error));
+        }
+
+        function updateAIStatusBadge(enabled) {
+            const badge = document.getElementById('aiStatusText');
+            badge.style.background = enabled ? '#10b981' : '#6b7280';
+            badge.textContent = enabled ? '🤖 AI 활성' : '🤖 AI 비활성';
         }
     </script>
 </body>

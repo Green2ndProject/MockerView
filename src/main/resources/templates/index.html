@@ -6,167 +6,712 @@
     <title>Mockerview - AI 모의면접 플랫폼</title>
     <link rel="stylesheet" th:href="@{/css/index.css}">
     <link rel="icon" href="/favicon.ico" />
-</head>
-<style>
-    .btn-out {
-        display: inline-block;
-        padding: 12px 24px;
-        background: #667eea;
-        color: white;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: background 0.3s;
-    }
-    
-    .btn-out:hover {
-        background: #5568d3;
-    }
-    
-    .btn-pri {
-        display: inline-block;
-        padding: 12px 24px;
-        border: 2px solid #667eea;
-        color: #667eea;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    
-    .btn-pri:hover {
-        background: #667eea;
-        color: white;
-    }
-
-    .session-explain {
-        padding: 80px 0;
-        background: #f8f9fa;
-    }
-
-    .session-explain h2 {
-        text-align: center;
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        color: #333;
-    }
-
-    .session-explain .subtitle {
-        text-align: center;
-        font-size: 1.2rem;
-        color: #666;
-        margin-bottom: 3rem;
-    }
-
-    .session-types {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2rem;
-        margin-top: 3rem;
-    }
-
-    .session-type-card {
-        background: white;
-        border: 2px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 2rem;
-        transition: all 0.3s;
-        text-align: center;
-    }
-
-    .session-type-card:hover {
-        transform: translateY(-8px);
-        border-color: #667eea;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
-    }
-
-    .session-type-icon {
-        font-size: 3.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .session-type-card h3 {
-        font-size: 1.5rem;
-        margin-bottom: 0.75rem;
-        color: #333;
-    }
-
-    .session-type-card p {
-        font-size: 1rem;
-        line-height: 1.6;
-        color: #666;
-    }
-
-    .session-flow {
-        margin-top: 4rem;
-        text-align: center;
-        background: white;
-        padding: 3rem;
-        border-radius: 16px;
-        border: 2px solid #e5e7eb;
-    }
-
-    .session-flow h3 {
-        font-size: 1.8rem;
-        margin-bottom: 2rem;
-        color: #333;
-    }
-
-    .flow-steps {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .flow-step {
-        background: #667eea;
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 12px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-    .flow-step:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .flow-arrow {
-        font-size: 1.5rem;
-        color: #667eea;
-    }
-
-    @media (max-width: 768px) {
-        .session-types {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: #0a0a0a;
+            background: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 20px 0;
+            z-index: 1000;
+            transform: translateY(-100%);
+            animation: slideDown 0.5s ease forwards;
+        }
+        
+        @keyframes slideDown {
+            to {
+                transform: translateY(0);
+            }
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+        
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .nav-menu a {
+            color: #666;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        
+        .nav-menu a:not(.btn-out):not(.btn-pri):hover {
+            color: #667eea;
+        }
+        
+        .btn-out {
+            padding: 10px 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-out:hover {
+            background: #5568d3;
+        }
+        
+        .btn-pri {
+            padding: 10px 24px;
+            border: 1.5px solid #e5e7eb;
+            color: #0a0a0a;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: white;
+        }
+        
+        .btn-pri:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .hero {
+            margin-top: 80px;
+            padding: 120px 0 100px;
+            position: relative;
+        }
+        
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+            opacity: 0;
+            animation: fadeIn 0.8s ease 0.2s forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .hero-text h1 {
+            font-size: clamp(48px, 6vw, 72px);
+            font-weight: 700;
+            margin-bottom: 24px;
+            line-height: 1.15;
+            letter-spacing: -2px;
+        }
+        
+        .hero-text p {
+            font-size: clamp(18px, 2vw, 22px);
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            padding: 16px 36px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-outline {
+            padding: 16px 36px;
+            border: 1.5px solid #e5e7eb;
+            color: #0a0a0a;
+            background: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        
+        .btn-outline:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        
+        .hero-visual {
+            position: relative;
+            height: 450px;
+        }
+        
+        .visual-card {
+            position: absolute;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease;
+        }
+        
+        .visual-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .card-1 {
+            top: 20px;
+            left: 0;
+        }
+        
+        .card-2 {
+            top: 50%;
+            right: 10%;
+            transform: translateY(-50%);
+        }
+        
+        .card-3 {
+            bottom: 20px;
+            left: 10%;
+        }
+        
+        .visual-card .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .visual-card .text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0a0a0a;
+        }
+        
+        .session-explain {
+            padding: 100px 0;
+            background: #fafafa;
+        }
+        
         .session-explain h2 {
-            font-size: 2rem;
+            text-align: center;
+            font-size: clamp(36px, 5vw, 56px);
+            margin-bottom: 16px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
         }
-
+        
         .session-explain .subtitle {
-            font-size: 1rem;
+            text-align: center;
+            font-size: clamp(16px, 2vw, 20px);
+            color: #666;
+            margin-bottom: 64px;
         }
-
-        .flow-steps {
-            flex-direction: column;
+        
+        .session-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 48px;
         }
-
-        .flow-arrow {
-            transform: rotate(90deg);
+        
+        .session-type-card {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 16px;
+            padding: 40px 32px;
+            transition: all 0.3s;
+            text-align: center;
         }
-
+        
+        .session-type-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border-color: #667eea;
+        }
+        
+        .session-type-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .session-type-card h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #0a0a0a;
+            font-weight: 600;
+        }
+        
+        .session-type-card p {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #666;
+        }
+        
         .session-flow {
-            padding: 2rem 1rem;
+            margin-top: 64px;
+            text-align: center;
+            background: white;
+            padding: 48px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
         }
-    }
-</style>
+        
+        .session-flow h3 {
+            font-size: 28px;
+            margin-bottom: 40px;
+            color: #0a0a0a;
+            font-weight: 600;
+        }
+        
+        .flow-steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .flow-step {
+            background: #667eea;
+            color: white;
+            padding: 16px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .flow-step:hover {
+            background: #5568d3;
+        }
+        
+        .flow-arrow {
+            font-size: 20px;
+            color: #667eea;
+        }
+        
+        .features {
+            padding: 100px 0;
+            background: white;
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: clamp(36px, 5vw, 56px);
+            margin-bottom: 64px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+        
+        .feature-card {
+            background: #fafafa;
+            padding: 48px 32px;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            background: white;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border-color: #667eea;
+        }
+        
+        .feature-icon {
+            font-size: 56px;
+            margin-bottom: 24px;
+            display: block;
+        }
+        
+        .feature-card h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #0a0a0a;
+        }
+        
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        
+        .pricing {
+            padding: 100px 0;
+            background: #fafafa;
+        }
+        
+        .pricing h2 {
+            text-align: center;
+            font-size: clamp(36px, 5vw, 56px);
+            margin-bottom: 16px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+        }
+        
+        .pricing .subtitle {
+            text-align: center;
+            font-size: clamp(16px, 2vw, 20px);
+            color: #666;
+            margin-bottom: 64px;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        .price-card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px 32px;
+            text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .price-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+        
+        .price-card.popular {
+            border: 2px solid #667eea;
+        }
+        
+        .price-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .price-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        
+        .price-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+        
+        .price-amount {
+            font-size: clamp(40px, 5vw, 52px);
+            font-weight: 700;
+            color: #0a0a0a;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+        
+        .price-amount small {
+            font-size: 18px;
+            color: #888;
+            font-weight: 500;
+        }
+        
+        .price-desc {
+            color: #666;
+            margin-bottom: 32px;
+            font-size: 15px;
+        }
+        
+        .how {
+            padding: 100px 0;
+            background: white;
+        }
+        
+        .how h2 {
+            text-align: center;
+            font-size: clamp(36px, 5vw, 56px);
+            margin-bottom: 64px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+        }
+        
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+        
+        .step-card {
+            background: #fafafa;
+            padding: 48px 32px;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        
+        .step-card:hover {
+            transform: translateY(-8px);
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.12);
+        }
+        
+        .step-number {
+            width: 56px;
+            height: 56px;
+            background: #667eea;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            transition: transform 0.3s;
+        }
+        
+        .step-card:hover .step-number {
+            transform: scale(1.1);
+        }
+        
+        .step-card h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #0a0a0a;
+        }
+        
+        .step-card p {
+            color: #666;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        
+        .cta {
+            background: #667eea;
+            color: white;
+            text-align: center;
+            padding: 100px 0;
+        }
+        
+        .cta h2 {
+            font-size: clamp(36px, 5vw, 56px);
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+            color: white;
+        }
+        
+        .cta p {
+            font-size: clamp(16px, 2vw, 20px);
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+        
+        .btn-white {
+            padding: 18px 48px;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        
+        .btn-white:hover {
+            background: #f8f9ff;
+        }
+        
+        .footer {
+            background: #0a0a0a;
+            color: white;
+            padding: 60px 0;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        
+        .footer-left h5 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .footer-left p {
+            opacity: 0.6;
+            font-size: 14px;
+        }
+        
+        .footer-right p {
+            opacity: 0.6;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 1024px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+            
+            .hero-visual {
+                height: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+            
+            .navbar .container {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .nav-menu {
+                gap: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-menu a:not(.btn-out):not(.btn-pri) {
+                display: none;
+            }
+            
+            .hero {
+                padding: 100px 0 80px;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-primary,
+            .btn-outline {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .hero-visual {
+                height: 250px;
+            }
+            
+            .visual-card {
+                padding: 24px;
+            }
+            
+            .visual-card .icon {
+                font-size: 36px;
+            }
+            
+            .visual-card .text {
+                font-size: 14px;
+            }
+            
+            .session-explain,
+            .features,
+            .pricing,
+            .how {
+                padding: 80px 0;
+            }
+            
+            .session-types,
+            .feature-grid,
+            .pricing-grid,
+            .step-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .flow-steps {
+                flex-direction: column;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+            
+            .session-flow {
+                padding: 32px 20px;
+            }
+            
+            .cta {
+                padding: 80px 0;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
 <body>
     <nav class="navbar">
         <div class="container">
@@ -174,6 +719,7 @@
             <div class="nav-menu">
                 <a href="#session">세션이란?</a>
                 <a href="#features">특징</a>
+                <a href="#pricing">요금제</a>
                 <a href="#how">사용방법</a>
                 <a th:href="@{/auth/login}" class="btn-out">로그인</a>
                 <a th:href="@{/auth/register}" class="btn-pri">시작하기</a>
@@ -268,6 +814,39 @@
                     <div class="feature-icon">📊</div>
                     <h3>성장 추적</h3>
                     <p>모든 세션 기록을 저장하여 발전 과정을 확인합니다</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2>간단한 요금제</h2>
+            <p class="subtitle">필요한 만큼만 사용하세요</p>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <span class="price-icon">🎯</span>
+                    <div class="price-name">Free</div>
+                    <div class="price-amount">₩0<small>/월</small></div>
+                    <div class="price-desc">월 5개 세션</div>
+                    <a th:href="@{/auth/register}" class="btn-primary">시작하기</a>
+                </div>
+                
+                <div class="price-card popular">
+                    <span class="price-badge">인기</span>
+                    <span class="price-icon">⭐</span>
+                    <div class="price-name">Pro</div>
+                    <div class="price-amount">₩29,900<small>/월</small></div>
+                    <div class="price-desc">월 100개 세션 + AI 상세 분석</div>
+                    <a th:href="@{/payment/plans}" class="btn-primary">선택하기</a>
+                </div>
+                
+                <div class="price-card">
+                    <span class="price-icon">👥</span>
+                    <div class="price-name">Team</div>
+                    <div class="price-amount">₩99,000<small>/월</small></div>
+                    <div class="price-desc">월 500개 세션 + 팀 관리</div>
+                    <a th:href="@{/payment/plans}" class="btn-primary">선택하기</a>
                 </div>
             </div>
         </div>

@@ -48,6 +48,20 @@ public class Answer {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "ai_feedback_requested")
+    @Builder.Default
+    private Boolean aiFeedbackRequested = true;
+
+    @Column(name = "ai_feedback_generated")
+    @Builder.Default
+    private Boolean aiFeedbackGenerated = false;
+
+    @Column(name = "ai_feedback_skipped_reason")
+    private String aiFeedbackSkippedReason;
+
+    @Column(name = "ai_processing_time_ms")
+    private Long aiProcessingTimeMs;
+
     @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     @JsonIgnoreProperties({"answer"})
