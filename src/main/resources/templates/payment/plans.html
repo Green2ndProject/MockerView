@@ -18,7 +18,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
@@ -61,7 +61,7 @@
         
         .plans-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
             margin-bottom: 48px;
         }
@@ -206,7 +206,21 @@
                     <li>기본 AI 피드백</li>
                     <li>세션 기록 저장</li>
                 </ul>
-                <button class="btn-select" onclick="selectPlan('FREE')">선택하기</button>
+                <button class="btn-select" disabled>현재 플랜</button>
+            </div>
+            
+            <div class="plan-card">
+                <span class="plan-icon">🚀</span>
+                <div class="plan-name">Basic</div>
+                <div class="plan-price">₩9,900<small>/월</small></div>
+                <div class="plan-desc">개인 연습용</div>
+                <ul class="plan-features">
+                    <li>월 30개 세션</li>
+                    <li>AI 상세 분석</li>
+                    <li>세션 기록 저장</li>
+                    <li>이메일 지원</li>
+                </ul>
+                <button class="btn-select" onclick="selectPlan('BASIC')">선택하기</button>
             </div>
             
             <div class="plan-card popular">
@@ -220,6 +234,7 @@
                     <li>AI 상세 분석</li>
                     <li>세션 기록 저장</li>
                     <li>우선 지원</li>
+                    <li>PDF 리포트</li>
                 </ul>
                 <button class="btn-select" onclick="selectPlan('PRO')">선택하기</button>
             </div>
@@ -234,12 +249,17 @@
                     <li>AI 상세 분석</li>
                     <li>팀 관리 기능</li>
                     <li>전담 지원</li>
+                    <li>API 접근</li>
                 </ul>
                 <button class="btn-select" onclick="selectPlan('TEAM')">선택하기</button>
             </div>
         </div>
     </div>
     
-    <script src="/js/payment-redirect.js"></script>
+    <script>
+        function selectPlan(planType) {
+            window.location.href = `/payment/checkout-page?planType=${planType}`;
+        }
+    </script>
 </body>
 </html>
