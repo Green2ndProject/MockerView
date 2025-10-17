@@ -1,8 +1,0 @@
-SecurityConfig.java 파일 열어서 filterChain 메서드 안에 추가:
-
-.oauth2Login(oauth2 -> oauth2
-    .userInfoEndpoint(userInfo -> userInfo
-        .userService(customOAuth2UserService))
-    .successHandler(oAuth2SuccessHandler))
-
-위치: .formLogin(login -> login.disable()) 바로 아래

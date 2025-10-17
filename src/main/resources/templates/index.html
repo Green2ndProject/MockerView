@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MockerView - 실시간 협업 AI 모의면접</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MockerView">
+    
+    <link rel="apple-touch-icon" href="/images/icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/images/icon-167x167.png">
+    
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/icon-512x512.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
         
@@ -857,17 +870,59 @@
         <p>&copy; 2025 MockerView. 국내 최초 실시간 협업 AI 모의면접 플랫폼 • 모든 권리 보유</p>
     </footer>
     
-    <script src="/js/payment-redirect.js"></script>
-    <script th:src="@{/js/index.js}"></script>
-    <script>
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
+<div id="preloader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #667eea; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s;">
+    <div style="text-align: center; color: white;">
+        <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+        <div style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">MockerView</div>
+    </div>
+</div>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<script src="/js/payment-redirect.js"></script>
+<script th:src="@{/js/index.js}"></script>
+<script>
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+    
+    window.addEventListener('load', function() {
+        const preloader = document.getElementById('preloader');
+        setTimeout(() => {
+            preloader.style.opacity = '0';
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 500);
+        }, 800);
+    });
+    
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('ServiceWorker registered: ', registration);
+                })
+                .catch(error => {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
         });
-    </script>
+    }
+    
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log('PWA install prompt ready');
+    });
+</script>
 </body>
 </html>
