@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: mockerview
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_PASSWORD: mockerview
     ports:
       - "5433:5432"
     volumes:
@@ -18,7 +18,7 @@ services:
     container_name: mockerview-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@mockerview.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_PASSWORD: mockerview
     ports:
       - "5050:80"
     depends_on:

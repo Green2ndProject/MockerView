@@ -72,7 +72,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/mockerview
     username: postgres
-    password: postgres123
+    password: mockerview
     driver-class-name: org.postgresql.Driver
 
   jpa:
