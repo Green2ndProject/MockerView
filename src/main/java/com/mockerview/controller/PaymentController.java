@@ -29,12 +29,14 @@ public class PaymentController {
     
     @GetMapping("/plans")
     public String showPlans(Authentication authentication, Model model) {
-        User user = userService.findByUsername(authentication.getName());
-        Subscription currentSub = subscriptionService.getActiveSubscription(user.getId());
-        
-        model.addAttribute("currentPlan", currentSub != null ? currentSub.getPlanType().name() : "NONE");
-        model.addAttribute("usedSessions", currentSub != null ? currentSub.getUsedSessions() : 0);
-        model.addAttribute("sessionLimit", currentSub != null ? currentSub.getSessionLimit() : 0);
+        if (authentication != null) {
+            User user = userService.findByUsername(authentication.getName());
+            Subscription currentSub = subscriptionService.getActiveSubscription(user.getId());
+            
+            model.addAttribute("currentPlan", currentSub != null ? currentSub.getPlanType().name() : "NONE");
+            model.addAttribute("usedSessions", currentSub != null ? currentSub.getUsedSessions() : 0);
+            model.addAttribute("sessionLimit", currentSub != null ? currentSub.getSessionLimit() : 0);
+        }
         
         return "payment/plans";
     }
@@ -48,7 +50,7 @@ public class PaymentController {
         User user = userService.findByUsername(authentication.getName());
         Subscription.PlanType plan = Subscription.PlanType.valueOf(planType);
         
-        String orderId = planType + "-" + paymentService.createOrder(user.getId(), plan);
+        String orderId = "ORDER-" + System.currentTimeMillis() + "-" + user.getId();
         Integer amount = subscriptionService.getPlanPrice(plan);
         
         Map<String, Object> result = new HashMap<>();
@@ -65,20 +67,24 @@ public class PaymentController {
     @GetMapping("/checkout-page")
     public String checkoutPage(
         @RequestParam String planType,
+        @RequestParam(required = false) String method,
         Authentication authentication,
         Model model
     ) {
         User user = userService.findByUsername(authentication.getName());
         Subscription.PlanType plan = Subscription.PlanType.valueOf(planType);
         
-        String orderId = planType + "-" + paymentService.createOrder(user.getId(), plan);
+        String orderId = plan.name() + "-" + java.util.UUID.randomUUID().toString();
         Integer amount = subscriptionService.getPlanPrice(plan);
         
         model.addAttribute("orderId", orderId);
         model.addAttribute("amount", amount);
         model.addAttribute("orderName", plan.name() + " 플랜");
         model.addAttribute("customerName", user.getName());
+        model.addAttribute("customerEmail", user.getEmail());
         model.addAttribute("tossClientKey", tossClientKey);
+        model.addAttribute("planType", planType);
+        model.addAttribute("paymentMethod", method != null ? method : "CARD");
         
         return "payment/checkout";
     }
@@ -88,21 +94,67 @@ public class PaymentController {
         @RequestParam String paymentKey,
         @RequestParam String orderId,
         @RequestParam Integer amount,
+        Authentication authentication,
         Model model
     ) {
         try {
+            log.info("결제 승인 시작 - orderId: {}, paymentKey: {}, amount: {}", orderId, paymentKey, amount);
+            
             paymentService.confirmPayment(paymentKey, orderId, amount);
+            
+            String planTypeStr = orderId.split("-")[0];
+            Subscription.PlanType planType = Subscription.PlanType.valueOf(planTypeStr);
+            User user = userService.findByUsername(authentication.getName());
+            
+            subscriptionService.createSubscription(user.getId(), planType);
+            
             model.addAttribute("message", "결제가 완료되었습니다!");
+            model.addAttribute("orderId", orderId);
+            model.addAttribute("amount", amount);
+            
             return "payment/success";
         } catch (Exception e) {
             log.error("결제 승인 실패: ", e);
-            return "redirect:/payment/fail?message=" + e.getMessage();
+            String errorMessage = "결제 처리 중 오류가 발생했습니다.";
+            if (e.getMessage() != null) {
+                if (e.getMessage().contains("ALREADY_PROCESSED_PAYMENT")) {
+                    errorMessage = "이미 처리된 결제입니다.";
+                } else if (e.getMessage().contains("INVALID_")) {
+                    errorMessage = "유효하지 않은 결제 정보입니다.";
+                }
+            }
+            model.addAttribute("message", errorMessage);
+            return "payment/fail";
         }
     }
     
     @GetMapping("/fail")
-    public String paymentFail(@RequestParam String message, Model model) {
-        model.addAttribute("message", message);
+    public String paymentFail(
+        @RequestParam(required = false) String code,
+        @RequestParam(required = false) String message,
+        Model model
+    ) {
+        String errorMessage = "결제에 실패했습니다.";
+        
+        if (message != null && !message.isEmpty()) {
+            errorMessage = message;
+        } else if (code != null) {
+            switch (code) {
+                case "USER_CANCEL":
+                    errorMessage = "사용자가 결제를 취소했습니다.";
+                    break;
+                case "INVALID_CARD_COMPANY":
+                    errorMessage = "유효하지 않은 카드사입니다.";
+                    break;
+                case "EXCEED_MAX_CARD_INSTALLMENT_PLAN":
+                    errorMessage = "할부 개월 수가 초과되었습니다.";
+                    break;
+                default:
+                    errorMessage = "결제 중 오류가 발생했습니다. (코드: " + code + ")";
+            }
+        }
+        
+        model.addAttribute("message", errorMessage);
         return "payment/fail";
     }
 }

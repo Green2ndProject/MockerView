@@ -15,7 +15,7 @@
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -35,6 +35,72 @@
             color: var(--gray-600);
             margin-top: 0.5rem;
         }
+        
+        .plan-card {
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+        }
+        
+        .plan-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .plan-name {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .plan-usage {
+            background: rgba(255,255,255,0.1);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .usage-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .usage-fill {
+            height: 100%;
+            background: white;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .btn-upgrade {
+            display: inline-block;
+            padding: 12px 24px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+        
+        .btn-upgrade:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
         .session-history {
             margin-top: 2rem;
         }
@@ -293,6 +359,12 @@
                 width: 95%; 
                 max-width: 95%; 
             }
+            .plan-card {
+                padding: 24px;
+            }
+            .plan-name {
+                font-size: 28px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -323,13 +395,35 @@
                 <span th:if="${user.role.name() == 'HOST'}">면접관</span>
                 <span th:text="' • ' + ${user.email}"></span>
             </div>
-            <div style="text-align: center; margin-top: 1rem;">
-                <a href="/auth/mypage/stats" class="btn btn-primary">내 활동 통계 보기</a>
-            </div>
         </div>
     </div>
 
     <div class="container">
+        <!-- 요금제 카드 -->
+        <div class="plan-card">
+            <span class="plan-badge">현재 플랜</span>
+            <div class="plan-name" th:text="${planType}">FREE</div>
+            
+            <div class="plan-usage">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>이번 달 세션 사용량</span>
+                    <span><strong th:text="${usedSessions}">0</strong> / <span th:text="${sessionLimit}">5</span></span>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-fill" th:style="'width: ' + ${usedSessions * 100 / sessionLimit} + '%'"></div>
+                </div>
+            </div>
+            
+            <div th:if="${endDate != null}" style="opacity: 0.9; font-size: 14px; margin-bottom: 16px;">
+                다음 결제일: <span th:text="${#temporals.format(endDate, 'yyyy-MM-dd')}"></span>
+            </div>
+            
+            <a href="/payment/plans" class="btn-upgrade">
+                <span th:if="${planType == 'FREE'}">⭐ 플랜 업그레이드하기</span>
+                <span th:if="${planType != 'FREE'}">플랜 변경하기</span>
+            </a>
+        </div>
+
         <div th:if="${success}" class="alert alert-success">
             <span th:text="${success}"></span>
         </div>

@@ -47,6 +47,38 @@ public class SubscriptionService {
         log.info("FREE 구독 생성 완료 - userId: {}", user.getId());
     }
     
+    @Transactional
+    public Subscription createSubscription(Long userId, Subscription.PlanType planType) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Subscription current = subscriptionRepository
+            .findByUserAndStatus(user, Subscription.SubscriptionStatus.ACTIVE)
+            .orElse(null);
+        
+        if (current != null) {
+            current.setStatus(Subscription.SubscriptionStatus.CANCELLED);
+            subscriptionRepository.save(current);
+        }
+        
+        Subscription newSub = Subscription.builder()
+            .user(user)
+            .planType(planType)
+            .status(Subscription.SubscriptionStatus.ACTIVE)
+            .sessionLimit(PLAN_LIMITS.get(planType))
+            .usedSessions(0)
+            .autoRenew(true)
+            .startDate(LocalDateTime.now())
+            .endDate(LocalDateTime.now().plusMonths(1))
+            .nextBillingDate(LocalDateTime.now().plusMonths(1))
+            .build();
+        
+        subscriptionRepository.save(newSub);
+        log.info("구독 생성 완료 - userId: {}, plan: {}", userId, planType);
+        
+        return newSub;
+    }
+    
     @Transactional(readOnly = true)
     public boolean canCreateSession(Long userId) {
         User user = userRepository.findById(userId)

@@ -1,14 +1,9 @@
 package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.entity.Answer;
-import com.mockerview.entity.Feedback;
-import com.mockerview.entity.Session;
-import com.mockerview.entity.User;
-import com.mockerview.repository.AnswerRepository;
-import com.mockerview.repository.FeedbackRepository;
-import com.mockerview.repository.SessionRepository;
-import com.mockerview.repository.UserRepository;
+import com.mockerview.entity.*;
+import com.mockerview.repository.*;
+import com.mockerview.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,6 +33,7 @@ public class MyPageController {
     private final SessionRepository sessionRepository;
     private final FeedbackRepository feedbackRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final SubscriptionService subscriptionService;
 
     @GetMapping("/auth/mypage")
     @Transactional(readOnly = true)
@@ -51,6 +47,23 @@ public class MyPageController {
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
             
             log.info("마이페이지 로드 - userId: {}, username: {}", user.getId(), user.getUsername());
+            
+            // 구독 정보 추가
+            Subscription subscription = subscriptionService.getActiveSubscription(user.getId());
+            
+            if (subscription != null) {
+                model.addAttribute("planType", subscription.getPlanType().name());
+                model.addAttribute("usedSessions", subscription.getUsedSessions());
+                model.addAttribute("sessionLimit", subscription.getSessionLimit());
+                model.addAttribute("startDate", subscription.getStartDate());
+                model.addAttribute("endDate", subscription.getEndDate());
+            } else {
+                model.addAttribute("planType", "FREE");
+                model.addAttribute("usedSessions", 0);
+                model.addAttribute("sessionLimit", 5);
+                model.addAttribute("startDate", null);
+                model.addAttribute("endDate", null);
+            }
             
             List<Answer> userAnswers = answerRepository.findByUserIdWithFeedbacks(user.getId());
             log.info("사용자 답변 수: {}", userAnswers.size());

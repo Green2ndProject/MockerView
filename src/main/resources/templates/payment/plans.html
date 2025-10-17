@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>요금제 - Mockerview</title>
+    <title>요금제 - MockerView</title>
     <style>
         * {
             margin: 0;
@@ -12,121 +11,86 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            background: #fafafa;
-            color: #0a0a0a;
-        }
-        
-        nav {
-            background: white;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            padding: 20px 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 40px 20px;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 32px;
-        }
-        
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 22px;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-            letter-spacing: -0.5px;
-        }
-        
-        .back-btn {
-            color: #666;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 15px;
-            transition: color 0.2s;
-        }
-        
-        .back-btn:hover {
-            color: #667eea;
         }
         
         .header {
             text-align: center;
-            padding: 80px 0 60px;
+            margin-bottom: 48px;
         }
         
-        .header h1 {
-            font-size: clamp(36px, 5vw, 56px);
+        .logo {
+            font-size: 32px;
             font-weight: 700;
+            color: #667eea;
             margin-bottom: 16px;
-            letter-spacing: -1.5px;
         }
         
-        .header p {
-            font-size: clamp(16px, 2vw, 20px);
+        .logo a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        h1 {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
             color: #666;
         }
         
         .current-plan {
-            max-width: 600px;
-            margin: 0 auto 60px;
             background: white;
-            border: 2px solid #667eea;
-            border-radius: 16px;
-            padding: 24px 32px;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 32px;
             text-align: center;
-        }
-        
-        .current-plan h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        
-        .current-plan p {
-            color: #666;
-            font-size: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         
         .plans-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
-            padding-bottom: 100px;
+            margin-bottom: 48px;
         }
         
         .plan-card {
             background: white;
-            border: 1px solid rgba(0, 0, 0, 0.06);
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 40px 32px;
             text-align: center;
-            transition: all 0.3s;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
             position: relative;
         }
         
         .plan-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-            border-color: #667eea;
         }
         
         .plan-card.popular {
             border: 2px solid #667eea;
         }
         
-        .plan-badge {
+        .popular-badge {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 16px;
+            right: 16px;
             background: #667eea;
             color: white;
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 16px;
             font-size: 12px;
             font-weight: 600;
@@ -135,22 +99,20 @@
         .plan-icon {
             font-size: 48px;
             margin-bottom: 16px;
-            display: block;
         }
         
         .plan-name {
             font-size: 28px;
             font-weight: 700;
+            color: #333;
             margin-bottom: 16px;
-            letter-spacing: -0.5px;
         }
         
         .plan-price {
-            font-size: clamp(40px, 5vw, 52px);
+            font-size: 48px;
             font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 12px;
-            letter-spacing: -1px;
+            color: #667eea;
+            margin-bottom: 8px;
         }
         
         .plan-price small {
@@ -159,65 +121,57 @@
             font-weight: 500;
         }
         
+        .plan-desc {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        
         .plan-features {
             list-style: none;
-            margin: 32px 0;
+            margin-bottom: 32px;
             text-align: left;
         }
         
         .plan-features li {
             padding: 12px 0;
-            color: #666;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .plan-features li:last-child {
-            border-bottom: none;
+            color: #333;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
         }
         
         .plan-features li:before {
-            content: '✓';
+            content: "✓ ";
             color: #667eea;
-            font-weight: 700;
-            margin-right: 12px;
-            font-size: 16px;
+            font-weight: bold;
+            margin-right: 8px;
         }
         
-        .btn {
-            display: block;
+        .btn-select {
             width: 100%;
             padding: 14px;
             background: #667eea;
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
+            transition: background 0.2s;
         }
         
-        .btn:hover {
+        .btn-select:hover {
             background: #5568d3;
         }
         
-        .btn-secondary {
-            background: #f5f5f5;
-            color: #999;
+        .btn-select:disabled {
+            background: #ccc;
             cursor: not-allowed;
         }
         
-        .btn-secondary:hover {
-            background: #f5f5f5;
-        }
-        
         @media (max-width: 768px) {
-            .container {
-                padding: 0 20px;
+            h1 {
+                font-size: 36px;
             }
             
             .plans-grid {
@@ -227,24 +181,18 @@
     </style>
 </head>
 <body>
-    <nav>
-        <div class="container">
-            <div class="nav-content">
-                <a class="logo" href="/">Mockerview</a>
-                <a href="/" class="back-btn">← 홈으로</a>
-            </div>
-        </div>
-    </nav>
-
     <div class="container">
         <div class="header">
+            <div class="logo">
+                <a href="/">MockerView</a>
+            </div>
             <h1>요금제 선택</h1>
-            <p>나에게 맞는 플랜을 선택하세요</p>
+            <p class="subtitle">당신에게 맞는 플랜을 선택하세요</p>
         </div>
         
-        <div class="current-plan" th:if="${currentPlan != 'NONE'}">
-            <h3>현재 플랜: <span th:text="${currentPlan}"></span></h3>
-            <p>사용 중인 세션: <span th:text="${usedSessions}"></span> / <span th:text="${sessionLimit}"></span></p>
+        <div class="current-plan" th:if="${currentPlan != null && currentPlan != 'NONE'}">
+            <p>현재 플랜: <strong th:text="${currentPlan}"></strong></p>
+            <p>사용한 세션: <span th:text="${usedSessions}"></span> / <span th:text="${sessionLimit}"></span></p>
         </div>
         
         <div class="plans-grid">
@@ -252,44 +200,46 @@
                 <span class="plan-icon">🎯</span>
                 <div class="plan-name">Free</div>
                 <div class="plan-price">₩0<small>/월</small></div>
+                <div class="plan-desc">시작하기에 완벽</div>
                 <ul class="plan-features">
                     <li>월 5개 세션</li>
                     <li>기본 AI 피드백</li>
-                    <li>텍스트 면접</li>
-                    <li>세션 기록 보관</li>
+                    <li>세션 기록 저장</li>
                 </ul>
-                <button class="btn btn-secondary" disabled>현재 플랜</button>
+                <button class="btn-select" onclick="selectPlan('FREE')">선택하기</button>
             </div>
             
             <div class="plan-card popular">
-                <span class="plan-badge">인기</span>
+                <span class="popular-badge">인기</span>
                 <span class="plan-icon">⭐</span>
                 <div class="plan-name">Pro</div>
                 <div class="plan-price">₩29,900<small>/월</small></div>
+                <div class="plan-desc">취준생에게 추천</div>
                 <ul class="plan-features">
                     <li>월 100개 세션</li>
                     <li>AI 상세 분석</li>
-                    <li>모든 면접 타입</li>
-                    <li>STAR 기법 분석</li>
-                    <li>세션 다운로드</li>
+                    <li>세션 기록 저장</li>
+                    <li>우선 지원</li>
                 </ul>
-                <a th:href="@{/payment/checkout-page(planType='PRO')}" class="btn">선택하기</a>
+                <button class="btn-select" onclick="selectPlan('PRO')">선택하기</button>
             </div>
             
             <div class="plan-card">
                 <span class="plan-icon">👥</span>
                 <div class="plan-name">Team</div>
                 <div class="plan-price">₩99,000<small>/월</small></div>
+                <div class="plan-desc">팀 단위 준비</div>
                 <ul class="plan-features">
                     <li>월 500개 세션</li>
+                    <li>AI 상세 분석</li>
                     <li>팀 관리 기능</li>
-                    <li>커스텀 AI 설정</li>
-                    <li>전담 매니저</li>
-                    <li>API 제공</li>
+                    <li>전담 지원</li>
                 </ul>
-                <a th:href="@{/payment/checkout-page(planType='TEAM')}" class="btn">선택하기</a>
+                <button class="btn-select" onclick="selectPlan('TEAM')">선택하기</button>
             </div>
         </div>
     </div>
+    
+    <script src="/js/payment-redirect.js"></script>
 </body>
 </html>
