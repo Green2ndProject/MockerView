@@ -2,373 +2,476 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마이페이지 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css">
     <style>
-        .profile-header {
-            background: white;
-            border-bottom: 1px solid var(--gray-200);
-            padding: 2rem 0;
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fafbfc;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .plan-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .plan-badge.free {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .plan-badge.basic {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .plan-badge.pro {
+            background: #fce7f3;
+            color: #9f1239;
+        }
+        
+        .plan-badge.team {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+        
+        .page-header {
+            padding: 48px 0 32px;
+        }
+        
+        .page-title h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+        
+        .page-title p {
+            font-size: 1rem;
+            color: #6b7280;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+        
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            text-align: center;
+        }
+        
         .profile-avatar {
             width: 80px;
             height: 80px;
-            border-radius: 50%;
             background: #667eea;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
-            font-weight: bold;
             color: white;
-            margin: 0 auto 1rem;
-        }
-        .profile-name {
-            font-size: 1.5rem;
-            font-weight: 600;
-            text-align: center;
-            color: var(--gray-900);
-        }
-        .profile-role {
-            text-align: center;
-            color: var(--gray-600);
-            margin-top: 0.5rem;
+            margin: 0 auto 20px;
+            font-weight: 700;
         }
         
-        .plan-card {
+        .profile-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin-bottom: 4px;
+        }
+        
+        .profile-email {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+        
+        .profile-role {
+            display: inline-block;
+            padding: 6px 14px;
+            background: #f0f4ff;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+        
+        .quick-actions {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .quick-actions h3 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 16px;
+            background: white;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+        
+        .action-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+        
+        .action-icon {
+            font-size: 1.25rem;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .section-header h2 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            letter-spacing: -0.5px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
             background: #667eea;
             color: white;
-            border-radius: 12px;
-            padding: 32px;
-            margin: 2rem 0;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
         }
         
-        .plan-badge {
-            display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 12px;
+        .btn-primary:hover {
+            background: #5568d3;
         }
         
-        .plan-name {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-        
-        .plan-usage {
-            background: rgba(255,255,255,0.1);
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-        
-        .usage-bar {
-            height: 8px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-        
-        .usage-fill {
-            height: 100%;
+        .btn-secondary {
             background: white;
-            border-radius: 4px;
+            color: #667eea;
+            border: 1.5px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f4ff;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .subscription-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .info-box {
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .info-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .info-desc {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            border-radius: 8px;
             transition: width 0.3s;
         }
         
-        .btn-upgrade {
-            display: inline-block;
-            padding: 12px 24px;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s;
-            margin-top: 8px;
+        .form-group {
+            margin-bottom: 20px;
         }
         
-        .btn-upgrade:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .session-history {
-            margin-top: 2rem;
-        }
-        .session-history-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--gray-900);
-        }
-        .history-item {
-            background: white;
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .history-info h4 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.125rem;
-            color: var(--gray-900);
-        }
-        .history-meta {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-        }
-        .answer-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        .answer-table th,
-        .answer-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-        .answer-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #495057;
-        }
-        .answer-table tr:hover {
-            background-color: #f8f9fa;
-        }
-        .answer-text {
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .profile-actions-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        @media (min-width: 768px) {
-            .profile-actions-grid {
-                grid-template-columns: 2fr 1fr;
-            }
-        }
-
-        .btn-danger {
-            background-color: #E74C3C;
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .btn-danger:hover {
-            background-color: #C0392B;
-        }
-
-        .custom-modal-backdrop {
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .custom-modal-container {
-            width: 450px;
-            max-width: 90%;
-            height: auto;
-            overflow: hidden;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
-
-        .custom-modal-card, .success-modal-card {
-            width: 100%;
-            height: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            box-sizing: border-box;
-            padding: 20px;
-        }
-
-        .custom-modal-card {
+        .form-label {
             display: block;
-        }
-
-        .success-modal-card {
-            display: none;
-        }
-
-        .modal-title {
-            font-size: 1.5em;
+            font-size: 0.875rem;
             font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
+            color: #1a1a1a;
+            margin-bottom: 8px;
         }
-
-        .modal-instruction {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-        }
-
-        .modal-reason-label {
-            color: #888;
-            margin: 20px 0 10px 0;
-            font-size: 0.85em;
-            padding-left: 5px;
-            text-align: left;
-        }
-
-        .input-field {
-            margin-bottom: 25px;
-        }
-        .select-field {
-            margin-bottom: 0;
-        }
-        .input-field, .select-field {
+        
+        .form-input {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1em;
+            padding: 12px 16px;
+            font-size: 0.9375rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-family: 'Pretendard', sans-serif;
         }
-
-        .wmodal-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-            gap: 10px;
-            padding: 0 10px;
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
-        .wmodal-actions button {
-            width: 50%;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-weight: 600;
+        
+        .form-input:disabled {
+            background: #f9fafb;
+            color: #9ca3af;
+            cursor: not-allowed;
         }
-
-        .danger-btn {
-            background-color: #E74C3C;
-            color: white;
-            border: none;
+        
+        .alert {
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+            font-weight: 500;
         }
-        .danger-btn:hover {
-            background-color: #C0392B;
+        
+        .alert-success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
         }
-
-        .secondary-btn {
-            background-color: transparent;
-            color: #7F78FF;
-            border: 2px solid #7F78FF;
+        
+        .alert-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
         }
-
-        .secondary-btn:hover {
-            background-color: #F0F0FF;
-        }
-
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border-left-color: #f34d3d;
-            margin: 15px auto 0;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .form-actions .btn {
-            flex: 1;
-            min-width: 150px;
+        
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            
+            .profile-card,
+            .quick-actions {
+                min-width: 280px;
+            }
         }
         
         @media (max-width: 768px) {
-            .profile-avatar { 
-                width: 60px; 
-                height: 60px; 
-                font-size: 1.5rem; 
+            .container {
+                padding: 0 16px;
             }
-            .profile-name { font-size: 20px; }
-            .stats-grid { 
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 12px; 
+            
+            .navbar-nav {
+                gap: 16px;
+                font-size: 0.875rem;
             }
-            .stat-card { padding: 20px; }
-            .stat-number { font-size: 32px; }
-            .session-history-title { font-size: 18px; }
-            .history-item { 
-                flex-direction: column; 
-                align-items: flex-start; 
-                gap: 12px; 
+            
+            .navbar-brand {
+                font-size: 1.125rem;
             }
-            .history-info h4 { font-size: 16px; }
-            .answer-table { font-size: 13px; }
-            .answer-table th,
-            .answer-table td { padding: 8px; }
-            .profile-actions-grid { 
-                grid-template-columns: 1fr; 
-                gap: 1rem; 
+            
+            .page-header {
+                padding: 32px 0 24px;
             }
-            .form-actions { 
-                flex-direction: column; 
+            
+            .page-title h1 {
+                font-size: 1.75rem;
             }
-            .form-actions .btn { 
-                width: 100%; 
-                min-width: unset; 
+            
+            .section-card {
+                padding: 24px 20px;
             }
-            .custom-modal-container { 
-                width: 95%; 
-                max-width: 95%; 
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
             }
-            .plan-card {
-                padding: 24px;
+            
+            .subscription-info {
+                grid-template-columns: 1fr;
             }
-            .plan-name {
-                font-size: 28px;
+            
+            .sidebar {
+                flex-direction: column;
+            }
+            
+            .profile-card,
+            .quick-actions {
+                min-width: auto;
             }
         }
         
         @media (max-width: 480px) {
-            .answer-table { display: block; overflow-x: auto; }
+            .profile-avatar {
+                width: 64px;
+                height: 64px;
+                font-size: 1.75rem;
+            }
+            
+            .profile-name {
+                font-size: 1.125rem;
+            }
+            
+            .section-header h2 {
+                font-size: 1.125rem;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -377,377 +480,206 @@
         <div class="container">
             <div class="navbar-content">
                 <a class="navbar-brand" href="/session/list">
-                    Mockerview
+                    MockerView
                     <span class="plan-badge" 
-                        th:classappend="${currentPlanType != null ? currentPlanType.toLowerCase() : 'free'}"
-                        th:text="${currentPlanType != null ? currentPlanType : 'FREE'}">FREE</span>
+                          th:classappend="${currentPlanType != null ? currentPlanType.toLowerCase() : 'free'}"
+                          th:text="${currentPlanType != null ? currentPlanType : 'FREE'}">FREE</span>
                 </a>
                 <div class="navbar-nav">
                     <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
                     <a class="nav-link active" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a
-                    class="nav-link"
-                    th:if="${isAdmin}"
-                    th:href="@{/admin/dashboard}"
-                    style="color: #ff6b6b; font-weight: 600;"
-                    > 관리자</a
-                    >
+                    <a class="nav-link" th:if="${isAdmin}" th:href="@{/admin/dashboard}" style="color: #ff6b6b; font-weight: 600;">🔧 관리자</a>
                     <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
                 </div>
             </div>
         </div>
     </nav>
-
-    <div class="profile-header">
+    
+    <div class="page-header">
         <div class="container">
-            <div class="profile-avatar" th:text="${user.name.substring(0,1).toUpperCase()}">U</div>
-            <div class="profile-name" th:text="${user.name}">사용자명</div>
-            <div class="profile-role">
-                <span th:if="${user.role.name() == 'STUDENT'}">면접자</span>
-                <span th:if="${user.role.name() == 'HOST'}">면접관</span>
-                <span th:text="' • ' + ${user.email}"></span>
+            <div class="page-title">
+                <h1>마이페이지</h1>
+                <p>계정 정보 및 구독 관리</p>
             </div>
         </div>
     </div>
-
+    
     <div class="container">
-        <!-- 요금제 카드 -->
-        <div class="plan-card">
-            <span class="plan-badge">현재 플랜</span>
-            <div class="plan-name" th:text="${planType}">FREE</div>
-            
-            <div class="plan-usage">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>이번 달 세션 사용량</span>
-                    <span><strong th:text="${usedSessions}">0</strong> / <span th:text="${sessionLimit}">5</span></span>
-                </div>
-                <div class="usage-bar">
-                    <div class="usage-fill" th:style="'width: ' + ${usedSessions * 100 / sessionLimit} + '%'"></div>
-                </div>
-            </div>
-            
-            <div th:if="${endDate != null}" style="opacity: 0.9; font-size: 14px; margin-bottom: 16px;">
-                다음 결제일: <span th:text="${#temporals.format(endDate, 'yyyy-MM-dd')}"></span>
-            </div>
-            
-            <a href="/payment/plans" class="btn-upgrade">
-                <span th:if="${planType == 'FREE'}">⭐ 플랜 업그레이드하기</span>
-                <span th:if="${planType != 'FREE'}">플랜 변경하기</span>
-            </a>
-        </div>
-
         <div th:if="${success}" class="alert alert-success">
-            <span th:text="${success}"></span>
+            <span th:text="${success}">성공 메시지</span>
         </div>
-
+        
         <div th:if="${error}" class="alert alert-error">
-            <span th:text="${error}"></span>
+            <span th:text="${error}">에러 메시지</span>
         </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-number" th:text="${participatedSessionCount}">0</span>
-                <div class="stat-label">참여한 세션</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${answerCount}">0</span>
-                <div class="stat-label">답변 개수</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${#lists.size(hostedSessions)}">0</span>
-                <div class="stat-label">호스팅한 세션</div>
-            </div>
-        </div>
-
-        <div class="session-history" th:if="${hostedSessions != null and !hostedSessions.empty}">
-            <h3 class="session-history-title">내가 호스팅한 세션</h3>
-            <div th:each="hostedSession : ${hostedSessions}" class="history-item">
-                <div class="history-info">
-                    <h4 th:text="${hostedSession.title}">세션 제목</h4>
-                    <div class="history-meta">
-                        <span th:text="${#temporals.format(hostedSession.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
-                        <span> • </span>
-                        <span th:text="${hostedSession.status}">ENDED</span>
-                    </div>
+        
+        <div class="content-grid">
+            <div class="sidebar">
+                <div class="profile-card">
+                    <div class="profile-avatar" th:text="${#strings.substring(user.name, 0, 1)}">홍</div>
+                    <div class="profile-name" th:text="${user.name}">홍길동</div>
+                    <div class="profile-email" th:text="${user.email}">hong@example.com</div>
+                    <span class="profile-role">
+                        <span th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
+                        <span th:if="${user.role.name() == 'HOST'}">👔 면접관</span>
+                        <span th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
+                        <span th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
+                    </span>
                 </div>
-                <a th:href="@{/session/detail/{id}(id=${hostedSession.id})}" class="btn btn-primary">상세보기</a>
-            </div>
-        </div>
-
-        <div class="session-history">
-            <h3 class="session-history-title">내 답변 목록</h3>
-            <div class="card">
-                <div class="card-body">
-                    <table class="answer-table" th:if="${userAnswers != null and !userAnswers.empty}">
-                        <thead>
-                            <tr>
-                                <th>세션</th>
-                                <th>질문</th>
-                                <th>답변</th>
-                                <th>작성일시</th>
-                                <th>액션</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="answer : ${userAnswers}">
-                                <td th:text="${answer.question.session.title}">세션 제목</td>
-                                <td th:text="${answer.question.text}">질문 내용</td>
-                                <td class="answer-text" th:text="${answer.answerText}">답변 내용</td>
-                                <td th:text="${#temporals.format(answer.createdAt, 'MM-dd HH:mm')}">01-15 14:30</td>
-                                <td>
-                                    <a th:href="@{/session/detail/{id}(id=${answer.question.session.id})}"
-                                        class="btn btn-sm btn-primary">상세</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div th:if="${userAnswers == null or userAnswers.empty}"
-                        style="text-align: center; padding: 2rem; color: #6c757d;">
-                        아직 작성한 답변이 없습니다
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="profile-actions-grid">
-            <div class="card">
-                <div class="card-header">프로필 수정</div>
-                <div class="card-body">
-                    <form th:action="@{/auth/mypage/update}" method="post" id="updateForm">
-                        <div class="form-group">
-                            <label for="name" class="form-label">이름</label>
-                            <input type="text" class="form-control" id="name" name="name" th:value="${user.name}" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email" class="form-label">이메일</label>
-                            <input type="email" class="form-control" id="email" name="email" th:value="${user.email}" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="password" class="form-label">새 비밀번호 (변경시에만 입력)</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="새 비밀번호">
-                            <small style="color: var(--gray-500); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
-                                비밀번호를 변경하지 않으려면 비워두세요.
-                            </small>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">프로필 업데이트</button>
-                            <button type="button" class="btn btn-danger" id="withdraw-btn">회원 탈퇴</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id="withdrawal-modal" class="custom-modal-backdrop" style="display:none;">
-                <div class="custom-modal-container">
-                    <div class="custom-modal-card" id="custom-modal-card">
-                        <h3 class="modal-title">정말로 탈퇴하시겠습니까?</h3>
-
-                        <div class="modal-body">
-                            <p class="modal-instruction">탈퇴를 진행하시려면 비밀번호를 입력해주세요</p>
-                            <input type="password" id="withdrawal-password" placeholder="비밀번호 재확인" class="input-field">
-
-                            <p class="modal-reason-label">탈퇴 사유를 선택해주세요</p>
-                            <select id="reason-select" class="select-field">
-                                <option value="">선택안함</option>
-                                <option value="no">더 좋은 사이트를 발견함</option>
-                                <option value="dontneed">서비스 불만</option>
-                                <option value="letmego">답하고 싶지 않음</option>
-                                <option value="other">기타</option>
-                            </select>
-                        </div>
-                        <div class="wmodal-actions">
-                            <button id="confirm-withdraw-btn" class="danger-btn">탈퇴하기</button>
-                            <button id="cancel-btn" class="secondary-btn">취소</button>
-                        </div>
-                    </div>
-
-                    <div class="success-modal-card" id="success-modal-card">
-                        <h3 class="modal-title">탈퇴되었습니다</h3>
-                        <div class="modal-body">
-                            <p class="modal-instruction">잠시만 기다려주세요</p>
-                            <p class="modal-instruction">이용해주셔서 감사합니다</p>
-                        </div>
-                        <div class="spinner"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">계정 정보</div>
-                <div class="card-body">
-                    <div style="margin-bottom: 1rem;">
-                        <strong>아이디:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${user.username}">username</div>
-                    </div>
-                    <div style="margin-bottom: 1rem;">
-                        <strong>역할:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;">
-                            <span th:if="${user.role.name() == 'STUDENT'}">면접자</span>
-                            <span th:if="${user.role.name() == 'HOST'}">면접관</span>
-                        </div>
-                    </div>
-                    <div>
-                        <strong>가입일:</strong>
-                        <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2025-01-01</div>
-                    </div>
-                    <a href="/payment/history" class="btn btn-primary" style="width: 100%; margin-top: 16px; text-align: center; display: block;">
-                        결제 내역 보기
+                
+                <div class="quick-actions">
+                    <h3>빠른 메뉴</h3>
+                    <a href="/session/list" class="action-btn">
+                        <span class="action-icon">🏠</span>
+                        세션 목록
+                    </a>
+                    <a href="/payment/plans" class="action-btn">
+                        <span class="action-icon">💳</span>
+                        플랜 업그레이드
+                    </a>
+                    <a href="/payment/history" class="action-btn">
+                        <span class="action-icon">📜</span>
+                        결제 내역
                     </a>
                 </div>
             </div>
+            
+            <div class="main-content">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>구독 정보</h2>
+                        <a href="/payment/plans" class="btn btn-primary">플랜 변경</a>
+                    </div>
+                    
+                    <div class="subscription-info">
+                        <div class="info-box">
+                            <div class="info-label">현재 플랜</div>
+                            <div class="info-value" th:text="${subscription?.planType != null ? subscription.planType : 'FREE'}">FREE</div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <div class="info-label">세션 사용량</div>
+                            <div class="info-value">
+                                <span th:text="${subscription?.usedSessions != null ? subscription.usedSessions : 0}">0</span>
+                                <span style="font-size: 1rem; color: #6b7280;">/ </span>
+                                <span style="font-size: 1rem; color: #6b7280;" th:text="${subscription?.sessionLimit != null ? subscription.sessionLimit : 5}">5</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" 
+                                     th:style="'width: ' + ${subscription != null && subscription.sessionLimit > 0 ? (subscription.usedSessions * 100 / subscription.sessionLimit) : 0} + '%'"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-box" th:if="${subscription?.endDate != null}">
+                            <div class="info-label">갱신일</div>
+                            <div class="info-value" style="font-size: 1.125rem;" th:text="${#temporals.format(subscription.endDate, 'MM/dd')}">12/31</div>
+                            <div class="info-desc" th:text="${#temporals.format(subscription.endDate, 'yyyy년 MM월 dd일')}">2025년 12월 31일</div>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${subscription?.planType != 'FREE'}" style="padding: 16px; background: #f0f4ff; border-radius: 10px; margin-top: 16px;">
+                        <p style="font-size: 0.875rem; color: #667eea; font-weight: 500;">
+                            ⚡ 프리미엄 플랜을 이용 중입니다. 세션 생성과 AI 피드백을 마음껏 사용하세요!
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>계정 정보</h2>
+                    </div>
+                    
+                    <form th:action="@{/auth/update}" method="post">
+                        <div class="form-group">
+                            <label class="form-label" for="username">아이디</label>
+                            <input type="text" id="username" class="form-input" th:value="${user.username}" disabled>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="name">이름</label>
+                            <input type="text" id="name" name="name" class="form-input" th:value="${user.name}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="email">이메일</label>
+                            <input type="email" id="email" name="email" class="form-input" th:value="${user.email}" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">정보 수정</button>
+                    </form>
+                </div>
+                
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>비밀번호 변경</h2>
+                    </div>
+                    
+                    <form th:action="@{/auth/change-password}" method="post">
+                        <div class="form-group">
+                            <label class="form-label" for="currentPassword">현재 비밀번호</label>
+                            <input type="password" id="currentPassword" name="currentPassword" class="form-input" placeholder="현재 비밀번호" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="newPassword">새 비밀번호</label>
+                            <input type="password" id="newPassword" name="newPassword" class="form-input" placeholder="새 비밀번호 (8자 이상)" required minlength="8">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="confirmNewPassword">새 비밀번호 확인</label>
+                            <input type="password" id="confirmNewPassword" class="form-input" placeholder="새 비밀번호 확인" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">비밀번호 변경</button>
+                    </form>
+                </div>
+                
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>회원 탈퇴</h2>
+                    </div>
+                    
+                    <p style="color: #6b7280; margin-bottom: 20px; font-size: 0.9375rem;">
+                        탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 신중하게 결정해주세요.
+                    </p>
+                    
+                    <button onclick="confirmWithdrawal()" class="btn btn-danger">회원 탈퇴</button>
+                </div>
+            </div>
         </div>
     </div>
-
+    
     <script>
-        document.getElementById('updateForm').addEventListener('submit', function(e) {
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            if (!name.trim() || !email.trim()) {
-                e.preventDefault();
-                alert('이름과 이메일을 입력해주세요.');
-                return;
-            }
-
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                e.preventDefault();
-                alert('올바른 이메일 형식을 입력해주세요.');
-                return;
-            }
-
-            if (password && password.length < 6) {
-                e.preventDefault();
-                alert('새 비밀번호는 6자 이상이어야 합니다.');
-                return;
-            }
-        });
-    </script>
-
-    <script>
-        const withdrawBtn             = document.getElementById('withdraw-btn');
-        const withdrawalModal         = document.getElementById('withdrawal-modal');
-        const withdrawalPasswordInput = document.getElementById('withdrawal-password');
-        const cancelBtn               = document.getElementById('cancel-btn');
-        const confirmWithdrawBtn      = document.getElementById('confirm-withdraw-btn');
-        const reasonSelect            = document.getElementById('reason-select');
-        const modalCard               = document.getElementById('custom-modal-card');
-        const successCard             = document.getElementById('success-modal-card');
-
-        withdrawBtn.addEventListener('click', ()=>{
-            withdrawalModal.style.display = 'flex';
-        });
-
-        cancelBtn.addEventListener('click', ()=>{
-            withdrawalModal.style.display = 'none';
-            resetWithdrawForm();
-        });
-
-        window.addEventListener('click', (e)=>{
-            if(e.target === withdrawalModal){
-                withdrawalModal.style.display = 'none';
-                resetWithdrawForm();
-            }
-        });
-
-        confirmWithdrawBtn.addEventListener('click', async ()=>{
-
-            const password = withdrawalPasswordInput.value;
-            const reason   = reasonSelect.value;
-
-            if(!password) {
-                alert("비밀번호를 입력해주세요");
-                return;
-            }
-
-            confirmWithdrawBtn.disabled = true;
-            confirmWithdrawBtn.textContent = '처리 중..';
-
-            console.log("탈퇴 사유 : " + reason);
-            console.log("실제 전송 비밀번호:", password);
-            console.log("비밀번호 길이:", password.length);
-
-            try {
-
-                const response = await fetch('/api/user/withdraw', {
-                    method  : 'POST',
-                    headers : {
-                        'Content-Type' : 'application/json'
-                    },
-                    credentials : 'include',
-                    body : JSON.stringify({
-                        'password' : password,
-                        'reason'   : reason
-                    })
-                });
-
-                if(response.ok){
-                    const data        = response.json();
-                    const redirectUrl = data.redirectUrl || "/";
-
-                    modalCard.style.display = 'none';
-                    successCard.style.display = 'block';
-                    withdrawalModal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-
-                    setTimeout(()=> {
-                        withdrawalModal.style.display = 'none';
-                        window.location.href = redirectUrl;
-                    }, 2000);
-
-                } else if (response.status >= 400 && response.status < 500) {
-
-                    const message = getErrorMessage(response.status);
-                    alert(message);
-
-                    if(response.status === 401 || response.status === 403){
-                        window.location.href = '/auth/login';
-                    }
-                } else {
-                    alert(`서버 오류가 발생했습니다. Code : ${response.status}`);
+        function confirmWithdrawal() {
+            if (confirm('정말로 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
+                const reason = prompt('탈퇴 사유를 입력해주세요 (선택사항):');
+                
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/auth/withdraw';
+                
+                if (reason) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'reason';
+                    input.value = reason;
+                    form.appendChild(input);
                 }
-
-            } catch (error) {
-                console.error("탈퇴 요청 오류 : " , error);
-                alert("서버 통신에 실패했습니다.");
-            } finally {
-                confirmWithdrawBtn.disabled = false;
-                confirmWithdrawBtn.textContent = '탈퇴하기';
+                
+                document.body.appendChild(form);
+                form.submit();
             }
-
-
+        }
+        
+        document.querySelector('form[action="/auth/change-password"]').addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('새 비밀번호가 일치하지 않습니다.');
+            }
         });
-
-    function resetWithdrawForm(){
-
-        if(withdrawalPasswordInput){
-            withdrawalPasswordInput.value = '';
-        }
-
-        if(reasonSelect){
-            reasonSelect.selectedIndex = 0;
-        }
-    }
-
-    function getErrorMessage(statusCode){
-
-        switch(statusCode){
-            case 400 :
-                return "비밀번호가 일치하지 않습니다. 다시 확인해주세요";
-            case 401 :
-                return "세션이 만료되었습니다. 다시 로그인해주세요.";
-            case 403 :
-                return "탈퇴회원이거나 접근 권한이 없습니다. 다시 로그인해주세요";
-            case 409 :
-                return "이미 탈퇴한 회원입니다. (중복요청)";
-            default :
-                return "처리중 오류 발생. 잠시 후 다시 시도해주세요. (Code : " + statusCode + ")";
-        }
-    }
-
     </script>
 </body>
 </html>

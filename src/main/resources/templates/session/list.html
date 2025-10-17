@@ -264,40 +264,147 @@
         font-size: 0.875rem;
       }
 
-      @media (max-width: 768px) {
-        .navbar-nav { gap: 12px; }
-        .page-header { padding: 24px 0; }
-        .page-title h1 { font-size: 24px; }
-        .section-tabs { gap: 8px; overflow-x: auto; }
-        .tab-btn { 
-            padding: 0.75rem 1rem; 
-            font-size: 14px; 
-            white-space: nowrap; 
-        }
-        .quick-action-cards { 
-            grid-template-columns: 1fr; 
-            gap: 1rem; 
-        }
-        .quick-card { padding: 1.5rem; }
-        .quick-card-icon { font-size: 2.5rem; }
-        .status-filter-tabs { 
-            flex-direction: column; 
-            gap: 8px; 
-        }
-        .status-tab { padding: 0.75rem 1rem; }
-        .search-form { flex-direction: column; }
-        .search-input { min-width: 100%; }
-        .btn-search, .btn-reset { width: 100%; }
-        .session-grid { 
-            grid-template-columns: 1fr; 
-            gap: 1rem; 
-        }
-        .session-card { padding: 16px; }
-        .session-header h3 { font-size: 18px; }
-        .interview-mode-options { 
-            flex-direction: column; 
-        }
-    }
+    @media (max-width: 768px) {
+      .navbar-nav { 
+          gap: 12px; 
+          font-size: 0.875rem;
+      }
+      
+      .page-header { 
+          padding: 20px 0; 
+      }
+      
+      .page-title h1 { 
+          font-size: 1.75rem; 
+      }
+      
+      .section-tabs { 
+          gap: 8px; 
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+      }
+      
+      .section-tabs::-webkit-scrollbar {
+          display: none;
+      }
+      
+      .tab-btn { 
+          padding: 0.75rem 1.25rem; 
+          font-size: 0.875rem; 
+          white-space: nowrap; 
+          flex-shrink: 0;
+      }
+      
+      .quick-action-cards { 
+          grid-template-columns: 1fr; 
+          gap: 1rem; 
+      }
+      
+      .quick-card { 
+          padding: 1.5rem; 
+      }
+      
+      .quick-card-icon { 
+          font-size: 2.5rem; 
+      }
+      
+      .status-filter-tabs { 
+          flex-direction: column; 
+          gap: 8px; 
+      }
+      
+      .status-tab { 
+          padding: 0.875rem 1rem;
+          font-size: 0.875rem;
+      }
+      
+      .search-form { 
+          flex-direction: column; 
+      }
+      
+      .search-input { 
+          min-width: 100%; 
+      }
+      
+      .btn-search, 
+      .btn-reset { 
+          width: 100%; 
+      }
+      
+      .session-grid { 
+          grid-template-columns: 1fr; 
+          gap: 1rem; 
+      }
+      
+      .session-card { 
+          padding: 20px; 
+      }
+      
+      .session-header h3 { 
+          font-size: 1.125rem; 
+      }
+      
+      .session-meta {
+          font-size: 0.8125rem;
+      }
+      
+      .badge {
+          font-size: 0.6875rem;
+          padding: 4px 10px;
+      }
+      
+      .interview-mode-options { 
+          flex-direction: column; 
+      }
+      
+      .mode-option-card {
+          padding: 14px;
+      }
+      
+      .modal-content {
+          width: 95%;
+          margin: 20px;
+          padding: 24px;
+      }
+      
+      .form-actions {
+          flex-direction: column;
+      }
+      
+      .form-actions button {
+          width: 100%;
+      }
+  }
+  
+  @media (max-width: 480px) {
+      .container {
+          padding: 0 16px;
+      }
+      
+      .navbar {
+          padding: 0.75rem 0;
+      }
+      
+      .navbar-brand {
+          font-size: 1.125rem;
+      }
+      
+      .plan-badge {
+          font-size: 0.625rem;
+          padding: 3px 8px;
+      }
+      
+      .page-title h1 {
+          font-size: 1.5rem;
+      }
+      
+      .btn {
+          padding: 10px 16px;
+          font-size: 0.8125rem;
+      }
+  }
+  MOBILE_CSS
     </style>
   </head>
   <body>
