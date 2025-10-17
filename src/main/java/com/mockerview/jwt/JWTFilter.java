@@ -107,6 +107,14 @@ protected boolean shouldNotFilter(HttpServletRequest request) throws ServletExce
         return true;
     }
 
+    if (uri.equals("/auth/find-username")) {
+        return true;
+    }
+
+    if (uri.equals("/auth/reset-password")) {
+        return true;
+    }
+
     if (uri.startsWith("/images/") ||
         uri.startsWith("/css/") ||
         uri.startsWith("/js/") ||

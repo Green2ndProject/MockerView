@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>아이디 찾기 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .find-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .find-container h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .find-container input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .find-container input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .find-container button {
+            width: 100%;
+            padding: 12px;
+            margin: 16px 0;
+            border: none;
+            border-radius: 4px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .find-container button:hover {
+            background: #5568d3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            margin: 0 10px;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="find-container">
+        <h2>아이디 찾기</h2>
+        <p class="subtitle">가입 시 등록한 정보를 입력하세요</p>
+        
+        <form id="findForm">
+            <input type="text" id="name" placeholder="이름" required>
+            <input type="email" id="email" placeholder="이메일" required>
+            <button type="submit">아이디 찾기</button>
+        </form>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="links">
+            <a href="/auth/login">로그인</a>
+            <a href="/auth/reset-password">비밀번호 찾기</a>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('findForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const result = document.getElementById('result');
+            
+            try {
+                const response = await fetch('/auth/find-username', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `회원님의 아이디는 "${data.username}" 입니다.`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = data.message;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = '오류가 발생했습니다.';
+            }
+        });
+    </script>
+</body>
+</html>

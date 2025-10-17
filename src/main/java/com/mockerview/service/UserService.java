@@ -84,4 +84,28 @@ public class UserService {
 
         log.info("탈퇴 로직 최종 완료 및 DB 반영");
     }
+
+    @Transactional(readOnly = true)
+    public String findUsername(String name, String email) {
+        User user = userRepository.findByNameAndEmail(name, email)
+            .orElseThrow(() -> new IllegalArgumentException("일치하는 회원 정보가 없습니다."));
+        return user.getUsername();
+    }
+
+    @Transactional
+    public void resetPassword(String username, String email, String newPassword) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+        
+        if (user.getIsDeleted() == 1) {
+            throw new IllegalArgumentException("탈퇴한 회원입니다.");
+        }
+        
+        if (!user.getEmail().equals(email)) {
+            throw new IllegalArgumentException("이메일이 일치하지 않습니다.");
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }

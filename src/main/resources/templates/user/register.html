@@ -2,104 +2,414 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>회원가입 - MockerView</title>
     <link rel="stylesheet" href="/css/common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        
+        .register-wrapper {
+            width: 100%;
+            max-width: 480px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo a {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -1px;
+        }
+        
+        .register-container {
+            width: 100%;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .register-container h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin: 8px 0;
+        }
+        
+        .register-container input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        
+        .register-container input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .register-container input.error {
+            border-color: #e74c3c;
+        }
+        
+        .register-container input.success {
+            border-color: #27ae60;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+        
+        .success-message {
+            color: #27ae60;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        .role-section {
+            margin: 24px 0;
+        }
+        
+        .role-section > label {
+            display: block;
+            margin-bottom: 16px;
+            color: #333;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .role-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .role-option {
+            position: relative;
+        }
+        
+        .role-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .role-card {
+            padding: 20px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            display: block;
+        }
+        
+        .role-option input[type="radio"]:checked + .role-card {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .role-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .role-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .role-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: block;
+        }
+        
+        .role-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+            display: block;
+        }
+        
+        .register-container button {
+            width: 100%;
+            padding: 14px;
+            margin: 24px 0 0 0;
+            border: none;
+            border-radius: 4px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .register-container button:hover {
+            background: #5568d3;
+        }
+        
+        .register-container button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .login-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .login-link:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .logo {
+                margin-bottom: 24px;
+            }
+            
+            .logo a {
+                font-size: 28px;
+            }
+            
+            .register-container {
+                padding: 30px 24px;
+            }
+            
+            .register-container h2 {
+                font-size: 20px;
+            }
+            
+            .subtitle {
+                font-size: 13px;
+                margin-bottom: 24px;
+            }
+            
+            .role-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .role-card {
+                padding: 16px 12px;
+            }
+            
+            .role-icon {
+                font-size: 32px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-logo">
-                <h1>Mockerview</h1>
-                <p>AI 모의면접 코치 플랫폼</p>
-            </div>
+    <div class="register-wrapper">
+        <div class="logo">
+            <a href="/">MockerView</a>
+        </div>
+        
+        <div class="register-container">
+            <h2>회원가입</h2>
+            <p class="subtitle">MockerView와 함께 면접 준비를 시작하세요</p>
             
-            <form th:action="@{/auth/register}" method="post" id="registerForm">
-                <div th:if="${error}" class="alert alert-error">
-                    <span th:text="${error}"></span>
+            <form id="registerForm">
+                <div class="input-group">
+                    <input type="text" id="username" name="username" placeholder="아이디 (4-20자)" required minlength="4" maxlength="20">
                 </div>
                 
-                <div class="form-group">
-                    <input type="text" class="form-control" name="username" placeholder="아이디 (4자 이상)" required>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" placeholder="비밀번호 (최소 6자)" required minlength="6">
                 </div>
                 
-                <div class="form-group">
-                    <input type="password" class="form-control" name="password" placeholder="비밀번호 (6자 이상)" required>
+                <div class="input-group">
+                    <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="비밀번호 확인" required minlength="6">
+                    <span class="error-message" id="passwordError">비밀번호가 일치하지 않습니다</span>
+                    <span class="success-message" id="passwordSuccess">비밀번호가 일치합니다</span>
                 </div>
                 
-                <div class="form-group">
-                    <input type="password" class="form-control" name="confirmPassword" placeholder="비밀번호 확인" required>
+                <div class="input-group">
+                    <input type="text" id="name" name="name" placeholder="이름" required>
                 </div>
                 
-                <div class="form-group">
-                    <input type="text" class="form-control" name="name" placeholder="이름을 입력하세요" required>
+                <div class="input-group">
+                    <input type="email" id="email" name="email" placeholder="이메일" required>
                 </div>
                 
-                <div class="form-group">
-                    <input type="email" class="form-control" name="email" placeholder="이메일을 입력하세요" required>
+                <div class="role-section">
+                    <label>가입 목적을 선택하세요</label>
+                    <div class="role-options">
+                        <div class="role-option">
+                            <input type="radio" id="student" name="role" value="STUDENT" checked>
+                            <label for="student" class="role-card">
+                                <span class="role-icon">🎓</span>
+                                <span class="role-name">면접자</span>
+                                <span class="role-desc">면접 연습</span>
+                            </label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="interviewer" name="role" value="INTERVIEWER">
+                            <label for="interviewer" class="role-card">
+                                <span class="role-icon">👔</span>
+                                <span class="role-name">면접관</span>
+                                <span class="role-desc">면접 진행</span>
+                            </label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="reviewer" name="role" value="REVIEWER">
+                            <label for="reviewer" class="role-card">
+                                <span class="role-icon">📝</span>
+                                <span class="role-name">리뷰어</span>
+                                <span class="role-desc">피드백 작성</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <select class="form-select" name="role" required>
-                        <option value="">역할을 선택하세요</option>
-                        <option value="STUDENT">면접자 (학생/취준생)</option>
-                        <option value="HOST">면접관 (강사/멘토)</option>
-                        <option value="REVIEWER">리뷰어 (평가 전문가)</option>
-                    </select>
-                    <small style="color: var(--gray-500); font-size: 0.75rem; margin-top: 0.5rem; display: block;">
-                        면접자: 모의면접에 참여하여 질문에 답변<br>
-                        면접관: 세션을 생성하고 질문을 출제하며 피드백 제공<br>
-                        리뷰어: 답변에 대한 평가와 피드백 제공
-                    </small>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-full">회원가입</button>
+                <button type="submit" id="submitBtn">회원가입</button>
             </form>
             
-            <div class="auth-link">
-                <p>이미 계정이 있으신가요? <a th:href="@{/auth/login}">로그인</a></p>
-            </div>
+            <a href="/auth/login" class="login-link">이미 계정이 있으신가요? 로그인</a>
         </div>
     </div>
-
+    
     <script>
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            const username = document.querySelector('input[name="username"]').value;
-            const password = document.querySelector('input[name="password"]').value;
-            const confirmPassword = document.querySelector('input[name="confirmPassword"]').value;
-            const name = document.querySelector('input[name="name"]').value;
-            const email = document.querySelector('input[name="email"]').value;
-            const role = document.querySelector('select[name="role"]').value;
+        const passwordInput = document.getElementById('password');
+        const passwordConfirmInput = document.getElementById('passwordConfirm');
+        const passwordError = document.getElementById('passwordError');
+        const passwordSuccess = document.getElementById('passwordSuccess');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        function validatePassword() {
+            const password = passwordInput.value;
+            const passwordConfirm = passwordConfirmInput.value;
             
-            if (username.length < 4) {
-                e.preventDefault();
-                alert('아이디는 4자 이상이어야 합니다.');
-                return;
+            if (passwordConfirm === '') {
+                passwordConfirmInput.classList.remove('error', 'success');
+                passwordError.classList.remove('show');
+                passwordSuccess.classList.remove('show');
+                return true;
             }
             
-            if (password.length < 6) {
-                e.preventDefault();
-                alert('비밀번호는 6자 이상이어야 합니다.');
-                return;
+            if (password === passwordConfirm) {
+                passwordConfirmInput.classList.remove('error');
+                passwordConfirmInput.classList.add('success');
+                passwordError.classList.remove('show');
+                passwordSuccess.classList.add('show');
+                return true;
+            } else {
+                passwordConfirmInput.classList.remove('success');
+                passwordConfirmInput.classList.add('error');
+                passwordError.classList.add('show');
+                passwordSuccess.classList.remove('show');
+                return false;
             }
+        }
+        
+        passwordInput.addEventListener('input', validatePassword);
+        passwordConfirmInput.addEventListener('input', validatePassword);
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            if (password !== confirmPassword) {
-                e.preventDefault();
+            if (!validatePassword()) {
                 alert('비밀번호가 일치하지 않습니다.');
                 return;
             }
             
-            if (!name.trim() || !email.trim() || !role) {
-                e.preventDefault();
-                alert('모든 필드를 입력해주세요.');
-                return;
-            }
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const role = document.querySelector('input[name="role"]:checked').value;
             
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                e.preventDefault();
-                alert('올바른 이메일 형식을 입력해주세요.');
-                return;
+            const data = {
+                username: username,
+                password: password,
+                name: name,
+                email: email,
+                role: role
+            };
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '처리 중...';
+            
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    alert('회원가입 성공! 로그인 해주세요.');
+                    window.location.href = '/auth/login';
+                } else {
+                    const error = await response.json();
+                    alert('회원가입 실패: ' + (error.message || '알 수 없는 오류'));
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '회원가입';
+                }
+            } catch (error) {
+                console.error('회원가입 오류:', error);
+                alert('회원가입 중 오류가 발생했습니다');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '회원가입';
             }
         });
     </script>

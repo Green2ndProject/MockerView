@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>결제 수단 선택</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <div class="payment-container">
+        <h2>결제 수단 선택</h2>
+        
+        <div class="payment-methods">
+            <button onclick="selectMethod('CARD')">신용/체크카드</button>
+            <button onclick="selectMethod('VIRTUAL_ACCOUNT')">가상계좌</button>
+            <button onclick="selectMethod('PHONE')">휴대폰 결제</button>
+            <button onclick="selectMethod('EASY_PAY')">간편결제</button>
+        </div>
+        
+        <div id="payment-form"></div>
+    </div>
+    
+    <script>
+        function selectMethod(method) {
+            const form = document.getElementById('payment-form');
+            form.innerHTML = `<p>${method} 결제가 선택되었습니다</p>`;
+        }
+    </script>
+</body>
+</html>

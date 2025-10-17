@@ -23,7 +23,9 @@ import com.mockerview.jwt.JWTFilter;
 import com.mockerview.jwt.JWTLogoutHandler;
 import com.mockerview.jwt.JWTUtil;
 import com.mockerview.jwt.LoginFilter;
+import com.mockerview.jwt.OAuth2SuccessHandler;
 import com.mockerview.repository.UserRepository;
+import com.mockerview.service.CustomOAuth2UserService;
 import com.mockerview.service.CustomUserDetailsService;
 
 import java.util.Arrays;
@@ -37,15 +39,21 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final UserRepository userRepository;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     public SecurityConfig(JWTUtil jwtUtil, 
                         AuthenticationConfiguration authenticationConfiguration,
                         JWTLogoutHandler jwtLogoutHandler,
-                        UserRepository userRepository) throws Exception {
+                        UserRepository userRepository,
+                        CustomOAuth2UserService customOAuth2UserService,
+                        OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
         this.jwtUtil = jwtUtil;
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtLogoutHandler = jwtLogoutHandler;
         this.userRepository = userRepository;
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
@@ -95,11 +103,12 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index").permitAll()
-                .requestMatchers("/auth/login", "/auth/register", "/error", "/favicon.ico").permitAll()
+                .requestMatchers("/auth/login", "/auth/register", "/auth/find-username", "/auth/reset-password", "/error", "/favicon.ico").permitAll()
                 .requestMatchers("/user/login", "/user/register", "/user/loginProc", "/user/registerProc").permitAll()
                 .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/**").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/auth/mypage").authenticated()
                 .requestMatchers("/session/list").authenticated()
                 .anyRequest().authenticated())
@@ -107,6 +116,10 @@ public class SecurityConfig {
             .headers(headers -> headers.disable())
             .requestCache((cache) -> cache.disable())
             .formLogin(login -> login.disable())
+            .oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService))
+                .successHandler(oAuth2SuccessHandler))
             .httpBasic(auth -> auth.disable())
             .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtFilter(), LoginFilter.class)

@@ -159,6 +159,8 @@
             font-size: 16px;
             transition: all 0.2s;
             display: inline-block;
+            cursor: pointer;
+            border: none;
         }
         
         .btn-primary:hover {
@@ -829,7 +831,7 @@
                     <div class="price-name">Free</div>
                     <div class="price-amount">₩0<small>/월</small></div>
                     <div class="price-desc">월 5개 세션</div>
-                    <a th:href="@{/auth/register}" class="btn-primary">시작하기</a>
+                    <button class="btn-primary" onclick="selectPlan('FREE')">시작하기</button>
                 </div>
                 
                 <div class="price-card popular">
@@ -838,7 +840,7 @@
                     <div class="price-name">Pro</div>
                     <div class="price-amount">₩29,900<small>/월</small></div>
                     <div class="price-desc">월 100개 세션 + AI 상세 분석</div>
-                    <a th:href="@{/payment/plans}" class="btn-primary">선택하기</a>
+                    <button class="btn-primary" onclick="selectPlan('PRO')">선택하기</button>
                 </div>
                 
                 <div class="price-card">
@@ -846,7 +848,7 @@
                     <div class="price-name">Team</div>
                     <div class="price-amount">₩99,000<small>/월</small></div>
                     <div class="price-desc">월 500개 세션 + 팀 관리</div>
-                    <a th:href="@{/payment/plans}" class="btn-primary">선택하기</a>
+                    <button class="btn-primary" onclick="selectPlan('TEAM')">선택하기</button>
                 </div>
             </div>
         </div>
@@ -897,6 +899,7 @@
         </div>
     </footer>
 
+    <script src="/js/payment-redirect.js"></script>
     <script th:src="@{/js/index.js}"></script>
 </body>
 </html>
