@@ -47,19 +47,28 @@
             line-height: 1.6;
         }
         
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+        }
+        
         .btn {
             display: inline-block;
             padding: 14px 32px;
-            background: #667eea;
-            color: white;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
-            transition: background 0.2s;
-            margin: 0 8px;
+            transition: all 0.2s;
+            font-size: 14px;
         }
         
-        .btn:hover {
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
             background: #5568d3;
         }
         
@@ -72,6 +81,27 @@
         .btn-outline:hover {
             background: #f0f4ff;
         }
+        
+        .btn-text {
+            background: transparent;
+            color: #666;
+            border: none;
+            padding: 12px;
+        }
+        
+        .btn-text:hover {
+            background: #f8f9fa;
+        }
+        
+        @media (min-width: 600px) {
+            .btn-group {
+                flex-direction: row;
+            }
+            
+            .btn {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 <body>
@@ -79,8 +109,13 @@
         <div class="fail-icon">❌</div>
         <h1>결제에 실패했습니다</h1>
         <p th:text="${message}">결제 처리 중 문제가 발생했습니다.</p>
-        <a href="/payment/plans" class="btn">다시 시도</a>
-        <a href="/" class="btn btn-outline">홈으로</a>
+        
+        <div class="btn-group">
+            <a href="/payment/plans" class="btn btn-primary">다른 플랜 선택</a>
+            <a href="/auth/mypage" class="btn btn-outline">마이페이지</a>
+        </div>
+        
+        <a href="/" class="btn btn-text" style="display: block; margin-top: 16px;">홈으로</a>
     </div>
 </body>
 </html>
