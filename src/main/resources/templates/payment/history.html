@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>결제 내역 - MockerView</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 32px 0;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .payment-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .payment-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .payment-table th {
+            background: #f8f9fa;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .payment-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        
+        .payment-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .payment-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-done {
+            background: #d1f4e0;
+            color: #0d7a3d;
+        }
+        
+        .status-failed {
+            background: #ffe0e0;
+            color: #c41e3a;
+        }
+        
+        .status-pending {
+            background: #fff4e0;
+            color: #b8860b;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 64px 32px;
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .btn-back {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 24px;
+        }
+        
+        .btn-back:hover {
+            background: #5568d3;
+        }
+        
+        @media (max-width: 768px) {
+            .payment-table {
+                overflow-x: auto;
+            }
+            
+            .payment-table table {
+                min-width: 600px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
+                    <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+                    <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="header">
+        <div class="container">
+            <h1>결제 내역</h1>
+            <p>MockerView 결제 내역을 확인하세요</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div th:if="${payments != null and !payments.empty}" class="payment-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>결제일시</th>
+                        <th>주문번호</th>
+                        <th>상품명</th>
+                        <th>결제수단</th>
+                        <th>금액</th>
+                        <th>상태</th>
+                        <th>영수증</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="payment : ${payments}">
+                        <td th:text="${#temporals.format(payment.approvedAt != null ? payment.approvedAt : payment.requestedAt, 'yyyy-MM-dd HH:mm')}">2025-01-15 14:30</td>
+                        <td th:text="${payment.orderId}">ORDER-123</td>
+                        <td>
+                            <span th:if="${payment.subscription != null}" 
+                                  th:text="${payment.subscription.planType.name()} + ' 플랜'">PRO 플랜</span>
+                            <span th:unless="${payment.subscription != null}">-</span>
+                        </td>
+                        <td th:text="${payment.method}">카드</td>
+                        <td th:text="'₩' + ${#numbers.formatInteger(payment.amount, 0, 'COMMA')}">₩29,900</td>
+                        <td>
+                            <span th:if="${payment.status.name() == 'DONE'}" class="status-badge status-done">완료</span>
+                            <span th:if="${payment.status.name() == 'FAILED'}" class="status-badge status-failed">실패</span>
+                            <span th:if="${payment.status.name() == 'PENDING'}" class="status-badge status-pending">대기</span>
+                        </td>
+                        <td>
+                            <a th:if="${payment.receiptUrl != null}" 
+                               th:href="${payment.receiptUrl}" 
+                               target="_blank"
+                               style="color: #667eea; text-decoration: none;">
+                                영수증 보기
+                            </a>
+                            <span th:unless="${payment.receiptUrl != null}">-</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div th:if="${payments == null or payments.empty}" class="card">
+            <div class="empty-state">
+                <div class="empty-state-icon">💳</div>
+                <p>아직 결제 내역이 없습니다</p>
+                <a href="/payment/plans" class="btn-back">플랜 구매하기</a>
+            </div>
+        </div>
+        
+        <div style="margin-top: 32px; text-align: center;">
+            <a href="/auth/mypage" class="btn-back">마이페이지로</a>
+        </div>
+    </div>
+</body>
+</html>

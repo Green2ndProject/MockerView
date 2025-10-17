@@ -40,7 +40,7 @@ public class User {
     private String email;
 
     public enum UserRole {
-        STUDENT, HOST, REVIEWER
+        STUDENT, HOST, REVIEWER, ADMIN
     }
 
     @Column(name = "IS_DELETED", nullable = false)

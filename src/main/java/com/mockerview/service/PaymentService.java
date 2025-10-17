@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -125,5 +126,10 @@ public class PaymentService {
         paymentRepository.save(payment);
         
         log.info("결제 취소 - orderId: {}, reason: {}", orderId, reason);
+    }
+    
+    @Transactional(readOnly = true)
+    public List<Payment> getPaymentsByUserId(Long userId) {
+        return paymentRepository.findByUserIdOrderByRequestedAtDesc(userId);
     }
 }

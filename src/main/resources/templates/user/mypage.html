@@ -376,10 +376,22 @@
     <nav class="navbar">
         <div class="container">
             <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <a class="navbar-brand" href="/session/list">
+                    Mockerview
+                    <span class="plan-badge" 
+                        th:classappend="${currentPlanType != null ? currentPlanType.toLowerCase() : 'free'}"
+                        th:text="${currentPlanType != null ? currentPlanType : 'FREE'}">FREE</span>
+                </a>
                 <div class="navbar-nav">
                     <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
                     <a class="nav-link active" th:href="@{/auth/mypage}">마이페이지</a>
+                    <a
+                    class="nav-link"
+                    th:if="${isAdmin}"
+                    th:href="@{/admin/dashboard}"
+                    style="color: #ff6b6b; font-weight: 600;"
+                    > 관리자</a
+                    >
                     <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
                 </div>
             </div>
@@ -581,6 +593,9 @@
                         <strong>가입일:</strong>
                         <div style="color: var(--gray-600); margin-top: 0.25rem;" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2025-01-01</div>
                     </div>
+                    <a href="/payment/history" class="btn btn-primary" style="width: 100%; margin-top: 16px; text-align: center; display: block;">
+                        결제 내역 보기
+                    </a>
                 </div>
             </div>
         </div>

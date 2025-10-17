@@ -1,5 +1,6 @@
 package com.mockerview.controller;
 
+import com.mockerview.entity.Payment;
 import com.mockerview.entity.Subscription;
 import com.mockerview.entity.User;
 import com.mockerview.service.*;
@@ -41,29 +42,6 @@ public class PaymentController {
         return "payment/plans";
     }
     
-    @PostMapping("/checkout")
-    @ResponseBody
-    public Map<String, Object> checkout(
-        @RequestParam String planType,
-        Authentication authentication
-    ) {
-        User user = userService.findByUsername(authentication.getName());
-        Subscription.PlanType plan = Subscription.PlanType.valueOf(planType);
-        
-        String orderId = "ORDER-" + System.currentTimeMillis() + "-" + user.getId();
-        Integer amount = subscriptionService.getPlanPrice(plan);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("orderId", orderId);
-        result.put("amount", amount);
-        result.put("orderName", plan.name() + " 플랜");
-        result.put("customerName", user.getName());
-        result.put("successUrl", "http://localhost:8080/payment/success");
-        result.put("failUrl", "http://localhost:8080/payment/fail");
-        
-        return result;
-    }
-    
     @GetMapping("/checkout-page")
     public String checkoutPage(
         @RequestParam String planType,
@@ -100,17 +78,22 @@ public class PaymentController {
         try {
             log.info("결제 승인 시작 - orderId: {}, paymentKey: {}, amount: {}", orderId, paymentKey, amount);
             
+            User user = userService.findByUsername(authentication.getName());
+            
             paymentService.confirmPayment(paymentKey, orderId, amount);
             
             String planTypeStr = orderId.split("-")[0];
             Subscription.PlanType planType = Subscription.PlanType.valueOf(planTypeStr);
-            User user = userService.findByUsername(authentication.getName());
             
-            subscriptionService.createSubscription(user.getId(), planType);
+            Subscription subscription = subscriptionService.createSubscription(user.getId(), planType);
             
             model.addAttribute("message", "결제가 완료되었습니다!");
             model.addAttribute("orderId", orderId);
             model.addAttribute("amount", amount);
+            model.addAttribute("planType", planType.name());
+            
+            log.info("결제 완료 - userId: {}, planType: {}, subscriptionId: {}", 
+                user.getId(), planType, subscription.getId());
             
             return "payment/success";
         } catch (Exception e) {
@@ -156,5 +139,12 @@ public class PaymentController {
         
         model.addAttribute("message", errorMessage);
         return "payment/fail";
+    }
+    
+    @GetMapping("/history")
+    public String paymentHistory(Authentication authentication, Model model) {
+        User user = userService.findByUsername(authentication.getName());
+        model.addAttribute("payments", paymentService.getPaymentsByUserId(user.getId()));
+        return "payment/history";
     }
 }

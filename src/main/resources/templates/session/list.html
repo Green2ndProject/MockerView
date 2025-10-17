@@ -304,7 +304,12 @@
     <nav class="navbar">
       <div class="container">
         <div class="navbar-content">
-          <a class="navbar-brand" href="/session/list">Mockerview</a>
+          <a class="navbar-brand" href="/session/list">
+            Mockerview
+            <span class="plan-badge" 
+                  th:classappend="${currentPlanType != null ? currentPlanType.toLowerCase() : 'free'}"
+                  th:text="${currentPlanType != null ? currentPlanType : 'FREE'}">FREE</span>
+          </a>
           <div class="navbar-nav">
             <a class="nav-link active" href="/session/list">세션 관리</a>
             <a
@@ -312,6 +317,13 @@
               th:if="${currentUser != null}"
               th:href="@{/auth/mypage}"
               >마이페이지</a
+            >
+            <a
+              class="nav-link"
+              th:if="${isAdmin}"
+              th:href="@{/admin/dashboard}"
+              style="color: #ff6b6b; font-weight: 600;"
+              >관리자</a
             >
             <a
               class="nav-link"
