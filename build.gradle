@@ -42,9 +42,6 @@ dependencies {
     
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
     
-    runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
-    runtimeOnly 'org.postgresql:postgresql'
-    
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     

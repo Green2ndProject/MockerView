@@ -1,16 +1,29 @@
-version: '3.8'
-
 services:
-  oracle:
-    image: container-registry.oracle.com/database/express:latest
-    container_name: mockerview-oracle
-    ports:
-      - "1522:1521"
+  postgres:
+    image: postgres:15-alpine
+    container_name: mockerview-postgres
     environment:
-      - ORACLE_PASSWORD=mockerview
+      POSTGRES_DB: mockerview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5433:5432"
     volumes:
-      - oracle-data:/opt/oracle/oradata
+      - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mockerview-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mockerview.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
 
 volumes:
-  oracle-data:
+  postgres_data:
