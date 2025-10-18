@@ -390,6 +390,85 @@
             color: #991b1b;
             border: 1px solid #fecaca;
         }
+
+        .stats-highlight {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+        }
+
+        .stats-highlight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f4ff;
+        }
+
+        .stats-highlight-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #fafbfc;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .stat-item:hover {
+            background: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .btn-stats-detail {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-stats-detail:hover {
+            background: #5568d3;
+        }
         
         @media (max-width: 1024px) {
             .content-grid {
@@ -404,6 +483,10 @@
             .profile-card,
             .quick-actions {
                 min-width: 280px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
         
@@ -451,6 +534,20 @@
             .quick-actions {
                 min-width: auto;
             }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-highlight {
+                padding: 20px;
+            }
+
+            .stats-highlight-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -472,6 +569,11 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .btn-stats-detail {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -482,13 +584,13 @@
                 <a class="navbar-brand" href="/session/list">
                     MockerView
                     <span class="plan-badge" 
-                          th:classappend="${currentPlanType != null ? currentPlanType.toLowerCase() : 'free'}"
-                          th:text="${currentPlanType != null ? currentPlanType : 'FREE'}">FREE</span>
+                          th:classappend="${planType != null ? planType.toLowerCase() : 'free'}"
+                          th:text="${planType != null ? planType : 'FREE'}">FREE</span>
                 </a>
                 <div class="navbar-nav">
                     <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
                     <a class="nav-link active" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a class="nav-link" th:if="${isAdmin}" th:href="@{/admin/dashboard}" style="color: #ff6b6b; font-weight: 600;">🔧 관리자</a>
+                    <a class="nav-link" th:if="${user.role.name() == 'ADMIN'}" th:href="@{/admin/dashboard}" style="color: #ff6b6b; font-weight: 600;">🔧 관리자</a>
                     <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
                 </div>
             </div>
@@ -533,6 +635,10 @@
                         <span class="action-icon">🏠</span>
                         세션 목록
                     </a>
+                    <a href="/auth/mypage/stats" class="action-btn">
+                        <span class="action-icon">📊</span>
+                        활동 통계
+                    </a>
                     <a href="/payment/plans" class="action-btn">
                         <span class="action-icon">💳</span>
                         플랜 업그레이드
@@ -545,6 +651,35 @@
             </div>
             
             <div class="main-content">
+                <div class="stats-highlight">
+                    <div class="stats-highlight-header">
+                        <h2 class="stats-highlight-title">
+                            <span>📊</span>
+                            나의 활동 통계
+                        </h2>
+                        <a href="/auth/mypage/stats" class="btn-stats-detail">
+                            상세 보기 →
+                        </a>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number" th:text="${participatedSessionCount}">0</div>
+                            <div class="stat-label">참여한 세션</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-number" th:text="${answerCount}">0</div>
+                            <div class="stat-label">작성한 답변</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-number" th:text="${hostedSessions.size()}">0</div>
+                            <div class="stat-label">호스팅한 세션</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="section-card">
                     <div class="section-header">
                         <h2>구독 정보</h2>
@@ -554,30 +689,30 @@
                     <div class="subscription-info">
                         <div class="info-box">
                             <div class="info-label">현재 플랜</div>
-                            <div class="info-value" th:text="${subscription?.planType != null ? subscription.planType : 'FREE'}">FREE</div>
+                            <div class="info-value" th:text="${planType != null ? planType : 'FREE'}">FREE</div>
                         </div>
                         
                         <div class="info-box">
                             <div class="info-label">세션 사용량</div>
                             <div class="info-value">
-                                <span th:text="${subscription?.usedSessions != null ? subscription.usedSessions : 0}">0</span>
+                                <span th:text="${usedSessions != null ? usedSessions : 0}">0</span>
                                 <span style="font-size: 1rem; color: #6b7280;">/ </span>
-                                <span style="font-size: 1rem; color: #6b7280;" th:text="${subscription?.sessionLimit != null ? subscription.sessionLimit : 5}">5</span>
+                                <span style="font-size: 1rem; color: #6b7280;" th:text="${sessionLimit != null ? sessionLimit : 5}">5</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" 
-                                     th:style="'width: ' + ${subscription != null && subscription.sessionLimit > 0 ? (subscription.usedSessions * 100 / subscription.sessionLimit) : 0} + '%'"></div>
+                                     th:style="'width: ' + ${sessionLimit != null && sessionLimit > 0 ? (usedSessions * 100 / sessionLimit) : 0} + '%'"></div>
                             </div>
                         </div>
                         
-                        <div class="info-box" th:if="${subscription?.endDate != null}">
+                        <div class="info-box" th:if="${endDate != null}">
                             <div class="info-label">갱신일</div>
-                            <div class="info-value" style="font-size: 1.125rem;" th:text="${#temporals.format(subscription.endDate, 'MM/dd')}">12/31</div>
-                            <div class="info-desc" th:text="${#temporals.format(subscription.endDate, 'yyyy년 MM월 dd일')}">2025년 12월 31일</div>
+                            <div class="info-value" style="font-size: 1.125rem;" th:text="${#temporals.format(endDate, 'MM/dd')}">12/31</div>
+                            <div class="info-desc" th:text="${#temporals.format(endDate, 'yyyy년 MM월 dd일')}">2025년 12월 31일</div>
                         </div>
                     </div>
                     
-                    <div th:if="${subscription?.planType != 'FREE'}" style="padding: 16px; background: #f0f4ff; border-radius: 10px; margin-top: 16px;">
+                    <div th:if="${planType != 'FREE'}" style="padding: 16px; background: #f0f4ff; border-radius: 10px; margin-top: 16px;">
                         <p style="font-size: 0.875rem; color: #667eea; font-weight: 500;">
                             ⚡ 프리미엄 플랜을 이용 중입니다. 세션 생성과 AI 피드백을 마음껏 사용하세요!
                         </p>
@@ -589,7 +724,7 @@
                         <h2>계정 정보</h2>
                     </div>
                     
-                    <form th:action="@{/auth/update}" method="post">
+                    <form th:action="@{/auth/mypage/update}" method="post">
                         <div class="form-group">
                             <label class="form-label" for="username">아이디</label>
                             <input type="text" id="username" class="form-input" th:value="${user.username}" disabled>
@@ -614,7 +749,7 @@
                         <h2>비밀번호 변경</h2>
                     </div>
                     
-                    <form th:action="@{/auth/change-password}" method="post">
+                    <form th:action="@{/api/users/change-password}" method="post">
                         <div class="form-group">
                             <label class="form-label" for="currentPassword">현재 비밀번호</label>
                             <input type="password" id="currentPassword" name="currentPassword" class="form-input" placeholder="현재 비밀번호" required>
@@ -656,7 +791,7 @@
                 
                 const form = document.createElement('form');
                 form.method = 'POST';
-                form.action = '/auth/withdraw';
+                form.action = '/api/users/withdraw';
                 
                 if (reason) {
                     const input = document.createElement('input');
@@ -671,15 +806,18 @@
             }
         }
         
-        document.querySelector('form[action="/auth/change-password"]').addEventListener('submit', function(e) {
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmNewPassword').value;
-            
-            if (newPassword !== confirmPassword) {
-                e.preventDefault();
-                alert('새 비밀번호가 일치하지 않습니다.');
-            }
-        });
+        const passwordForm = document.querySelector('form[action="/api/users/change-password"]');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', function(e) {
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmNewPassword').value;
+                
+                if (newPassword !== confirmPassword) {
+                    e.preventDefault();
+                    alert('새 비밀번호가 일치하지 않습니다.');
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -48,7 +48,6 @@ public class MyPageController {
             
             log.info("마이페이지 로드 - userId: {}, username: {}", user.getId(), user.getUsername());
             
-            // 구독 정보 추가
             Subscription subscription = subscriptionService.getActiveSubscription(user.getId());
             
             if (subscription != null) {
@@ -95,7 +94,7 @@ public class MyPageController {
         } catch (Exception e) {
             log.error("마이페이지 로드 실패", e);
             model.addAttribute("error", "마이페이지를 불러올 수 없습니다: " + e.getMessage());
-            return "error/500";
+            return "error";
         }
     }
 
