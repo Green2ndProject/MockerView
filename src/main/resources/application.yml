@@ -165,3 +165,9 @@ logging:
     com.mockerview: INFO
     org.springframework.web.socket: INFO
     root: INFO
+
+admin:
+  username: ${ADMIN_USERNAME:mockerview}
+  password: ${ADMIN_PASSWORD:mockerview}
+  name: ${ADMIN_NAME:MockerView}
+  email: ${ADMIN_EMAIL:admin@mockerview.com}
