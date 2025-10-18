@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('STUDENT', 'HOST', 'REVIEWER', 'ADMIN'));
 
+-- 나머지 테이블들...
 CREATE TABLE IF NOT EXISTS sessions (
     id BIGSERIAL PRIMARY KEY,
     host_id BIGINT REFERENCES users(id),

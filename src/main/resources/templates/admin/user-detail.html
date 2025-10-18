@@ -2,28 +2,93 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사용자 상세 - MockerView Admin</title>
-    <link rel="stylesheet" href="/css/common.css">
     <style>
-        .admin-header {
-            background: #667eea;
-            color: white;
-            padding: 32px 0;
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
             margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border-left: 4px solid #667eea;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 6px;
+        }
+        
+        .header p {
+            color: #64748b;
+            font-size: 15px;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
         }
         
         .info-card {
             background: white;
-            padding: 32px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 36px;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             margin-bottom: 24px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .info-card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f3f5;
         }
         
         .info-row {
             display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f3f5;
         }
         
         .info-row:last-child {
@@ -31,86 +96,268 @@
         }
         
         .info-label {
-            width: 150px;
-            font-weight: 600;
-            color: #495057;
+            width: 160px;
+            font-weight: 700;
+            color: #64748b;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .info-value {
             flex: 1;
-            color: #212529;
+            color: #1a202c;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .role-badge.student {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        
+        .role-badge.host {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .role-badge.reviewer {
+            background: #ddd6fe;
+            color: #5b21b6;
+        }
+        
+        .role-badge.admin {
+            background: #ffe4e6;
+            color: #be123c;
+        }
+        
+        .plan-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .plan-badge.free {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+        
+        .plan-badge.basic {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .plan-badge.pro {
+            background: #fce7f3;
+            color: #9f1239;
+        }
+        
+        .plan-badge.team {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .plan-badge.enterprise {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .usage-bar {
+            width: 100%;
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .usage-fill {
+            height: 100%;
+            background: #667eea;
+            border-radius: 10px;
+            transition: width 0.3s;
         }
         
         .plan-change-form {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 2px solid #e5e7eb;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 2px solid #f1f3f5;
+        }
+        
+        .plan-change-form h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
         
         select {
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            margin-right: 12px;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Pretendard', sans-serif;
+        }
+        
+        select:hover {
+            border-color: #667eea;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f4ff;
+        }
+        
+        .footer-actions {
+            margin-top: 32px;
+            text-align: center;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .info-label {
+                width: 100%;
+            }
+            
+            .form-group {
+                flex-direction: column;
+            }
+            
+            select, .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <div class="container">
-            <h1>사용자 상세 정보</h1>
-        </div>
-    </div>
-    
     <div class="container">
+        <div class="header">
+            <h1>👤 사용자 상세 정보</h1>
+            <p>사용자 정보 조회 및 관리</p>
+        </div>
+        
         <div th:if="${success}" class="alert alert-success">
-            <span th:text="${success}"></span>
+            ✓ <span th:text="${success}"></span>
         </div>
         
         <div th:if="${error}" class="alert alert-error">
-            <span th:text="${error}"></span>
+            ✗ <span th:text="${error}"></span>
         </div>
         
         <div class="info-card">
-            <h2 style="margin-bottom: 24px;">기본 정보</h2>
+            <h2>기본 정보</h2>
             
             <div class="info-row">
                 <div class="info-label">사용자 ID</div>
-                <div class="info-value" th:text="${user.id}">1</div>
+                <div class="info-value"><strong th:text="${user.id}"></strong></div>
             </div>
             
             <div class="info-row">
                 <div class="info-label">이름</div>
-                <div class="info-value" th:text="${user.name}">홍길동</div>
+                <div class="info-value" th:text="${user.name}"></div>
             </div>
             
             <div class="info-row">
                 <div class="info-label">아이디</div>
-                <div class="info-value" th:text="${user.username}">user123</div>
+                <div class="info-value" th:text="${user.username}"></div>
             </div>
             
             <div class="info-row">
                 <div class="info-label">이메일</div>
-                <div class="info-value" th:text="${user.email}">email@example.com</div>
+                <div class="info-value" th:text="${user.email}"></div>
             </div>
             
             <div class="info-row">
                 <div class="info-label">역할</div>
                 <div class="info-value">
-                    <span th:if="${user.role.name() == 'STUDENT'}">면접자</span>
-                    <span th:if="${user.role.name() == 'HOST'}">면접관</span>
-                    <span th:if="${user.role.name() == 'ADMIN'}">관리자</span>
+                    <span class="role-badge student" th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
+                    <span class="role-badge host" th:if="${user.role.name() == 'HOST'}">👔 면접관</span>
+                    <span class="role-badge reviewer" th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
+                    <span class="role-badge admin" th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
                 </div>
             </div>
             
             <div class="info-row">
                 <div class="info-label">가입일</div>
-                <div class="info-value" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01</div>
+                <div class="info-value" th:text="${#temporals.format(user.createdAt, 'yyyy년 MM월 dd일 HH:mm')}"></div>
             </div>
         </div>
         
         <div class="info-card">
-            <h2 style="margin-bottom: 24px;">구독 정보</h2>
+            <h2>구독 정보</h2>
             
             <div th:if="${subscription != null}">
                 <div class="info-row">
@@ -118,55 +365,65 @@
                     <div class="info-value">
                         <span class="plan-badge" 
                               th:classappend="${subscription.planType.name().toLowerCase()}"
-                              th:text="${subscription.planType.name()}">FREE</span>
+                              th:text="${subscription.planType.name()}"></span>
                     </div>
                 </div>
                 
                 <div class="info-row">
                     <div class="info-label">세션 사용량</div>
                     <div class="info-value">
-                        <span th:text="${subscription.usedSessions}">0</span> / 
-                        <span th:text="${subscription.sessionLimit}">5</span>
+                        <div style="margin-bottom: 8px;">
+                            <strong th:text="${subscription.usedSessions}"></strong> / 
+                            <span th:text="${subscription.sessionLimit}"></span> 세션
+                        </div>
+                        <div class="usage-bar">
+                            <div class="usage-fill" 
+                                 th:style="'width: ' + ${subscription.sessionLimit > 0 ? (subscription.usedSessions * 100 / subscription.sessionLimit) : 0} + '%'"></div>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="info-row">
                     <div class="info-label">구독 시작일</div>
-                    <div class="info-value" th:text="${#temporals.format(subscription.startDate, 'yyyy-MM-dd')}">2025-01-01</div>
+                    <div class="info-value" th:text="${#temporals.format(subscription.startDate, 'yyyy.MM.dd')}"></div>
                 </div>
                 
                 <div class="info-row" th:if="${subscription.endDate != null}">
                     <div class="info-label">구독 종료일</div>
-                    <div class="info-value" th:text="${#temporals.format(subscription.endDate, 'yyyy-MM-dd')}">2025-02-01</div>
+                    <div class="info-value" th:text="${#temporals.format(subscription.endDate, 'yyyy.MM.dd')}"></div>
                 </div>
                 
                 <div class="info-row">
                     <div class="info-label">상태</div>
-                    <div class="info-value" th:text="${subscription.status.name()}">ACTIVE</div>
+                    <div class="info-value">
+                        <strong th:text="${subscription.status.name()}"></strong>
+                    </div>
                 </div>
             </div>
             
-            <div th:unless="${subscription != null}">
-                <p style="color: #666;">활성 구독 없음</p>
+            <div th:unless="${subscription != null}" class="empty-state">
+                📭 활성 구독이 없습니다
             </div>
             
             <div class="plan-change-form">
-                <h3 style="margin-bottom: 16px;">플랜 변경</h3>
+                <h3>💳 플랜 변경</h3>
                 <form th:action="@{/admin/users/{id}/change-plan(id=${user.id})}" method="post">
-                    <select name="planType" required>
-                        <option value="FREE">FREE</option>
-                        <option value="BASIC">BASIC</option>
-                        <option value="PRO">PRO</option>
-                        <option value="TEAM">TEAM</option>
-                        <option value="ENTERPRISE">ENTERPRISE</option>
-                    </select>
-                    <button type="submit" class="btn btn-primary">플랜 변경</button>
+                    <div class="form-group">
+                        <select name="planType" required>
+                            <option value="FREE">FREE - 무료 플랜</option>
+                            <option value="BASIC">BASIC - 베이직 플랜</option>
+                            <option value="PRO">PRO - 프로 플랜</option>
+                            <option value="TEAM">TEAM - 팀 플랜</option>
+                            <option value="ENTERPRISE">ENTERPRISE - 엔터프라이즈</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">변경 적용 →</button>
+                    </div>
                 </form>
             </div>
         </div>
         
-        <div style="margin-top: 32px; text-align: center;">
-            <a href="/admin/dashboard" class="btn btn-secondary">대시보드로</a>
+        <div class="footer-actions">
+            <a href="/admin/dashboard" class="btn btn-secondary">← 대시보드로 돌아가기</a>
         </div>
     </div>
 </body>

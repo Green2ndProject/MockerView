@@ -2,146 +2,353 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 대시보드 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css">
     <style>
-        .admin-header {
-            background: #667eea;
-            color: white;
-            padding: 32px 0;
-            margin-bottom: 32px;
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .admin-header h1 {
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+        
+        .header-left h1 {
             font-size: 32px;
-            margin-bottom: 8px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-left p {
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f4ff;
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
-            margin-bottom: 48px;
+            margin-bottom: 40px;
         }
         
         .stat-card {
             background: white;
             padding: 32px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            text-align: center;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border-color: #667eea;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
         
         .stat-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: #f0f4ff;
         }
         
         .stat-number {
-            font-size: 36px;
+            font-size: 42px;
             font-weight: 700;
             color: #667eea;
+            line-height: 1;
             margin-bottom: 8px;
         }
         
         .stat-label {
-            color: #666;
+            color: #64748b;
             font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        
+        .user-table-wrapper {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border: 1px solid #e5e7eb;
         }
         
         .user-table {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .user-table table {
             width: 100%;
             border-collapse: collapse;
         }
         
-        .user-table th {
-            background: #f8f9fa;
-            padding: 16px;
-            text-align: left;
-            font-weight: 600;
-            color: #495057;
-            font-size: 14px;
+        .user-table thead {
+            background: #f8f9fc;
             border-bottom: 2px solid #e5e7eb;
         }
         
+        .user-table th {
+            padding: 18px 24px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
         .user-table td {
-            padding: 16px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 24px;
+            border-bottom: 1px solid #f1f3f5;
             font-size: 14px;
+            color: #334155;
         }
         
-        .user-table tr:hover {
-            background: #f8f9fa;
+        .user-table tbody tr {
+            transition: background 0.15s;
         }
         
-        .plan-badge {
+        .user-table tbody tr:hover {
+            background: #f8f9fc;
+        }
+        
+        .user-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .role-badge {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 6px 14px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .role-badge.student {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        
+        .role-badge.host {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .role-badge.reviewer {
+            background: #ddd6fe;
+            color: #5b21b6;
+        }
+        
+        .role-badge.admin {
+            background: #ffe4e6;
+            color: #be123c;
         }
         
         .btn-view {
-            padding: 6px 16px;
+            padding: 8px 18px;
             background: #667eea;
             color: white;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-block;
         }
         
         .btn-view:hover {
             background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .footer-actions {
+            margin-top: 40px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 20px 16px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-table-wrapper {
+                overflow-x: auto;
+            }
+            
+            .user-table {
+                min-width: 800px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <div class="container">
-            <h1>관리자 대시보드</h1>
-            <p>MockerView 전체 관리</p>
+    <div class="dashboard-container">
+        <div class="header">
+            <div class="header-left">
+                <h1>⚡ 관리자 대시보드</h1>
+                <p>MockerView 전체 시스템 관리</p>
+            </div>
+            <div class="header-actions">
+                <a href="/session/list" class="btn btn-secondary">🏠 메인으로</a>
+                <a href="/auth/mypage" class="btn btn-primary">👤 마이페이지</a>
+            </div>
         </div>
-    </div>
-    
-    <div class="container">
+        
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">👥</div>
-                <div class="stat-number" th:text="${totalUsers}">0</div>
+                <div class="stat-header">
+                    <div class="stat-icon">👥</div>
+                </div>
+                <div class="stat-number" th:text="${totalUsers}"></div>
                 <div class="stat-label">전체 사용자</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-number" th:text="${activeSubscriptions}">0</div>
+                <div class="stat-header">
+                    <div class="stat-icon">⭐</div>
+                </div>
+                <div class="stat-number" th:text="${activeSubscriptions}"></div>
                 <div class="stat-label">활성 구독</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">🆓</div>
-                <div class="stat-number" th:text="${freeUsers}">0</div>
+                <div class="stat-header">
+                    <div class="stat-icon">🆓</div>
+                </div>
+                <div class="stat-number" th:text="${freeUsers}"></div>
                 <div class="stat-label">무료 사용자</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon">💳</div>
-                <div class="stat-number" th:text="${paidUsers}">0</div>
+                <div class="stat-header">
+                    <div class="stat-icon">💳</div>
+                </div>
+                <div class="stat-number" th:text="${paidUsers}"></div>
                 <div class="stat-label">유료 사용자</div>
             </div>
         </div>
         
-        <h2 style="margin-bottom: 24px;">사용자 목록</h2>
+        <h2 class="section-title">사용자 목록</h2>
         
-        <div class="user-table">
-            <table>
+        <div class="user-table-wrapper">
+            <table class="user-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -154,25 +361,26 @@
                 </thead>
                 <tbody>
                     <tr th:each="user : ${users}">
-                        <td th:text="${user.id}">1</td>
-                        <td th:text="${user.name}">홍길동</td>
-                        <td th:text="${user.email}">email@example.com</td>
+                        <td><strong th:text="${user.id}"></strong></td>
+                        <td th:text="${user.name}"></td>
+                        <td th:text="${user.email}"></td>
                         <td>
-                            <span th:if="${user.role.name() == 'STUDENT'}">면접자</span>
-                            <span th:if="${user.role.name() == 'HOST'}">면접관</span>
-                            <span th:if="${user.role.name() == 'ADMIN'}">관리자</span>
+                            <span class="role-badge student" th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
+                            <span class="role-badge host" th:if="${user.role.name() == 'HOST'}">👔 면접관</span>
+                            <span class="role-badge reviewer" th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
+                            <span class="role-badge admin" th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
                         </td>
-                        <td th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2025-01-01</td>
+                        <td th:text="${#temporals.format(user.createdAt, 'yyyy.MM.dd')}"></td>
                         <td>
-                            <a th:href="@{/admin/users/{id}(id=${user.id})}" class="btn-view">상세보기</a>
+                            <a th:href="@{/admin/users/{id}(id=${user.id})}" class="btn-view">상세보기 →</a>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
         
-        <div style="margin-top: 32px; text-align: center;">
-            <a href="/session/list" class="btn btn-primary">메인으로</a>
+        <div class="footer-actions">
+            <a href="/session/list" class="btn btn-secondary">← 메인으로 돌아가기</a>
         </div>
     </div>
 </body>
