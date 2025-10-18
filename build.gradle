@@ -57,6 +57,9 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
     
     implementation 'commons-codec:commons-codec:1.16.0'
+    
+    implementation 'nl.martijndwars:web-push:5.1.1'
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
 }
 
 tasks.named('test') {

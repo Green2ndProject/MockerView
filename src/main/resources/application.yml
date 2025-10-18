@@ -95,6 +95,13 @@ agora:
   app-certificate: ${AGORA_APP_CERTIFICATE}
   token-expiration: 3600
 
+vapid:
+  public:
+    key: ${VAPID_PUBLIC_KEY}
+  private:
+    key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT}
+
 ---
 spring:
   config:

@@ -1,91 +1,36 @@
 const pushNotifications = {
-    async requestPermission() {
-        if (!('Notification' in window)) {
-            console.warn('This browser does not support notifications');
+    registration: null,
+    subscription: null,
+    vapidPublicKey: null,
+
+    async init() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.warn('❌ Push notifications not supported');
             return false;
         }
-        
-        if (!('serviceWorker' in navigator)) {
-            console.warn('Service Worker not supported');
-            return false;
-        }
-        
-        const permission = await Notification.requestPermission();
-        
-        if (permission === 'granted') {
-            console.log('Notification permission granted');
-            await this.subscribe();
+
+        try {
+            this.registration = await navigator.serviceWorker.ready;
+            await this.loadVapidKey();
+            console.log('✅ Push notifications initialized');
             return true;
-        } else {
-            console.log('Notification permission denied');
+        } catch (error) {
+            console.error('❌ Push init failed:', error);
             return false;
         }
     },
-    
-    async subscribe() {
+
+    async loadVapidKey() {
         try {
-            const registration = await navigator.serviceWorker.ready;
-            
-            const applicationServerKey = this.urlBase64ToUint8Array(
-                'YOUR_VAPID_PUBLIC_KEY_HERE'
-            );
-            
-            const subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: applicationServerKey
-            });
-            
-            console.log('Push subscription:', subscription);
-            
-            await fetch('/api/notifications/subscribe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': this.getCookie('Authorization')
-                },
-                body: JSON.stringify(subscription)
-            });
-            
-            console.log('Subscription sent to server');
-            
+            const response = await fetch('/api/notifications/vapid-public-key');
+            const data = await response.json();
+            this.vapidPublicKey = data.publicKey;
+            console.log('✅ VAPID public key loaded');
         } catch (error) {
-            console.error('Failed to subscribe:', error);
+            console.error('❌ Failed to load VAPID key:', error);
         }
     },
-    
-    async unsubscribe() {
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-            
-            if (subscription) {
-                await subscription.unsubscribe();
-                console.log('Unsubscribed from push notifications');
-                
-                await fetch('/api/notifications/unsubscribe', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': this.getCookie('Authorization')
-                    },
-                    body: JSON.stringify(subscription)
-                });
-            }
-        } catch (error) {
-            console.error('Failed to unsubscribe:', error);
-        }
-    },
-    
-    async getSubscription() {
-        try {
-            const registration = await navigator.serviceWorker.ready;
-            return await registration.pushManager.getSubscription();
-        } catch (error) {
-            console.error('Failed to get subscription:', error);
-            return null;
-        }
-    },
-    
+
     urlBase64ToUint8Array(base64String) {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
         const base64 = (base64String + padding)
@@ -98,16 +43,126 @@ const pushNotifications = {
         for (let i = 0; i < rawData.length; ++i) {
             outputArray[i] = rawData.charCodeAt(i);
         }
-        
         return outputArray;
     },
-    
-    getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return '';
+
+    async requestPermission() {
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+            console.log('✅ Notification permission granted');
+            await this.subscribe();
+            return true;
+        } else if (permission === 'denied') {
+            console.warn('❌ Notification permission denied');
+            return false;
+        } else {
+            console.log('⚠️ Notification permission dismissed');
+            return false;
+        }
+    },
+
+    async subscribe() {
+        try {
+            if (!this.vapidPublicKey) {
+                await this.loadVapidKey();
+            }
+
+            const subscription = await this.registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
+            });
+
+            this.subscription = subscription;
+            console.log('✅ Push subscription created:', subscription);
+
+            await this.sendSubscriptionToServer(subscription);
+            return subscription;
+        } catch (error) {
+            console.error('❌ Push subscription failed:', error);
+            throw error;
+        }
+    },
+
+    async sendSubscriptionToServer(subscription) {
+        const subscriptionJson = subscription.toJSON();
+        
+        const payload = {
+            endpoint: subscriptionJson.endpoint,
+            keys: {
+                p256dh: subscriptionJson.keys.p256dh,
+                auth: subscriptionJson.keys.auth
+            }
+        };
+
+        try {
+            const response = await fetch('/api/notifications/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                console.log('✅ Subscription sent to server');
+            } else {
+                console.error('❌ Failed to send subscription to server');
+            }
+        } catch (error) {
+            console.error('❌ Error sending subscription:', error);
+        }
+    },
+
+    async unsubscribe() {
+        try {
+            const subscription = await this.registration.pushManager.getSubscription();
+            
+            if (subscription) {
+                await subscription.unsubscribe();
+                
+                await fetch('/api/notifications/unsubscribe', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        endpoint: subscription.endpoint
+                    })
+                });
+
+                console.log('✅ Push unsubscribed');
+                this.subscription = null;
+            }
+        } catch (error) {
+            console.error('❌ Unsubscribe failed:', error);
+        }
+    },
+
+    async getSubscription() {
+        try {
+            const subscription = await this.registration.pushManager.getSubscription();
+            this.subscription = subscription;
+            return subscription;
+        } catch (error) {
+            console.error('❌ Failed to get subscription:', error);
+            return null;
+        }
+    },
+
+    isSubscribed() {
+        return this.subscription !== null;
     }
 };
 
-window.pushNotifications = pushNotifications;
+if (typeof window !== 'undefined') {
+    window.pushNotifications = pushNotifications;
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            pushNotifications.init();
+        });
+    } else {
+        pushNotifications.init();
+    }
+}
