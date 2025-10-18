@@ -104,15 +104,12 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index").permitAll()
+                .requestMatchers("/", "/index", "/index.html").permitAll()
                 .requestMatchers("/auth/login", "/auth/register", "/auth/find-username", "/auth/reset-password", "/error", "/favicon.ico").permitAll()
                 .requestMatchers("/user/login", "/user/register", "/user/loginProc", "/user/registerProc").permitAll()
-                .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
-                
-                // PWA 파일 추가
-                .requestMatchers("/manifest.json", "/service-worker.js", "/offline.html").permitAll()
+                .requestMatchers("/images/**", "/css/**", "/js/**", "/*.png", "/*.jpg", "/*.ico").permitAll()
+                .requestMatchers("/manifest.json", "/service-worker.js", "/offline.html", "/*.html").permitAll()
                 .requestMatchers("/apple-touch-icon**").permitAll()
-                
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
@@ -157,7 +154,10 @@ public class SecurityConfig {
             "/favicon.ico",
             "/manifest.json",
             "/service-worker.js",
-            "/offline.html"
+            "/offline.html",
+            "/*.png",
+            "/*.jpg",
+            "/*.ico"
         );
     }
 }
