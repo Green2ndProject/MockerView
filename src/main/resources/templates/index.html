@@ -6,6 +6,7 @@
     <title>MockerView - 실시간 협업 AI 모의면접</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MockerView">
@@ -15,6 +16,7 @@
     <link rel="apple-touch-icon" sizes="167x167" href="/images/167.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/images/android-launchericon-192-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/images/android-launchericon-512-512.png">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
         
@@ -591,7 +593,7 @@
             }
             
             .hero-visual {
-                order: -1;
+                order: 1;
             }
             
             .comparison-grid {
@@ -645,6 +647,42 @@
     
     <section class="hero">
         <div class="hero-grid">
+            <div class="hero-visual">
+                <div class="hero-image">
+                    <div class="hero-card">
+                        <div class="card-header">
+                            <div class="card-avatar">김</div>
+                            <div class="card-name">김민수</div>
+                            <div class="card-badge">면접 중</div>
+                        </div>
+                        <div class="card-content">
+                            "저는 팀 프로젝트에서 프론트엔드를 담당했고, React와 JavaScript를 활용해..."
+                        </div>
+                    </div>
+                    <div class="hero-card">
+                        <div class="card-header">
+                            <div class="card-avatar" style="background: #10b981;">AI</div>
+                            <div class="card-name">AI 피드백</div>
+                            <div class="card-badge">분석 완료</div>
+                        </div>
+                        <div class="card-content">
+                            <strong>강점:</strong> 구체적인 기술 스택 언급<br>
+                            <strong>개선점:</strong> 프로젝트 성과를 수치로 보완
+                        </div>
+                    </div>
+                    <div class="hero-card">
+                        <div class="card-header">
+                            <div class="card-avatar" style="background: #f59e0b;">이</div>
+                            <div class="card-name">면접관</div>
+                            <div class="card-badge">피드백</div>
+                        </div>
+                        <div class="card-content">
+                            "기술 스택은 좋은데, 왜 그 기술을 선택했는지 이유를 추가하면 더 좋을 것 같아요."
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="hero-content">
                 <div class="hero-badge">
                     ⚡ 국내 최초 실시간 협업 면접
@@ -679,42 +717,6 @@
                         <div class="hero-feature-text">
                             <div class="hero-feature-label">Response Time</div>
                             <div class="hero-feature-value">실시간 동기화</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="hero-visual">
-                <div class="hero-image">
-                    <div class="hero-card">
-                        <div class="card-header">
-                            <div class="card-avatar">김</div>
-                            <div class="card-name">김민수</div>
-                            <div class="card-badge">면접 중</div>
-                        </div>
-                        <div class="card-content">
-                            "저는 팀 프로젝트에서 프론트엔드를 담당했고, React와 JavaScript를 활용해..."
-                        </div>
-                    </div>
-                    <div class="hero-card">
-                        <div class="card-header">
-                            <div class="card-avatar" style="background: #10b981;">AI</div>
-                            <div class="card-name">AI 피드백</div>
-                            <div class="card-badge">분석 완료</div>
-                        </div>
-                        <div class="card-content">
-                            <strong>강점:</strong> 구체적인 기술 스택 언급<br>
-                            <strong>개선점:</strong> 프로젝트 성과를 수치로 보완
-                        </div>
-                    </div>
-                    <div class="hero-card">
-                        <div class="card-header">
-                            <div class="card-avatar" style="background: #f59e0b;">이</div>
-                            <div class="card-name">면접관</div>
-                            <div class="card-badge">피드백</div>
-                        </div>
-                        <div class="card-content">
-                            "기술 스택은 좋은데, 왜 그 기술을 선택했는지 이유를 추가하면 더 좋을 것 같아요."
                         </div>
                     </div>
                 </div>
@@ -892,7 +894,6 @@
             navbar.classList.remove('scrolled');
         }
     });
-    
     window.addEventListener('load', function() {
         const preloader = document.getElementById('preloader');
         setTimeout(() => {
@@ -902,7 +903,6 @@
             }, 500);
         }, 800);
     });
-    
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
             navigator.serviceWorker.register('/service-worker.js')
@@ -914,28 +914,23 @@
                 });
         });
     }
-    
     let deferredPrompt;
+    
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
         console.log('PWA install prompt ready');
-    });
-
-    let deferredPrompt;
-    
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
     });
     
     window.addEventListener('appinstalled', async () => {
         console.log('PWA installed!');
         
         setTimeout(async () => {
-            const granted = await pushNotifications.requestPermission();
-            if (granted) {
-                console.log('Push notifications enabled!');
+            if (window.pushNotifications) {
+                const granted = await window.pushNotifications.requestPermission();
+                if (granted) {
+                    console.log('Push notifications enabled!');
+                }
             }
         }, 3000);
     });
