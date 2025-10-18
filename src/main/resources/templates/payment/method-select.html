@@ -2,27 +2,182 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>결제 수단 선택</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 수단 선택 - MockerView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .top-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            z-index: 100;
+            text-align: center;
+        }
+        
+        .top-logo a {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 80px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .payment-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            padding: 32px;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin-bottom: 24px;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+        
+        .payment-methods {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        
+        .method-btn {
+            padding: 18px 24px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #1a1a1a;
+        }
+        
+        .method-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .method-btn.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 0 0 1px #667eea;
+        }
+        
+        .method-icon {
+            font-size: 1.5rem;
+        }
+        
+        .payment-form {
+            padding: 24px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            .top-logo {
+                padding: 14px 16px;
+            }
+            
+            .top-logo a {
+                font-size: 1.25rem;
+            }
+            
+            body {
+                padding: 16px;
+                padding-top: 70px;
+            }
+            
+            .payment-card {
+                padding: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="payment-container">
-        <h2>결제 수단 선택</h2>
-        
-        <div class="payment-methods">
-            <button onclick="selectMethod('CARD')">신용/체크카드</button>
-            <button onclick="selectMethod('VIRTUAL_ACCOUNT')">가상계좌</button>
-            <button onclick="selectMethod('PHONE')">휴대폰 결제</button>
-            <button onclick="selectMethod('EASY_PAY')">간편결제</button>
+    <div class="top-logo">
+        <a href="/">MockerView</a>
+    </div>
+    
+    <div class="container">
+        <div class="payment-card">
+            <h2>결제 수단 선택</h2>
+            
+            <div class="payment-methods">
+                <button class="method-btn" onclick="selectMethod('CARD', this)">
+                    <span class="method-icon">💳</span>
+                    신용/체크카드
+                </button>
+                <button class="method-btn" onclick="selectMethod('VIRTUAL_ACCOUNT', this)">
+                    <span class="method-icon">🏦</span>
+                    가상계좌
+                </button>
+                <button class="method-btn" onclick="selectMethod('PHONE', this)">
+                    <span class="method-icon">📱</span>
+                    휴대폰 결제
+                </button>
+                <button class="method-btn" onclick="selectMethod('EASY_PAY', this)">
+                    <span class="method-icon">⚡</span>
+                    간편결제
+                </button>
+            </div>
+            
+            <div id="payment-form" class="payment-form">
+                결제 수단을 선택해주세요
+            </div>
         </div>
-        
-        <div id="payment-form"></div>
     </div>
     
     <script>
-        function selectMethod(method) {
+        function selectMethod(method, btn) {
+            document.querySelectorAll('.method-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
             const form = document.getElementById('payment-form');
-            form.innerHTML = `<p>${method} 결제가 선택되었습니다</p>`;
+            const methodNames = {
+                'CARD': '신용/체크카드',
+                'VIRTUAL_ACCOUNT': '가상계좌',
+                'PHONE': '휴대폰 결제',
+                'EASY_PAY': '간편결제'
+            };
+            form.innerHTML = '<p>' + methodNames[method] + ' 결제가 선택되었습니다</p>';
         }
     </script>
 </body>

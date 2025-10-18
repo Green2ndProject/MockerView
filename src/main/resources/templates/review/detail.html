@@ -2,44 +2,552 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>리뷰 작성 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/review.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+        
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 57px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 99;
+        }
+        
+        .mobile-menu.active {
+            display: block;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            padding: 14px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .mobile-menu a:hover,
+        .mobile-menu a.active {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+        
+        .page-header {
+            padding: 40px 0 28px;
+        }
+        
+        .page-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+        
+        .page-title p {
+            font-size: 0.9375rem;
+            color: #6b7280;
+        }
+        
+        .message {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .success-message {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .session-summary {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+            padding: 20px 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            flex-wrap: wrap;
+        }
+        
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .summary-item .label {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        
+        .summary-item .value {
+            font-size: 0.9375rem;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        
+        .qa-container h2 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        .qa-card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .question-header {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+            align-items: flex-start;
+        }
+        
+        .question-number {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+        
+        .question-header h3 {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            color: #0a0a0a;
+            line-height: 1.5;
+        }
+        
+        .answer-section {
+            margin-top: 18px;
+        }
+        
+        .user-answer-block {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+        
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .answer-header .label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .answer-time {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+        }
+        
+        .answer-content {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 0.9375rem;
+            white-space: pre-wrap;
+        }
+        
+        .feedback-section {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .feedback-card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .feedback-card.feedback-ai {
+            border-left-color: #3b82f6;
+        }
+        
+        .feedback-card.feedback-interviewer {
+            border-left-color: #f59e0b;
+        }
+        
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .feedback-type {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .feedback-card.feedback-ai .feedback-type {
+            color: #3b82f6;
+        }
+        
+        .feedback-card.feedback-interviewer .feedback-type {
+            color: #f59e0b;
+        }
+        
+        .feedback-score {
+            font-size: 0.875rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            background: #f0f4ff;
+            color: #667eea;
+            border-radius: 6px;
+        }
+        
+        .feedback-item {
+            margin-bottom: 12px;
+        }
+        
+        .feedback-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .feedback-item strong {
+            display: block;
+            font-size: 0.8125rem;
+            color: #6b7280;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        
+        .feedback-item p {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 0.875rem;
+        }
+        
+        .no-answer {
+            padding: 20px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            background: white;
+            border-radius: 14px;
+            color: #9ca3af;
+        }
+        
+        .review-form-card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px;
+            margin-top: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .review-form-card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .rating-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .rating-input input {
+            width: 120px;
+            padding: 10px 12px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+        }
+        
+        .rating-input input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .rating-label {
+            font-size: 0.9375rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn-primary {
+            padding: 11px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-primary:disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            padding: 11px 24px;
+            background: white;
+            color: #667eea;
+            border: 1.5px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #f8f9ff;
+        }
+        
         @media (max-width: 768px) {
-            .container { padding: 0 12px; }
-            .page-header h1 { font-size: 24px; }
-            .subtitle { font-size: 14px; }
-            .session-summary { flex-direction: column; gap: 8px; }
-            .summary-item { font-size: 14px; }
-            .qa-card { padding: 16px; }
-            .question-header h3 { font-size: 16px; }
-            .answer-section, .feedback-section { padding: 12px; }
-            .review-form-card { padding: 16px; }
-            .form-actions { flex-direction: column; }
-            .form-actions .btn-primary,
-            .form-actions .btn-secondary { width: 100%; }
+            .navbar-nav {
+                display: none;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .container {
+                padding: 0 16px;
+            }
+            
+            .page-header {
+                padding: 28px 0 20px;
+            }
+            
+            .page-title h1 {
+                font-size: 1.625rem;
+            }
+            
+            .session-summary {
+                flex-direction: column;
+                gap: 12px;
+                padding: 16px;
+            }
+            
+            .qa-card {
+                padding: 18px;
+            }
+            
+            .question-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .review-form-card {
+                padding: 20px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="/session/list">Mockerview</a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="/session/list">세션 목록</a>
-                <a class="nav-link active" href="/review/list">리뷰 작성</a>
-                <a class="nav-link" href="/review/my">내 리뷰</a>
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">MockerView</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link active" href="/review/list">리뷰 작성</a>
+                    <a class="nav-link" href="/review/my">내 리뷰</a>
+                </div>
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </div>
         </div>
     </nav>
     
-    <div class="container">
-        <div class="page-header">
-            <h1>리뷰 작성</h1>
-            <p class="subtitle" th:text="${interviewSession.title}">세션 제목</p>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/session/list">세션 목록</a>
+        <a class="active" href="/review/list">리뷰 작성</a>
+        <a href="/review/my">내 리뷰</a>
+    </div>
+    
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>리뷰 작성</h1>
+                <p th:text="${interviewSession.title}">세션 제목</p>
+            </div>
         </div>
-        
+    </div>
+    
+    <div class="container">
         <div id="successMessage" class="message success-message" style="display: none;"></div>
         <div id="errorMessage" class="message error-message" style="display: none;"></div>
         
@@ -90,17 +598,17 @@
                                         <p th:text="${feedback.summary}">요약</p>
                                     </div>
                                     
-                                    <div th:if="${feedback.strengths != null}" class="feedback-item strengths">
+                                    <div th:if="${feedback.strengths != null}" class="feedback-item">
                                         <strong>강점</strong>
                                         <p th:text="${feedback.strengths}">강점</p>
                                     </div>
                                     
-                                    <div th:if="${feedback.weaknesses != null}" class="feedback-item weaknesses">
+                                    <div th:if="${feedback.weaknesses != null}" class="feedback-item">
                                         <strong>약점</strong>
                                         <p th:text="${feedback.weaknesses}">약점</p>
                                     </div>
                                     
-                                    <div th:if="${feedback.improvement != null}" class="feedback-item improvement">
+                                    <div th:if="${feedback.improvement != null}" class="feedback-item">
                                         <strong>개선 방향</strong>
                                         <p th:text="${feedback.improvement}">개선 방향</p>
                                     </div>
@@ -140,7 +648,7 @@
                 
                 <div class="form-group">
                     <label>종합 피드백</label>
-                    <textarea name="comment" rows="6" placeholder="이번 면접 세션에 대한 전반적인 피드백을 작성해주세요...&#10;&#10;예시:&#10;- 준비가 잘 되어 있었던 점&#10;- 부족했던 부분&#10;- 다음 면접을 위한 조언" required></textarea>
+                    <textarea name="comment" rows="6" placeholder="이번 면접 세션에 대한 전반적인 피드백을 작성해주세요..." required></textarea>
                 </div>
                 
                 <div class="form-actions">
@@ -153,6 +661,11 @@
 
     <script src="/js/authFetch.js"></script>
     <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+        
         async function submitReview(event) {
             event.preventDefault();
             
@@ -169,8 +682,6 @@
                 rating: rating
             };
             
-            console.log('Sending payload:', payload);
-            
             submitBtn.disabled = true;
             submitBtn.textContent = '제출 중...';
             
@@ -182,7 +693,6 @@
                 });
                 
                 const result = await response.json();
-                console.log('Server response:', result);
                 
                 if (result.success) {
                     showMessage('successMessage', '리뷰가 성공적으로 제출되었습니다!');

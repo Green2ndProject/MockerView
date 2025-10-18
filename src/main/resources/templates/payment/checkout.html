@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>결제 - MockerView</title>
     <script src="https://js.tosspayments.com/v1/payment"></script>
     <style>
@@ -13,107 +14,165 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
+            background: #f8f9fa;
             min-height: 100vh;
             padding: 40px 20px;
         }
         
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
+        .top-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: #667eea;
-            color: white;
-            padding: 32px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            z-index: 100;
             text-align: center;
         }
         
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 8px;
-            font-weight: 600;
+        .top-logo a {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
         }
         
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
+        body {
+            padding-top: 80px;
         }
         
-        .content {
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .checkout-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        
+        .plan-section {
             padding: 32px;
+            background: #667eea;
+            color: white;
+            text-align: center;
         }
         
-        .plan-info {
-            background: #f8f9fa;
-            padding: 24px;
-            border-radius: 8px;
-            margin-bottom: 24px;
+        .plan-section h2 {
+            font-size: 1.125rem;
+            margin-bottom: 16px;
+            font-weight: 600;
+            opacity: 0.95;
         }
         
         .plan-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
+            font-size: 1.5rem;
+            font-weight: 700;
             margin-bottom: 12px;
         }
         
         .plan-price {
-            font-size: 32px;
+            font-size: 3rem;
             font-weight: 700;
-            color: #667eea;
+            margin-bottom: 8px;
+            letter-spacing: -1.5px;
         }
         
-        .method-section {
-            margin-bottom: 24px;
+        .plan-period {
+            font-size: 0.875rem;
+            opacity: 0.9;
         }
         
-        .method-section h3 {
-            font-size: 16px;
+        .payment-section {
+            padding: 32px;
+        }
+        
+        .section-title {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: #1a1a1a;
             margin-bottom: 16px;
-            color: #333;
-            font-weight: 600;
         }
         
         .method-grid {
-            display: flex;
-            gap: 8px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 28px;
         }
         
         .method-btn {
-            flex: 1;
-            padding: 14px 8px;
+            padding: 16px 8px;
             border: 2px solid #e5e7eb;
-            border-radius: 8px;
+            border-radius: 10px;
             background: white;
             cursor: pointer;
             text-align: center;
             transition: all 0.2s;
-            font-size: 14px;
-            font-weight: 500;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
         
         .method-btn:hover {
             border-color: #667eea;
+            background: #f8f9ff;
         }
         
         .method-btn.active {
             border-color: #667eea;
-            background: #f0f4ff;
-            color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 0 0 1px #667eea;
         }
         
         .method-icon {
-            font-size: 20px;
+            font-size: 1.75rem;
+        }
+        
+        .method-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .method-btn.active .method-label {
+            color: #667eea;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .info-label {
+            color: #6b7280;
+        }
+        
+        .info-value {
+            color: #1a1a1a;
+            font-weight: 600;
         }
         
         .btn-pay {
@@ -122,81 +181,136 @@
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            margin-bottom: 12px;
         }
         
         .btn-pay:hover {
             background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .btn-pay:active {
+            transform: translateY(0);
         }
         
         .btn-cancel {
             width: 100%;
-            padding: 12px;
-            margin-top: 12px;
+            padding: 14px;
             background: white;
-            color: #666;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
+            color: #6b7280;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.9375rem;
             cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
         }
         
         .btn-cancel:hover {
             background: #f8f9fa;
+            border-color: #d1d5db;
+        }
+        
+        .secure-badge {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .secure-badge p {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
         
         @media (max-width: 600px) {
+            .top-logo {
+                padding: 14px 16px;
+            }
+            
+            .top-logo a {
+                font-size: 1.25rem;
+            }
+            
             body {
-                padding: 0;
+                padding: 20px 16px;
+                padding-top: 70px;
             }
             
-            .container {
-                border-radius: 0;
+            .plan-section {
+                padding: 28px 24px;
             }
             
-            .content {
+            .payment-section {
                 padding: 24px;
+            }
+            
+            .plan-price {
+                font-size: 2.5rem;
             }
         }
     </style>
 </head>
 <body>
+    <div class="top-logo">
+        <a href="/">MockerView</a>
+    </div>
+    
     <div class="container">
-        <div class="header">
-            <h1>결제하기</h1>
-            <p>MockerView</p>
-        </div>
-        
-        <div class="content">
-            <div class="plan-info">
+        <div class="checkout-card">
+            <div class="plan-section">
+                <h2>결제 정보</h2>
                 <div class="plan-name" th:text="${orderName}">PRO 플랜</div>
                 <div class="plan-price" th:text="'₩' + ${#numbers.formatInteger(amount, 0, 'COMMA')}">₩29,900</div>
+                <div class="plan-period">월 구독</div>
             </div>
             
-            <div class="method-section">
-                <h3>결제 수단</h3>
+            <div class="payment-section">
+                <div class="section-title">결제 수단 선택</div>
                 <div class="method-grid">
                     <button class="method-btn active" onclick="selectMethod('카드', this)">
                         <span class="method-icon">💳</span>
-                        <span>카드</span>
+                        <span class="method-label">카드</span>
                     </button>
                     <button class="method-btn" onclick="selectMethod('가상계좌', this)">
                         <span class="method-icon">🏦</span>
-                        <span>가상계좌</span>
+                        <span class="method-label">가상계좌</span>
                     </button>
                     <button class="method-btn" onclick="selectMethod('휴대폰', this)">
                         <span class="method-icon">📱</span>
-                        <span>휴대폰</span>
+                        <span class="method-label">휴대폰</span>
                     </button>
                 </div>
+                
+                <div class="section-title">결제 내역</div>
+                <div class="info-box">
+                    <div class="info-row">
+                        <span class="info-label">상품명</span>
+                        <span class="info-value" th:text="${orderName}">PRO 플랜</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">결제 금액</span>
+                        <span class="info-value" style="color: #667eea; font-size: 1.125rem;" th:text="'₩' + ${#numbers.formatInteger(amount, 0, 'COMMA')}">₩29,900</span>
+                    </div>
+                </div>
+                
+                <button class="btn-pay" onclick="requestPayment()">결제하기</button>
+                <button class="btn-cancel" onclick="location.href='/payment/plans'">취소</button>
+                
+                <div class="secure-badge">
+                    <p>🔒 안전한 결제 시스템</p>
+                </div>
             </div>
-            
-            <button class="btn-pay" onclick="requestPayment()">결제하기</button>
-            <button class="btn-cancel" onclick="location.href='/'">취소</button>
         </div>
     </div>
     

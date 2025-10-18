@@ -1,1066 +1,897 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>세션 목록 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css" />
-    <link rel="stylesheet" href="/css/sessionModal.css" />
-    <link rel="stylesheet" href="/css/pagination.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
-      :root {
-        --primary-color: #667eea;
-        --secondary-color: #4caf50;
-        --planned-color: #f2b824;
-        --running-color: #28a745;
-        --ended-color: #6c757d;
-      }
-
-      .status-filter-tabs {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 2rem;
-        padding: 1rem;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      }
-
-      .status-tab {
-        flex: 1;
-        padding: 0.875rem 1.5rem;
-        border: 2px solid var(--primary-color);
-        background: white;
-        color: var(--primary-color);
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-        transition: all 0.2s;
-        text-align: center;
-        position: relative;
-      }
-
-      .status-tab:hover {
-        background: #f0f3ff;
-      }
-
-      .status-tab.active {
-        background: var(--primary-color);
-        color: white;
-      }
-
-      .status-tab .count {
-        display: inline-block;
-        margin-left: 0.5rem;
-        padding: 0.2rem 0.6rem;
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 12px;
-        font-size: 0.875rem;
-      }
-
-      .status-tab.active .count {
-        background: rgba(255, 255, 255, 0.3);
-      }
-
-      .search-container {
-        margin-bottom: 2rem;
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-      }
-      .search-form {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-      .search-input {
-        flex: 1;
-        min-width: 300px;
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        background: white;
-        transition: border-color 0.15s ease-in-out;
-      }
-      .search-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-      }
-      .btn-search,
-      .btn-reset {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-        font-weight: 400;
-        border: 1px solid;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.15s ease-in-out;
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-      }
-      .btn-search {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
-      }
-      .btn-search:hover {
-        background: #5568d3;
-        border-color: #5568d3;
-      }
-      .btn-reset {
-        background: white;
-        color: #6c757d;
-        border-color: #6c757d;
-      }
-      .btn-reset:hover {
-        background: #6c757d;
-        color: white;
-      }
-      .search-result-info {
-        margin-top: 1rem;
-        padding: 0.75rem;
-        background: #e7f1ff;
-        border-radius: 4px;
-        color: #004085;
-        border: 1px solid #b3d7ff;
-      }
-      .section-tabs {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        border-bottom: 2px solid #e9ecef;
-      }
-      .tab-btn {
-        padding: 1rem 2rem;
-        background: none;
-        border: none;
-        border-bottom: 3px solid transparent;
-        cursor: pointer;
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: #6c757d;
-        transition: all 0.2s;
-      }
-      .tab-btn:hover {
-        color: var(--primary-color);
-      }
-      .tab-btn.active {
-        color: var(--primary-color);
-        border-bottom-color: var(--primary-color);
-      }
-      .tab-content {
-        display: none;
-      }
-      .tab-content.active {
-        display: block;
-      }
-      .quick-action-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-      }
-      .quick-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        text-align: center;
-        transition: transform 0.2s;
-      }
-      .quick-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-      .quick-card-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-      }
-      .quick-card h3 {
-        margin-bottom: 0.5rem;
-        color: #212529;
-      }
-      .quick-card p {
-        color: #6c757d;
-        margin-bottom: 1.5rem;
-      }
-
-      .interview-mode-options {
-        display: flex;
-        gap: 12px;
-        margin: 1.5rem 0;
-      }
-      .mode-option-card {
-        flex: 1;
-        padding: 16px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-align: center;
-      }
-      .mode-option-card:hover {
-        border-color: var(--primary-color);
-        background: #f5f5f5;
-      }
-      .mode-option-card.active {
-        border-color: var(--primary-color);
-        background: #f0f3ff;
-      }
-      .mode-option-card input[type="radio"] {
-        display: none;
-      }
-      .mode-icon {
-        font-size: 32px;
-        margin-bottom: 8px;
-      }
-      .mode-title {
-        font-weight: 600;
-        font-size: 14px;
-        color: #333;
-        margin-bottom: 4px;
-      }
-      .mode-desc {
-        font-size: 12px;
-        color: #666;
-      }
-      .badge {
-        display: inline-block;
-        padding: 0.35rem 0.75rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        border-radius: 12px;
-        margin-right: 0.5rem;
-      }
-
-      .badge-waiting {
-        background: #fef3c7;
-        color: #92400e;
-      }
-
-      .badge-live {
-        background: #dcfce7;
-        color: #166534;
-      }
-
-      .badge-ended {
-        background: #f3f4f6;
-        color: #374151;
-      }
-
-      .scheduled-time {
-        display: block;
-        margin-top: 0.5rem;
-        color: #667eea;
-        font-weight: 600;
-        font-size: 0.875rem;
-      }
-
-    @media (max-width: 768px) {
-      .navbar-nav { 
-          gap: 12px; 
-          font-size: 0.875rem;
-      }
-      
-      .page-header { 
-          padding: 20px 0; 
-      }
-      
-      .page-title h1 { 
-          font-size: 1.75rem; 
-      }
-      
-      .section-tabs { 
-          gap: 8px; 
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-      }
-      
-      .section-tabs::-webkit-scrollbar {
-          display: none;
-      }
-      
-      .tab-btn { 
-          padding: 0.75rem 1.25rem; 
-          font-size: 0.875rem; 
-          white-space: nowrap; 
-          flex-shrink: 0;
-      }
-      
-      .quick-action-cards { 
-          grid-template-columns: 1fr; 
-          gap: 1rem; 
-      }
-      
-      .quick-card { 
-          padding: 1.5rem; 
-      }
-      
-      .quick-card-icon { 
-          font-size: 2.5rem; 
-      }
-      
-      .status-filter-tabs { 
-          flex-direction: column; 
-          gap: 8px; 
-      }
-      
-      .status-tab { 
-          padding: 0.875rem 1rem;
-          font-size: 0.875rem;
-      }
-      
-      .search-form { 
-          flex-direction: column; 
-      }
-      
-      .search-input { 
-          min-width: 100%; 
-      }
-      
-      .btn-search, 
-      .btn-reset { 
-          width: 100%; 
-      }
-      
-      .session-grid { 
-          grid-template-columns: 1fr; 
-          gap: 1rem; 
-      }
-      
-      .session-card { 
-          padding: 20px; 
-      }
-      
-      .session-header h3 { 
-          font-size: 1.125rem; 
-      }
-      
-      .session-meta {
-          font-size: 0.8125rem;
-      }
-      
-      .badge {
-          font-size: 0.6875rem;
-          padding: 4px 10px;
-      }
-      
-      .interview-mode-options { 
-          flex-direction: column; 
-      }
-      
-      .mode-option-card {
-          padding: 14px;
-      }
-      
-      .modal-content {
-          width: 95%;
-          margin: 20px;
-          padding: 24px;
-      }
-      
-      .form-actions {
-          flex-direction: column;
-      }
-      
-      .form-actions button {
-          width: 100%;
-      }
-  }
-  
-  @media (max-width: 480px) {
-      .container {
-          padding: 0 16px;
-      }
-      
-      .navbar {
-          padding: 0.75rem 0;
-      }
-      
-      .navbar-brand {
-          font-size: 1.125rem;
-      }
-      
-      .plan-badge {
-          font-size: 0.625rem;
-          padding: 3px 8px;
-      }
-      
-      .page-title h1 {
-          font-size: 1.5rem;
-      }
-      
-      .btn {
-          padding: 10px 16px;
-          font-size: 0.8125rem;
-      }
-  }
-  MOBILE_CSS
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+        
+        .page-header {
+            margin-top: 64px;
+            padding: 3rem 0 2rem;
+            background: #667eea;
+            color: white;
+        }
+        
+        .page-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .section-tabs {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn:hover {
+            color: #667eea;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .quick-action-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .quick-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            border-color: #667eea;
+        }
+        
+        .quick-card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .quick-card h3 {
+            margin-bottom: 0.5rem;
+            color: #212529;
+            font-size: 1.25rem;
+        }
+        
+        .quick-card p {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        
+        .status-filter-tabs {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-tab {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .status-tab:hover {
+            background: #f0f3ff;
+        }
+        
+        .status-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .status-tab .count {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.6rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 0.875rem;
+        }
+        
+        .status-tab.active .count {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .search-container {
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 0.875rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .session-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .session-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .session-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+            border-color: #667eea;
+        }
+        
+        .session-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 0.75rem;
+        }
+        
+        .session-meta {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-live {
+            background: #d1f4e0;
+            color: #10b981;
+        }
+        
+        .badge-waiting {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+        
+        .badge-ended {
+            background: #f0f0f0;
+            color: #6c757d;
+        }
+        
+        .scheduled-time {
+            display: block;
+            margin-top: 0.5rem;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #212529;
+        }
+        
+        .close-modal {
+            font-size: 2rem;
+            font-weight: 300;
+            color: #6c757d;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            color: #212529;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .interview-mode-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 0.5rem;
+        }
+        
+        .mode-option-card {
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            background: white;
+        }
+        
+        .mode-option-card:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .mode-option-card.active {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+        
+        .mode-option-card input[type="radio"] {
+            display: none;
+        }
+        
+        .mode-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mode-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+        
+        .mode-desc {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s;
+                pointer-events: none;
+            }
+            
+            .navbar-nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .page-header {
+                padding: 2rem 0 1.5rem;
+            }
+            
+            .page-title h1 {
+                font-size: 1.5rem;
+            }
+            
+            .section-tabs {
+                gap: 0.5rem;
+                overflow-x: auto;
+            }
+            
+            .tab-btn {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.9rem;
+                white-space: nowrap;
+            }
+            
+            .quick-action-cards {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .status-filter-tabs {
+                flex-direction: column;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .session-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .interview-mode-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <nav class="navbar">
-      <div class="container">
-        <div class="navbar-content">
-          <a class="navbar-brand" href="/session/list">
-            Mockerview
-            <span class="plan-badge" 
-                  th:classappend="${currentPlanType != null ? currentPlanType.toLowerCase() : 'free'}"
-                  th:text="${currentPlanType != null ? currentPlanType : 'FREE'}">FREE</span>
-          </a>
-          <div class="navbar-nav">
-            <a class="nav-link active" href="/session/list">세션 관리</a>
-            <a
-              class="nav-link"
-              th:if="${currentUser != null}"
-              th:href="@{/auth/mypage}"
-              >마이페이지</a
-            >
-            <a
-              class="nav-link"
-              th:if="${isAdmin}"
-              th:href="@{/admin/dashboard}"
-              style="color: #ff6b6b; font-weight: 600;"
-              >관리자</a
-            >
-            <a
-              class="nav-link"
-              th:if="${currentUser != null}"
-              th:href="@{/auth/logout}"
-              >로그아웃</a
-            >
-          </div>
-          <div th:if="${currentUser == null}">
-            <a class="nav-link" th:href="@{/auth/login}">로그인</a>
-            <a class="nav-link" th:href="@{/auth/register}">회원가입</a>
-          </div>
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="hamburger" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link active" href="/session/list">세션 관리</a>
+                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/mypage}">마이페이지</a>
+                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/logout}">로그아웃</a>
+                </div>
+            </div>
         </div>
-      </div>
     </nav>
 
     <div class="page-header">
-      <div class="container">
-        <div class="page-title">
-          <h1>MockerView 면접 플랫폼</h1>
+        <div class="container">
+            <div class="page-title">
+                <h1>MockerView 면접 플랫폼</h1>
+            </div>
         </div>
-      </div>
     </div>
 
     <div class="container">
-      <div class="section-tabs">
-        <button class="tab-btn active" onclick="switchTab('group', event)">
-          그룹 면접
-        </button>
-        <button class="tab-btn" onclick="switchTab('self', event)">
-          셀프 면접
-        </button>
-        <button class="tab-btn" onclick="switchTab('review', event)">
-          리뷰
-        </button>
-      </div>
-
-      <div id="group-tab" class="tab-content active">
-        <div class="quick-action-cards">
-          <div class="quick-card">
-            <div class="quick-card-icon">👥</div>
-            <h3>그룹 면접</h3>
-            <p>실시간으로 여러 명이 참여하는 모의면접</p>
-            <button
-              th:if="${currentUser != null and currentUser.role.name() == 'HOST'}"
-              class="btn btn-primary"
-              onclick="createNewSession()"
-            >
-              새 세션 생성
-            </button>
-          </div>
+        <div class="section-tabs">
+            <button class="tab-btn active" onclick="switchTab('group', event)">그룹 면접</button>
+            <button class="tab-btn" onclick="switchTab('self', event)">셀프 면접</button>
+            <button class="tab-btn" onclick="switchTab('review', event)">리뷰</button>
         </div>
 
-        <div class="status-filter-tabs">
-          <button
-            class="status-tab"
-            th:classappend="${statusFilter == null or statusFilter == '' ? 'active' : ''}"
-            onclick="filterByStatus('')"
-          >
-            전체보기
-            <span class="count" th:text="${totalCount}">0</span>
-          </button>
-          <button
-            class="status-tab"
-            th:classappend="${statusFilter == 'PLANNED' ? 'active' : ''}"
-            onclick="filterByStatus('PLANNED')"
-          >
-            예정된 세션
-            <span class="count" th:text="${plannedCount}">0</span>
-          </button>
-          <button
-            class="status-tab"
-            th:classappend="${statusFilter == 'RUNNING' ? 'active' : ''}"
-            onclick="filterByStatus('RUNNING')"
-          >
-            진행 중
-            <span class="count" th:text="${runningCount}">0</span>
-          </button>
-          <button
-            class="status-tab"
-            th:classappend="${statusFilter == 'ENDED' ? 'active' : ''}"
-            onclick="filterByStatus('ENDED')"
-          >
-            종료됨
-            <span class="count" th:text="${endedCount}">0</span>
-          </button>
-        </div>
-
-        <div class="search-container">
-          <form
-            class="search-form"
-            method="get"
-            action="/session/list"
-            id="searchForm"
-          >
-            <input
-              type="hidden"
-              name="status"
-              id="statusInput"
-              th:value="${statusFilter}"
-            />
-            <input
-              type="text"
-              id="keyword"
-              name="keyword"
-              class="search-input"
-              placeholder="세션 제목 또는 호스트명으로 검색"
-              th:value="${searchDTO?.keyword}"
-            />
-            <button type="submit" class="btn-search">검색</button>
-            <button type="button" class="btn-reset" onclick="resetSearch()">
-              초기화
-            </button>
-          </form>
-
-          <div
-            class="search-result-info"
-            th:if="${keyword != null and !#strings.isEmpty(keyword)}"
-          >
-            "<span th:text="${keyword}">검색어</span>" 검색 결과:
-            <strong th:text="${#lists.size(sessions)}">0</strong>개의 세션
-          </div>
-        </div>
-
-        <div th:if="${error}" class="alert alert-error">
-          <strong>오류:</strong> <span th:text="${error}">에러 메시지</span>
-        </div>
-
-        <div th:if="${success}" class="alert alert-success">
-          <span th:text="${success}">성공 메시지</span>
-        </div>
-
-        <div
-          class="session-grid"
-          th:if="${sessions != null and !sessions.empty}"
-        >
-          <div
-            th:each="sessionItem : ${sessions}"
-            class="session-card"
-            th:attr="data-session-id=${sessionItem.id}, data-session-status=${sessionItem.sessionStatus}"
-          >
-            <div class="session-header">
-              <div>
-                <h3
-                  class="session-title"
-                  th:text="${sessionItem.title != null ? sessionItem.title : '모의면접 세션'}"
-                >
-                  모의면접 세션
-                </h3>
-                <div class="session-meta">
-                  <span
-                    class="badge"
-                    th:classappend="${sessionItem.sessionStatus == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
-                    th:text="${sessionItem.sessionStatus != null ? sessionItem.sessionStatus : 'PLANNED'}"
-                  >
-                    PLANNED
-                  </span>
-                  <span
-                    class="badge"
-                    th:if="${sessionItem.sessionType != null}"
-                    th:text="${sessionItem.sessionType == 'TEXT' ? '✍️ 텍스트' : (sessionItem.sessionType == 'AUDIO' ? '🎤 음성' : '📹 화상')}"
-                  >
-                    면접 방식
-                  </span>
+        <div id="group-tab" class="tab-content active">
+            <div class="quick-action-cards">
+                <div class="quick-card">
+                    <div class="quick-card-icon">👥</div>
+                    <h3>그룹 면접</h3>
+                    <p>실시간으로 여러 명이 참여하는 모의면접</p>
+                    <button th:if="${currentUser != null and currentUser.role.name() == 'HOST'}" class="btn btn-primary" onclick="createNewSession()">
+                        새 세션 생성
+                    </button>
                 </div>
-              </div>
             </div>
 
-            <div class="session-meta" th:if="${sessionItem.host != null}">
-              <span>호스트: </span>
-              <span
-                th:text="${sessionItem.host.name != null ? sessionItem.host.name : (sessionItem.host.username != null ? sessionItem.host.username : '알 수 없음')}"
-              >
-                호스트명
-              </span>
-
-              <span
-                th:if="${sessionItem.sessionStatus == 'PLANNED' and sessionItem.startTime != null}"
-                class="scheduled-time"
-              >
-                ⏰ [[${#temporals.format(sessionItem.startTime, 'MM/dd
-                HH:mm')}]] 시작 예정
-              </span>
+            <div class="status-filter-tabs">
+                <button class="status-tab" th:classappend="${statusFilter == null or statusFilter == '' ? 'active' : ''}" onclick="filterByStatus('')">
+                    전체보기
+                    <span class="count" th:text="${totalCount}">0</span>
+                </button>
+                <button class="status-tab" th:classappend="${statusFilter == 'PLANNED' ? 'active' : ''}" onclick="filterByStatus('PLANNED')">
+                    예정된 세션
+                    <span class="count" th:text="${plannedCount}">0</span>
+                </button>
+                <button class="status-tab" th:classappend="${statusFilter == 'RUNNING' ? 'active' : ''}" onclick="filterByStatus('RUNNING')">
+                    진행 중
+                    <span class="count" th:text="${runningCount}">0</span>
+                </button>
+                <button class="status-tab" th:classappend="${statusFilter == 'ENDED' ? 'active' : ''}" onclick="filterByStatus('ENDED')">
+                    종료됨
+                    <span class="count" th:text="${endedCount}">0</span>
+                </button>
             </div>
 
-            <div style="margin-top: 1rem">
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'HOST' and sessionItem.isSelfInterview != 'Y'}"
-                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='HOST')}"
-                class="btn btn-success"
-              >
-                면접관으로 참가
-              </a>
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.isSelfInterview == 'Y'}"
-                th:href="@{/selfinterview/room/{id}(id=${sessionItem.id})}"
-                class="btn btn-primary"
-              >
-                셀프 면접 입장
-              </a>
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.isSelfInterview != 'Y' and sessionItem.sessionStatus != 'ENDED' }"
-                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='STUDENT')}"
-                class="btn btn-primary"
-              >
-                학생으로 참가
-              </a>
-              <a
-                th:if="${sessionItem.sessionStatus == 'ENDED' and currentUser.role.name() != 'HOST' and  sessionItem.isSelfInterview != 'Y' }"
-                class="btn btn-primary"
-                disabled="disabled"
-                style="background-color: #707070; cursor: default"
-              >
-                종료된 세션
-              </a>
-              <a
-                th:if="${currentUser != null and currentUser.role.name() == 'REVIEWER'}"
-                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='REVIEWER')}"
-                class="btn btn-info"
-              >
-                리뷰어로 참가
-              </a>
-
-              <div
-                th:if="${currentUser == null}"
-                style="text-align: center; color: #6c757d"
-              >
-                로그인 후 참가할 수 있습니다
-              </div>
+            <div class="search-container">
+                <form class="search-form" method="get" action="/session/list">
+                    <input type="hidden" name="status" th:value="${statusFilter}">
+                    <input type="text" name="keyword" class="search-input" placeholder="세션 제목 또는 호스트명으로 검색" th:value="${searchDTO?.keyword}">
+                    <button type="submit" class="btn btn-primary">검색</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetSearch()">초기화</button>
+                </form>
             </div>
-          </div>
+
+            <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
+                <div th:each="sessionItem : ${sessions}" class="session-card">
+                    <div class="session-header">
+                        <h3 th:text="${sessionItem.title}">모의면접 세션</h3>
+                        <div class="session-meta">
+                            <span class="badge" th:classappend="${sessionItem.sessionStatus == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus == 'ENDED' ? 'badge-ended' : 'badge-waiting')}" th:text="${sessionItem.sessionStatus}">PLANNED</span>
+                            <span class="badge" th:if="${sessionItem.sessionType != null}" th:text="${sessionItem.sessionType == 'TEXT' ? '✏️ 텍스트' : (sessionItem.sessionType == 'AUDIO' ? '🎤 음성' : '🖥️ 화상')}">면접 방식</span>
+                        </div>
+                    </div>
+
+                    <div class="session-meta" th:if="${sessionItem.host != null}">
+                        <span>호스트: <span th:text="${sessionItem.host.name}">호스트명</span></span>
+                        <span th:if="${sessionItem.sessionStatus == 'PLANNED' and sessionItem.startTime != null}" class="scheduled-time">
+                            ⏰ [[${#temporals.format(sessionItem.startTime, 'MM/dd HH:mm')}]] 시작 예정
+                        </span>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <a th:if="${currentUser != null and currentUser.role.name() == 'HOST'}" th:href="@{/session/{id}/join(id=${sessionItem.id}, role='HOST')}" class="btn btn-success">
+                            면접관으로 참가
+                        </a>
+                        <a th:if="${currentUser != null and currentUser.role.name() == 'STUDENT' and sessionItem.sessionStatus != 'ENDED'}" th:href="@{/session/{id}/join(id=${sessionItem.id}, role='STUDENT')}" class="btn btn-primary">
+                            학생으로 참가
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${sessions == null or sessions.empty}" class="empty-state">
+                <h3>현재 조건에 맞는 세션이 없습니다</h3>
+                <p>다른 필터를 선택하거나 새로운 세션을 생성해주세요.</p>
+            </div>
         </div>
 
-        <div
-          th:if="${sessions == null or sessions.empty}"
-          style="text-align: center; padding: 4rem 0"
-        >
-          <h3 style="color: #6c757d; margin-bottom: 1rem">
-            현재 조건에 맞는 세션이 없습니다
-          </h3>
-          <p style="color: #999; margin-bottom: 2rem">
-            다른 필터를 선택하거나 새로운 세션을 생성해주세요.
-          </p>
-        </div>
-      </div>
-
-      <div id="self-tab" class="tab-content">
-        <div class="quick-action-cards">
-          <div class="quick-card">
-            <div class="quick-card-icon">🎯</div>
-            <h3>셀프 면접 시작</h3>
-            <p>혼자 연습하고 AI 피드백 받기</p>
-            <a href="/selfinterview/create" class="btn btn-primary">시작하기</a>
-          </div>
-          <div class="quick-card">
-            <div class="quick-card-icon">📊</div>
-            <h3>내 연습 기록</h3>
-            <p>지난 셀프 면접 결과 보기</p>
-            <a href="/selfinterview/list" class="btn btn-secondary">보러가기</a>
-          </div>
+        <div id="self-tab" class="tab-content">
+            <div class="quick-action-cards">
+                <div class="quick-card">
+                    <div class="quick-card-icon">🎯</div>
+                    <h3>셀프 면접 시작</h3>
+                    <p>혼자 연습하고 AI 피드백 받기</p>
+                    <a href="/selfinterview/create" class="btn btn-primary">시작하기</a>
+                </div>
+                <div class="quick-card">
+                    <div class="quick-card-icon">📊</div>
+                    <h3>내 연습 기록</h3>
+                    <p>지난 셀프 면접 결과 보기</p>
+                    <a href="/selfinterview/list" class="btn btn-secondary">보러가기</a>
+                </div>
+            </div>
         </div>
 
-        <div
-          style="
-            text-align: center;
-            padding: 3rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-          "
-        >
-          <h3>셀프 면접 기능</h3>
-          <ul style="list-style: none; padding: 0; margin: 1.5rem 0">
-            <li style="margin: 0.5rem 0">✅ 랜덤 질문 자동 생성</li>
-            <li style="margin: 0.5rem 0">✅ AI 실시간 피드백</li>
-            <li style="margin: 0.5rem 0">✅ 강점/약점 분석</li>
-            <li style="margin: 0.5rem 0">✅ 답변 기록 저장</li>
-          </ul>
+        <div id="review-tab" class="tab-content">
+            <div class="quick-action-cards">
+                <div class="quick-card">
+                    <div class="quick-card-icon">📝</div>
+                    <h3>리뷰 가능한 세션</h3>
+                    <p>종료된 면접에 피드백 작성하기</p>
+                    <a href="/review/list" class="btn btn-primary">리뷰하러 가기</a>
+                </div>
+                <div class="quick-card">
+                    <div class="quick-card-icon">⭐</div>
+                    <h3>내가 작성한 리뷰</h3>
+                    <p>내가 남긴 피드백 보기</p>
+                    <a href="/review/my" class="btn btn-secondary">확인하기</a>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <div id="review-tab" class="tab-content">
-        <div class="quick-action-cards">
-          <div class="quick-card">
-            <div class="quick-card-icon">📝</div>
-            <h3>리뷰 가능한 세션</h3>
-            <p>종료된 면접에 피드백 작성하기</p>
-            <a href="/review/list" class="btn btn-primary">리뷰하러 가기</a>
-          </div>
-          <div class="quick-card">
-            <div class="quick-card-icon">⭐</div>
-            <h3>내가 작성한 리뷰</h3>
-            <p>내가 남긴 피드백 보기</p>
-            <a href="/review/my" class="btn btn-secondary">확인하기</a>
-          </div>
-        </div>
-
-        <div
-          style="
-            text-align: center;
-            padding: 3rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-          "
-        >
-          <h3>리뷰 시스템</h3>
-          <ul style="list-style: none; padding: 0; margin: 1.5rem 0">
-            <li style="margin: 0.5rem 0">✅ 면접 종료 후 열람 가능</li>
-            <li style="margin: 0.5rem 0">✅ 상세 피드백 작성</li>
-            <li style="margin: 0.5rem 0">✅ 평점 시스템 (0.0~5.0)</li>
-            <li style="margin: 0.5rem 0">✅ 팀원/멘토 피드백 축적</li>
-          </ul>
-        </div>
-      </div>
     </div>
 
     <div id="sessionModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>새 세션 생성</h2>
-          <span class="close-modal">&times;</span>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>새 세션 생성</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createSessionForm">
+                    <div class="form-group">
+                        <label for="sessionTitle">세션 제목</label>
+                        <input type="text" id="sessionTitle" name="title" class="form-control" placeholder="모의면접 세션 제목" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>면접 방식</label>
+                        <div class="interview-mode-options">
+                            <label class="mode-option-card active">
+                                <input type="radio" name="sessionType" value="TEXT" checked>
+                                <div class="mode-icon">✏️</div>
+                                <div class="mode-title">텍스트 면접</div>
+                                <div class="mode-desc">글로만 진행</div>
+                            </label>
+                            <label class="mode-option-card">
+                                <input type="radio" name="sessionType" value="AUDIO">
+                                <div class="mode-icon">🎤</div>
+                                <div class="mode-title">음성 면접</div>
+                                <div class="mode-desc">목소리로 대화</div>
+                            </label>
+                            <label class="mode-option-card">
+                                <input type="radio" name="sessionType" value="VIDEO">
+                                <div class="mode-icon">🖥️</div>
+                                <div class="mode-title">화상 면접</div>
+                                <div class="mode-desc">얼굴 보며 면접</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="scheduledStartTime">시작 예정 시간 (선택)</label>
+                        <input type="datetime-local" id="scheduledStartTime" name="scheduledStartTime" class="form-control">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">생성하기</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">취소</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-          <form id="createSessionForm">
-            <div class="form-group">
-              <label for="sessionTitle">세션 제목</label>
-              <input
-                type="text"
-                id="sessionTitle"
-                name="title"
-                class="form-control"
-                placeholder="모의면접 세션 제목"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label>면접 방식</label>
-              <div class="interview-mode-options">
-                <label class="mode-option-card active">
-                  <input type="radio" name="sessionType" value="TEXT" checked />
-                  <div class="mode-icon">✍️</div>
-                  <div class="mode-title">텍스트 면접</div>
-                  <div class="mode-desc">글로만 면접 진행</div>
-                </label>
-                <label class="mode-option-card">
-                  <input type="radio" name="sessionType" value="AUDIO" />
-                  <div class="mode-icon">🎤</div>
-                  <div class="mode-title">음성 면접</div>
-                  <div class="mode-desc">목소리로 대화</div>
-                </label>
-                <label class="mode-option-card">
-                  <input type="radio" name="sessionType" value="VIDEO" />
-                  <div class="mode-icon">📹</div>
-                  <div class="mode-title">화상 면접</div>
-                  <div class="mode-desc">얼굴 보며 면접</div>
-                </label>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="scheduledStartTime">시작 예정 시각 (선택)</label>
-              <input
-                type="datetime-local"
-                id="scheduledStartTime"
-                name="scheduledStartTime"
-                class="form-control"
-              />
-              <small class="text-muted">비워두면 즉시 시작 가능</small>
-            </div>
-
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">생성하기</button>
-              <button type="button" class="btn btn-secondary close-modal">
-                취소
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
 
-    <div class="pagination hidden" id="pagination">
-      <button class="btn btn-outline btn-sm" id="prev-btn" disabled>
-        이전
-      </button>
-      <div class="page-numbers" id="page-numbers"></div>
-      <button class="btn btn-outline btn-sm" id="next-btn">다음</button>
-    </div>
-
-    <script th:src="@{/js/pagination.js}"></script>
-    <script th:inline="javascript">
-      const serverCurrentPage = /*[[${serverCurrentPage}]]*/ 1;
-      const serverTotalPages = /*[[${totalPages}]]*/ 1;
-      const itemsPerPage = 6;
-      const currentStatusFilter = /*[[${statusFilter}]]*/ "";
-
-      function hideElement(element) {
-        if (element) element.classList.add("hidden");
-      }
-      function showElement(element) {
-        if (element) element.classList.remove("hidden");
-      }
-
-      function onPageChange(page) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("page", page);
-        url.searchParams.set("size", itemsPerPage);
-        window.location.href = url.toString();
-      }
-
-      window.addEventListener("load", () => {
-        const paginationContainer = document.getElementById("pagination");
-        if (serverTotalPages > 1) {
-          showElement(paginationContainer);
-        } else {
-          hideElement(paginationContainer);
-        }
-        createPagination(
-          serverCurrentPage || 1,
-          serverTotalPages || 1,
-          onPageChange,
-          "#pagination"
-        );
-      });
-
-      function switchTab(tabName, event) {
-        document
-          .querySelectorAll(".tab-btn")
-          .forEach((btn) => btn.classList.remove("active"));
-        document
-          .querySelectorAll(".tab-content")
-          .forEach((content) => content.classList.remove("active"));
-
-        event.target.classList.add("active");
-        document.getElementById(tabName + "-tab").classList.add("active");
-      }
-
-      function filterByStatus(status) {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("page");
-
-        if (status) {
-          url.searchParams.set("status", status);
-        } else {
-          url.searchParams.delete("status");
+    <script>
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
         }
 
-        window.location.href = url.toString();
-      }
-
-      function createNewSession() {
-        document.getElementById("sessionModal").style.display = "flex";
-      }
-
-      function resetSearch() {
-        window.location.href = "/session/list";
-      }
-
-      const sessions = /*[[${sessions}]]*/ [];
-      let stompClient = null;
-
-      function connect() {
-        const socket = new SockJS("/ws");
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, onConnected, onError);
-      }
-
-      function onConnected() {
-        console.log("WebSocket 연결 성공.");
-        if (sessions) {
-          sessions.forEach((session) => {
-            if (session && session.id) {
-              stompClient.subscribe(
-                `/topic/session/${session.id}/status`,
-                onSessionStatusReceived
-              );
-              console.log(
-                `[WebSocket] 세션 ${session.id} 상태 토픽 구독 완료.`
-              );
-            }
-          });
-        }
-      }
-
-      function onError(error) {
-        console.error("WebSocket 연결 실패:", error);
-      }
-
-      function onSessionStatusReceived(payload) {
-        try {
-          const statusMessage = JSON.parse(payload.body);
-          const sessionId = statusMessage.sessionId;
-          const newStatus = statusMessage.status;
-
-          const sessionCard = document.querySelector(
-            `.session-card[data-session-id='${sessionId}']`
-          );
-
-          if (sessionCard) {
-            const badge = sessionCard.querySelector(".session-meta .badge");
-            if (badge) {
-              badge.textContent = newStatus;
-              badge.classList.remove(
-                "badge-waiting",
-                "badge-live",
-                "badge-ended"
-              );
-              if (newStatus === "RUNNING") {
-                badge.classList.add("badge-live");
-              } else if (newStatus === "ENDED") {
-                badge.classList.add("badge-ended");
-              } else {
-                badge.classList.add("badge-waiting");
-              }
-            }
-
-            sessionCard.setAttribute("data-session-status", newStatus);
-
-            if (currentStatusFilter && currentStatusFilter !== newStatus) {
-              sessionCard.style.display = "none";
-
-              const statusCounts = {
-                PLANNED: parseInt(
-                  document.querySelector(".status-tab:nth-child(2) .count")
-                    .textContent
-                ),
-                RUNNING: parseInt(
-                  document.querySelector(".status-tab:nth-child(3) .count")
-                    .textContent
-                ),
-                ENDED: parseInt(
-                  document.querySelector(".status-tab:nth-child(4) .count")
-                    .textContent
-                ),
-              };
-
-              if (statusCounts[newStatus] !== undefined) {
-                statusCounts[newStatus]++;
-              }
-              if (statusCounts[currentStatusFilter] !== undefined) {
-                statusCounts[currentStatusFilter]--;
-              }
-
-              document.querySelector(
-                ".status-tab:nth-child(2) .count"
-              ).textContent = statusCounts["PLANNED"];
-              document.querySelector(
-                ".status-tab:nth-child(3) .count"
-              ).textContent = statusCounts["RUNNING"];
-              document.querySelector(
-                ".status-tab:nth-child(4) .count"
-              ).textContent = statusCounts["ENDED"];
-            }
-          }
-        } catch (e) {
-          console.error("세션 상태 메시지 처리 오류:", e);
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", function () {
-        const modal = document.getElementById("sessionModal");
-        const closeBtns = document.getElementsByClassName("close-modal");
-
-        for (let i = 0; i < closeBtns.length; i++) {
-          closeBtns[i].addEventListener("click", function () {
-            modal.style.display = "none";
-          });
+        function switchTab(tabName, event) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
         }
 
-        window.addEventListener("click", function (event) {
-          if (event.target === modal) {
-            modal.style.display = "none";
-          }
-        });
-
-        document.querySelectorAll(".mode-option-card").forEach((card) => {
-          card.addEventListener("click", function () {
-            document
-              .querySelectorAll(".mode-option-card")
-              .forEach((c) => c.classList.remove("active"));
-            this.classList.add("active");
-            this.querySelector("input").checked = true;
-          });
-        });
-
-        document
-          .getElementById("createSessionForm")
-          .addEventListener("submit", function (e) {
-            e.preventDefault();
-            const title = document.getElementById("sessionTitle").value;
-            const sessionType = document.querySelector(
-              'input[name="sessionType"]:checked'
-            ).value;
-            const scheduledStartTime =
-              document.getElementById("scheduledStartTime").value;
-
-            if (title !== null && title.trim() !== "") {
-              const form = document.createElement("form");
-              form.method = "POST";
-              form.action = "/session/create";
-
-              const titleInput = document.createElement("input");
-              titleInput.type = "hidden";
-              titleInput.name = "title";
-              titleInput.value = title.trim();
-              form.appendChild(titleInput);
-
-              const typeInput = document.createElement("input");
-              typeInput.type = "hidden";
-              typeInput.name = "sessionType";
-              typeInput.value = sessionType;
-              form.appendChild(typeInput);
-
-              if (scheduledStartTime) {
-                const timeInput = document.createElement("input");
-                timeInput.type = "hidden";
-                timeInput.name = "scheduledStartTime";
-                timeInput.value = scheduledStartTime;
-                form.appendChild(timeInput);
-              }
-
-              document.body.appendChild(form);
-              form.submit();
+        function filterByStatus(status) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('page');
+            if (status) {
+                url.searchParams.set('status', status);
             } else {
-              alert("세션 제목을 입력해주세요!");
+                url.searchParams.delete('status');
             }
-          });
+            window.location.href = url.toString();
+        }
 
-        connect();
-      });
+        function createNewSession() {
+            document.getElementById('sessionModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('sessionModal').style.display = 'none';
+        }
+
+        function resetSearch() {
+            window.location.href = '/session/list';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.mode-option-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.mode-option-card').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    this.querySelector('input').checked = true;
+                });
+            });
+
+            document.getElementById('createSessionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const title = document.getElementById('sessionTitle').value;
+                const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
+                const scheduledStartTime = document.getElementById('scheduledStartTime').value;
+
+                if (title.trim()) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/session/create';
+
+                    const titleInput = document.createElement('input');
+                    titleInput.type = 'hidden';
+                    titleInput.name = 'title';
+                    titleInput.value = title.trim();
+                    form.appendChild(titleInput);
+
+                    const typeInput = document.createElement('input');
+                    typeInput.type = 'hidden';
+                    typeInput.name = 'sessionType';
+                    typeInput.value = sessionType;
+                    form.appendChild(typeInput);
+
+                    if (scheduledStartTime) {
+                        const timeInput = document.createElement('input');
+                        timeInput.type = 'hidden';
+                        timeInput.name = 'scheduledStartTime';
+                        timeInput.value = scheduledStartTime;
+                        form.appendChild(timeInput);
+                    }
+
+                    document.body.appendChild(form);
+                    form.submit();
+                } else {
+                    alert('세션 제목을 입력해주세요!');
+                }
+            });
+
+            window.onclick = function(event) {
+                const modal = document.getElementById('sessionModal');
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+        });
     </script>
-  </body>
+</body>
 </html>

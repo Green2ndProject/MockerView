@@ -5,22 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입 - MockerView</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         
+        .top-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            z-index: 100;
+        }
+        
+        .top-logo a {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
         body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #fafbfc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            padding-top: 90px;
         }
         
         .register-container {
@@ -28,35 +46,22 @@
             max-width: 520px;
         }
         
-        .logo {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .logo a {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-            letter-spacing: -0.5px;
-        }
-        
         .register-card {
             background: white;
-            border-radius: 20px;
-            padding: 48px 40px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
         }
         
         .register-header {
             text-align: center;
-            margin-bottom: 36px;
+            margin-bottom: 32px;
         }
         
         .register-header h1 {
-            font-size: 1.75rem;
+            font-size: 1.625rem;
             font-weight: 700;
-            color: #0a0a0a;
+            color: #1a1a1a;
             margin-bottom: 8px;
             letter-spacing: -0.5px;
         }
@@ -67,7 +72,7 @@
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         
         .form-label {
@@ -80,12 +85,11 @@
         
         .form-input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 12px 14px;
             font-size: 0.9375rem;
             border: 1.5px solid #e5e7eb;
-            border-radius: 10px;
+            border-radius: 8px;
             transition: all 0.2s;
-            font-family: 'Pretendard', sans-serif;
         }
         
         .form-input:focus {
@@ -101,13 +105,13 @@
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 14px;
         }
         
         .role-selection {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 10px;
             margin-top: 8px;
         }
         
@@ -124,9 +128,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 12px;
+            padding: 18px 10px;
             border: 2px solid #e5e7eb;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
@@ -134,12 +138,12 @@
         
         .role-option input[type="radio"]:checked + .role-label {
             border-color: #667eea;
-            background: #f0f4ff;
+            background: #f8f9ff;
         }
         
         .role-icon {
             font-size: 2rem;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         
         .role-name {
@@ -150,27 +154,29 @@
         
         .btn-submit {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             background: #667eea;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 0.9375rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            margin-top: 12px;
+            margin-top: 10px;
         }
         
         .btn-submit:hover {
             background: #5568d3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .btn-submit:active {
+            transform: scale(0.98);
         }
         
         .footer-links {
-            margin-top: 28px;
-            padding-top: 24px;
+            margin-top: 24px;
+            padding-top: 20px;
             border-top: 1px solid #e5e7eb;
             text-align: center;
         }
@@ -187,8 +193,8 @@
         }
         
         .alert {
-            padding: 14px 16px;
-            border-radius: 10px;
+            padding: 12px 14px;
+            border-radius: 8px;
             font-size: 0.875rem;
             margin-bottom: 20px;
             font-weight: 500;
@@ -200,12 +206,6 @@
             border: 1px solid #fecaca;
         }
         
-        @media (max-width: 768px) {
-            .register-container {
-                max-width: 480px;
-            }
-        }
-        
         @media (max-width: 600px) {
             .role-selection {
                 grid-template-columns: 1fr;
@@ -213,20 +213,25 @@
         }
         
         @media (max-width: 480px) {
+            .top-logo {
+                padding: 14px 16px;
+            }
+            
+            .top-logo a {
+                font-size: 1.25rem;
+            }
+            
             body {
                 padding: 16px;
+                padding-top: 80px;
             }
             
             .register-card {
-                padding: 36px 24px;
+                padding: 32px 24px;
             }
             
             .register-header h1 {
                 font-size: 1.5rem;
-            }
-            
-            .logo a {
-                font-size: 1.75rem;
             }
             
             .form-row {
@@ -235,18 +240,18 @@
             
             .form-input,
             .btn-submit {
-                padding: 12px 14px;
+                padding: 11px 12px;
                 font-size: 0.875rem;
             }
         }
     </style>
 </head>
 <body>
+    <div class="top-logo">
+        <a href="/">MockerView</a>
+    </div>
+    
     <div class="register-container">
-        <div class="logo">
-            <a href="/">MockerView</a>
-        </div>
-        
         <div class="register-card">
             <div class="register-header">
                 <h1>회원가입</h1>
@@ -334,7 +339,7 @@
                         <div class="role-option">
                             <input type="radio" id="roleHost" name="role" value="HOST">
                             <label for="roleHost" class="role-label">
-                                <div class="role-icon">👔</div>
+                                <div class="role-icon">💼</div>
                                 <div class="role-name">면접관</div>
                             </label>
                         </div>

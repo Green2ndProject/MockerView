@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사용자 상세 - MockerView Admin</title>
     <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        
         * {
             margin: 0;
             padding: 0;
@@ -14,81 +12,177 @@
         }
         
         body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f8f9fc;
-            color: #1a202c;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+        
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
         
         .container {
             max-width: 1000px;
             margin: 0 auto;
-            padding: 32px 24px;
+            padding: 0 20px;
         }
         
-        .header {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            margin-bottom: 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            border-left: 4px solid #667eea;
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .header h1 {
-            font-size: 28px;
+        .navbar-brand {
+            font-size: 1.375rem;
             font-weight: 700;
             color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .admin-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 57px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 99;
+        }
+        
+        .mobile-menu.active {
+            display: block;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            padding: 14px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .mobile-menu a:hover,
+        .mobile-menu a.active {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+        
+        .page-header {
+            padding: 40px 0 28px;
+        }
+        
+        .page-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            letter-spacing: -0.5px;
             margin-bottom: 6px;
         }
         
-        .header p {
-            color: #64748b;
-            font-size: 15px;
+        .page-title p {
+            font-size: 0.9375rem;
+            color: #6b7280;
         }
         
         .alert {
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            font-weight: 600;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
         
         .alert-success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
         }
         
         .alert-error {
-            background: #fee2e2;
+            background: #fef2f2;
             color: #991b1b;
-            border: 1px solid #fca5a5;
+            border: 1px solid #fecaca;
         }
         
         .info-card {
             background: white;
-            padding: 36px;
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            padding: 32px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             margin-bottom: 24px;
             border: 1px solid #e5e7eb;
         }
         
         .info-card h2 {
-            font-size: 20px;
+            font-size: 1.25rem;
             font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 28px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f1f3f5;
+            color: #0a0a0a;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #f3f4f6;
+            letter-spacing: -0.5px;
         }
         
         .info-row {
             display: flex;
-            padding: 16px 0;
-            border-bottom: 1px solid #f1f3f5;
+            padding: 14px 0;
+            border-bottom: 1px solid #f9fafb;
         }
         
         .info-row:last-child {
@@ -96,26 +190,26 @@
         }
         
         .info-label {
-            width: 160px;
+            width: 140px;
             font-weight: 700;
-            color: #64748b;
-            font-size: 13px;
+            color: #6b7280;
+            font-size: 0.8125rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .info-value {
             flex: 1;
-            color: #1a202c;
+            color: #1a1a1a;
             font-weight: 500;
-            font-size: 15px;
+            font-size: 0.9375rem;
         }
         
         .role-badge {
             display: inline-block;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             font-weight: 600;
         }
         
@@ -135,22 +229,22 @@
         }
         
         .role-badge.admin {
-            background: #ffe4e6;
-            color: #be123c;
+            background: #fee2e2;
+            color: #991b1b;
         }
         
         .plan-badge {
             display: inline-block;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 0.8125rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         
         .plan-badge.free {
-            background: #e5e7eb;
+            background: #f3f4f6;
             color: #4b5563;
         }
         
@@ -165,8 +259,8 @@
         }
         
         .plan-badge.team {
-            background: #d1fae5;
-            color: #065f46;
+            background: #f0fdf4;
+            color: #166534;
         }
         
         .plan-badge.enterprise {
@@ -176,9 +270,9 @@
         
         .usage-bar {
             width: 100%;
-            height: 10px;
+            height: 8px;
             background: #e5e7eb;
-            border-radius: 10px;
+            border-radius: 8px;
             overflow: hidden;
             margin-top: 8px;
         }
@@ -186,21 +280,21 @@
         .usage-fill {
             height: 100%;
             background: #667eea;
-            border-radius: 10px;
+            border-radius: 8px;
             transition: width 0.3s;
         }
         
         .plan-change-form {
-            margin-top: 32px;
-            padding-top: 32px;
-            border-top: 2px solid #f1f3f5;
+            margin-top: 28px;
+            padding-top: 28px;
+            border-top: 2px solid #f3f4f6;
         }
         
         .plan-change-form h3 {
-            font-size: 18px;
+            font-size: 1rem;
             font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 20px;
+            color: #1a1a1a;
+            margin-bottom: 18px;
         }
         
         .form-group {
@@ -210,16 +304,16 @@
         }
         
         select {
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 14px;
+            padding: 11px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
             font-weight: 600;
-            color: #1a202c;
+            color: #1a1a1a;
             background: white;
             cursor: pointer;
             transition: all 0.2s;
-            font-family: 'Pretendard', sans-serif;
+            flex: 1;
         }
         
         select:hover {
@@ -233,15 +327,15 @@
         }
         
         .btn {
-            padding: 12px 24px;
-            border-radius: 10px;
+            padding: 11px 20px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 0.875rem;
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             border: none;
             cursor: pointer;
         }
@@ -253,39 +347,58 @@
         
         .btn-primary:hover {
             background: #5568d3;
-            transform: translateY(-1px);
         }
         
         .btn-secondary {
             background: white;
             color: #667eea;
-            border: 2px solid #667eea;
+            border: 1.5px solid #667eea;
         }
         
         .btn-secondary:hover {
-            background: #f0f4ff;
+            background: #f8f9ff;
         }
         
         .footer-actions {
-            margin-top: 32px;
+            margin-top: 28px;
             text-align: center;
         }
         
         .empty-state {
             text-align: center;
-            padding: 40px;
-            color: #64748b;
-            font-size: 15px;
+            padding: 36px;
+            color: #9ca3af;
+            font-size: 0.875rem;
         }
         
         @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
             .container {
-                padding: 20px 16px;
+                padding: 0 16px;
+            }
+            
+            .page-header {
+                padding: 28px 0 20px;
+            }
+            
+            .page-title h1 {
+                font-size: 1.625rem;
+            }
+            
+            .info-card {
+                padding: 24px;
             }
             
             .info-row {
                 flex-direction: column;
-                gap: 8px;
+                gap: 6px;
             }
             
             .info-label {
@@ -303,12 +416,45 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>👤 사용자 상세 정보</h1>
-            <p>사용자 정보 조회 및 관리</p>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/admin/dashboard">
+                    MockerView
+                    <span class="admin-badge">ADMIN</span>
+                </a>
+                <div class="navbar-nav">
+                    <a class="nav-link active" href="/admin/dashboard">대시보드</a>
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                    <a class="nav-link" href="/auth/logout">로그아웃</a>
+                </div>
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
         </div>
-        
+    </nav>
+    
+    <div class="mobile-menu" id="mobileMenu">
+        <a class="active" href="/admin/dashboard">대시보드</a>
+        <a href="/session/list">세션 목록</a>
+        <a href="/auth/mypage">마이페이지</a>
+        <a href="/auth/logout">로그아웃</a>
+    </div>
+    
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>👤 사용자 상세 정보</h1>
+                <p>사용자 정보 조회 및 관리</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
         <div th:if="${success}" class="alert alert-success">
             ✓ <span th:text="${success}"></span>
         </div>
@@ -344,7 +490,7 @@
                 <div class="info-label">역할</div>
                 <div class="info-value">
                     <span class="role-badge student" th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
-                    <span class="role-badge host" th:if="${user.role.name() == 'HOST'}">👔 면접관</span>
+                    <span class="role-badge host" th:if="${user.role.name() == 'HOST'}">💼 면접관</span>
                     <span class="role-badge reviewer" th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
                     <span class="role-badge admin" th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
                 </div>
@@ -363,9 +509,9 @@
                 <div class="info-row">
                     <div class="info-label">현재 플랜</div>
                     <div class="info-value">
-                        <span class="plan-badge" 
-                              th:classappend="${subscription.planType.name().toLowerCase()}"
-                              th:text="${subscription.planType.name()}"></span>
+                        <span class="plan-badge"
+                            th:classappend="${subscription.planType.name().toLowerCase()}"
+                            th:text="${subscription.planType.name()}"></span>
                     </div>
                 </div>
                 
@@ -402,7 +548,7 @@
             </div>
             
             <div th:unless="${subscription != null}" class="empty-state">
-                📭 활성 구독이 없습니다
+                🔭 활성 구독이 없습니다
             </div>
             
             <div class="plan-change-form">
@@ -426,5 +572,12 @@
             <a href="/admin/dashboard" class="btn btn-secondary">← 대시보드로 돌아가기</a>
         </div>
     </div>
+    
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>

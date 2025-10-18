@@ -24,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import com.mockerview.service.SessionService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/selfinterview")
@@ -46,9 +47,9 @@ public class SelfInterviewController {
 
     @GetMapping("/list")
     public String listPage(Authentication authentication,
-                           @RequestParam(defaultValue = "1") int page,
-                           @RequestParam(defaultValue = "6") int size,
-                           Model model) {
+                            @RequestParam(defaultValue = "1") int page,
+                            @RequestParam(defaultValue = "6") int size,
+                            Model model) {
         try {
             if (authentication == null) {
                 return "redirect:/auth/login";
@@ -129,15 +130,27 @@ public class SelfInterviewController {
             }
             
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            Long userId = userDetails.getUserId();
             
-            List<Session> selfSessions = sessionRepository.findSelfInterviewsByHostId(userDetails.getUserId());
+            log.info("히스토리 조회 시작 - userId: {}", userId);
+            
+            List<Session> allSessions = sessionRepository.findByHostId(userId);
+            
+            List<Session> selfSessions = allSessions.stream()
+                .filter(s -> Boolean.TRUE.equals(s.getIsSelfInterview()))
+                .collect(Collectors.toList());
+            
+            log.info("셀프면접 세션 필터링 완료 - 전체: {}, 셀프: {}", allSessions.size(), selfSessions.size());
             
             model.addAttribute("sessions", selfSessions);
             return "selfinterview/history";
+            
         } catch (Exception e) {
-            log.error("셀프면접 히스토리 조회 오류", e);
-            model.addAttribute("error", e.getMessage());
-            return "error";
+            log.error("셀프면접 히스토리 조회 오류 - userId: {}", 
+                ((CustomUserDetails) authentication.getPrincipal()).getUserId(), e);
+            model.addAttribute("error", "데이터를 불러오는 중 오류가 발생했습니다.");
+            model.addAttribute("sessions", List.of());
+            return "selfinterview/history";
         }
     }
 }
