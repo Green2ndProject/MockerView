@@ -195,7 +195,7 @@ public class SessionService {
     public void createSession(String title, Long hostId, String sessionType, LocalDateTime scheduledStartTime) {
         try {
             if (!subscriptionService.canCreateSession(hostId)) {
-                throw new RuntimeException("세션 생성 한도를 초과했습니다. 플랜을 업그레이드하세요.");
+                throw new RuntimeException("SESSION_LIMIT_EXCEEDED");
             }
             
             User host = userRepository.findById(hostId)

@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('STUDENT', 'HOST', 'REVIEWER', 'ADMIN'));
 
--- 나머지 테이블들...
 CREATE TABLE IF NOT EXISTS sessions (
     id BIGSERIAL PRIMARY KEY,
     host_id BIGINT REFERENCES users(id),
@@ -179,3 +178,20 @@ WHERE NOT EXISTS (SELECT 1 FROM question_pool WHERE question_text LIKE '%마감 
 INSERT INTO question_pool (category, difficulty, question_text, created_at) 
 SELECT '상황', 'HARD', '기술적 의견 충돌이 있을 때 어떻게 해결하시나요?', CURRENT_TIMESTAMP
 WHERE NOT EXISTS (SELECT 1 FROM question_pool WHERE question_text LIKE '%기술적 의견 충돌%');
+
+INSERT INTO subscriptions (user_id, plan_type, status, start_date, end_date, session_limit, used_sessions, auto_renew, created_at, updated_at)
+SELECT 
+    u.id,
+    'FREE',
+    'ACTIVE',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP + INTERVAL '1 year',
+    5,
+    0,
+    TRUE,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+FROM users u
+WHERE NOT EXISTS (
+    SELECT 1 FROM subscriptions s WHERE s.user_id = u.id AND s.status = 'ACTIVE'
+);

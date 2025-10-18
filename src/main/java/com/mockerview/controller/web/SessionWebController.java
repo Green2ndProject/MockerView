@@ -192,14 +192,17 @@ public class SessionWebController {
             sessionService.createSession(title, currentUser.getId(), sessionType, startTime);
             log.info("세션 생성 완료");
 
-            String successMessage = "세션이 생성되었습니다";
-            String encodedMessage = URLEncoder.encode(successMessage, StandardCharsets.UTF_8.toString());
-
-            return "redirect:/session/list?success=" + encodedMessage;
+            return "redirect:/session/list?success=CREATE_SUCCESS";
 
         } catch (Exception e) {
             log.error("세션 생성 오류: ", e);
-            return "redirect:/session/list?error=" + e.getMessage();
+            
+            String errorCode = "CREATE_FAILED";
+            if (e.getMessage() != null && e.getMessage().contains("SESSION_LIMIT_EXCEEDED")) {
+                errorCode = "LIMIT_EXCEEDED";
+            }
+            
+            return "redirect:/session/list?error=" + errorCode;
         }
     }
 
