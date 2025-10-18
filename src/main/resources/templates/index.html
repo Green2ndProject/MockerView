@@ -9,14 +9,12 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MockerView">
-    
-    <link rel="apple-touch-icon" href="/images/icon-180x180.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/images/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon-180x180.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="/images/icon-167x167.png">
-    
-    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/images/icon-512x512.png">
+    <link rel="apple-touch-icon" href="/images/180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/images/167.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/android-launchericon-192-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/android-launchericon-512-512.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
         
@@ -882,7 +880,7 @@
         to { transform: rotate(360deg); }
     }
 </style>
-
+<script src="/js/push-notifications.js"></script>
 <script src="/js/payment-redirect.js"></script>
 <script th:src="@{/js/index.js}"></script>
 <script>
@@ -922,6 +920,24 @@
         e.preventDefault();
         deferredPrompt = e;
         console.log('PWA install prompt ready');
+    });
+
+    let deferredPrompt;
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+    
+    window.addEventListener('appinstalled', async () => {
+        console.log('PWA installed!');
+        
+        setTimeout(async () => {
+            const granted = await pushNotifications.requestPermission();
+            if (granted) {
+                console.log('Push notifications enabled!');
+            }
+        }, 3000);
     });
 </script>
 </body>

@@ -23,7 +23,7 @@ public class DevController {
     @GetMapping("/create-admin")
     public String createAdmin() {
         try {
-            if (userRepository.findByUsername("mockerview").isPresent()) {
+            if (userRepository.findByUsername("admin").isPresent()) {
                 return "관리자 계정이 이미 존재합니다.";
             }
             
@@ -37,9 +37,9 @@ public class DevController {
             
             userRepository.save(admin);
             
-            log.info("관리자 계정 생성 완료 - username: mockerview, password: mockerview");
+            log.info("관리자 계정 생성 완료 - username: admin, password: admin123");
             
-            return "관리자 계정 생성 완료! (username: mockerview, password: mockerview, email: admin@mockerview.com)";
+            return "관리자 계정 생성 완료! (username: admin, password: admin123)";
         } catch (Exception e) {
             log.error("관리자 계정 생성 실패", e);
             return "관리자 계정 생성 실패: " + e.getMessage();
