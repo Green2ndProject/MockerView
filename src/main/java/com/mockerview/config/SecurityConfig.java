@@ -108,6 +108,11 @@ public class SecurityConfig {
                 .requestMatchers("/auth/login", "/auth/register", "/auth/find-username", "/auth/reset-password", "/error", "/favicon.ico").permitAll()
                 .requestMatchers("/user/login", "/user/register", "/user/loginProc", "/user/registerProc").permitAll()
                 .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
+                
+                // PWA 파일 추가
+                .requestMatchers("/manifest.json", "/service-worker.js", "/offline.html").permitAll()
+                .requestMatchers("/apple-touch-icon**").permitAll()
+                
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
@@ -149,7 +154,10 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
             "/error",
-            "/favicon.ico"
+            "/favicon.ico",
+            "/manifest.json",
+            "/service-worker.js",
+            "/offline.html"
         );
     }
 }
