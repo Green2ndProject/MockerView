@@ -33,3 +33,6 @@ target/
 *.tmp
 *.temp
 bin/
+run-local.sh
+run.sh
+.env
