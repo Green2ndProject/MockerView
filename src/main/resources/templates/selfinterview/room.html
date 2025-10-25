@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <title>셀프 면접</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+        
+        .session-info-bar {
+            margin-top: 64px;
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            padding: 1.5rem 0;
+        }
+        
+        .session-title-section {
+            flex: 1;
+        }
+        
+        .session-title-section h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 0.5rem;
+        }
+        
+        .session-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .timer {
+            color: #495057;
+            font-weight: 500;
+        }
+        
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-ai {
+            background: #f0f3ff;
+            color: #667eea;
+        }
+        
+        .badge-success {
+            background: #d1f4e0;
+            color: #10b981;
+        }
+        
+        .session-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .selfinterview-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .main-content {
+            min-height: calc(100vh - 300px);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .progress-bar-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 1.5rem;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+            border-radius: 8px;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #495057;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .question-info {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .question-info span:first-child {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+        
+        .ai-badge {
+            background: #f0f3ff;
+            color: #667eea;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .question-timer {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .question-display {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #212529;
+        }
+        
+        .answer-tip {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .answer-mode-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .answer-mode-toggle .btn {
+            flex: 1;
+        }
+        
+        .answer-mode-toggle .btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s;
+            resize: vertical;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .char-counter {
+            text-align: right;
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        
+        .answer-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .ai-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #f0f0f0;
+            color: #6c757d;
+        }
+        
+        .feedback-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollable::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .scrollable::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6c757d;
+        }
+        
+        .ai-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .ai-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .question-nav-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .question-nav-list li {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .question-nav-list li:hover {
+            background: #f8f9ff;
+        }
+        
+        .result-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .result-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .selfinterview-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s;
+                pointer-events: none;
+            }
+            
+            .navbar-nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .session-title-section h1 {
+                font-size: 1.2rem;
+            }
+            
+            .card-header h4 {
+                font-size: 1rem;
+            }
+            
+            .answer-mode-toggle {
+                flex-direction: column;
+            }
+            
+            .answer-actions {
+                flex-direction: column;
+            }
+            
+            #videoPreview {
+                width: 100%;
+                height: auto;
+            }
+            
+            .result-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="hamburger" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/selfinterview/list">내 연습 기록</a>
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="session-info-bar">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div class="session-title-section">
+                    <h1 id="session-title" th:text="${session.title}">셀프 면접</h1>
+                    <div class="session-meta">
+                        <span class="timer">
+                            <span id="session-timer">00:00</span>
+                        </span>
+                        <span class="badge badge-ai">AI 면접관</span>
+                        <span id="session-stats">질문 로딩중...</span>
+                    </div>
+                </div>
+                <div class="session-actions">
+                    <button onclick="toggleResultView()" class="btn btn-secondary btn-sm">결과 보기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="selfinterview-layout">
+            <main class="main-content">
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progress-current">0</span> / <span id="progress-total">0</span> 질문 완료
+                    </div>
+                </div>
+
+                <div class="card current-question">
+                    <div class="card-header">
+                        <div class="question-info">
+                            <span id="question-number">Q1</span>
+                            <span class="ai-badge">AI 질문</span>
+                        </div>
+                        <div id="question-timer" class="question-timer">00:00</div>
+                    </div>
+                    <div class="card-body">
+                        <div id="current-question" class="question-display">
+                            <p id="current-question-text">질문을 불러오는 중...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card answer-card" id="answer-section">
+                    <div class="card-header">
+                        <h4>답변 작성</h4>
+                        <span class="answer-tip">자신있게 답변해보세요</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="answer-mode-toggle">
+                            <button id="textModeBtn" class="btn btn-secondary active" onclick="switchToTextMode()">텍스트 답변</button>
+                            <button id="voiceModeBtn" class="btn btn-secondary" onclick="switchToVoiceMode()">음성 답변</button>
+                            <button id="videoModeBtn" class="btn btn-secondary" onclick="switchToVideoMode()">화상 답변</button>
+                        </div>
+
+                        <div id="text-answer-area">
+                            <div class="form-group">
+                                <textarea id="answerText" placeholder="여기에 답변을 작성하세요..." class="form-control" rows="6"></textarea>
+                                <div class="char-counter">
+                                    <span id="charCount">0</span>/1000자
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="voice-answer-area" style="display: none; text-align: center; padding: 2rem;">
+                            <button id="recordBtn" class="btn btn-danger" onclick="toggleRecording()" style="width: 100px; height: 100px; border-radius: 50%; font-size: 2rem;">
+                                🎤
+                            </button>
+                            <div id="recordingStatus" style="margin-top: 1rem; color: #6c757d; font-weight: 500;">녹음 시작하려면 클릭</div>
+                        </div>
+
+                        <div id="video-answer-area" style="display: none; text-align: center; padding: 2rem;">
+                            <video id="videoPreview" width="400" height="300" style="border: 2px solid #e0e0e0; margin-bottom: 1rem; border-radius: 12px;" muted></video>
+                            <br>
+                            <button id="videoRecordBtn" class="btn btn-danger" onclick="toggleVideoRecording()" style="width: 120px; height: 50px; border-radius: 8px; margin-bottom: 1rem;">
+                                🎥 녹화 시작
+                            </button>
+                            <div id="videoRecordingStatus" style="margin-top: 1rem; color: #6c757d; font-weight: 500;">카메라를 허용하고 녹화 시작</div>
+                        </div>
+
+                        <div class="answer-actions">
+                            <button onclick="skipQuestion()" class="btn btn-secondary">건너뛰기</button>
+                            <button id="submitAnswerBtn" onclick="submitAnswer()" class="btn btn-success" style="flex: 1;">답변 제출</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="result-section" class="card" style="display: none;">
+                    <div class="card-header">
+                        <h4>면접 완료</h4>
+                        <span class="badge badge-success">분석 완료</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="result-summary">
+                            <div class="result-item">
+                                <div class="result-label">평균 점수</div>
+                                <div id="avg-score" class="result-value">0점</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">답변한 질문</div>
+                                <div id="answered-count" class="result-value">0개</div>
+                            </div>
+                            <div class="result-item">
+                                <div class="result-label">소요 시간</div>
+                                <div id="total-time" class="result-value">0분</div>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button onclick="viewDetailedResults()" class="btn btn-primary">상세 결과 보기</button>
+                            <a href="/selfinterview/create" class="btn btn-secondary">새 면접 시작</a>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="feedback-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>AI 피드백</h4>
+                        <span id="ai-status" class="ai-status">대기중</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="ai-feedback-list" class="feedback-list scrollable">
+                            <div class="empty-state">
+                                <div class="ai-icon">🤖</div>
+                                <p>답변이 제출되면 AI가 즉시 분석합니다</p>
+                                <div class="ai-features">
+                                    <span>• 루브릭 기반 평가</span>
+                                    <span>• 강점 분석</span>
+                                    <span>• 개선점 제시</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card question-list-card">
+                    <div class="card-header">
+                        <h4>질문 목록</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul id="question-list" class="question-nav-list">
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="/js/authFetch.js"></script>
+    <script src="/js/selfinterview-room.js"></script>
+    <script src="/js/notification-handler.js"></script>
+    <script th:inline="javascript">
+    const currentUserId = [[${user.id}]];
+    
+    if (typeof NotificationHandler !== 'undefined') {
+        const notificationHandler = new NotificationHandler(currentUserId, {
+            isSelfInterview: true,
+            enableToast: false
+        });
+    }
+    
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
+        }
+
+        let isRecording = false;
+        let currentMode = 'text';
+        let mediaRecorder = null;
+        let audioBlob = null;
+        let audioChunks = [];
+        let videoStream = null;
+        let videoRecorder = null;
+        let videoBlob = null;
+        let isVideoRecording = false;
+
+        const answerTextArea = document.getElementById('answerText');
+        if (answerTextArea) {
+            answerTextArea.addEventListener('input', function() {
+                const count = this.value.length;
+                document.getElementById('charCount').textContent = count;
+                if (count > 1000) {
+                    this.value = this.value.substring(0, 1000);
+                    document.getElementById('charCount').textContent = 1000;
+                }
+            });
+        }
+
+        function switchToTextMode() {
+            currentMode = 'text';
+            document.getElementById('textModeBtn').classList.add('active');
+            document.getElementById('voiceModeBtn').classList.remove('active');
+            document.getElementById('videoModeBtn').classList.remove('active');
+            document.getElementById('text-answer-area').style.display = 'block';
+            document.getElementById('voice-answer-area').style.display = 'none';
+            document.getElementById('video-answer-area').style.display = 'none';
+        }
+
+        function switchToVoiceMode() {
+            currentMode = 'voice';
+            document.getElementById('voiceModeBtn').classList.add('active');
+            document.getElementById('textModeBtn').classList.remove('active');
+            document.getElementById('videoModeBtn').classList.remove('active');
+            document.getElementById('text-answer-area').style.display = 'none';
+            document.getElementById('voice-answer-area').style.display = 'block';
+            document.getElementById('video-answer-area').style.display = 'none';
+        }
+
+        function switchToVideoMode() {
+            currentMode = 'video';
+            document.getElementById('videoModeBtn').classList.add('active');
+            document.getElementById('textModeBtn').classList.remove('active');
+            document.getElementById('voiceModeBtn').classList.remove('active');
+            document.getElementById('text-answer-area').style.display = 'none';
+            document.getElementById('voice-answer-area').style.display = 'none';
+            document.getElementById('video-answer-area').style.display = 'block';
+            startVideoPreview();
+        }
+
+        async function startVideoPreview() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                document.getElementById('videoPreview').srcObject = videoStream;
+                document.getElementById('videoPreview').play();
+            } catch (error) {
+                alert('카메라 접근 권한을 허용해주세요.');
+                console.error('카메라 접근 실패:', error);
+            }
+        }
+
+        async function toggleVideoRecording() {
+            const recordBtn = document.getElementById('videoRecordBtn');
+            const recordingStatus = document.getElementById('videoRecordingStatus');
+
+            if (!isVideoRecording) {
+                try {
+                    if (!videoStream) {
+                        await startVideoPreview();
+                    }
+                    
+                    videoRecorder = new MediaRecorder(videoStream);
+                    let videoChunks = [];
+                    
+                    videoRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            videoChunks.push(e.data);
+                        }
+                    };
+                    
+                    videoRecorder.onstop = () => {
+                        videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                        recordingStatus.textContent = '녹화 완료! 제출해주세요';
+                    };
+                    
+                    videoRecorder.start();
+                    isVideoRecording = true;
+                    recordBtn.innerHTML = '⏹️ 녹화 중지';
+                    recordBtn.style.background = '#dc3545';
+                    recordingStatus.textContent = '비디오 녹화 중...';
+                } catch (error) {
+                    alert('비디오 녹화를 시작할 수 없습니다.');
+                    console.error('비디오 녹화 실패:', error);
+                }
+            } else {
+                videoRecorder.stop();
+                isVideoRecording = false;
+                recordBtn.innerHTML = '🎥 녹화 시작';
+                recordBtn.style.background = '';
+            }
+        }
+
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const recordingStatus = document.getElementById('recordingStatus');
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            audioChunks.push(e.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        recordingStatus.textContent = '녹음 완료! 제출해주세요';
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.innerHTML = '⏹️';
+                    recordBtn.style.background = '#dc3545';
+                    recordingStatus.textContent = '녹음 중...';
+                } catch (error) {
+                    alert('마이크 권한을 허용해주세요.');
+                    console.error('녹음 시작 실패:', error);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.innerHTML = '🎤';
+                recordBtn.style.background = '';
+            }
+        }
+
+        async function submitAnswer() {
+            if (currentMode === 'text') {
+                const answerText = document.getElementById('answerText').value.trim();
+                if (!answerText) {
+                    alert('답변을 입력하세요');
+                    return;
+                }
+                window.submitTextAnswer();
+            } else if (currentMode === 'voice') {
+                if (!audioBlob) {
+                    alert('먼저 음성을 녹음해주세요');
+                    return;
+                }
+                window.submitVoiceAnswerSelf(audioBlob);
+            } else if (currentMode === 'video') {
+                if (!videoBlob) {
+                    alert('먼저 비디오를 녹화해주세요');
+                    return;
+                }
+                await submitVideoAnswer();
+            }
+        }
+
+        async function submitVideoAnswer() {
+            if (!SESSION_DATA || !SESSION_DATA.id) {
+                alert('세션 정보를 불러올 수 없습니다.');
+                return;
+            }
+        
+            const question = questions[currentQuestionIndex];
+            const formData = new FormData();
+            
+            formData.append('audio', videoBlob, 'answer.webm');
+            formData.append('questionId', question.id);
+        
+            try {
+                document.getElementById('ai-status').textContent = '비디오 분석 중...';
+                document.getElementById('ai-status').style.color = '#f59e0b';
+                
+                const token = document.cookie.split(';').find(c => c.trim().startsWith('Authorization='));
+                const authToken = token ? token.split('=')[1] : '';
+                
+                const response = await fetch('/api/session/' + SESSION_DATA.id + '/video-answer', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authToken
+                    },
+                    body: formData
+                });
+                
+                console.log('Status:', response.status);
+                console.log('Headers:', [...response.headers.entries()]);
+                
+                const text = await response.text();
+                console.log('Raw response:', text);
+                console.log('Response length:', text.length);
+                
+                if (!response.ok) {
+                    throw new Error('비디오 제출 실패: ' + response.status + ' - ' + text);
+                }
+                
+                if (!text || text.length === 0) {
+                    throw new Error('서버에서 빈 응답을 받았습니다');
+                }
+                
+                const result = JSON.parse(text);
+                console.log('Video result:', result);
+                console.log('Feedback:', result.feedback);
+                
+                if (!result.feedback || !result.feedback.score) {
+                    console.error('Invalid feedback structure:', result);
+                    throw new Error('피드백 데이터가 올바르지 않습니다');
+                }
+                
+                answers.push(result.answer);
+                feedbacks.push(result.feedback);
+                
+                displayFeedback(result.feedback, question, currentQuestionIndex + 1);
+                
+                document.getElementById('ai-status').textContent = '완료';
+                document.getElementById('ai-status').style.color = '#10b981';
+                
+                videoBlob = null;
+                document.getElementById('videoRecordingStatus').textContent = '카메라를 허용하고 녹화 시작';
+                
+                updateProgress();
+                
+                setTimeout(() => {
+                    loadQuestion(currentQuestionIndex + 1);
+                }, 1500);
+                
+            } catch (error) {
+                console.error('비디오 답변 제출 실패:', error);
+                alert('비디오 답변 제출에 실패했습니다: ' + error.message);
+                document.getElementById('ai-status').textContent = '실패';
+                document.getElementById('ai-status').style.color = '#ef4444';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>면접관 활동 통계 - MockerView</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar-brand {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+        }
+        .nav-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+        .nav-link:hover {
+            color: #667eea;
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 57px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 99;
+        }
+        .mobile-menu.active {
+            display: block;
+        }
+        .mobile-menu a {
+            display: block;
+            padding: 14px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .mobile-menu a:hover {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+        .btn {
+            padding: 9px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .stats-header {
+            background: #667eea;
+            color: white;
+            padding: 36px 0;
+            margin-bottom: 28px;
+        }
+        .stats-header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .stats-header p {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+        .stat-number {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+        .session-list {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+        .session-item {
+            border-left: 3px solid #667eea;
+            padding: 14px 20px;
+            margin-bottom: 14px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .session-title {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.9375rem;
+        }
+        .session-meta {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+        .session-meta a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .session-meta a:hover {
+            text-decoration: underline;
+        }
+        .top-interviewees {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 28px;
+        }
+        .interviewee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid #10b981;
+        }
+        .interviewee-rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            width: 40px;
+        }
+        .interviewee-info {
+            flex: 1;
+            margin-left: 14px;
+        }
+        .interviewee-name {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9375rem;
+        }
+        .interviewee-stats {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+        .interviewee-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+            .hamburger {
+                display: flex;
+            }
+            .stats-header { padding: 24px 0; }
+            .stats-header h1 { font-size: 1.5rem; }
+            .stats-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 12px; 
+            }
+            .stat-card { padding: 20px; }
+            .stat-number { font-size: 1.875rem; }
+            .charts-row {
+                grid-template-columns: 1fr !important;
+            }
+            .chart-container { padding: 20px; }
+            .chart-title { font-size: 1rem; }
+            .interviewee-item { 
+                padding: 12px; 
+                font-size: 0.875rem; 
+            }
+            .interviewee-rank { font-size: 1.25rem; }
+            .interviewee-score { font-size: 1.25rem; }
+            .session-item { padding: 12px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">MockerView</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                    <a class="nav-link" href="/auth/logout">로그아웃</a>
+                </div>
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/session/list">세션 목록</a>
+        <a href="/auth/mypage">마이페이지</a>
+        <a href="/auth/logout">로그아웃</a>
+    </div>
+
+    <div class="stats-header">
+        <div class="container">
+            <h1>면접관 활동 통계</h1>
+            <p th:text="${user.name} + '님의 면접 진행 및 피드백 분석'">면접관님의 활동 분석</p>
+            <div style="margin-top: 14px;">
+                <a href="/auth/mypage" class="btn btn-primary">마이페이지로</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalHostedSessions}">0</span>
+                <div class="stat-label">개설한 세션</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${endedSessionsCount}">0</span>
+                <div class="stat-label">완료된 세션</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalFeedbacksGiven}">0</span>
+                <div class="stat-label">작성한 피드백</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${avgGivenScore}">0.0</span>
+                <div class="stat-label">평균 부여 점수</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 28px;" class="charts-row">
+            <div class="chart-container">
+                <h3 class="chart-title">📊 월별 세션 개설 추이</h3>
+                <canvas id="sessionsChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3 class="chart-title">💬 피드백 활동</h3>
+                <canvas id="feedbackChart"></canvas>
+            </div>
+        </div>
+
+        <div class="top-interviewees">
+            <h3 class="chart-title">🏆 우수 면접자 TOP 10</h3>
+            <div th:if="${topInterviewees.empty}" class="empty-state">
+                <p>아직 평가된 면접자가 없습니다</p>
+            </div>
+            <div th:each="interviewee, iterStat : ${topInterviewees}" class="interviewee-item">
+                <div class="interviewee-rank" th:text="${iterStat.index + 1}">1</div>
+                <div class="interviewee-info">
+                    <div class="interviewee-name" th:text="${interviewee[1]}">면접자 이름</div>
+                    <div class="interviewee-stats" th:text="'답변 ' + ${interviewee[3]} + '개'">답변 10개</div>
+                </div>
+                <div class="interviewee-score" th:text="${#numbers.formatDecimal(interviewee[2], 1, 1)}">95.0</div>
+            </div>
+        </div>
+
+        <div class="session-list">
+            <h3 class="chart-title">📝 최근 개설 세션</h3>
+            <div th:if="${hostedSessions.empty}" class="empty-state">
+                <p>개설한 세션이 없습니다</p>
+            </div>
+            <div th:each="sess : ${hostedSessions}" class="session-item">
+                <div class="session-title" th:text="${sess.title}">세션 제목</div>
+                <div class="session-meta">
+                    <span th:text="${#temporals.format(sess.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                    <span style="margin: 0 8px;">•</span>
+                    <span th:text="${sess.status}">상태</span>
+                    <span style="margin: 0 8px;">•</span>
+                    <a th:href="@{/session/scoreboard/{id}(id=${sess.id})}">점수판 보기 →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        var sessionsByMonth = /*[[${sessionsByMonth}]]*/ {};
+        var totalFeedbacksGiven = /*[[${totalFeedbacksGiven}]]*/ 0;
+        var totalHostedSessions = /*[[${totalHostedSessions}]]*/ 0;
+        
+        var months = Object.keys(sessionsByMonth).sort();
+        var sessionCounts = months.map(function(m) { return sessionsByMonth[m]; });
+        
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+        
+        if (document.getElementById('sessionsChart') && typeof Chart !== 'undefined') {
+            new Chart(document.getElementById('sessionsChart'), {
+                type: 'bar',
+                data: {
+                    labels: months.length > 0 ? months : ['데이터 없음'],
+                    datasets: [{
+                        label: '세션 개설 수',
+                        data: sessionCounts.length > 0 ? sessionCounts : [0],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        if (document.getElementById('feedbackChart') && typeof Chart !== 'undefined') {
+            new Chart(document.getElementById('feedbackChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['작성한 피드백', '개설한 세션'],
+                    datasets: [{
+                        data: [totalFeedbacksGiven, totalHostedSessions],
+                        backgroundColor: ['#10b981', '#667eea']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+    </script>
+</body>
+</html>

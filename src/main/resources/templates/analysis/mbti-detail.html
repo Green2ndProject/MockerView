@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>면접 MBTI 상세 - MockerView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 40px;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #667eea;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 999;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 16px 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s;
+        }
+
+        .mobile-menu a:hover {
+            background: #f8fafc;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            color: #667eea;
+            padding: 12px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 24px;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 2px solid #667eea;
+        }
+
+        .back-button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(-4px);
+        }
+
+        .mbti-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mbti-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 32px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .mbti-character {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 24px;
+        }
+
+        .mbti-type {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .mbti-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .mbti-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+        }
+
+        .traits-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .trait-badge {
+            background: #667eea;
+            color: white;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.2);
+            transition: transform 0.2s;
+        }
+
+        .trait-badge:hover {
+            transform: translateY(-2px);
+        }
+
+        .content-box {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border-left: 4px solid #667eea;
+        }
+
+        .content-box h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .content-box p {
+            color: #475569;
+            line-height: 1.8;
+            margin-bottom: 0;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .career-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .career-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .career-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.1);
+            transform: translateY(-2px);
+        }
+
+        .career-card h4 {
+            color: #667eea;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .career-card p {
+            color: #64748b;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .compatibility-section {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .compatibility-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .compatibility-item {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .compatibility-item.good {
+            border-color: #10b981;
+        }
+
+        .compatibility-item.bad {
+            border-color: #ef4444;
+        }
+
+        .compatibility-item h4 {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .compatibility-item.good h4 {
+            color: #10b981;
+        }
+
+        .compatibility-item.bad h4 {
+            color: #ef4444;
+        }
+
+        .compatibility-item p {
+            color: #64748b;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .tips-box {
+            background: #e0e7ff;
+            border-radius: 14px;
+            padding: 24px;
+            border-left: 4px solid #667eea;
+        }
+
+        .tips-box h3 {
+            color: #667eea;
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .tips-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .tips-list li {
+            color: #475569;
+            line-height: 1.8;
+            padding-left: 28px;
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .tips-list li:before {
+            content: "💡";
+            position: absolute;
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .container {
+                padding: 24px 16px;
+            }
+
+            .mbti-card {
+                padding: 24px 20px;
+                border-radius: 16px;
+            }
+
+            .mbti-character {
+                width: 140px;
+                height: 140px;
+            }
+
+            .mbti-type {
+                font-size: 2rem;
+            }
+
+            .mbti-title {
+                font-size: 1.25rem;
+            }
+
+            .mbti-subtitle {
+                font-size: 0.9375rem;
+            }
+
+            .section-title {
+                font-size: 1.125rem;
+            }
+
+            .traits-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .trait-badge {
+                padding: 12px 10px;
+                font-size: 0.8125rem;
+            }
+
+            .content-box {
+                padding: 20px 16px;
+            }
+
+            .content-box h3 {
+                font-size: 1rem;
+            }
+
+            .compatibility-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .career-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .back-button {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .mbti-character {
+                width: 120px;
+                height: 120px;
+            }
+
+            .mbti-type {
+                font-size: 1.75rem;
+            }
+
+            .mbti-header {
+                margin-bottom: 32px;
+                padding-bottom: 24px;
+            }
+
+            .section {
+                margin-bottom: 32px;
+            }
+
+            .traits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="nav-brand" href="/session/list">MockerView</a>
+            <div class="nav-menu">
+                <a class="nav-link" href="/session/list">세션</a>
+                <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                <a class="nav-link" href="/auth/mypage/stats">통계</a>
+                <a class="nav-link" href="/auth/logout">로그아웃</a>
+            </div>
+            <div class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/session/list">세션 목록</a>
+        <a href="/auth/mypage">마이페이지</a>
+        <a href="/auth/mypage/stats">통계</a>
+        <a href="/auth/logout">로그아웃</a>
+    </div>
+
+    <div class="container">
+        <a href="/analysis/mbti/result" class="back-button">
+            ← 목록으로 돌아가기
+        </a>
+
+        <div class="mbti-card">
+            <div class="mbti-header">
+                <div class="mbti-character" id="mbtiCharacter"></div>
+                <div class="mbti-type" id="mbtiType">ALDS</div>
+                <div class="mbti-title" id="mbtiTitle">체계적 분석가</div>
+                <div class="mbti-subtitle" id="mbtiSubtitle">데이터 기반 의사결정과 정밀한 실행력을 갖춘 전략적 실무자</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">🎯</span>
+                    핵심 특성
+                </div>
+                <div class="traits-grid" id="traitsGrid"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">🌟</span>
+                    강점
+                </div>
+                <div id="strengthsContent"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">⚠️</span>
+                    보완점
+                </div>
+                <div id="weaknessesContent"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">💼</span>
+                    추천 직무
+                </div>
+                <div class="career-grid" id="careerGrid"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">🤝</span>
+                    면접관 궁합
+                </div>
+                <div class="compatibility-section">
+                    <div class="compatibility-grid" id="compatibilityGrid"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <span class="section-icon">💡</span>
+                    면접 꿀팁
+                </div>
+                <div class="tips-box">
+                    <h3>이렇게 준비하세요!</h3>
+                    <ul class="tips-list" id="tipsList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/mbti-data.js"></script>
+    <script>
+        function toggleMenu() {
+            document.getElementById('mobileMenu').classList.toggle('active');
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const mbtiType = urlParams.get('type') || 'ALDS';
+        const data = window.mbtiData[mbtiType] || window.mbtiData['ALDS'];
+
+        document.getElementById('mbtiCharacter').innerHTML = data.character;
+        document.getElementById('mbtiType').textContent = mbtiType;
+        document.getElementById('mbtiTitle').textContent = data.title;
+        document.getElementById('mbtiSubtitle').textContent = data.subtitle;
+
+        const traitsGrid = document.getElementById('traitsGrid');
+        data.traits.forEach(function(trait) {
+            const badge = document.createElement('div');
+            badge.className = 'trait-badge';
+            badge.textContent = trait;
+            traitsGrid.appendChild(badge);
+        });
+
+        const strengthsContent = document.getElementById('strengthsContent');
+        data.strengths.forEach(function(strength) {
+            const box = document.createElement('div');
+            box.className = 'content-box';
+            box.innerHTML = '<h3>' + strength.title + '</h3><p>' + strength.desc + '</p>';
+            strengthsContent.appendChild(box);
+        });
+
+        const weaknessesContent = document.getElementById('weaknessesContent');
+        data.weaknesses.forEach(function(weakness) {
+            const box = document.createElement('div');
+            box.className = 'content-box warning-box';
+            box.innerHTML = '<h3>' + weakness.title + '</h3><p>' + weakness.desc + '</p>';
+            weaknessesContent.appendChild(box);
+        });
+
+        const careerGrid = document.getElementById('careerGrid');
+        data.careers.forEach(function(career) {
+            const card = document.createElement('div');
+            card.className = 'career-card';
+            card.innerHTML = '<h4>' + career.title + '</h4><p>' + career.desc + '</p>';
+            careerGrid.appendChild(card);
+        });
+
+        const compatibilityGrid = document.getElementById('compatibilityGrid');
+        data.compatibility.good.forEach(function(item) {
+            const div = document.createElement('div');
+            div.className = 'compatibility-item good';
+            div.innerHTML = '<h4>✅ ' + item.type + '</h4><p>' + item.desc + '</p>';
+            compatibilityGrid.appendChild(div);
+        });
+        data.compatibility.bad.forEach(function(item) {
+            const div = document.createElement('div');
+            div.className = 'compatibility-item bad';
+            div.innerHTML = '<h4>⚠️ ' + item.type + '</h4><p>' + item.desc + '</p>';
+            compatibilityGrid.appendChild(div);
+        });
+
+        const tipsList = document.getElementById('tipsList');
+        data.tips.forEach(function(tip) {
+            const li = document.createElement('li');
+            li.textContent = tip;
+            tipsList.appendChild(li);
+        });
+    </script>
+</body>
+</html>

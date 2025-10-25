@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>면접 MBTI 결과 - MockerView</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        body { 
+            background: #f5f7fa; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif; 
+            min-height: 100vh; 
+            padding-bottom: 40px; 
+        }
+        .navbar { 
+            background: white; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+        .nav-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+            height: 64px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .nav-brand { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            color: #667eea; 
+            text-decoration: none; 
+        }
+        .nav-menu { 
+            display: flex; 
+            gap: 24px; 
+            align-items: center; 
+        }
+        .nav-link { 
+            color: #64748b; 
+            text-decoration: none; 
+            font-weight: 500; 
+            font-size: 0.9375rem; 
+            transition: color 0.2s; 
+        }
+        .nav-link:hover { 
+            color: #667eea; 
+        }
+        .hamburger { 
+            display: none; 
+            flex-direction: column; 
+            gap: 4px; 
+            cursor: pointer; 
+            padding: 8px; 
+        }
+        .hamburger span { 
+            width: 24px; 
+            height: 2px; 
+            background: #667eea; 
+            border-radius: 2px; 
+            transition: all 0.3s; 
+        }
+        .mobile-menu { 
+            display: none; 
+            position: fixed; 
+            top: 64px; 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border-bottom: 1px solid #e5e7eb; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            z-index: 999; 
+        }
+        .mobile-menu.active { 
+            display: block; 
+        }
+        .mobile-menu a { 
+            display: block; 
+            padding: 16px 20px; 
+            color: #64748b; 
+            text-decoration: none; 
+            font-weight: 500; 
+            border-bottom: 1px solid #f1f5f9; 
+            transition: all 0.2s; 
+        }
+        .mobile-menu a:hover { 
+            background: #f8fafc; 
+            color: #667eea; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 32px 20px; 
+        }
+        .page-header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+        }
+        .page-title { 
+            font-size: 2rem; 
+            font-weight: 800; 
+            color: #1e293b; 
+            margin-bottom: 8px; 
+        }
+        .page-subtitle { 
+            font-size: 1rem; 
+            color: #64748b; 
+        }
+        .batch-section { 
+            background: #fef3c7; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 24px; 
+            border-left: 4px solid #f59e0b; 
+        }
+        .batch-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 12px; 
+        }
+        .batch-info strong { 
+            color: #92400e; 
+            font-size: 1rem; 
+        }
+        .batch-info p { 
+            color: #92400e; 
+            margin: 8px 0 0 0; 
+            font-size: 0.875rem; 
+        }
+        .batch-progress { 
+            color: #92400e; 
+            font-size: 0.875rem; 
+            margin-top: 12px; 
+        }
+        .mbti-card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 40px; 
+            text-align: center; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            margin-bottom: 24px; 
+        }
+        .mbti-type { 
+            font-size: 3rem; 
+            font-weight: 900; 
+            color: #667eea; 
+            margin-bottom: 12px; 
+        }
+        .scores-section { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 32px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            margin-bottom: 20px; 
+        }
+        .scores-title { 
+            font-size: 1.25rem; 
+            font-weight: 700; 
+            color: #1e293b; 
+            margin-bottom: 24px; 
+            text-align: center; 
+        }
+        .score-item { 
+            margin-bottom: 20px; 
+        }
+        .score-header { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 8px; 
+        }
+        .score-name { 
+            font-weight: 600; 
+            color: #475569; 
+        }
+        .score-num { 
+            font-weight: 700; 
+            color: #667eea; 
+        }
+        .progress-bar { 
+            height: 12px; 
+            background: #f1f5f9; 
+            border-radius: 6px; 
+            overflow: hidden; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #667eea, #764ba2); 
+            transition: width 0.5s ease; 
+            width: 0; 
+        }
+        .info-card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 28px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+        }
+        .info-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 16px; 
+        }
+        .info-icon { 
+            font-size: 1.5rem; 
+        }
+        .info-title { 
+            font-size: 1.125rem; 
+            font-weight: 700; 
+            color: #1e293b; 
+        }
+        .info-content { 
+            font-size: 0.9375rem; 
+            color: #475569; 
+            line-height: 1.7; 
+            white-space: pre-line; 
+        }
+        .empty-state { 
+            background: white; 
+            border-radius: 16px; 
+            text-align: center; 
+            padding: 80px 20px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+        }
+        .empty-icon { 
+            font-size: 4rem; 
+            margin-bottom: 16px; 
+            opacity: 0.5; 
+        }
+        .empty-text { 
+            font-size: 1.125rem; 
+            color: #94a3b8; 
+            margin-bottom: 24px; 
+        }
+        .btn { 
+            display: inline-block; 
+            padding: 12px 24px; 
+            background: #667eea; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 10px; 
+            font-weight: 600; 
+            font-size: 0.9375rem; 
+            transition: all 0.2s; 
+            border: none; 
+            cursor: pointer; 
+        }
+        .btn:hover { 
+            background: #5568d3; 
+            transform: translateY(-1px); 
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3); 
+        }
+        .btn:disabled { 
+            background: #94a3b8; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+        .btn-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.2s;
+            border: 2px solid #667eea;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+            margin-top: 24px;
+        }
+        .btn-detail:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(102,126,234,0.3);
+        }
+        @media (max-width: 768px) {
+            .nav-menu { 
+                display: none; 
+            }
+            .hamburger { 
+                display: flex; 
+            }
+            .page-title { 
+                font-size: 1.5rem; 
+            }
+            .batch-header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 12px; 
+            }
+            .mbti-card { 
+                padding: 24px; 
+            }
+            .scores-section { 
+                padding: 20px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="nav-brand" href="/session/list">MockerView</a>
+            <div class="nav-menu">
+                <a class="nav-link" href="/session/list">세션</a>
+                <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                <a class="nav-link" href="/auth/mypage/stats">통계</a>
+                <a class="nav-link" href="/auth/logout">로그아웃</a>
+            </div>
+            <div class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/session/list">세션 목록</a>
+        <a href="/auth/mypage">마이페이지</a>
+        <a href="/auth/mypage/stats">통계</a>
+        <a href="/auth/logout">로그아웃</a>
+    </div>
+    <div class="container">
+        <div class="page-header">
+            <div class="page-title">🧠 면접 MBTI 결과</div>
+            <div class="page-subtitle">AI 기반 면접 성향 분석</div>
+        </div>
+        <div id="batchAnalysisSection" class="batch-section" style="display: none;">
+            <div class="batch-header">
+                <div class="batch-info">
+                    <strong>📊 MBTI 분석</strong>
+                    <p id="mbtiStatusText">답변 5개 이상이면 분석 가능합니다.</p>
+                </div>
+                <button onclick="runMBTIAnalysis()" class="btn" id="batchBtn">🔄 MBTI 분석 실행</button>
+            </div>
+            <div id="batchProgress" class="batch-progress" style="display: none;">분석 중...</div>
+        </div>
+        <div id="mbtiResult" style="display: none;">
+            <div class="mbti-card">
+                <div class="mbti-type" id="mbtiType">-</div>
+                <a href="#" id="detailLink" class="btn-detail" style="display: none;">
+                    🔍 상세 분석 보기
+                </a>
+            </div>
+            <div class="scores-section">
+                <div class="scores-title">📊 세부 점수</div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">분석적</span>
+                        <span class="score-num" id="analyticalScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="analyticalBar"></div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">창의적</span>
+                        <span class="score-num" id="creativeScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="creativeBar"></div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">논리적</span>
+                        <span class="score-num" id="logicalScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="logicalBar"></div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">감성적</span>
+                        <span class="score-num" id="emotionalScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="emotionalBar"></div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">디테일</span>
+                        <span class="score-num" id="detailScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="detailBar"></div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">큰그림</span>
+                        <span class="score-num" id="bigPictureScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="bigPictureBar"></div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">결단력</span>
+                        <span class="score-num" id="decisiveScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="decisiveBar"></div>
+                    </div>
+                </div>
+                <div class="score-item">
+                    <div class="score-header">
+                        <span class="score-name">유연성</span>
+                        <span class="score-num" id="flexibleScore">0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="flexibleBar"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-header">
+                    <span class="info-icon">💪</span>
+                    <span class="info-title">강점</span>
+                </div>
+                <div class="info-content" id="strengthText">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-header">
+                    <span class="info-icon">⚠️</span>
+                    <span class="info-title">약점</span>
+                </div>
+                <div class="info-content" id="weaknessText">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-header">
+                    <span class="info-icon">🎯</span>
+                    <span class="info-title">추천 직무</span>
+                </div>
+                <div class="info-content" id="careerText">-</div>
+            </div>
+            <div style="text-align: center; margin-top: 24px;">
+                <a href="/auth/mypage/stats" class="btn">통계로 돌아가기</a>
+            </div>
+        </div>
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">🧠</div>
+            <div class="empty-text">아직 면접 MBTI 분석 결과가 없습니다</div>
+            <a href="/auth/mypage/stats" class="btn">통계로 돌아가기</a>
+        </div>
+    </div>
+    <script>
+        function toggleMenu() {
+            document.getElementById('mobileMenu').classList.toggle('active');
+        }
+    </script>
+    <script src="/js/notification-handler.js"></script>
+    <script th:inline="javascript">
+        let userId = [[${userId}]];
+        if (!userId || userId === 'null') {
+            fetch('/api/users/me')
+                .then(r => r.json())
+                .then(u => {
+                    userId = u.id;
+                    checkMBTIStatus(userId);
+                    loadMBTI(userId);
+                })
+                .catch(e => {
+                    console.error('사용자 정보 로드 실패:', e);
+                    document.getElementById('emptyState').style.display = 'block';
+                });
+        } else {
+            checkMBTIStatus(userId);
+            loadMBTI(userId);
+        }
+        
+        function checkMBTIStatus(uid) {
+            fetch('/api/batch/mbti/status/' + uid)
+                .then(r => r.json())
+                .then(d => {
+                    if (d.needsAnalysis) {
+                        document.getElementById('batchAnalysisSection').style.display = 'block';
+                        document.getElementById('mbtiStatusText').textContent = '답변 ' + d.totalAnswers + '개 있음. MBTI 분석이 가능합니다!';
+                    } else if (!d.hasEnoughAnswers) {
+                        document.getElementById('batchAnalysisSection').style.display = 'block';
+                        document.getElementById('mbtiStatusText').textContent = '답변 ' + d.totalAnswers + '개. 최소 5개 필요합니다.';
+                        document.getElementById('batchBtn').disabled = true;
+                    }
+                })
+                .catch(e => console.error('MBTI 상태 확인 실패:', e));
+        }
+        
+        function runMBTIAnalysis() {
+            const btn = document.getElementById('batchBtn');
+            const prg = document.getElementById('batchProgress');
+            btn.disabled = true;
+            btn.textContent = '분석 중...';
+            prg.style.display = 'block';
+            fetch('/api/batch/mbti/' + userId, {method: 'POST'})
+                .then(r => r.json())
+                .then(d => {
+                    alert(d.message);
+                    if (d.success) {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
+                    }
+                })
+                .catch(e => {
+                    console.error('MBTI 분석 실패:', e);
+                    alert('분석 실패: ' + e.message);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 MBTI 분석 실행';
+                    prg.style.display = 'none';
+                });
+        }
+        
+        function loadMBTI(uid) {
+            fetch('/api/analysis/mbti/' + uid)
+                .then(r => r.json())
+                .then(d => {
+                    if (!d || d.message) {
+                        document.getElementById('emptyState').style.display = 'block';
+                        return;
+                    }
+                    document.getElementById('mbtiResult').style.display = 'block';
+                    document.getElementById('emptyState').style.display = 'none';
+                    const mbtiType = d.mbtiType || '-';
+                    document.getElementById('mbtiType').textContent = mbtiType;
+                    
+                    const detailLink = document.getElementById('detailLink');
+                    if (mbtiType && mbtiType !== '-') {
+                        detailLink.href = '/analysis/mbti/detail?type=' + mbtiType;
+                        detailLink.style.display = 'inline-flex';
+                    }
+                    
+                    document.getElementById('strengthText').textContent = d.strengthDescription || '-';
+                    document.getElementById('weaknessText').textContent = d.weaknessDescription || '-';
+                    document.getElementById('careerText').textContent = d.careerRecommendation || '-';
+                    document.getElementById('analyticalScore').textContent = d.analyticalScore || 0;
+                    document.getElementById('creativeScore').textContent = d.creativeScore || 0;
+                    document.getElementById('logicalScore').textContent = d.logicalScore || 0;
+                    document.getElementById('emotionalScore').textContent = d.emotionalScore || 0;
+                    document.getElementById('detailScore').textContent = d.detailOrientedScore || 0;
+                    document.getElementById('bigPictureScore').textContent = d.bigPictureScore || 0;
+                    document.getElementById('decisiveScore').textContent = d.decisiveScore || 0;
+                    document.getElementById('flexibleScore').textContent = d.flexibleScore || 0;
+                    setTimeout(() => {
+                        document.getElementById('analyticalBar').style.width = (d.analyticalScore || 0) + '%';
+                        document.getElementById('creativeBar').style.width = (d.creativeScore || 0) + '%';
+                        document.getElementById('logicalBar').style.width = (d.logicalScore || 0) + '%';
+                        document.getElementById('emotionalBar').style.width = (d.emotionalScore || 0) + '%';
+                        document.getElementById('detailBar').style.width = (d.detailOrientedScore || 0) + '%';
+                        document.getElementById('bigPictureBar').style.width = (d.bigPictureScore || 0) + '%';
+                        document.getElementById('decisiveBar').style.width = (d.decisiveScore || 0) + '%';
+                        document.getElementById('flexibleBar').style.width = (d.flexibleScore || 0) + '%';
+                    }, 100);
+                })
+                .catch(e => {
+                    console.error('MBTI 데이터 로드 실패', e);
+                    document.getElementById('emptyState').style.display = 'block';
+                });
+        }
+    </script>
+</body>
+</html>

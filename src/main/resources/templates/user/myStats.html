@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>내 활동 통계 - MockerView</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+        }
+
+        .nav-link:hover {
+            color: #667eea;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 57px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 99;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 14px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .mobile-menu a:hover {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+
+        .btn {
+            padding: 9px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .stats-header {
+            background: #667eea;
+            color: white;
+            padding: 36px 0;
+            margin-bottom: 28px;
+        }
+
+        .stats-header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .stats-header p {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .analysis-section {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+
+        .analysis-section h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .analysis-section p {
+            color: #6b7280;
+            font-size: 0.9375rem;
+            margin-bottom: 20px;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .analysis-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid #e5e7eb;
+        }
+
+        .analysis-card:hover {
+            background: #f0f4ff;
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .analysis-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .analysis-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .analysis-desc {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .analysis-count {
+            margin-top: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .mbti-badge {
+            display: inline-block;
+            font-size: 1.5rem;
+            font-weight: 900;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-number {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .stat-number.ai {
+            color: #3b82f6;
+        }
+
+        .stat-number.interviewer {
+            color: #f59e0b;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .answer-list {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+        }
+
+        .answer-item {
+            border-left: 3px solid #667eea;
+            padding: 14px 20px;
+            margin-bottom: 14px;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .answer-item:hover {
+            background: #f0f4ff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .answer-date {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .answer-question {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.9375rem;
+        }
+
+        .answer-scores {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .score-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+
+        .score-badge.ai {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .score-badge.interviewer {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 28px;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 8px;
+        }
+
+        .close-btn:hover {
+            color: #374151;
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section h4 {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .feedback-item {
+            background: #f9fafb;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            border-left: 3px solid #667eea;
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .feedback-type {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .feedback-type.ai {
+            color: #1e40af;
+        }
+
+        .feedback-type.interviewer {
+            color: #92400e;
+        }
+
+        .feedback-score {
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+        }
+
+        .feedback-score.ai {
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .feedback-score.interviewer {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .feedback-content {
+            color: #374151;
+            line-height: 1.6;
+            margin-top: 8px;
+            font-size: 0.875rem;
+        }
+
+        .my-answer-text {
+            background: #f8fafc;
+            padding: 14px;
+            border-radius: 8px;
+            color: #374151;
+            line-height: 1.6;
+            border: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+        }
+
+        .question-text {
+            background: #fef7e1;
+            padding: 14px;
+            border-radius: 8px;
+            color: #92400e;
+            font-weight: 500;
+            border: 1px solid #f59e0b;
+            font-size: 0.875rem;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border-left: 3px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .ranking-item:hover {
+            background: #f0f4ff;
+        }
+
+        .ranking-item.current-user {
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .rank-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            width: 40px;
+        }
+
+        .rank-info {
+            flex: 1;
+            margin-left: 14px;
+        }
+
+        .rank-name {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9375rem;
+        }
+
+        .rank-stats {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .rank-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .stats-header {
+                padding: 24px 0;
+            }
+
+            .stats-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .export-buttons .btn {
+                width: 100%;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-number {
+                font-size: 1.875rem;
+            }
+
+            .chart-container {
+                padding: 20px;
+            }
+
+            .chart-title {
+                font-size: 1rem;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr !important;
+            }
+
+            .ranking-item {
+                padding: 12px;
+                font-size: 0.875rem;
+            }
+
+            .rank-number {
+                font-size: 1.25rem;
+            }
+
+            .rank-score {
+                font-size: 1.25rem;
+            }
+
+            .answer-item {
+                padding: 12px 16px;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">MockerView</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                    <a class="nav-link" href="/auth/logout">로그아웃</a>
+                </div>
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/session/list">세션 목록</a>
+        <a href="/auth/mypage">마이페이지</a>
+        <a href="/auth/logout">로그아웃</a>
+    </div>
+
+    <div class="stats-header">
+        <div class="container">
+            <h1>내 활동 통계</h1>
+            <p th:text="${user.name} + '님의 면접 성장 추이 분석'">사용자님의 면접 성장 추이 분석</p>
+            <div class="export-buttons">
+                <button onclick="downloadCSV()" class="btn btn-secondary">CSV 다운로드</button>
+                <button onclick="exportPDF()" class="btn btn-secondary">PDF 다운로드</button>
+                <a href="/auth/mypage" class="btn btn-primary">마이페이지로</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="stats-content">
+        <div class="analysis-section">
+            <h2>🎯 고급 분석 대시보드</h2>
+            <p>음성, 표정, 면접 스타일을 AI로 종합 분석합니다</p>
+            
+            <div class="analysis-grid">
+                <div class="analysis-card" onclick="window.location.href='/analysis/voice/result'">
+                    <div class="analysis-icon">🎤</div>
+                    <div class="analysis-title">음성 분석</div>
+                    <div class="analysis-desc">말 속도, 필러워드, 발음 분석</div>
+                    <div id="voiceCount" class="analysis-count" th:text="${voiceAnalysisCount} + '회'">-</div>
+                </div>
+                
+                <div class="analysis-card" onclick="window.location.href='/analysis/facial/result'">
+                    <div class="analysis-icon">😊</div>
+                    <div class="analysis-title">표정 분석</div>
+                    <div class="analysis-desc">시선, 미소, 자세 평가</div>
+                    <div id="facialCount" class="analysis-count" th:text="${facialAnalysisCount} + '회'">-</div>
+                </div>
+                
+                <div class="analysis-card" onclick="window.location.href='/analysis/mbti/result'">
+                    <div class="analysis-icon">🧠</div>
+                    <div class="analysis-title">면접 MBTI</div>
+                    <div class="analysis-desc">나의 면접 스타일 유형</div>
+                    <div id="mbtiType" class="mbti-badge" th:text="${latestMBTI != null ? latestMBTI.mbtiType : '?'}">?</div>
+                </div>
+            </div>
+        
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="/analysis/growth/result" class="btn btn-primary">📈 성장 추이 상세 보기</a>
+            </div>
+
+        </div>
+
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" th:text="${totalAnswers}">0</span>
+                <div class="stat-label">총 답변 수</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${aiFeedbackCount}">0</span>
+                <div class="stat-label">AI 피드백</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" th:text="${interviewerFeedbackCount}">0</span>
+                <div class="stat-label">면접관 피드백</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number ai" th:text="${avgAiScore}">0.0</span>
+                <div class="stat-label">AI 평균 점수</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number interviewer" th:text="${avgInterviewerScore != null ? avgInterviewerScore : 'N/A'}">0.0</span>
+                <div class="stat-label">면접관 평균 점수</div>
+            </div>
+        </div>
+
+        <div id="pdf-export-area">
+            <div class="chart-container">
+                <h3 class="chart-title">📈 나의 성장 추이 (점수 변화)</h3>
+                <canvas id="growthChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">🏆 전체 면접자 순위</h3>
+                <div th:if="${rankings.empty}" class="empty-state">
+                    <p>아직 순위 데이터가 없습니다</p>
+                </div>
+                <div th:each="rank : ${rankings}" th:class="${rank.isCurrentUser ? 'ranking-item current-user' : 'ranking-item'}">
+                    <div class="rank-number" th:text="${rank.rank}">1</div>
+                    <div class="rank-info">
+                        <div class="rank-name" th:text="${rank.userName}">사용자명</div>
+                        <div class="rank-stats" th:text="'답변 ' + ${rank.answerCount} + '개'">답변 10개</div>
+                    </div>
+                    <div class="rank-score" th:text="${rank.avgScore}">95.0</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 28px;" class="charts-row">
+                <div class="chart-container">
+                    <h3 class="chart-title">월별 답변 추이</h3>
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 class="chart-title">피드백 비율</h3>
+                    <canvas id="feedbackChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="answer-list">
+            <h3 class="chart-title">최근 답변 내역</h3>
+            <div th:each="answer : ${myAnswers}" class="answer-item" th:onclick="'openAnswerModal(' + ${answer.id} + ')'">
+                <div class="answer-date" th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</div>
+                <div class="answer-question" th:text="'Q. ' + ${answer.question.text}">질문</div>
+                <div class="answer-scores">
+                    <th:block th:each="feedback : ${answer.feedbacks}">
+                        <span th:if="${feedback.feedbackType.name() == 'AI' && feedback.score != null}" class="score-badge ai">
+                            AI: <span th:text="${feedback.score}">0</span>/100
+                        </span>
+                        <span th:if="${feedback.feedbackType.name() == 'INTERVIEWER' && feedback.score != null}" class="score-badge interviewer">
+                            면접관: <span th:text="${feedback.score}">0</span>/100
+                        </span>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="answerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">답변 상세 정보</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-section">
+                <h4>질문</h4>
+                <div id="modalQuestion" class="question-text"></div>
+            </div>
+            <div class="modal-section">
+                <h4>내 답변</h4>
+                <div id="modalAnswer" class="my-answer-text"></div>
+            </div>
+            <div class="modal-section">
+                <h4>받은 피드백</h4>
+                <div id="modalFeedbacks"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="/js/notification-handler.js"></script>
+    <script th:inline="javascript">
+        const currentUserId = [[${user.id}]];
+        const notificationHandler = new NotificationHandler(currentUserId);
+
+        var answersByMonth = /*[[${answersByMonth}]]*/ {};
+        var aiFeedbackCount = /*[[${aiFeedbackCount}]]*/ 0;
+        var interviewerFeedbackCount = /*[[${interviewerFeedbackCount}]]*/ 0;
+        var myAnswersData = /*[[${myAnswers}]]*/ [];
+        var growthData = /*[[${growthData}]]*/ [];
+        var userId = /*[[${user.id}]]*/ 0;
+        var months = Object.keys(answersByMonth).sort();
+        var counts = months.map(function(m) { return answersByMonth[m]; });
+
+        console.log('userId:', userId);
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+
+        function getToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'Authorization') {
+                    return value;
+                }
+            }
+            return '';
+        }
+
+        fetch('/api/analysis/comprehensive/' + userId)
+            .then(res => res.json())
+            .then(data => {
+                if (data.voiceAnalyses && data.voiceAnalyses.length > 0) {
+                    document.getElementById('voiceCount').textContent = data.voiceAnalyses.length + '회';
+                }
+                if (data.facialAnalyses && data.facialAnalyses.length > 0) {
+                    document.getElementById('facialCount').textContent = data.facialAnalyses.length + '회';
+                }
+                if (data.mbti && data.mbti.mbtiType) {
+                    document.getElementById('mbtiType').textContent = data.mbti.mbtiType;
+                }
+            })
+            .catch(err => {
+                console.error('고급 분석 데이터 로드 실패', err);
+            });
+
+        function goToMBTI() {
+            window.location.href = '/analysis/mbti/result';
+        }
+
+        async function downloadCSV() {
+            try {
+                const token = getToken();
+                const response = await fetch('/auth/mypage/stats/export-csv', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('CSV 다운로드 실패');
+                }
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'my_interview_stats.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('CSV 다운로드 오류:', error);
+                alert('CSV 다운로드 중 오류가 발생했습니다.');
+            }
+        }
+
+        if (document.getElementById('growthChart') && typeof Chart !== 'undefined') {
+            var dates = growthData.map(function(d) { return d.date; });
+            var aiScores = growthData.map(function(d) { return d.aiScore; });
+            var interviewerScores = growthData.map(function(d) { return d.interviewerScore; });
+
+            new Chart(document.getElementById('growthChart'), {
+                type: 'line',
+                data: {
+                    labels: dates.length > 0 ? dates : ['데이터 없음'],
+                    datasets: [
+                        {
+                            label: 'AI 점수',
+                            data: aiScores.length > 0 ? aiScores : [0],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            spanGaps: true
+                        },
+                        {
+                            label: '면접관 점수',
+                            data: interviewerScores.length > 0 ? interviewerScores : [0],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: '점수'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '날짜'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        }
+
+        if (document.getElementById('monthlyChart') && typeof Chart !== 'undefined') {
+            new Chart(document.getElementById('monthlyChart'), {
+                type: 'line',
+                data: {
+                    labels: months.length > 0 ? months : ['데이터 없음'],
+                    datasets: [{
+                        label: '답변 수',
+                        data: counts.length > 0 ? counts : [0],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        if (document.getElementById('feedbackChart') && typeof Chart !== 'undefined') {
+            var totalFeedback = aiFeedbackCount + interviewerFeedbackCount;
+            new Chart(document.getElementById('feedbackChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['AI 피드백', '면접관 피드백'],
+                    datasets: [{
+                        data: totalFeedback > 0 ? [aiFeedbackCount, interviewerFeedbackCount] : [1, 1],
+                        backgroundColor: ['#3b82f6', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        function openAnswerModal(answerId) {
+            var answer = myAnswersData.find(function(a) {
+                return a.id == answerId;
+            });
+            if (!answer) return;
+
+            document.getElementById('modalQuestion').textContent = answer.question.text;
+            document.getElementById('modalAnswer').textContent = answer.answerText || answer.text || '답변 내용이 없습니다.';
+
+            var feedbacksContainer = document.getElementById('modalFeedbacks');
+            feedbacksContainer.innerHTML = '';
+
+            if (answer.feedbacks && answer.feedbacks.length > 0) {
+                answer.feedbacks.forEach(function(feedback) {
+                    var feedbackDiv = document.createElement('div');
+                    feedbackDiv.className = 'feedback-item';
+                    var feedbackType = feedback.feedbackType === 'AI' ? 'AI' : '면접관';
+                    var typeClass = feedback.feedbackType === 'AI' ? 'ai' : 'interviewer';
+
+                    var reviewerName = '';
+                    if (feedback.feedbackType === 'INTERVIEWER' && feedback.reviewer && feedback.reviewer.name) {
+                        reviewerName = ' (' + feedback.reviewer.name + ')';
+                    }
+
+                    feedbackDiv.innerHTML =
+                        '<div class="feedback-header">' +
+                            '<span class="feedback-type ' + typeClass + '">' + feedbackType + reviewerName + ' 피드백</span>' +
+                            (feedback.score ? '<span class="feedback-score ' + typeClass + '">' + feedback.score + '/100</span>' : '') +
+                        '</div>' +
+                        '<div class="feedback-content">' +
+                            (feedback.summary ? '<div><strong>요약:</strong> ' + feedback.summary + '</div>' : '') +
+                            (feedback.strengths ? '<div style="margin-top: 8px;"><strong>강점:</strong> ' + feedback.strengths + '</div>' : '') +
+                            (feedback.weaknesses ? '<div style="margin-top: 8px;"><strong>약점:</strong> ' + feedback.weaknesses + '</div>' : '') +
+                            (feedback.improvement ? '<div style="margin-top: 8px;"><strong>개선점:</strong> ' + feedback.improvement + '</div>' : '') +
+                            (feedback.reviewerComment ? '<div style="margin-top: 8px;"><strong>코멘트:</strong> ' + feedback.reviewerComment + '</div>' : '') +
+                        '</div>';
+                    feedbacksContainer.appendChild(feedbackDiv);
+                });
+            } else {
+                feedbacksContainer.innerHTML = '<p>아직 피드백이 없습니다.</p>';
+            }
+
+            document.getElementById('answerModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('answerModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            var modal = document.getElementById('answerModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        function exportPDF() {
+            if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+                alert('PDF 라이브러리가 로드되지 않았습니다.');
+                return;
+            }
+            
+            var content = document.getElementById('pdf-export-area');
+            if (!content) {
+                alert('PDF 다운로드 영역을 찾을 수 없습니다.');
+                return;
+            }
+            
+            html2canvas(content, {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            }).then(function(canvas) {
+                var imgData = canvas.toDataURL('image/png');
+                var pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                var pdfWidth = pdf.internal.pageSize.getWidth();
+                var pdfHeight = pdf.internal.pageSize.getHeight();
+                var imgWidth = pdfWidth - 20;
+                var imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                var heightLeft = imgHeight;
+                var position = 10;
+                
+                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+                
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + 10;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+                }
+                
+                var fileName = 'mockerview_stats_' + new Date().toISOString().split('T')[0] + '.pdf';
+                pdf.save(fileName);
+            }).catch(function(error) {
+                console.error('PDF 생성 오류:', error);
+                alert('PDF 생성 중 오류가 발생했습니다.');
+            });
+        }
+    </script>
+</body>
+</html>

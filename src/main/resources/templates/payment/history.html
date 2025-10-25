@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 내역 - MockerView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+        
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 57px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 99;
+        }
+        
+        .mobile-menu.active {
+            display: block;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            padding: 14px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .mobile-menu a:hover {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+        
+        .page-header {
+            padding: 40px 0 28px;
+        }
+        
+        .page-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+        
+        .page-title p {
+            font-size: 0.9375rem;
+            color: #6b7280;
+        }
+        
+        .payment-table-wrapper {
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 28px;
+        }
+        
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .payment-table thead {
+            background: #f9fafb;
+        }
+        
+        .payment-table th {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.8125rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .payment-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.875rem;
+            color: #334155;
+        }
+        
+        .payment-table tbody tr {
+            transition: background 0.15s;
+        }
+        
+        .payment-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-done {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        
+        .status-failed {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 64px 32px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 14px;
+        }
+        
+        .empty-state p {
+            color: #6b7280;
+            font-size: 0.9375rem;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 11px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 1.5px solid #667eea;
+        }
+        
+        .btn-secondary:hover {
+            background: #f8f9ff;
+        }
+        
+        .receipt-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .receipt-link:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-actions {
+            text-align: center;
+            margin-top: 28px;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .container {
+                padding: 0 16px;
+            }
+            
+            .page-header {
+                padding: 28px 0 20px;
+            }
+            
+            .page-title h1 {
+                font-size: 1.625rem;
+            }
+            
+            .payment-table-wrapper {
+                overflow-x: auto;
+            }
+            
+            .payment-table {
+                min-width: 700px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">MockerView</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                    <a class="nav-link" href="/auth/logout">로그아웃</a>
+                </div>
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/session/list">세션 목록</a>
+        <a href="/auth/mypage">마이페이지</a>
+        <a href="/auth/logout">로그아웃</a>
+    </div>
+    
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>결제 내역</h1>
+                <p>MockerView 결제 내역을 확인하세요</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div th:if="${payments != null and !payments.empty}" class="payment-table-wrapper">
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>결제일시</th>
+                        <th>주문번호</th>
+                        <th>상품명</th>
+                        <th>결제수단</th>
+                        <th>금액</th>
+                        <th>상태</th>
+                        <th>영수증</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="payment : ${payments}">
+                        <td th:text="${#temporals.format(payment.approvedAt != null ? payment.approvedAt : payment.requestedAt, 'yyyy-MM-dd HH:mm')}">2025-01-15 14:30</td>
+                        <td th:text="${payment.orderId}">ORDER-123</td>
+                        <td>
+                            <span th:if="${payment.subscription != null}" 
+                                    th:text="${payment.subscription.planType.name()} + ' 플랜'">PRO 플랜</span>
+                            <span th:unless="${payment.subscription != null}">-</span>
+                        </td>
+                        <td th:text="${payment.method}">카드</td>
+                        <td th:text="'₩' + ${#numbers.formatInteger(payment.amount, 0, 'COMMA')}">₩29,900</td>
+                        <td>
+                            <span th:if="${payment.status.name() == 'DONE'}" class="status-badge status-done">완료</span>
+                            <span th:if="${payment.status.name() == 'FAILED'}" class="status-badge status-failed">실패</span>
+                            <span th:if="${payment.status.name() == 'PENDING'}" class="status-badge status-pending">대기</span>
+                        </td>
+                        <td>
+                            <a th:if="${payment.receiptUrl != null}" 
+                                th:href="${payment.receiptUrl}" 
+                                target="_blank"
+                                class="receipt-link">
+                                영수증 보기
+                            </a>
+                            <span th:unless="${payment.receiptUrl != null}">-</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div th:if="${payments == null or payments.empty}" class="empty-state">
+            <div class="empty-state-icon">💳</div>
+            <p>아직 결제 내역이 없습니다</p>
+            <a href="/payment/plans" class="btn btn-primary">플랜 구매하기</a>
+        </div>
+        
+        <div class="footer-actions">
+            <a href="/auth/mypage" class="btn btn-secondary">마이페이지로</a>
+        </div>
+    </div>
+    
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
