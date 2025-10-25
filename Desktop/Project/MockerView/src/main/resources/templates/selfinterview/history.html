@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>셀프 면접 기록 - Mockerview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+        
+        .main-content {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+        
+        .page-title-section {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title-section h1 {
+            color: #667eea;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-title-section p {
+            color: #666;
+            font-size: 1.05rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state p {
+            font-size: 1.2rem;
+            color: #999;
+            margin-bottom: 1.5rem;
+        }
+        
+        .session-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .session-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        
+        .session-card:hover {
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            transform: translateY(-4px);
+        }
+        
+        .session-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .session-card-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #667eea;
+            color: white;
+        }
+        
+        .session-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .session-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .session-card-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-view {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-view:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s;
+                pointer-events: none;
+            }
+            
+            .navbar-nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .main-content {
+                margin-top: 70px;
+            }
+            
+            .page-title-section h1 {
+                font-size: 1.5rem;
+            }
+            
+            .session-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .session-card {
+                padding: 1.25rem;
+            }
+            
+            .session-card-header h3 {
+                font-size: 1.05rem;
+            }
+            
+            .empty-state {
+                padding: 3rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/">Mockerview</a>
+                <div class="hamburger" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/selfinterview/list">셀프 면접</a>
+                    <a class="nav-link active" href="/selfinterview/history">내 기록</a>
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <div class="page-title-section">
+            <h1>셀프 면접 기록</h1>
+            <p>나의 셀프 면접 연습 기록을 확인하세요</p>
+        </div>
+
+        <div th:if="${sessions.isEmpty()}" class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <p>아직 연습 기록이 없습니다</p>
+            <a href="/selfinterview/create" class="btn btn-view">첫 연습 시작하기</a>
+        </div>
+
+        <div th:if="${!sessions.isEmpty()}" class="session-grid">
+            <div th:each="session : ${sessions}" class="session-card">
+                <div class="session-card-header">
+                    <h3 th:text="${session.title}">셀프 면접</h3>
+                    <span class="badge" th:text="${session.sessionType}">TEXT</span>
+                </div>
+                
+                <div class="session-card-body">
+                    <div class="session-stat">
+                        <span class="stat-label">질문 수</span>
+                        <span class="stat-value" th:text="${session.questions != null ? session.questions.size() : 0} + '개'">5개</span>
+                    </div>
+                    <div class="session-stat">
+                        <span class="stat-label">평균 점수</span>
+                        <span class="stat-value" th:text="${session.avgScore != null ? #numbers.formatDecimal(session.avgScore, 1, 1) + '점' : 'N/A'}">8.5점</span>
+                    </div>
+                    <div class="session-stat">
+                        <span class="stat-label">연습 시간</span>
+                        <span class="stat-value" th:text="${#temporals.format(session.createdAt, 'MM/dd HH:mm')}">10/18 14:30</span>
+                    </div>
+                </div>
+
+                <div class="session-card-footer">
+                    <a th:href="@{/session/scoreboard/{id}(id=${session.id})}" class="btn btn-view">결과 보기</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

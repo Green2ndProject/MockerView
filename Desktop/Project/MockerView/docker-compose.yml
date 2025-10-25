@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: mockerview-postgres
+    environment:
+      POSTGRES_DB: mockerview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mockerview
+    ports:
+      - "5433:5432"
+    volumes:
+      - mockerview-pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:latest
+    container_name: mockerview-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - mockerview-redis-data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  mockerview-pgdata:
+  mockerview-redis-data:

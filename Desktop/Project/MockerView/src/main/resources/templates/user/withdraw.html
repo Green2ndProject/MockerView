@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원 탈퇴 - MockerView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .top-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            z-index: 100;
+        }
+        
+        .top-logo a {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        body {
+            padding-top: 80px;
+        }
+        
+        .withdraw-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .withdraw-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+        
+        .withdraw-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .withdraw-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: #fef2f2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .withdraw-icon svg {
+            width: 32px;
+            height: 32px;
+            color: #dc2626;
+        }
+        
+        .withdraw-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .withdraw-header p {
+            font-size: 1rem;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        
+        .warning-box {
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .warning-title {
+            font-size: 0.9375rem;
+            font-weight: 700;
+            color: #991b1b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .warning-list li {
+            font-size: 0.875rem;
+            color: #991b1b;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .warning-list li:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            font-weight: 700;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+        
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .radio-option:hover {
+            border-color: #667eea;
+            background: #fafbfc;
+        }
+        
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .radio-option label {
+            font-size: 0.9375rem;
+            color: #1a1a1a;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .radio-option input[type="radio"]:checked ~ label {
+            font-weight: 600;
+        }
+        
+        .textarea-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 0.9375rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            transition: all 0.2s;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .textarea-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .textarea-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .char-count {
+            text-align: right;
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+        
+        .checkbox-group {
+            margin: 24px 0;
+        }
+        
+        .checkbox-option {
+            display: flex;
+            align-items: flex-start;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+        
+        .checkbox-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: #dc2626;
+            margin-top: 2px;
+        }
+        
+        .checkbox-option label {
+            font-size: 0.9375rem;
+            color: #374151;
+            cursor: pointer;
+            line-height: 1.6;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-cancel {
+            background: white;
+            color: #374151;
+            border: 1.5px solid #e5e7eb;
+        }
+        
+        .btn-cancel:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .btn-withdraw {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-withdraw:hover {
+            background: #b91c1c;
+        }
+        
+        .btn-withdraw:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        @media (max-width: 640px) {
+            .withdraw-card {
+                padding: 28px 20px;
+            }
+            
+            .withdraw-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .button-group {
+                flex-direction: column-reverse;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-logo">
+        <a href="/">MockerView</a>
+    </div>
+    
+    <div class="withdraw-container">
+        <div class="withdraw-card">
+            <div class="withdraw-header">
+                <div class="withdraw-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h1>회원 탈퇴</h1>
+                <p>정말 MockerView를 떠나시나요?<br>탈퇴 전 아래 내용을 꼭 확인해주세요.</p>
+            </div>
+            
+            <div class="warning-box">
+                <div class="warning-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    탈퇴 시 유의사항
+                </div>
+                <ul class="warning-list">
+                    <li>탈퇴 후 30일간 계정 정보가 보존됩니다</li>
+                    <li>30일 이내 재가입 시 기존 데이터 복구 가능</li>
+                    <li>30일 경과 후 모든 데이터가 영구 삭제됩니다</li>
+                    <li>삭제되는 정보: 면접 기록, AI 피드백, 답변, 구독/결제 내역 등</li>
+                </ul>
+            </div>
+            
+            <form id="withdrawForm">
+                <div class="form-group">
+                    <label class="form-label">탈퇴 사유를 선택해주세요 *</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="reason1" name="reason" value="서비스 이용 빈도가 낮음" required>
+                            <label for="reason1">서비스 이용 빈도가 낮음</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="reason2" name="reason" value="원하는 기능이 없음">
+                            <label for="reason2">원하는 기능이 없음</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="reason3" name="reason" value="다른 서비스 이용">
+                            <label for="reason3">다른 서비스 이용</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="reason4" name="reason" value="개인정보 보호">
+                            <label for="reason4">개인정보 보호</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="reason5" name="reason" value="서비스 품질 불만족">
+                            <label for="reason5">서비스 품질 불만족</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="reason6" name="reason" value="기타">
+                            <label for="reason6">기타</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="detailReason">상세 사유 (선택)</label>
+                    <textarea 
+                        id="detailReason" 
+                        class="textarea-input" 
+                        placeholder="서비스 개선을 위해 구체적인 의견을 남겨주시면 감사하겠습니다."
+                        maxlength="500"
+                    ></textarea>
+                    <div class="char-count"><span id="charCount">0</span> / 500</div>
+                </div>
+                
+                <div class="checkbox-group">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="confirmWithdraw" required>
+                        <label for="confirmWithdraw">
+                            위 내용을 모두 확인했으며, 탈퇴 후 30일이 경과하면 모든 데이터가 영구 삭제되고 복구할 수 없음을 이해했습니다.
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-cancel" onclick="history.back()">취소</button>
+                    <button type="submit" class="btn btn-withdraw" id="withdrawBtn" disabled>탈퇴하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('withdrawForm');
+        const detailReason = document.getElementById('detailReason');
+        const charCount = document.getElementById('charCount');
+        const confirmCheckbox = document.getElementById('confirmWithdraw');
+        const withdrawBtn = document.getElementById('withdrawBtn');
+        
+        detailReason.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+        
+        confirmCheckbox.addEventListener('change', function() {
+            withdrawBtn.disabled = !this.checked;
+        });
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const selectedReason = document.querySelector('input[name="reason"]:checked');
+            
+            if (!selectedReason) {
+                alert('탈퇴 사유를 선택해주세요.');
+                return;
+            }
+            
+            if (!confirmCheckbox.checked) {
+                alert('탈퇴 확인 체크박스를 선택해주세요.');
+                return;
+            }
+            
+            if (!confirm('정말로 탈퇴하시겠습니까?\n\n탈퇴 후 30일간 데이터가 보존되며,\n30일 경과 후 모든 데이터가 영구 삭제됩니다.')) {
+                return;
+            }
+            
+            let reason = selectedReason.value;
+            const detail = detailReason.value.trim();
+            
+            if (detail) {
+                reason += ': ' + detail;
+            }
+            
+            try {
+                const response = await fetch('/api/users/withdraw', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ reason })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.cookie = 'Authorization=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                        alert('회원 탈퇴가 완료되었습니다.\n그동안 이용해주셔서 감사합니다.');
+                        window.location.href = '/';
+                    } else {
+                        alert(data.message || '탈퇴 처리 중 오류가 발생했습니다.');
+                    }
+                } else {
+                    alert('탈퇴 처리 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('탈퇴 오류:', error);
+                alert('탈퇴 처리 중 오류가 발생했습니다.');
+            }
+        });
+    </script>
+</body>
+</html>
