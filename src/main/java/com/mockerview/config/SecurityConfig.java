@@ -57,6 +57,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .requiresChannel(channel -> 
+                    channel
+                        .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
+                        .requiresSecure()
+                )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
@@ -93,7 +98,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080", "http://127.0.0.1:8080"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+            "https://mockerview.net",
+            "https://www.mockerview.net"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
