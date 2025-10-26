@@ -185,4 +185,53 @@ public class PushNotificationService {
             "/session/" + sessionId
         );
     }
+    
+    public int broadcastNotification(String title, String body, String url) {
+        List<PushSubscription> allActiveSubscriptions = subscriptionRepository.findByActiveTrue();
+        
+        if (allActiveSubscriptions.isEmpty()) {
+            log.warn("⚠️ No active subscriptions found");
+            return 0;
+        }
+        
+        log.info("📢 Broadcasting to {} subscriptions", allActiveSubscriptions.size());
+        
+        String payload = String.format(
+            "{\"title\":\"%s\",\"body\":\"%s\",\"url\":\"%s\",\"icon\":\"/images/192.png\"}",
+            title, body, url
+        );
+        
+        int successCount = 0;
+        
+        for (PushSubscription sub : allActiveSubscriptions) {
+            try {
+                Notification notification = new Notification(
+                    sub.getEndpoint(),
+                    sub.getP256dh(),
+                    sub.getAuth(),
+                    payload
+                );
+                
+                HttpResponse response = pushService.send(notification);
+                int statusCode = response.getStatusLine().getStatusCode();
+                
+                if (statusCode == 201) {
+                    successCount++;
+                    log.info("✅ Broadcast sent to {}", sub.getUser().getUsername());
+                } else if (statusCode == 410) {
+                    log.warn("⚠️ Subscription expired for {}", sub.getUser().getUsername());
+                    sub.setActive(false);
+                    subscriptionRepository.save(sub);
+                } else {
+                    log.error("❌ Broadcast failed with status: {} for {}", statusCode, sub.getUser().getUsername());
+                }
+                
+            } catch (Exception e) {
+                log.error("❌ Error broadcasting to {}", sub.getUser().getUsername(), e);
+            }
+        }
+        
+        log.info("📊 Broadcast complete: {}/{} sent", successCount, allActiveSubscriptions.size());
+        return successCount;
+    }
 }

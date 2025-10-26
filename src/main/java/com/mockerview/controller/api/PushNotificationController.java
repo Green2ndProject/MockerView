@@ -78,4 +78,41 @@ public class PushNotificationController {
             ));
         }
     }
+    
+    @PostMapping("/broadcast")
+    public ResponseEntity<?> broadcastPush(
+            Authentication auth,
+            @RequestBody Map<String, Object> request) {
+        try {
+            String username = auth.getName();
+            
+            if (!"admin@mockerview.com".equals(username)) {
+                log.warn("⚠️ Unauthorized broadcast attempt by: {}", username);
+                return ResponseEntity.status(403).body(Map.of(
+                    "success", false,
+                    "message", "관리자만 전체 알림을 보낼 수 있습니다"
+                ));
+            }
+            
+            String title = (String) request.getOrDefault("title", "공지사항");
+            String body = (String) request.getOrDefault("body", "새로운 소식이 있습니다");
+            String url = (String) request.getOrDefault("url", "/");
+            
+            log.info("전체 푸시 알림 요청 - from: {}, title: {}", username, title);
+            
+            int sentCount = pushService.broadcastNotification(title, body, url);
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", sentCount + "명에게 푸시 알림이 전송되었습니다",
+                "sentCount", sentCount
+            ));
+        } catch (Exception e) {
+            log.error("전체 푸시 알림 전송 실패", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "전체 푸시 알림 전송 실패: " + e.getMessage()
+            ));
+        }
+    }
 }

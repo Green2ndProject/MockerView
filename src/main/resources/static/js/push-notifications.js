@@ -24,9 +24,17 @@ const pushNotifications = {
                     await this.subscribe();
                 } else if (Notification.permission === 'default') {
                     console.log('🔔 Requesting notification permission...');
-                    setTimeout(() => {
-                        this.requestPermission();
-                    }, 2000);
+                    const requestWithDelay = () => {
+                        setTimeout(() => {
+                            this.requestPermission();
+                        }, 2000);
+                    };
+                    
+                    if ('requestIdleCallback' in window) {
+                        requestIdleCallback(requestWithDelay, { timeout: 3000 });
+                    } else {
+                        requestWithDelay();
+                    }
                 }
             }
             
