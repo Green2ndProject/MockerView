@@ -23,7 +23,10 @@ const pushNotifications = {
                 if (Notification.permission === 'granted') {
                     await this.subscribe();
                 } else if (Notification.permission === 'default') {
-                    console.log('🔔 Will request permission shortly...');
+                    console.log('🔔 Requesting notification permission...');
+                    setTimeout(() => {
+                        this.requestPermission();
+                    }, 2000);
                 }
             }
             
