@@ -4,6 +4,7 @@ import com.mockerview.dto.PushSubscriptionDTO;
 import com.mockerview.service.PushNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,14 @@ import java.util.Map;
 public class PushNotificationController {
     
     private final PushNotificationService pushService;
+    
+    @Value("${vapid.public.key}")
+    private String vapidPublicKey;
+    
+    @GetMapping("/vapid-key")
+    public ResponseEntity<String> getVapidPublicKey() {
+        return ResponseEntity.ok(vapidPublicKey);
+    }
     
     @PostMapping("/subscribe")
     public ResponseEntity<String> subscribe(
