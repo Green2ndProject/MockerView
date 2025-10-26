@@ -75,8 +75,19 @@ public class PushNotificationService {
         log.info("🗑️ Push subscription removed: {}", endpoint);
     }
     
+    public void sendNotificationToUser(String username, String title, String body, String url) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        sendNotification(user, title, body, url);
+    }
+    
     public void sendNotification(User user, String title, String body, String url) {
         List<PushSubscription> subscriptions = subscriptionRepository.findByUserAndActiveTrue(user);
+        
+        if (subscriptions.isEmpty()) {
+            log.warn("⚠️ No active subscriptions for user: {}", user.getUsername());
+            return;
+        }
         
         String payload = String.format(
             "{\"title\":\"%s\",\"body\":\"%s\",\"url\":\"%s\",\"icon\":\"/images/192.png\"}",
@@ -96,7 +107,7 @@ public class PushNotificationService {
                 int statusCode = response.getStatusLine().getStatusCode();
                 
                 if (statusCode == 201) {
-                    log.info("✅ Push sent successfully");
+                    log.info("✅ Push sent successfully to {}", user.getUsername());
                 } else if (statusCode == 410) {
                     log.warn("⚠️ Subscription expired, removing");
                     sub.setActive(false);
