@@ -784,7 +784,7 @@
                     </div>
                 </div>
                 
-                <div class="section-card">
+                <div class="section-card" th:if="${user.role.name() == 'STUDENT'}">
                     <div class="section-header">
                         <h2>📹 나의 녹화 영상</h2>
                         <span style="color: #6b7280; font-size: 0.875rem;" 
