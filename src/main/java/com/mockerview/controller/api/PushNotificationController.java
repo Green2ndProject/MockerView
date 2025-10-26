@@ -86,7 +86,7 @@ public class PushNotificationController {
         try {
             String username = auth.getName();
             
-            if (!"admin@mockerview.com".equals(username)) {
+            if (!"mockerview".equals(username) && !"admin@mockerview.com".equals(username)) {
                 log.warn("⚠️ Unauthorized broadcast attempt by: {}", username);
                 return ResponseEntity.status(403).body(Map.of(
                     "success", false,
