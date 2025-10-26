@@ -6,6 +6,7 @@ import com.mockerview.jwt.LoginFilter;
 import com.mockerview.oauth.CustomOAuth2UserService;
 import com.mockerview.oauth.OAuth2SuccessHandler;
 import com.mockerview.repository.UserRepository;
+import com.mockerview.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,7 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final RefreshTokenService refreshTokenService;
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -73,7 +75,7 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/auth/**", "/api/join", "/api/login", "/api/auth/logout").permitAll()
+                        .requestMatchers("/", "/auth/**", "/api/join", "/api/login", "/api/auth/logout", "/api/auth/refresh").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/analysis/**").permitAll()
@@ -86,7 +88,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), 
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenService), 
                             UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

@@ -128,4 +128,50 @@ public class PushNotificationService {
             "/session/" + sessionId + "/scoreboard"
         );
     }
+    
+    public void notifySessionInvite(User user, String sessionTitle, Long sessionId) {
+        sendNotification(
+            user,
+            "📩 면접 세션 초대",
+            sessionTitle + "에 초대되었습니다",
+            "/session/" + sessionId
+        );
+    }
+    
+    public void notifyAnswerSubmitted(User user, String participantName, Long sessionId) {
+        sendNotification(
+            user,
+            "✍️ 답변이 제출되었습니다",
+            participantName + "님이 답변을 제출했습니다",
+            "/session/" + sessionId + "/scoreboard"
+        );
+    }
+    
+    public void notifyScoreUpdate(User user, Long sessionId) {
+        sendNotification(
+            user,
+            "📊 점수가 업데이트되었습니다",
+            "새로운 평가 결과를 확인하세요",
+            "/session/" + sessionId + "/scoreboard"
+        );
+    }
+    
+    public void notifyTeamJoin(User user, String participantName, Long sessionId) {
+        sendNotification(
+            user,
+            "👥 새로운 참가자",
+            participantName + "님이 세션에 참가했습니다",
+            "/session/" + sessionId
+        );
+    }
+    
+    public void notifyChatMessage(User user, String senderName, String message, Long sessionId) {
+        String preview = message.length() > 30 ? message.substring(0, 30) + "..." : message;
+        sendNotification(
+            user,
+            "💬 " + senderName,
+            preview,
+            "/session/" + sessionId
+        );
+    }
 }

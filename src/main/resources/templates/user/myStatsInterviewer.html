@@ -360,7 +360,7 @@
 
         <div class="session-list">
             <h3 class="chart-title">📝 최근 개설 세션</h3>
-            <div th:if="${hostedSessions.empty}" class="empty-state">
+            <div th:if="${hostedSessions == null || hostedSessions.empty}" class="empty-state">
                 <p>개설한 세션이 없습니다</p>
             </div>
             <div th:each="sess : ${hostedSessions}" class="session-item">

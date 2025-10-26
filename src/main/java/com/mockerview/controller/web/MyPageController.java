@@ -185,8 +185,10 @@ public class MyPageController {
             model.addAttribute("avgGivenScore", Math.round(avgGivenScore * 10) / 10.0);
             model.addAttribute("sessionsByMonth", sessionsByMonth);
             model.addAttribute("topInterviewees", topInterviewees);
+            model.addAttribute("hostedSessions", hostedSessions);
+            model.addAttribute("givenFeedbacks", givenFeedbacks);
             
-            return "user/stats-interviewer";
+            return "user/myStatsInterviewer";
             
         } catch (Exception e) {
             log.error("면접관 통계 로드 실패", e);
@@ -305,6 +307,40 @@ public class MyPageController {
             
             List<Map<String, Object>> userRankings = calculateUserRankings(currentUser.getId());
             
+            List<Map<String, Object>> growthData = new ArrayList<>();
+            for (Answer answer : myAnswers) {
+                if (answer.getCreatedAt() != null) {
+                    Map<String, Object> dataPoint = new HashMap<>();
+                    dataPoint.put("date", answer.getCreatedAt().format(DateTimeFormatter.ofPattern("MM/dd")));
+                    
+                    OptionalInt aiScore = answer.getFeedbacks().stream()
+                        .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI && f.getScore() != null)
+                        .mapToInt(Feedback::getScore)
+                        .findFirst();
+                    
+                    OptionalInt interviewerScore = answer.getFeedbacks().stream()
+                        .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER && f.getScore() != null)
+                        .mapToInt(Feedback::getScore)
+                        .findFirst();
+                    
+                    dataPoint.put("aiScore", aiScore.isPresent() ? aiScore.getAsInt() : null);
+                    dataPoint.put("interviewerScore", interviewerScore.isPresent() ? interviewerScore.getAsInt() : null);
+                    
+                    growthData.add(dataPoint);
+                }
+            }
+            
+            List<String> months = new ArrayList<>(answersByMonth.keySet());
+            List<Long> counts = new ArrayList<>(answersByMonth.values());
+            
+            long aiFeedbackCount = allFeedbacks.stream()
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.AI)
+                .count();
+            
+            long interviewerFeedbackCount = allFeedbacks.stream()
+                .filter(f -> f.getFeedbackType() == Feedback.FeedbackType.INTERVIEWER)
+                .count();
+            
             model.addAttribute("totalAnswers", totalAnswers);
             model.addAttribute("participatedSessions", participatedSessions);
             model.addAttribute("avgAiScore", Math.round(avgAiScore * 10) / 10.0);
@@ -314,8 +350,14 @@ public class MyPageController {
             model.addAttribute("scoresByMonth", scoresByMonth);
             model.addAttribute("recentAnswers", recentAnswers);
             model.addAttribute("userRankings", userRankings);
+            model.addAttribute("growthData", growthData);
+            model.addAttribute("months", months);
+            model.addAttribute("counts", counts);
+            model.addAttribute("aiFeedbackCount", aiFeedbackCount);
+            model.addAttribute("interviewerFeedbackCount", interviewerFeedbackCount);
+            model.addAttribute("myAnswersData", myAnswers);
             
-            return "user/stats-interviewee";
+            return "user/myStats";
             
         } catch (Exception e) {
             log.error("면접자 통계 로드 실패", e);

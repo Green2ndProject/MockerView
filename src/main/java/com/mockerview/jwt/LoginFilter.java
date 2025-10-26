@@ -1,6 +1,7 @@
 package com.mockerview.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mockerview.service.RefreshTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,10 +25,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenService = refreshTokenService;
         setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/auth/login", "POST"));
     }
 
@@ -72,17 +75,26 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
         
-        String token = jwtUtil.createJwt(username, role, 3 * 60 * 60 * 1000L);
+        String accessToken = jwtUtil.createJwt(username, role, 60 * 60 * 1000L);
+        String refreshToken = refreshTokenService.createRefreshToken(username);
         
-        Cookie cookie = new Cookie("Authorization", token);
-        cookie.setMaxAge(3 * 60 * 60);
-        cookie.setPath("/");
-        cookie.setHttpOnly(false);
+        Cookie accessCookie = new Cookie("Authorization", accessToken);
+        accessCookie.setMaxAge(60 * 60);
+        accessCookie.setPath("/");
+        accessCookie.setHttpOnly(false);
         
-        response.addCookie(cookie);
+        Cookie refreshCookie = new Cookie("RefreshToken", refreshToken);
+        refreshCookie.setMaxAge(30 * 24 * 60 * 60);
+        refreshCookie.setPath("/");
+        refreshCookie.setHttpOnly(true);
+        
+        response.addCookie(accessCookie);
+        response.addCookie(refreshCookie);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"success\":true,\"redirect\":\"/session/list\"}");
+        
+        log.info("✅ Login successful - Access Token: 1h, Refresh Token: 30d");
     }
 
     @Override

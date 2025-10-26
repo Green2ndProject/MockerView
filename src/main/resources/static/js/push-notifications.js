@@ -21,14 +21,8 @@ const pushNotifications = {
     },
 
     async loadVapidKey() {
-        try {
-            const response = await fetch('/api/notifications/vapid-public-key');
-            const data = await response.json();
-            this.vapidPublicKey = data.publicKey;
-            console.log('✅ VAPID public key loaded');
-        } catch (error) {
-            console.error('❌ Failed to load VAPID key:', error);
-        }
+        this.vapidPublicKey = 'BDKUoBp4vhLTJQxcwv6OOUGf9_arWZJqYn56uvIr8Vt-IAjTfAEP3xGlQe0WJcM4IUHJe3KEQRS_iyG6ZTZMjsU';
+        console.log('✅ VAPID public key loaded');
     },
 
     urlBase64ToUint8Array(base64String) {
@@ -96,7 +90,7 @@ const pushNotifications = {
         };
 
         try {
-            const response = await fetch('/api/notifications/subscribe', {
+            const response = await fetch('/api/push/subscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -121,14 +115,12 @@ const pushNotifications = {
             if (subscription) {
                 await subscription.unsubscribe();
                 
-                await fetch('/api/notifications/unsubscribe', {
-                    method: 'DELETE',
+                await fetch('/api/push/unsubscribe', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        endpoint: subscription.endpoint
-                    })
+                    body: JSON.stringify(subscription.endpoint)
                 });
 
                 console.log('✅ Push unsubscribed');

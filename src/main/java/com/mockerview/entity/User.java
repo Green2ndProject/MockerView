@@ -54,6 +54,9 @@ public class User {
     @Column(name = "WITHDRAWAL_REASON", length = 255)
     private String withdrawalReason;
     
+    @Column(name = "LAST_LOGIN_DATE")
+    private LocalDateTime lastLoginDate;
+    
     public boolean isDeleted() {
         return this.isDeleted != null && this.isDeleted == 1;
     }

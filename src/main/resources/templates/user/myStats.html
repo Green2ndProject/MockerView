@@ -735,10 +735,10 @@
 
             <div class="chart-container">
                 <h3 class="chart-title">🏆 전체 면접자 순위</h3>
-                <div th:if="${rankings.empty}" class="empty-state">
+                <div th:if="${userRankings == null || userRankings.empty}" class="empty-state">
                     <p>아직 순위 데이터가 없습니다</p>
                 </div>
-                <div th:each="rank : ${rankings}" th:class="${rank.isCurrentUser ? 'ranking-item current-user' : 'ranking-item'}">
+                <div th:each="rank : ${userRankings}" th:class="${rank.isCurrentUser ? 'ranking-item current-user' : 'ranking-item'}">
                     <div class="rank-number" th:text="${rank.rank}">1</div>
                     <div class="rank-info">
                         <div class="rank-name" th:text="${rank.userName}">사용자명</div>
@@ -762,7 +762,7 @@
 
         <div class="answer-list">
             <h3 class="chart-title">최근 답변 내역</h3>
-            <div th:each="answer : ${myAnswers}" class="answer-item" th:onclick="'openAnswerModal(' + ${answer.id} + ')'">
+            <div th:each="answer : ${myAnswersData}" class="answer-item" th:onclick="'openAnswerModal(' + ${answer.id} + ')'">
                 <div class="answer-date" th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</div>
                 <div class="answer-question" th:text="'Q. ' + ${answer.question.text}">질문</div>
                 <div class="answer-scores">
@@ -809,13 +809,15 @@
         var answersByMonth = /*[[${answersByMonth}]]*/ {};
         var aiFeedbackCount = /*[[${aiFeedbackCount}]]*/ 0;
         var interviewerFeedbackCount = /*[[${interviewerFeedbackCount}]]*/ 0;
-        var myAnswersData = /*[[${myAnswers}]]*/ [];
+        var myAnswersData = /*[[${myAnswersData}]]*/ [];
         var growthData = /*[[${growthData}]]*/ [];
         var userId = /*[[${user.id}]]*/ 0;
         var months = Object.keys(answersByMonth).sort();
         var counts = months.map(function(m) { return answersByMonth[m]; });
 
         console.log('userId:', userId);
+        console.log('myAnswersData:', myAnswersData);
+        console.log('myAnswersData length:', myAnswersData ? myAnswersData.length : 0);
 
         function toggleMobileMenu() {
             const menu = document.getElementById('mobileMenu');
