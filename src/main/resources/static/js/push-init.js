@@ -1,30 +1,24 @@
-(function() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-        console.warn('⚠️ Push notifications not supported in this browser');
-        return;
-    }
-
-    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+    navigator.serviceWorker.register('/service-worker.js')
         .then(registration => {
             console.log('✅ Service Worker registered:', registration.scope);
             
-            if (window.pushNotifications) {
-                window.pushNotifications.init();
-            }
-            return registration.pushManager.getSubscription();
-        })
-        .then(subscription => {
-            if (!subscription && Notification.permission === 'default') {
-                setTimeout(() => {
-                    if (window.showPushPrompt && typeof window.showPushPrompt === 'function') {
-                        window.showPushPrompt();
+            setTimeout(async () => {
+                if (window.pushNotifications && Notification.permission === 'default') {
+                    console.log('🔔 Requesting notification permission...');
+                    await window.pushNotifications.requestPermission();
+                } else if (Notification.permission === 'granted') {
+                    const sub = await registration.pushManager.getSubscription();
+                    if (!sub && window.pushNotifications) {
+                        console.log('🔔 Permission granted but not subscribed, subscribing now...');
+                        await window.pushNotifications.subscribe();
                     }
-                }, 3000);
-            } else if (subscription) {
-                console.log('✅ Already subscribed to push notifications');
-            }
+                }
+            }, 3000);
         })
         .catch(error => {
-            console.error('❌ Service Worker error:', error);
+            console.error('❌ Service Worker registration failed:', error);
         });
-})();
+} else {
+    console.warn('⚠️ Service Worker or Push API not supported');
+}

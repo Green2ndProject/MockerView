@@ -12,6 +12,21 @@ const pushNotifications = {
         try {
             this.registration = await navigator.serviceWorker.ready;
             await this.loadVapidKey();
+            
+            const existingSubscription = await this.getSubscription();
+            
+            if (existingSubscription) {
+                console.log('✅ Already subscribed to push notifications');
+                await this.sendSubscriptionToServer(existingSubscription);
+            } else {
+                console.log('⚠️ Not subscribed yet');
+                if (Notification.permission === 'granted') {
+                    await this.subscribe();
+                } else if (Notification.permission === 'default') {
+                    console.log('🔔 Will request permission shortly...');
+                }
+            }
+            
             console.log('✅ Push notifications initialized');
             return true;
         } catch (error) {
@@ -21,8 +36,14 @@ const pushNotifications = {
     },
 
     async loadVapidKey() {
-        this.vapidPublicKey = 'BDKUoBp4vhLTJQxcwv6OOUGf9_arWZJqYn56uvIr8Vt-IAjTfAEP3xGlQe0WJcM4IUHJe3KEQRS_iyG6ZTZMjsU';
-        console.log('✅ VAPID public key loaded');
+        try {
+            const response = await fetch('/api/push/vapid-key');
+            this.vapidPublicKey = await response.text();
+            console.log('✅ VAPID public key loaded');
+        } catch (error) {
+            console.error('❌ Failed to load VAPID key:', error);
+            this.vapidPublicKey = 'BDKUoBp4vhLTJQxcwv6OOUGf9_arWZJqYn56uvIr8Vt-IAjTfAEP3xGlQe0WJcM4IUHJe3KEQRS_iyG6ZTZMjsU';
+        }
     },
 
     urlBase64ToUint8Array(base64String) {
@@ -95,13 +116,15 @@ const pushNotifications = {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify(payload)
             });
 
             if (response.ok) {
-                console.log('✅ Subscription sent to server');
+                const message = await response.text();
+                console.log('✅ Subscription sent to server:', message);
             } else {
-                console.error('❌ Failed to send subscription to server');
+                console.error('❌ Failed to send subscription to server:', response.status);
             }
         } catch (error) {
             console.error('❌ Error sending subscription:', error);
@@ -120,6 +143,7 @@ const pushNotifications = {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(subscription.endpoint)
                 });
 
