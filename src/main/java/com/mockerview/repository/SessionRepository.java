@@ -139,4 +139,7 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
         @Query("SELECT s FROM Session s WHERE s.isSelfInterview = 'Y' AND s.host.id = :userId")
         List<Session> findSelfInterviewsByUserId(@Param("userId") Long userId);
+
+        @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId AND s.videoRecordingUrl IS NOT NULL AND s.videoRecordingUrl != '' ORDER BY s.createdAt DESC")
+        List<Session> findByHostIdWithRecording(@Param("hostId") Long hostId);
 }

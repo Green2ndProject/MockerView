@@ -821,4 +821,39 @@ public class SessionApiController {
                 .body(Map.of("error", e.getMessage()));
         }
     }
+
+    @DeleteMapping("/{sessionId}/recording")
+    public ResponseEntity<Map<String, Object>> deleteSessionRecording(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("success", false, "message", "로그인이 필요합니다"));
+            }
+
+            Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+
+            User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+            if (!session.getHost().getId().equals(currentUser.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "권한이 없습니다"));
+            }
+
+            session.setVideoRecordingUrl(null);
+            sessionRepository.save(session);
+
+            log.info("세션 녹화 삭제 완료 - sessionId: {}, userId: {}", sessionId, currentUser.getId());
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "녹화가 삭제되었습니다"));
+
+        } catch (Exception e) {
+            log.error("세션 녹화 삭제 실패", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "삭제 중 오류가 발생했습니다"));
+        }
+    }
 }

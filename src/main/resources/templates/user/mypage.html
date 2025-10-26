@@ -840,6 +840,62 @@
                     </div>
                 </div>
                 
+                <div class="section-card" th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">
+                    <div class="section-header">
+                        <h2>🎬 세션 전체 녹화</h2>
+                        <span style="color: #6b7280; font-size: 0.875rem;" 
+                                th:text="${sessionsWithRecording != null ? sessionsWithRecording.size() + '개' : '0개'}">0개</span>
+                    </div>
+                    
+                    <div th:if="${sessionsWithRecording != null and !sessionsWithRecording.isEmpty()}" 
+                            style="display: flex; flex-direction: column; gap: 12px;">
+                        <div th:each="sessionRec : ${sessionsWithRecording}" 
+                                style="padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                <div>
+                                    <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;" 
+                                            th:text="${sessionRec.title}">세션명</div>
+                                    <div style="font-size: 0.8125rem; color: #6b7280;">
+                                        <span th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 10:00</span>
+                                        <span th:if="${sessionRec.description != null and !session.description.isEmpty()}">
+                                            · <span th:text="${sessionRec.description}">설명</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="playVideo(this)" 
+                                        th:attr="data-video-url=${sessionRec.videoRecordingUrl}"
+                                        class="btn btn-primary" 
+                                        style="flex: 1; padding: 8px; font-size: 0.875rem;">
+                                    ▶ 재생
+                                </button>
+                                <a th:href="${sessionRec.videoRecordingUrl}" 
+                                    target="_blank" 
+                                    download
+                                    class="btn" 
+                                    style="flex: 1; padding: 8px; font-size: 0.875rem; text-align: center; text-decoration: none;">
+                                    ⬇ 다운로드
+                                </a>
+                                <button onclick="deleteSessionRecording(this)" 
+                                        th:attr="data-session-id=${sessionRec.id}"
+                                        class="btn btn-danger" 
+                                        style="padding: 8px 12px; font-size: 0.875rem;">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${sessionsWithRecording == null or sessionsWithRecording.isEmpty()}" 
+                            style="text-align: center; padding: 40px 20px; color: #9ca3af;">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">🎬</div>
+                        <div style="font-weight: 600; color: #6b7280; margin-bottom: 8px;">저장된 세션 녹화가 없습니다</div>
+                        <div style="font-size: 0.875rem;">면접 진행 중 화면 녹화를 시작하세요</div>
+                    </div>
+                </div>
+                
                 <div class="section-card">
                     <div class="section-header">
                         <h2>계정 정보</h2>
@@ -1009,6 +1065,33 @@
                 
                 if (data.success) {
                     alert('녹화가 삭제되었습니다.');
+                    location.reload();
+                } else {
+                    alert(data.message || '삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        async function deleteSessionRecording(button) {
+            if (!confirm('이 세션 녹화 영상을 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            const sessionId = button.getAttribute('data-session-id');
+            
+            try {
+                const response = await fetch(`/api/session/${sessionId}/recording`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('세션 녹화가 삭제되었습니다.');
                     location.reload();
                 } else {
                     alert(data.message || '삭제에 실패했습니다.');
