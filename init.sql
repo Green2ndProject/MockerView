@@ -273,3 +273,227 @@ CREATE TABLE IF NOT EXISTS interviewer_notes (
 CREATE INDEX IF NOT EXISTS idx_interviewer_notes_session ON interviewer_notes(session_id);
 CREATE INDEX IF NOT EXISTS idx_interviewer_notes_interviewer ON interviewer_notes(interviewer_id);
 CREATE INDEX IF NOT EXISTS idx_interviewer_notes_interviewee ON interviewer_notes(interviewee_id);
+
+CREATE TABLE IF NOT EXISTS interview_reports (
+    id BIGSERIAL PRIMARY KEY,
+    session_id BIGINT REFERENCES sessions(id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    report_type VARCHAR(20) NOT NULL,
+    pdf_url VARCHAR(500),
+    share_link VARCHAR(255) UNIQUE,
+    share_password VARCHAR(255),
+    link_expires_at TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'GENERATING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_interview_reports_session ON interview_reports(session_id);
+CREATE INDEX IF NOT EXISTS idx_interview_reports_user ON interview_reports(user_id);
+CREATE INDEX IF NOT EXISTS idx_interview_reports_share_link ON interview_reports(share_link);
+
+ALTER TABLE interview_reports DROP CONSTRAINT IF EXISTS interview_reports_report_type_check;
+ALTER TABLE interview_reports ADD CONSTRAINT interview_reports_report_type_check CHECK (report_type IN ('INTERVIEWEE', 'INTERVIEWER'));
+
+ALTER TABLE interview_reports DROP CONSTRAINT IF EXISTS interview_reports_status_check;
+ALTER TABLE interview_reports ADD CONSTRAINT interview_reports_status_check CHECK (status IN ('GENERATING', 'COMPLETED', 'FAILED'));
+
+CREATE TABLE IF NOT EXISTS report_comparisons (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    report_id_1 BIGINT REFERENCES interview_reports(id) ON DELETE CASCADE,
+    report_id_2 BIGINT REFERENCES interview_reports(id) ON DELETE CASCADE,
+    growth_rate DECIMAL(5,2),
+    comparison_data TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_report_comparisons_user ON report_comparisons(user_id);
+
+CREATE TABLE IF NOT EXISTS candidate_resumes (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE UNIQUE,
+    resume_pdf_url VARCHAR(500),
+    portfolio_url VARCHAR(500),
+    education VARCHAR(1000),
+    experience VARCHAR(2000),
+    tech_stack VARCHAR(1000),
+    preferred_salary VARCHAR(100),
+    preferred_location VARCHAR(255),
+    is_public BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_candidate_resumes_user ON candidate_resumes(user_id);
+CREATE INDEX IF NOT EXISTS idx_candidate_resumes_public ON candidate_resumes(is_public);
+
+CREATE TABLE IF NOT EXISTS talent_pool (
+    id BIGSERIAL PRIMARY KEY,
+    company_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    candidate_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    tags VARCHAR(500),
+    recruiter_note VARCHAR(1000),
+    status VARCHAR(50) DEFAULT 'INTERESTED',
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_talent_pool_company ON talent_pool(company_id);
+CREATE INDEX IF NOT EXISTS idx_talent_pool_candidate ON talent_pool(candidate_id);
+CREATE INDEX IF NOT EXISTS idx_talent_pool_status ON talent_pool(status);
+
+ALTER TABLE talent_pool DROP CONSTRAINT IF EXISTS talent_pool_status_check;
+ALTER TABLE talent_pool ADD CONSTRAINT talent_pool_status_check CHECK (status IN ('INTERESTED', 'CONTACTED', 'INTERVIEWING', 'OFFERED', 'HIRED', 'REJECTED'));
+
+CREATE TABLE IF NOT EXISTS interviewer_interests (
+    id BIGSERIAL PRIMARY KEY,
+    session_id BIGINT REFERENCES sessions(id) ON DELETE CASCADE,
+    interviewer_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    candidate_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_session_interviewer_candidate UNIQUE (session_id, interviewer_id, candidate_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_interviewer_interests_session ON interviewer_interests(session_id);
+CREATE INDEX IF NOT EXISTS idx_interviewer_interests_interviewer ON interviewer_interests(interviewer_id);
+CREATE INDEX IF NOT EXISTS idx_interviewer_interests_candidate ON interviewer_interests(candidate_id);
+
+CREATE TABLE IF NOT EXISTS private_messages (
+    id BIGSERIAL PRIMARY KEY,
+    room_id VARCHAR(255) NOT NULL,
+    sender_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    message_text TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_private_messages_room ON private_messages(room_id);
+CREATE INDEX IF NOT EXISTS idx_private_messages_sender ON private_messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_private_messages_receiver ON private_messages(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_private_messages_receiver_unread ON private_messages(receiver_id, is_read);
+
+CREATE TABLE IF NOT EXISTS company_shares (
+    id BIGSERIAL PRIMARY KEY,
+    interviewer_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    candidate_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    report_id BIGINT REFERENCES interview_reports(id) ON DELETE SET NULL,
+    department VARCHAR(100),
+    recipient_email VARCHAR(255),
+    shared_content TEXT,
+    shared_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_company_shares_interviewer ON company_shares(interviewer_id);
+CREATE INDEX IF NOT EXISTS idx_company_shares_candidate ON company_shares(candidate_id);
+
+CREATE TABLE IF NOT EXISTS rankings (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    category VARCHAR(50) NOT NULL,
+    score DECIMAL(5,2) NOT NULL,
+    rank_position INTEGER,
+    period_type VARCHAR(20) NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_category_period UNIQUE (user_id, category, period_type, period_start)
+);
+
+CREATE INDEX IF NOT EXISTS idx_rankings_category_period ON rankings(category, period_type, period_start);
+CREATE INDEX IF NOT EXISTS idx_rankings_user ON rankings(user_id);
+CREATE INDEX IF NOT EXISTS idx_rankings_rank_position ON rankings(category, period_type, rank_position);
+
+ALTER TABLE rankings DROP CONSTRAINT IF EXISTS rankings_period_type_check;
+ALTER TABLE rankings ADD CONSTRAINT rankings_period_type_check CHECK (period_type IN ('WEEKLY', 'MONTHLY', 'YEARLY', 'ALL_TIME'));
+
+CREATE TABLE IF NOT EXISTS challenges (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description VARCHAR(1000),
+    challenge_type VARCHAR(50) NOT NULL,
+    target_count INTEGER NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reward_type VARCHAR(50),
+    reward_value VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenges_active ON challenges(is_active);
+CREATE INDEX IF NOT EXISTS idx_challenges_dates ON challenges(start_date, end_date);
+
+ALTER TABLE challenges DROP CONSTRAINT IF EXISTS challenges_challenge_type_check;
+ALTER TABLE challenges ADD CONSTRAINT challenges_challenge_type_check CHECK (challenge_type IN ('INTERVIEW_COUNT', 'CATEGORY_MASTER', 'SCORE_TARGET', 'DAILY_PRACTICE'));
+
+CREATE TABLE IF NOT EXISTS user_challenges (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    challenge_id BIGINT REFERENCES challenges(id) ON DELETE CASCADE,
+    current_count INTEGER DEFAULT 0,
+    completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMP,
+    reward_claimed BOOLEAN DEFAULT FALSE,
+    CONSTRAINT unique_user_challenge UNIQUE (user_id, challenge_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_challenges_user ON user_challenges(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_challenges_completed ON user_challenges(completed);
+
+CREATE TABLE IF NOT EXISTS achievements (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description VARCHAR(1000),
+    achievement_type VARCHAR(50) NOT NULL,
+    required_count INTEGER NOT NULL,
+    badge_icon VARCHAR(100),
+    badge_level VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_achievements_code ON achievements(code);
+CREATE INDEX IF NOT EXISTS idx_achievements_type ON achievements(achievement_type);
+
+ALTER TABLE achievements DROP CONSTRAINT IF EXISTS achievements_badge_level_check;
+ALTER TABLE achievements ADD CONSTRAINT achievements_badge_level_check CHECK (badge_level IN ('BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'));
+
+INSERT INTO achievements (code, name, description, achievement_type, required_count, badge_icon, badge_level) VALUES
+('FIRST_INTERVIEW', '첫 면접 완료', '첫 번째 면접을 완료했습니다', 'INTERVIEW_COUNT', 1, '🎯', 'BRONZE'),
+('INTERVIEW_MASTER_10', '면접 마스터 10', '10회 면접을 완료했습니다', 'INTERVIEW_COUNT', 10, '🏆', 'SILVER'),
+('INTERVIEW_MASTER_50', '면접 마스터 50', '50회 면접을 완료했습니다', 'INTERVIEW_COUNT', 50, '🏆', 'GOLD'),
+('INTERVIEW_MASTER_100', '면접 마스터 100', '100회 면접을 완료했습니다', 'INTERVIEW_COUNT', 100, '🏆', 'PLATINUM'),
+('PERFECT_SCORE', '완벽한 답변', 'AI 피드백 5점 만점을 받았습니다', 'SCORE_TARGET', 1, '⭐', 'GOLD'),
+('BACKEND_MASTER', '백엔드 마스터', '백엔드 카테고리 상위 10%', 'CATEGORY_MASTER', 1, '💻', 'GOLD'),
+('FRONTEND_MASTER', '프론트엔드 마스터', '프론트엔드 카테고리 상위 10%', 'CATEGORY_MASTER', 1, '🎨', 'GOLD')
+ON CONFLICT (code) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS user_achievements (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    achievement_id BIGINT REFERENCES achievements(id) ON DELETE CASCADE,
+    achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_display_badge BOOLEAN DEFAULT FALSE,
+    CONSTRAINT unique_user_achievement UNIQUE (user_id, achievement_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_achievements_user ON user_achievements(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_display ON user_achievements(user_id, is_display_badge);
+
+CREATE TABLE IF NOT EXISTS system_notifications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content VARCHAR(1000),
+    related_link VARCHAR(500),
+    related_id BIGINT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON system_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON system_notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON system_notifications(created_at);
+
+ALTER TABLE system_notifications DROP CONSTRAINT IF EXISTS system_notifications_notification_type_check;
+ALTER TABLE system_notifications ADD CONSTRAINT system_notifications_notification_type_check CHECK (notification_type IN ('MESSAGE', 'INTEREST_MARKED', 'CHALLENGE_COMPLETED', 'RANKING_UPDATED', 'SHARE_NOTIFICATION', 'REPORT_COMPLETED', 'ACHIEVEMENT_UNLOCKED'));
