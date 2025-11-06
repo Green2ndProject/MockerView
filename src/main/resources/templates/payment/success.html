@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제 완료 - MockerView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            padding: 48px 32px;
+            text-align: center;
+        }
+        
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+        
+        h1 {
+            font-size: 1.75rem;
+            color: #0a0a0a;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        p {
+            color: #6b7280;
+            margin-bottom: 32px;
+            line-height: 1.6;
+            font-size: 0.9375rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 13px 36px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 36px 24px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .success-icon {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎉</div>
+        <h1>결제가 완료되었습니다!</h1>
+        <p th:text="${message}">결제가 성공적으로 완료되었습니다.</p>
+        <a href="/session/list" class="btn">세션 목록으로 가기</a>
+    </div>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
+</body>
+</html>

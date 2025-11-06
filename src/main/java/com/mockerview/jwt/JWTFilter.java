@@ -77,8 +77,13 @@ public class JWTFilter extends OncePerRequestFilter{
 
         String username = jwtUtil.getUsername(token);
         
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        User user = userRepository.findByUsername(username).orElse(null);
+
+        if (user == null) {
+          log.warn("Deleted or not found user tried to access: {}", username);
+          filterChain.doFilter(request, response);
+          return;
+        }
 
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
@@ -90,9 +95,9 @@ public class JWTFilter extends OncePerRequestFilter{
   }
 
   @Override
-protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+  protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 
-    String uri    = request.getRequestURI();
+    String uri = request.getRequestURI();
     String method = request.getMethod();
 
     if (uri.equals("/") || uri.equals("/index")) {
@@ -104,6 +109,22 @@ protected boolean shouldNotFilter(HttpServletRequest request) throws ServletExce
     }
 
     if (uri.equals("/auth/register")) {
+        return true;
+    }
+
+    if (uri.equals("/auth/find-username")) {
+        return true;
+    }
+
+    if (uri.equals("/auth/reset-password")) {
+        return true;
+    }
+
+    if (uri.equals("/manifest.json") ||
+        uri.equals("/service-worker.js") ||
+        uri.equals("/offline.html") ||
+        uri.startsWith("/apple-touch-icon")) {
+        log.warn("[JWTFilter] Bypass! PWA file is skipping JWT validation: {}", uri);
         return true;
     }
 

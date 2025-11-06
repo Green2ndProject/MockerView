@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI 셀프 면접 - MockerView</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary-color: #667eea;
+            --primary-hover: #5568d3;
+            --text-dark: #212529;
+            --text-muted: #6c757d;
+            --border-color: #e0e0e0;
+            --bg-light: #f8f9fa;
+            --bg-white: #ffffff;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: var(--bg-white);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover { color: var(--primary-color); }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: var(--primary-color);
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(6px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
+        
+        .page-header {
+            margin-top: 64px;
+            padding: 3rem 0;
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-header p { font-size: 1.1rem; opacity: 0.95; }
+        
+        .ai-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto 3rem;
+            padding: 0 1rem;
+        }
+        
+        .step-indicator {
+            background: var(--bg-white);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--border-color);
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        
+        .step.active .step-number { background: var(--primary-color); color: white; }
+        .step.completed .step-number { background: #28a745; color: white; }
+        
+        .section {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+        
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .category-card {
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-white);
+            text-align: center;
+        }
+        
+        .category-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .category-card.active {
+            border-color: var(--primary-color);
+            background: #f0f3ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .category-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .category-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+        
+        .category-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .sub-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .sub-category-badge {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-white);
+            font-size: 0.9rem;
+        }
+        
+        .sub-category-badge:hover {
+            border-color: var(--primary-color);
+            background: #f8f9ff;
+        }
+        
+        .sub-category-badge.active {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+        }
+        
+        .difficulty-card {
+            padding: 1.25rem 0.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            background: var(--bg-white);
+        }
+        
+        .difficulty-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        .difficulty-card.active {
+            border-color: var(--primary-color);
+            background: #f0f3ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        
+        .difficulty-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .difficulty-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .difficulty-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+        
+        .question-types {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .question-type-card {
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-white);
+        }
+        
+        .question-type-card:hover { border-color: var(--primary-color); }
+        .question-type-card.active { border-color: var(--primary-color); background: #f0f3ff; }
+        
+        .type-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .type-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: var(--bg-white);
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s ease;
+                pointer-events: none;
+            }
+            
+            .navbar-nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .hamburger { display: flex; }
+            
+            .page-header h1 { font-size: 1.5rem; }
+            .page-header p { font-size: 0.95rem; }
+            .category-grid { grid-template-columns: repeat(2, 1fr); }
+            .difficulty-grid { grid-template-columns: repeat(2, 1fr); }
+            .question-types { grid-template-columns: 1fr; }
+            .step-indicator { gap: 0.5rem; }
+            .step span { font-size: 0.85rem; }
+            .section { padding: 1.5rem; }
+        }
+    </style>
+    <link rel="stylesheet" href="/css/session-limit-modal.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a class="navbar-brand" href="/">MockerView</a>
+            <div class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/session/list">세션 관리</a>
+                <a class="nav-link" href="/selfinterview/list">셀프면접</a>
+                <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                <a class="nav-link" href="/auth/logout">로그아웃</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <h1><span class="ai-badge">🤖 AI</span> 셀프 면접 생성</h1>
+        <p>직무와 난이도를 선택하면 AI가 맞춤 질문을 자동으로 생성합니다</p>
+    </div>
+
+    <div class="container">
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <span>직무 선택</span>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <span>세부 분야</span>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <span>난이도</span>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                <span>설정</span>
+            </div>
+        </div>
+
+        <div class="section" id="section-main-category">
+            <h2 class="section-title">1️⃣ 직무 분야를 선택하세요</h2>
+            <div class="category-grid" id="mainCategoryList"></div>
+        </div>
+
+        <div class="section" id="section-sub-category" style="display: none;">
+            <h2 class="section-title">2️⃣ 세부 분야를 선택하세요 (선택사항)</h2>
+            <p class="section-subtitle">선택하지 않으면 전체 분야에서 질문이 생성됩니다</p>
+            <div class="sub-categories" id="subCategoryList"></div>
+            <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="skipSubCategory()">건너뛰기</button>
+        </div>
+
+        <div class="section" id="section-difficulty" style="display: none;">
+            <h2 class="section-title">3️⃣ 시작 난이도를 선택하세요</h2>
+            <p class="section-subtitle">답변에 따라 AI가 자동으로 난이도를 조절합니다</p>
+            <div class="difficulty-grid">
+                <div class="difficulty-card" onclick="selectDifficulty(1)">
+                    <span class="difficulty-icon">⭐</span>
+                    <div class="difficulty-name">초급</div>
+                    <div class="difficulty-desc">기본 개념</div>
+                </div>
+                <div class="difficulty-card active" onclick="selectDifficulty(2)">
+                    <span class="difficulty-icon">⭐⭐</span>
+                    <div class="difficulty-name">초중급</div>
+                    <div class="difficulty-desc">실무 기초</div>
+                </div>
+                <div class="difficulty-card" onclick="selectDifficulty(3)">
+                    <span class="difficulty-icon">⭐⭐⭐</span>
+                    <div class="difficulty-name">중급</div>
+                    <div class="difficulty-desc">실무 경험</div>
+                </div>
+                <div class="difficulty-card" onclick="selectDifficulty(4)">
+                    <span class="difficulty-icon">⭐⭐⭐⭐</span>
+                    <div class="difficulty-name">중고급</div>
+                    <div class="difficulty-desc">전략적 사고</div>
+                </div>
+                <div class="difficulty-card" onclick="selectDifficulty(5)">
+                    <span class="difficulty-icon">⭐⭐⭐⭐⭐</span>
+                    <div class="difficulty-name">고급</div>
+                    <div class="difficulty-desc">전문가 수준</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section-settings" style="display: none;">
+            <h2 class="section-title">4️⃣ 면접 설정을 완료하세요</h2>
+            
+            <div class="form-group">
+                <label class="form-label">면접 제목</label>
+                <input type="text" id="interviewTitle" class="form-control" placeholder="예: 백엔드 개발자 기술면접" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">질문 개수</label>
+                <select id="questionCount" class="form-control">
+                    <option value="3">3개</option>
+                    <option value="5" selected>5개</option>
+                    <option value="7">7개</option>
+                    <option value="10">10개</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">질문 유형</label>
+                <div class="question-types">
+                    <div class="question-type-card active" onclick="selectQuestionType('TECHNICAL')">
+                        <div class="type-name">🔧 기술/전문 지식</div>
+                        <div class="type-desc">전문 지식과 기술 역량 평가</div>
+                    </div>
+                    <div class="question-type-card" onclick="selectQuestionType('BEHAVIORAL')">
+                        <div class="type-name">💼 경험 기반 (STAR)</div>
+                        <div class="type-desc">과거 경험과 행동 패턴 평가</div>
+                    </div>
+                    <div class="question-type-card" onclick="selectQuestionType('SITUATIONAL')">
+                        <div class="type-name">🎯 상황 대처</div>
+                        <div class="type-desc">가상 상황에서의 대처 능력 평가</div>
+                    </div>
+                    <div class="question-type-card" onclick="selectQuestionType('PERSONALITY')">
+                        <div class="type-name">😊 인성/가치관</div>
+                        <div class="type-desc">인성과 조직 적합성 평가</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" id="createBtn" onclick="createInterview()">
+                    🚀 AI 면접 시작하기
+                </button>
+                <a href="/selfinterview/list" class="btn btn-secondary">취소</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/authFetch.js"></script>
+    <script>
+        let selectedMainCategory = null;
+        let selectedSubCategory = null;
+        let selectedDifficulty = 2;
+        let selectedQuestionType = 'TECHNICAL';
+
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMainCategories();
+        });
+
+        function loadMainCategories() {
+            fetch('/api/questions/categories/main')
+                .then(response => response.json())
+                .then(categories => {
+                    const container = document.getElementById('mainCategoryList');
+                    container.innerHTML = '';
+                    
+                    categories.forEach(cat => {
+                        const card = document.createElement('div');
+                        card.className = 'category-card';
+                        card.onclick = () => selectMainCategory(cat);
+                        card.innerHTML = `
+                            <span class="category-icon">${cat.icon || '📁'}</span>
+                            <div class="category-name">${cat.name}</div>
+                            <div class="category-desc">${cat.description || ''}</div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('카테고리 로드 실패:', error);
+                    alert('카테고리를 불러올 수 없습니다.');
+                });
+        }
+
+        function selectMainCategory(category) {
+            selectedMainCategory = category;
+            
+            document.querySelectorAll('.category-card').forEach(card => card.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('step1').classList.add('completed');
+            document.getElementById('step2').classList.add('active');
+            
+            loadSubCategories(category.code);
+            
+            document.getElementById('section-sub-category').style.display = 'block';
+            document.getElementById('section-sub-category').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function loadSubCategories(parentCode) {
+            fetch(`/api/questions/categories/${parentCode}/sub`)
+                .then(response => response.json())
+                .then(subs => {
+                    const container = document.getElementById('subCategoryList');
+                    container.innerHTML = '';
+                    
+                    if (subs.length === 0) {
+                        skipSubCategory();
+                        return;
+                    }
+                    
+                    subs.forEach(sub => {
+                        const badge = document.createElement('div');
+                        badge.className = 'sub-category-badge';
+                        badge.textContent = sub.name;
+                        badge.onclick = () => selectSubCategory(sub, badge);
+                        container.appendChild(badge);
+                    });
+                })
+                .catch(error => {
+                    console.error('소분류 로드 실패:', error);
+                    skipSubCategory();
+                });
+        }
+
+        function selectSubCategory(category, element) {
+            selectedSubCategory = category;
+            
+            document.querySelectorAll('.sub-category-badge').forEach(badge => badge.classList.remove('active'));
+            element.classList.add('active');
+            
+            document.getElementById('step2').classList.add('completed');
+            document.getElementById('step3').classList.add('active');
+            
+            document.getElementById('section-difficulty').style.display = 'block';
+            document.getElementById('section-difficulty').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function skipSubCategory() {
+            selectedSubCategory = null;
+            
+            document.getElementById('step2').classList.add('completed');
+            document.getElementById('step3').classList.add('active');
+            
+            document.getElementById('section-difficulty').style.display = 'block';
+            document.getElementById('section-difficulty').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selectDifficulty(level) {
+            selectedDifficulty = level;
+            
+            document.querySelectorAll('.difficulty-card').forEach(card => card.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('step3').classList.add('completed');
+            document.getElementById('step4').classList.add('active');
+            
+            document.getElementById('section-settings').style.display = 'block';
+            document.getElementById('section-settings').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selectQuestionType(type) {
+            selectedQuestionType = type;
+            
+            document.querySelectorAll('.question-type-card').forEach(card => card.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        function mapDifficultyToString(level) {
+            return level <= 2 ? 'EASY' : level === 3 ? 'MEDIUM' : 'HARD';
+        }
+
+        async function createInterview() {
+            console.log('🔍 AI 면접 생성 버튼 클릭 - 제한 체크 시작');
+            
+            const title = document.getElementById('interviewTitle').value.trim();
+            
+            if (!title) {
+                alert('면접 제목을 입력하세요.');
+                return;
+            }
+            
+            if (!selectedMainCategory) {
+                alert('직무를 선택하세요.');
+                return;
+            }
+            
+            if (typeof checkSessionLimitForSelfInterview === 'function') {
+                console.log('✅ checkSessionLimitForSelfInterview 함수 발견 - 제한 체크 실행');
+                checkSessionLimitForSelfInterview();
+            } else {
+                console.log('⚠️ checkSessionLimitForSelfInterview 함수 없음 - 바로 생성 시도');
+                proceedWithAICreation();
+            }
+        }
+        
+        window.proceedWithAICreation = async function() {
+            const title = document.getElementById('interviewTitle').value.trim();
+            const questionCount = parseInt(document.getElementById('questionCount').value);
+            
+            const btn = document.getElementById('createBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 생성 중...';
+            
+            try {
+                const categoryCode = selectedSubCategory ? selectedSubCategory.code : selectedMainCategory.code;
+                
+                const sessionData = {
+                    title: title,
+                    difficultyLevel: selectedDifficulty,
+                    difficulty: mapDifficultyToString(selectedDifficulty),
+                    category: categoryCode,
+                    questionCount: questionCount,
+                    questionType: selectedQuestionType,
+                    sessionType: 'TEXT',
+                    aiEnabled: true
+                };
+                
+                const response = await authFetch('/api/selfinterview/create-with-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sessionData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('✨ AI 면접이 생성되었습니다!');
+                    window.location.href = `/selfinterview/room/${data.sessionId}`;
+                } else {
+                    const errorData = await response.json();
+                    if (errorData.error === 'SESSION_LIMIT_EXCEEDED' && errorData.limitInfo) {
+                        if (typeof showSelfInterviewUpgradeModal === 'function') {
+                            showSelfInterviewUpgradeModal(errorData.limitInfo);
+                        }
+                    } else {
+                        throw new Error('면접 생성 실패');
+                    }
+                }
+            } catch (error) {
+                console.error('생성 실패:', error);
+                alert('면접 생성에 실패했습니다. 다시 시도해주세요.');
+                btn.disabled = false;
+                btn.textContent = '🚀 AI 면접 시작하기';
+            }
+        }
+    </script>
+    <script src="/js/self-interview-limit-check.js"></script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
+</body>
+</html>

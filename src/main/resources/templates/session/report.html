@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>면접 레포트 - MockerView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #667eea;
+        }
+
+        .main-content {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .report-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .video-container video {
+            width: 100%;
+            display: block;
+        }
+
+        .no-video {
+            padding: 3rem;
+            text-align: center;
+            color: #6b7280;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 2px dashed #e5e7eb;
+        }
+
+        .feedback-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .feedback-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .interviewer-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .interviewer-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+
+        .interviewer-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .rating-display {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stars {
+            color: #fbbf24;
+            font-size: 1.25rem;
+        }
+
+        .score {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .feedback-content {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .feedback-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .feedback-label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .feedback-text {
+            color: #374151;
+            font-size: 0.9375rem;
+            line-height: 1.7;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f3ff;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .no-feedback {
+            padding: 2rem;
+            text-align: center;
+            color: #6b7280;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 2px dashed #e5e7eb;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-top: 70px;
+                padding: 1rem 0;
+            }
+
+            .page-header,
+            .report-section {
+                padding: 1.5rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.125rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">MockerView</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 관리</a>
+                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/mypage}">마이페이지</a>
+                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/logout}">로그아웃</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title" th:text="${session.title}">면접 레포트</h1>
+                <p class="page-subtitle">
+                    면접 진행 시간: <span th:text="${duration}">45분</span> | 
+                    종료 시간: <span th:text="${#temporals.format(session.endTime, 'yyyy-MM-dd HH:mm')}">2025-01-01 15:00</span>
+                </p>
+            </div>
+
+            <div class="report-section" th:if="${session.videoRecordingUrl != null}">
+                <div class="section-title">
+                    <span>🎬</span>
+                    <span>녹화 영상</span>
+                </div>
+                <div class="video-container">
+                    <video controls>
+                        <source th:src="${session.videoRecordingUrl}" type="video/webm">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+
+            <div class="report-section" th:if="${session.videoRecordingUrl == null}">
+                <div class="section-title">
+                    <span>🎬</span>
+                    <span>녹화 영상</span>
+                </div>
+                <div class="no-video">
+                    <p>녹화된 영상이 없습니다.</p>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <div class="section-title">
+                    <span>📊</span>
+                    <span>면접 통계</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">참여 면접관</div>
+                        <div class="stat-value" th:text="${interviewerCount}">3</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">참여 면접자</div>
+                        <div class="stat-value" th:text="${intervieweeCount}">5</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">평균 평가 점수</div>
+                        <div class="stat-value" th:text="${averageRating != null ? #numbers.formatDecimal(averageRating, 1, 1) : 'N/A'}">4.2</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">총 질문 수</div>
+                        <div class="stat-value" th:text="${questionCount}">10</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-section">
+                <div class="section-title">
+                    <span>💼</span>
+                    <span>면접관 평가</span>
+                </div>
+                
+                <div class="feedback-grid" th:if="${feedbacks != null and !feedbacks.empty}">
+                    <div class="feedback-card" th:each="feedback : ${feedbacks}">
+                        <div class="feedback-header">
+                            <div class="interviewer-info">
+                                <div class="interviewer-icon" th:text="${feedback.interviewerName.substring(0,1)}">김</div>
+                                <div>
+                                    <div class="interviewer-name" th:text="${feedback.interviewerName}">김면접</div>
+                                    <div style="font-size: 0.875rem; color: #6b7280;">
+                                        면접자: <span th:text="${feedback.intervieweeName}">이지원</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rating-display">
+                                <div class="stars">
+                                    <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                          th:text="${i <= feedback.rating ? '★' : '☆'}">★</span>
+                                </div>
+                                <div class="score" th:text="${feedback.rating} + '/5'">5/5</div>
+                            </div>
+                        </div>
+                        
+                        <div class="feedback-content">
+                            <div class="feedback-item" th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}">
+                                <div class="feedback-label">강점</div>
+                                <div class="feedback-text" th:text="${feedback.strengths}">...</div>
+                            </div>
+                            
+                            <div class="feedback-item" th:if="${feedback.weaknesses != null and !feedback.weaknesses.isEmpty()}">
+                                <div class="feedback-label">약점</div>
+                                <div class="feedback-text" th:text="${feedback.weaknesses}">...</div>
+                            </div>
+                            
+                            <div class="feedback-item" th:if="${feedback.improvements != null and !feedback.improvements.isEmpty()}">
+                                <div class="feedback-label">개선 사항</div>
+                                <div class="feedback-text" th:text="${feedback.improvements}">...</div>
+                            </div>
+                            
+                            <div class="feedback-item" th:if="${feedback.notes != null and !feedback.notes.isEmpty()}">
+                                <div class="feedback-label">메모</div>
+                                <div class="feedback-text" th:text="${feedback.notes}">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="no-feedback" th:if="${feedbacks == null or feedbacks.empty}">
+                    <p>제출된 면접관 평가가 없습니다.</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="/session/list" class="btn btn-secondary">세션 목록으로</a>
+                <button class="btn btn-primary" onclick="window.print()">📄 레포트 인쇄</button>
+                <a th:if="${session.videoRecordingUrl != null}" 
+                   th:href="${session.videoRecordingUrl}" 
+                   download 
+                   class="btn btn-primary">📥 영상 다운로드</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('beforeprint', function() {
+            document.querySelector('.navbar').style.display = 'none';
+            document.querySelector('.action-buttons').style.display = 'none';
+        });
+
+        window.addEventListener('afterprint', function() {
+            document.querySelector('.navbar').style.display = 'block';
+            document.querySelector('.action-buttons').style.display = 'flex';
+        });
+    </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
+</body>
+</html>

@@ -1,16 +1,26 @@
-version: '3.8'
-
 services:
-  oracle:
-    image: container-registry.oracle.com/database/express:latest
-    container_name: mockerview-oracle
-    ports:
-      - "1522:1521"
+  postgres:
+    image: postgres:15
+    container_name: mockerview-postgres
     environment:
-      - ORACLE_PASSWORD=mockerview
+      POSTGRES_DB: mockerview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mockerview
+    ports:
+      - "5433:5432"
     volumes:
-      - oracle-data:/opt/oracle/oradata
+      - mockerview-pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  redis:
+    image: redis:latest
+    container_name: mockerview-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - mockerview-redis-data:/data
+    command: redis-server --appendonly yes
+
 volumes:
-  oracle-data:
+  mockerview-pgdata:
+  mockerview-redis-data:

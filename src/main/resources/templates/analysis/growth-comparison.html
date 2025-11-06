@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>성장 추이 분석 - MockerView</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #667eea;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 999;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-menu a {
+            display: block;
+            padding: 16px 20px;
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s;
+        }
+
+        .mobile-menu a:hover {
+            background: #f8fafc;
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.15);
+        }
+
+        .summary-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .trend-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .trend-up {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .trend-down {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .trend-stable {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .insights-section {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .insights-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+
+        .insight-item {
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .insight-item h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .insight-item p {
+            color: #475569;
+            line-height: 1.7;
+            font-size: 0.9375rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .page-header {
+                padding: 30px 20px;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .chart-card {
+                padding: 20px;
+            }
+
+            .insights-section {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a class="navbar-brand" href="/session/list">MockerView</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/session/list">세션</a>
+                <a class="nav-link" href="/auth/mypage">마이페이지</a>
+                <a class="nav-link" href="/auth/mypage/stats">통계</a>
+                <a class="nav-link" href="/auth/logout">로그아웃</a>
+            </div>
+            <div class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="/session/list">세션 목록</a>
+        <a href="/auth/mypage">마이페이지</a>
+        <a href="/auth/mypage/stats">통계</a>
+        <a href="/auth/logout">로그아웃</a>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="page-title">📈 성장 추이 분석</div>
+            <div class="page-subtitle">시간에 따른 분석 결과 비교</div>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button onclick="exportPDF()" class="btn" style="margin-right: 10px; background: #667eea; color: white;">📄 PDF 다운로드</button>
+            <button onclick="exportCSV()" class="btn" style="background: #10b981; color: white;">📊 CSV 다운로드</button>
+        </div>
+
+        <div id="content"></div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/auth/mypage/stats" class="btn">통계 페이지로 돌아가기</a>
+        </div>
+    </div>
+    
+    <script>
+        function toggleMenu() {
+            document.getElementById('mobileMenu').classList.toggle('active');
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="/js/notification-handler.js"></script>
+    <script th:inline="javascript">
+        const currentUserId = [[${user.id}]];
+        if (typeof NotificationHandler !== 'undefined') {
+            const notificationHandler = new NotificationHandler(currentUserId);
+        }
+        const userId = [[${userId}]];
+
+        Promise.all([
+            fetch('/api/analysis/voice/user/' + userId).then(function(res) { return res.json(); }),
+            fetch('/api/analysis/facial/user/' + userId).then(function(res) { return res.json(); })
+        ]).then(function(results) {
+            var voiceData = results[0];
+            var facialData = results[1];
+            
+            const voiceArray = Array.isArray(voiceData) ? voiceData : [];
+            const facialArray = Array.isArray(facialData) ? facialData : [];
+            
+            globalVoiceData = voiceArray;
+            globalFacialData = facialArray;
+            
+            if (voiceArray.length === 0 && facialArray.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            renderContent(voiceArray, facialArray);
+            
+        }).catch(function(err) {
+            console.error('데이터 로드 실패', err);
+            showEmptyState();
+        });
+
+        function showEmptyState() {
+            document.getElementById('content').innerHTML = 
+                '<div class="empty-state">' +
+                '<div class="empty-state-icon">📊</div>' +
+                '<div class="empty-state-title">아직 분석 데이터가 없습니다</div>' +
+                '<div class="empty-state-text">면접을 진행하고 AI 피드백을 받아보세요!</div>' +
+                '<a href="/session/list" class="btn">세션 시작하기</a>' +
+                '</div>';
+        }
+
+        function renderContent(voiceData, facialData) {
+            document.getElementById('content').innerHTML = 
+                '<div class="summary-grid" id="summaryGrid"></div>' +
+                '<div class="chart-grid">' +
+                '<div class="chart-card">' +
+                '<div class="chart-title">🎤 음성 분석 추이</div>' +
+                '<canvas id="voiceChart"></canvas>' +
+                '</div>' +
+                '<div class="chart-card">' +
+                '<div class="chart-title">😊 표정 분석 추이</div>' +
+                '<canvas id="facialChart"></canvas>' +
+                '</div>' +
+                '<div class="chart-card full">' +
+                '<div class="chart-title">📊 종합 점수 추이</div>' +
+                '<canvas id="overallChart"></canvas>' +
+                '</div>' +
+                '</div>' +
+                '<div class="insights-section" id="insightsSection"></div>';
+            
+            renderSummary(voiceData, facialData);
+            renderVoiceChart(voiceData);
+            renderFacialChart(facialData);
+            renderOverallChart(voiceData, facialData);
+            renderInsights(voiceData, facialData);
+        }
+
+        function renderSummary(voiceData, facialData) {
+            const summaryGrid = document.getElementById('summaryGrid');
+            
+            const voiceAvg = voiceData.length > 0 
+                ? Math.round(voiceData.reduce(function(sum, d) { return sum + (d.voiceStability || 0); }, 0) / voiceData.length)
+                : 0;
+            
+            const facialAvg = facialData.length > 0
+                ? Math.round(facialData.reduce(function(sum, d) { return sum + (d.confidenceScore || 0); }, 0) / facialData.length)
+                : 0;
+
+            const voiceTrend = calculateTrend(voiceData.map(function(d) { return d.voiceStability || 0; }));
+            const facialTrend = calculateTrend(facialData.map(function(d) { return d.confidenceScore || 0; }));
+
+            summaryGrid.innerHTML = 
+                '<div class="summary-card">' +
+                '<div class="summary-icon">🎤</div>' +
+                '<div class="summary-label">평균 음성 안정성</div>' +
+                '<div class="summary-value">' + voiceAvg + '점</div>' +
+                getTrendBadge(voiceTrend) +
+                '</div>' +
+                '<div class="summary-card">' +
+                '<div class="summary-icon">😊</div>' +
+                '<div class="summary-label">평균 자신감</div>' +
+                '<div class="summary-value">' + facialAvg + '점</div>' +
+                getTrendBadge(facialTrend) +
+                '</div>' +
+                '<div class="summary-card">' +
+                '<div class="summary-icon">📊</div>' +
+                '<div class="summary-label">총 분석 횟수</div>' +
+                '<div class="summary-value">' + (voiceData.length + facialData.length) + '회</div>' +
+                '</div>' +
+                '<div class="summary-card">' +
+                '<div class="summary-icon">📅</div>' +
+                '<div class="summary-label">분석 기간</div>' +
+                '<div class="summary-value">' + calculatePeriod(voiceData, facialData) + '일</div>' +
+                '</div>';
+        }
+
+        function calculateTrend(scores) {
+            if (scores.length < 2) return 0;
+            const recent = scores.slice(-3).reduce(function(a, b) { return a + b; }, 0) / Math.min(3, scores.length);
+            const older = scores.slice(0, 3).reduce(function(a, b) { return a + b; }, 0) / Math.min(3, scores.length);
+            return recent - older;
+        }
+
+        function getTrendBadge(trend) {
+            if (trend > 5) {
+                return '<div class="trend-badge trend-up">↗️ 상승 중</div>';
+            } else if (trend < -5) {
+                return '<div class="trend-badge trend-down">↘️ 하락 중</div>';
+            } else {
+                return '<div class="trend-badge trend-stable">→ 안정</div>';
+            }
+        }
+
+        function calculatePeriod(voiceData, facialData) {
+            const allDates = [];
+            for (var i = 0; i < voiceData.length; i++) {
+                allDates.push(new Date(voiceData[i].createdAt));
+            }
+            for (var i = 0; i < facialData.length; i++) {
+                allDates.push(new Date(facialData[i].createdAt));
+            }
+            if (allDates.length === 0) return 0;
+            const oldest = Math.min.apply(null, allDates.map(function(d) { return d.getTime(); }));
+            const newest = Math.max.apply(null, allDates.map(function(d) { return d.getTime(); }));
+            return Math.ceil((newest - oldest) / (1000 * 60 * 60 * 24)) || 1;
+        }
+
+        function renderVoiceChart(data) {
+            if (data.length === 0) return;
+            const ctx = document.getElementById('voiceChart').getContext('2d');
+            const sortedData = data.sort(function(a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedData.map(function(d, i) { return '#' + (i + 1); }),
+                    datasets: [
+                        {
+                            label: '음성 안정성',
+                            data: sortedData.map(function(d) { return d.voiceStability || 0; }),
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '발음 점수',
+                            data: sortedData.map(function(d) { return d.pronunciationScore || 0; }),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderFacialChart(data) {
+            if (data.length === 0) return;
+            const ctx = document.getElementById('facialChart').getContext('2d');
+            const sortedData = data.sort(function(a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedData.map(function(d, i) { return '#' + (i + 1); }),
+                    datasets: [
+                        {
+                            label: '미소',
+                            data: sortedData.map(function(d) { return d.smileScore || 0; }),
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '자신감',
+                            data: sortedData.map(function(d) { return d.confidenceScore || 0; }),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderOverallChart(voiceData, facialData) {
+            const allData = [];
+            for (var i = 0; i < voiceData.length; i++) {
+                allData.push({ 
+                    date: new Date(voiceData[i].createdAt), 
+                    score: voiceData[i].voiceStability || 0, 
+                    type: 'voice' 
+                });
+            }
+            for (var i = 0; i < facialData.length; i++) {
+                allData.push({ 
+                    date: new Date(facialData[i].createdAt), 
+                    score: facialData[i].confidenceScore || 0, 
+                    type: 'facial' 
+                });
+            }
+            allData.sort(function(a, b) { return a.date - b.date; });
+
+            if (allData.length === 0) return;
+
+            const ctx = document.getElementById('overallChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allData.map(function(d) { 
+                        return d.date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }); 
+                    }),
+                    datasets: [{
+                        label: '종합 점수',
+                        data: allData.map(function(d) { return d.score; }),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderInsights(voiceData, facialData) {
+            const section = document.getElementById('insightsSection');
+            
+            const insights = [];
+
+            if (voiceData.length >= 3) {
+                const avgSpeed = voiceData.reduce(function(sum, d) { return sum + (d.speakingSpeed || 0); }, 0) / voiceData.length;
+                if (avgSpeed > 0 && avgSpeed < 90) {
+                    insights.push({
+                        title: '🎤 말 속도 개선 필요',
+                        content: '평균 말 속도가 ' + avgSpeed.toFixed(1) + ' 단어/분으로 다소 느립니다. 90-150 단어/분을 목표로 연습해보세요.'
+                    });
+                } else if (avgSpeed > 180) {
+                    insights.push({
+                        title: '🎤 말 속도 조절 필요',
+                        content: '평균 말 속도가 ' + avgSpeed.toFixed(1) + ' 단어/분으로 다소 빠릅니다. 청자가 이해하기 쉽도록 속도를 조절해보세요.'
+                    });
+                }
+            }
+
+            if (facialData.length >= 3) {
+                const avgSmile = facialData.reduce(function(sum, d) { return sum + (d.smileScore || 0); }, 0) / facialData.length;
+                if (avgSmile < 70) {
+                    insights.push({
+                        title: '😊 표정 밝기 개선',
+                        content: '평균 미소 점수가 ' + avgSmile.toFixed(0) + '점입니다. 자연스러운 미소 연습으로 호감도를 높여보세요.'
+                    });
+                }
+            }
+
+            const voiceTrend = calculateTrend(voiceData.map(function(d) { return d.voiceStability || 0; }));
+            if (voiceTrend > 10) {
+                insights.push({
+                    title: '📈 음성 안정성 상승 중',
+                    content: '최근 음성 안정성이 지속적으로 개선되고 있습니다. 이 추세를 유지하세요!'
+                });
+            }
+
+            if (insights.length === 0) {
+                insights.push({
+                    title: '✨ 분석 데이터 수집 중',
+                    content: '더 많은 면접 연습을 통해 정확한 인사이트를 제공받으세요!'
+                });
+            }
+
+            var html = '<div class="insights-title">💡 AI 인사이트</div>';
+            for (var i = 0; i < insights.length; i++) {
+                html += '<div class="insight-item">' +
+                    '<h4>' + insights[i].title + '</h4>' +
+                    '<p>' + insights[i].content + '</p>' +
+                    '</div>';
+            }
+            section.innerHTML = html;
+        }
+        
+        let globalVoiceData = [];
+        let globalFacialData = [];
+        
+        function exportPDF() {
+            if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+                alert('PDF 라이브러리가 로드되지 않았습니다.');
+                return;
+            }
+            
+            const content = document.getElementById('content');
+            if (!content || content.innerHTML.trim() === '') {
+                alert('다운로드할 데이터가 없습니다.');
+                return;
+            }
+            
+            html2canvas(content, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#f5f7fa'
+            }).then(function(canvas) {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pdfWidth - 20;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                let heightLeft = imgHeight;
+                let position = 10;
+                
+                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+                
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + 10;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+                }
+                
+                const fileName = 'mockerview_growth_' + new Date().toISOString().split('T')[0] + '.pdf';
+                pdf.save(fileName);
+            }).catch(function(error) {
+                console.error('PDF 생성 오류:', error);
+                alert('PDF 생성 중 오류가 발생했습니다.');
+            });
+        }
+        
+        function exportCSV() {
+            if (globalVoiceData.length === 0 && globalFacialData.length === 0) {
+                alert('다운로드할 데이터가 없습니다.');
+                return;
+            }
+            
+            let csv = '\uFEFF';
+            csv += '분석 유형,날짜,말 속도,필러워드,발음 점수,음성 안정성,미소 점수,시선 점수,자세 점수,자신감 점수\n';
+            
+            globalVoiceData.forEach(function(item) {
+                const date = new Date(item.createdAt).toISOString().split('T')[0];
+                csv += '음성분석,' + date + ',';
+                csv += (item.speakingSpeed || '') + ',';
+                csv += (item.fillerWordsCount || '') + ',';
+                csv += (item.pronunciationScore || '') + ',';
+                csv += (item.voiceStability || '') + ',';
+                csv += ',,,\n';
+            });
+            
+            globalFacialData.forEach(function(item) {
+                const date = new Date(item.createdAt).toISOString().split('T')[0];
+                csv += '표정분석,' + date + ',';
+                csv += ',,,,';
+                csv += (item.smileScore || '') + ',';
+                csv += (item.eyeContactScore || '') + ',';
+                csv += (item.postureScore || '') + ',';
+                csv += (item.confidenceScore || '') + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const fileName = 'mockerview_growth_' + new Date().toISOString().split('T')[0] + '.csv';
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
+</body>
+</html>

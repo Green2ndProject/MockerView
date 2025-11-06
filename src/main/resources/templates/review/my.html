@@ -1,75 +1,376 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>내 리뷰 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css" />
-    <link rel="stylesheet" href="/css/review.css" />
-  </head>
-  <body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+        
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #667eea;
+            transition: all 0.3s;
+            border-radius: 3px;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        .page-header {
+            padding: 40px 0 28px;
+        }
+        
+        .page-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+        
+        .page-title p {
+            font-size: 0.9375rem;
+            color: #6b7280;
+        }
+        
+        .my-reviews-container {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .my-review-card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        
+        .my-review-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .header-left h3 {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .session-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+        
+        .review-date {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+        }
+        
+        .rating-display {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        
+        .rating-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            line-height: 1;
+        }
+        
+        .rating-max {
+            font-size: 1rem;
+            color: #9ca3af;
+            font-weight: 600;
+        }
+        
+        .review-content {
+            color: #4a5568;
+            line-height: 1.7;
+            font-size: 0.9375rem;
+        }
+        
+        .review-content p {
+            white-space: pre-wrap;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 64px 32px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .empty-state svg {
+            margin-bottom: 20px;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            color: #6b7280;
+            font-size: 0.9375rem;
+            margin-bottom: 24px;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            padding: 11px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                gap: 0;
+                padding: 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                transform: translateX(-100%);
+                opacity: 0;
+                transition: all 0.3s ease;
+                pointer-events: none;
+                height: calc(100vh - 64px);
+                overflow-y: auto;
+            }
+            
+            .navbar-nav.active {
+                transform: translateX(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+            
+            .nav-link {
+                padding: 1.2rem 1.5rem;
+                width: 100%;
+                text-align: left;
+                border-bottom: 1px solid #f0f0f0;
+                font-size: 1.1rem;
+            }
+            
+            .nav-link:hover {
+                background: #f8f9ff;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .container {
+                padding: 0 16px;
+            }
+            
+            .page-header {
+                padding: 28px 0 20px;
+            }
+            
+            .page-title h1 {
+                font-size: 1.625rem;
+            }
+            
+            .my-review-card {
+                padding: 20px;
+            }
+            
+            .review-header {
+                flex-direction: column;
+                gap: 14px;
+            }
+            
+            .rating-display {
+                align-self: flex-start;
+            }
+            
+            .rating-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
     <nav class="navbar">
-      <div class="container">
-        <a class="navbar-brand" href="/session/list">Mockerview</a>
-        <div class="navbar-nav">
-          <a class="nav-link" href="/session/list">세션 목록</a>
-          <a class="nav-link" href="/review/list">리뷰 작성</a>
-          <a class="nav-link active" href="/review/my">내 리뷰</a>
+        <div class="container">
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">MockerView</a>
+                <div class="hamburger" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link" href="/review/list">리뷰 작성</a>
+                    <a class="nav-link active" href="/review/my">내 리뷰</a>
+                </div>
+            </div>
         </div>
-      </div>
     </nav>
-
-    <div class="container">
-      <div class="page-header">
-        <h1>내가 작성한 리뷰</h1>
-        <p class="subtitle">작성한 리뷰 목록입니다</p>
-      </div>
-
-      <div
-        th:if="${reviews != null and !reviews.empty}"
-        class="my-reviews-container"
-      >
-        <div th:each="review : ${reviews}" class="my-review-card">
-          <div class="review-header">
-            <div class="header-left">
-              <h3>세션 #<span th:text="${review.sessionId}">1</span></h3>
-              <h3 class="session-title">
-                <span th:text="${review.sessionTitle}">세션 제목</span>
-              </h3>
-              <span
-                class="review-date"
-                th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}"
-                >날짜</span
-              >
+    
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>내가 작성한 리뷰</h1>
+                <p>작성한 리뷰 목록입니다</p>
             </div>
-            <div class="rating-display">
-              <span class="rating-value" th:text="${review.rating}">4.5</span>
-              <span class="rating-max">/ 5.0</span>
-            </div>
-          </div>
-
-          <div class="review-content">
-            <p th:text="${review.reviewComment}">리뷰 내용</p>
-          </div>
         </div>
-      </div>
-
-      <div th:if="${reviews == null or reviews.empty}" class="empty-state">
-        <svg
-          width="80"
-          height="80"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#667eea"
-          stroke-width="1.5"
-        >
-          <path
-            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-          ></path>
-        </svg>
-        <h3>아직 작성한 리뷰가 없습니다</h3>
-        <p>면접을 완료하고 리뷰를 작성해보세요</p>
-        <a href="/review/list" class="btn-primary">리뷰 작성하러 가기</a>
-      </div>
     </div>
-  </body>
+    
+    <div class="container">
+        <div th:if="${reviews != null and !reviews.empty}" class="my-reviews-container">
+            <div th:each="review : ${reviews}" class="my-review-card">
+                <div class="review-header">
+                    <div class="header-left">
+                        <h3>세션 #<span th:text="${review.session?.id ?: 'N/A'}">1</span></h3>
+                        <h3 class="session-title">
+                            <span th:text="${review.session?.title ?: '제목 없음'}">세션 제목</span>
+                        </h3>
+                        <span class="review-date" th:text="${#temporals.format(review.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                    </div>
+                    <div class="rating-display">
+                        <span class="rating-value" th:text="${review.rating}">4.5</span>
+                        <span class="rating-max">/ 5.0</span>
+                    </div>
+                </div>
+                
+                <div class="review-content">
+                    <p th:text="${review.reviewComment}">리뷰 내용</p>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${reviews == null or reviews.empty}" class="empty-state">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="1.5">
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            <h3>아직 작성한 리뷰가 없습니다</h3>
+            <p>면접을 완료하고 리뷰를 작성해보세요</p>
+            <a href="/review/list" class="btn-primary">리뷰 작성하러 가기</a>
+        </div>
+    </div>
+    
+    <script>
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
+        }
+    </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
+</body>
 </html>

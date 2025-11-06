@@ -27,6 +27,12 @@ public class Session {
     @Column(nullable = false)
     private String title;
 
+    @Column(length = 1000)
+    private String description;
+
+    @Column(name = "video_recording_url", length = 500)
+    private String videoRecordingUrl;
+
     @Column(name = "start_time")
     private LocalDateTime startTime;
 
@@ -58,7 +64,7 @@ public class Session {
 
     @Column(name = "media_enabled")
     @Builder.Default
-    private Short mediaEnabled = 0;
+    private Short mediaEnabled = 2;
 
     @Column(name = "agora_channel")
     private String agoraChannel;
@@ -68,6 +74,22 @@ public class Session {
 
     @Column(name = "category")
     private String category;
+
+    @Column(name = "ai_enabled")
+    @Builder.Default
+    private Boolean aiEnabled = true;
+
+    @Column(name = "ai_mode")
+    @Builder.Default
+    private String aiMode = "FULL";
+
+    @Column(name = "ai_feedback_delay_seconds")
+    @Builder.Default
+    private Integer aiFeedbackDelaySeconds = 0;
+
+    @Column(name = "allow_participants_toggle_ai")
+    @Builder.Default
+    private Boolean allowParticipantsToggleAi = false;
 
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default

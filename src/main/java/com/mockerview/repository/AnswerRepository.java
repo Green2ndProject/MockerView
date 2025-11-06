@@ -1,6 +1,8 @@
 package com.mockerview.repository;
 
 import com.mockerview.entity.Answer;
+import com.mockerview.entity.Question;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -67,4 +69,13 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
             "GROUP BY u.id, u.name " +
             "ORDER BY AVG(CAST(f.score AS double)) DESC")
     List<Object[]> findAllUserAverageScores();
+
+    @Query("SELECT a FROM Answer a WHERE a.question IN :questions")
+    List<Answer> findByQuestionIn(@Param("questions") List<Question> questions);
+    
+    @Query("SELECT a FROM Answer a WHERE a.question.session = :session AND a.user = :user ORDER BY a.createdAt ASC")
+    List<Answer> findBySessionAndAnswerer(@Param("session") com.mockerview.entity.Session session, @Param("user") com.mockerview.entity.User user);
+
+    @Query("SELECT COUNT(a) FROM Answer a WHERE a.user.id = :userId")
+    long countByUserId(@Param("userId") Long userId);
 }

@@ -1,28 +1,25 @@
 package com.mockerview.controller.api;
 
 import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.entity.*;
-import com.mockerview.repository.*;
-import com.mockerview.service.SelfInterviewService;
+import com.mockerview.entity.Answer;
+import com.mockerview.entity.Feedback;
+import com.mockerview.entity.Question;
+import com.mockerview.entity.Session;
+import com.mockerview.repository.AnswerRepository;
+import com.mockerview.repository.FeedbackRepository;
+import com.mockerview.repository.QuestionRepository;
+import com.mockerview.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,432 +35,126 @@ public class SelfInterviewApiController {
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
     private final FeedbackRepository feedbackRepository;
-    private final UserRepository userRepository;
-    private final SelfInterviewService selfInterviewService;
-    private final RestTemplate restTemplate = new RestTemplate();
-    
-    @Value("${openai.api.key}")
-    private String openaiApiKey;
-    
-    @Value("${openai.api.url}")
-    private String openaiApiUrl;
 
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> createSelfInterview(
-            @RequestBody Map<String, Object> request,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            Long userId = userDetails.getUserId();
-            String title = (String) request.get("title");
-            Integer questionCount = (Integer) request.get("questionCount");
-            String sessionType = request.getOrDefault("sessionType", "TEXT").toString();
-            String difficulty = request.getOrDefault("difficulty", "MEDIUM").toString();
-            String category = request.getOrDefault("category", "GENERAL").toString();
-            
-            User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            Session session = selfInterviewService.createSelfInterviewSession(
-                user, title, questionCount, sessionType, difficulty, category);
-            
-            response.put("success", true);
-            response.put("message", "셀프 면접이 생성되었습니다");
-            response.put("sessionId", session.getId());
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            log.error("셀프 면접 생성 실패", e);
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    @GetMapping("/{sessionId}")
-    @Transactional(readOnly = true)
+    @GetMapping(value = "/{sessionId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> getSessionData(
             @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
-        Session session = sessionRepository.findByIdWithHost(sessionId).orElse(null);
-        
-        if (session == null || session.getHost() == null) {
-            log.warn("Session not found - sessionId: {}", sessionId);
-            return ResponseEntity.notFound().build();
-        }
-        
-        if (!session.getHost().getId().equals(userDetails.getUserId())) {
-            log.warn("Unauthorized - sessionId: {}, userId: {}", 
+        try {
+            log.info("셀프면접 데이터 조회 - sessionId: {}, userId: {}", 
                     sessionId, userDetails.getUserId());
-            return ResponseEntity.notFound().build();
+            
+            Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+            
+            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(sessionId);
+            
+            Map<String, Object> sessionData = new HashMap<>();
+            sessionData.put("id", session.getId());
+            sessionData.put("title", session.getTitle());
+            sessionData.put("sessionType", session.getSessionType());
+            sessionData.put("difficulty", session.getDifficulty());
+            sessionData.put("category", session.getCategory());
+            sessionData.put("status", session.getSessionStatus().name());
+            
+            List<Map<String, Object>> questionList = questions.stream()
+                .map(q -> {
+                    Map<String, Object> qMap = new HashMap<>();
+                    qMap.put("id", q.getId());
+                    qMap.put("text", q.getText());
+                    qMap.put("orderNo", q.getOrderNo());
+                    return qMap;
+                })
+                .collect(Collectors.toList());
+            
+            sessionData.put("questions", questionList);
+            
+            log.info("✅ 셀프면접 데이터 반환 - 질문 수: {}", questionList.size());
+            
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(sessionData);
+            
+        } catch (Exception e) {
+            log.error("셀프면접 데이터 조회 실패", e);
+            return ResponseEntity.internalServerError()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("error", e.getMessage()));
         }
-
-        List<Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
-        
-        List<Map<String, Object>> questionMaps = questions.stream().map(q -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", q.getId());
-            map.put("questionText", q.getText());
-            map.put("orderNumber", q.getOrderNo());
-            return map;
-        }).collect(Collectors.toList());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("sessionId", session.getId());
-        response.put("userId", userDetails.getUserId());
-        response.put("title", session.getTitle());
-        response.put("questions", questionMaps);
-
-        log.info("Session data sent - sessionId: {}, questions: {}", sessionId, questionMaps.size());
-
-        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/transcribe")
-    public ResponseEntity<Map<String, Object>> transcribeAudio(
-            @RequestParam("audio") MultipartFile audioFile,
-            @RequestParam("questionId") Long questionId,
-            @RequestParam("sessionId") Long sessionId,
+    @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, Object>> getSelfInterviewList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "6") int size,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
         try {
-            log.info("음성 파일 수신 - 크기: {} bytes", audioFile.getSize());
-
-            String transcribedText = transcribeWithWhisper(audioFile);
-            log.info("음성 변환 완료: {}", transcribedText.substring(0, Math.min(50, transcribedText.length())));
-
-            Question question = questionRepository.findById(questionId).orElseThrow();
-            User user = userRepository.findById(userDetails.getUserId()).orElseThrow();
-
-            Answer answer = Answer.builder()
-                    .question(question)
-                    .user(user)
-                    .answerText(transcribedText)
-                    .build();
-            answer = answerRepository.save(answer);
-
-            String feedbackText = generateAIFeedback(question.getText(), transcribedText);
+            log.info("셀프면접 목록 조회 - userId: {}, page: {}", userDetails.getUserId(), page);
             
-            int score = extractScore(feedbackText);
-            String strengths = extractSection(feedbackText, "강점");
-            String improvements = extractSection(feedbackText, "개선점");
-
-            Feedback feedback = Feedback.builder()
-                    .answer(answer)
-                    .feedbackType(Feedback.FeedbackType.AI)
-                    .summary("AI 음성 분석 완료")
-                    .score(score)
-                    .strengths(strengths)
-                    .weaknesses("")
-                    .improvementSuggestions(improvements)
-                    .build();
-            feedbackRepository.save(feedback);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("answer", Map.of(
-                "id", answer.getId(), 
-                "answerText", transcribedText
-            ));
-            result.put("feedback", Map.of(
-                "score", score,
-                "strengths", strengths,
-                "improvements", improvements
-            ));
-
-            log.info("음성 답변 처리 완료 - answerId: {}", answer.getId());
-
-            return ResponseEntity.ok(result);
+            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+            Page<Session> sessionPage = sessionRepository.findSelfInterviewsByHostIdPageable(userDetails.getUserId(), pageable);
             
-        } catch (Exception e) {
-            log.error("음성 처리 실패", e);
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @PostMapping("/{sessionId}/answer")
-    public ResponseEntity<Map<String, Object>> submitAnswer(
-            @PathVariable Long sessionId,
-            @RequestBody Map<String, Object> request,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        try {
-            Long questionId = Long.valueOf(request.get("questionId").toString());
-            String answerText = request.get("answerText").toString();
-
-            log.info("Answer submitted - sessionId: {}, questionId: {}, userId: {}", 
-                    sessionId, questionId, userDetails.getUserId());
-
-            Question question = questionRepository.findById(questionId).orElseThrow();
-            User user = userRepository.findById(userDetails.getUserId()).orElseThrow();
-
-            Answer answer = Answer.builder()
-                    .question(question)
-                    .user(user)
-                    .answerText(answerText)
-                    .build();
-            answer = answerRepository.save(answer);
-
-            String feedbackText = generateAIFeedback(question.getText(), answerText);
-            
-            int score = extractScore(feedbackText);
-            String strengths = extractSection(feedbackText, "강점");
-            String improvements = extractSection(feedbackText, "개선점");
-
-            Feedback feedback = Feedback.builder()
-                    .answer(answer)
-                    .feedbackType(Feedback.FeedbackType.AI)
-                    .summary("AI 텍스트 분석 완료")
-                    .score(score)
-                    .strengths(strengths)
-                    .weaknesses("")
-                    .improvementSuggestions(improvements)
-                    .build();
-            feedbackRepository.save(feedback);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("answer", Map.of("id", answer.getId(), "answerText", answerText));
-            result.put("feedback", Map.of(
-                "score", score,
-                "strengths", strengths,
-                "improvements", improvements
-            ));
-
-            log.info("Feedback generated - score: {}", score);
-
-            return ResponseEntity.ok(result);
-            
-        } catch (Exception e) {
-            log.error("Failed to submit answer", e);
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @PostMapping("/{sessionId}/video-answer")
-    public ResponseEntity<Map<String, Object>> submitVideoAnswer(
-            @PathVariable Long sessionId,
-            @RequestParam("audio") MultipartFile videoFile,
-            @RequestParam("questionId") Long questionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
-        try {
-            log.info("비디오 답변 수신 - 크기: {} bytes", videoFile.getSize());
-
-            String transcribedText = transcribeWithWhisper(videoFile);
-            log.info("음성 변환 완료: {}", transcribedText);
-
-            Question question = questionRepository.findById(questionId).orElseThrow();
-            User user = userRepository.findById(userDetails.getUserId()).orElseThrow();
-
-            Answer answer = Answer.builder()
-                    .question(question)
-                    .user(user)
-                    .answerText(transcribedText)
-                    .build();
-            answer = answerRepository.save(answer);
-
-            String feedbackText = generateAIFeedback(question.getText(), transcribedText);
-            
-            int score = extractScore(feedbackText);
-            String strengths = extractSection(feedbackText, "강점");
-            String improvements = extractSection(feedbackText, "개선점");
-
-            Feedback feedback = Feedback.builder()
-                    .answer(answer)
-                    .feedbackType(Feedback.FeedbackType.AI)
-                    .summary("AI 비디오 분석 완료")
-                    .score(score)
-                    .strengths(strengths)
-                    .weaknesses("")
-                    .improvementSuggestions(improvements)
-                    .build();
-            feedbackRepository.save(feedback);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("transcription", transcribedText);
-            result.put("answer", Map.of("id", answer.getId(), "answerText", transcribedText));
-            result.put("feedback", Map.of(
-                "score", score,
-                "strengths", strengths,
-                "improvements", improvements
-            ));
-
-            log.info("비디오 답변 처리 완료 - answerId: {}", answer.getId());
-            return ResponseEntity.ok(result);
-            
-        } catch (Exception e) {
-            log.error("비디오 답변 처리 실패", e);
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "비디오 처리 실패: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
-        }
-    }
-
-    private String transcribeWithWhisper(MultipartFile videoFile) {
-        File tempVideoFile = null;
-        File audioFile = null;
-        
-        try {
-            tempVideoFile = File.createTempFile("video_", ".webm");
-            videoFile.transferTo(tempVideoFile);
-            
-            long fileSizeInMB = tempVideoFile.length() / (1024 * 1024);
-            log.info("원본 비디오 크기: {}MB", fileSizeInMB);
-            
-            audioFile = convertToCompressedAudio(tempVideoFile);
-            
-            long audioSizeInMB = audioFile.length() / (1024 * 1024);
-            log.info("압축된 오디오 크기: {}MB", audioSizeInMB);
-            
-            if (audioSizeInMB > 24) {
-                log.error("압축 후에도 파일이 너무 큽니다: {}MB", audioSizeInMB);
-                return "음성 파일이 너무 커서 인식할 수 없습니다. 답변을 짧게 해주세요.";
-            }
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-            headers.setBearerAuth(openaiApiKey.replace("Bearer ", ""));
-
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            body.add("file", new FileSystemResource(audioFile));
-            body.add("model", "whisper-1");
-            body.add("language", "ko");
-
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                "https://api.openai.com/v1/audio/transcriptions",
-                requestEntity,
-                Map.class
-            );
-
-            String transcription = (String) response.getBody().get("text");
-            
-            if (transcription == null || transcription.trim().isEmpty()) {
-                return "음성을 인식하지 못했습니다. 더 크게 말씀해주세요.";
-            }
-            
-            return transcription;
-            
-        } catch (Exception e) {
-            log.error("Whisper API 호출 실패", e);
-            return "음성 인식에 실패했습니다: " + e.getMessage();
-        } finally {
-            if (audioFile != null && audioFile.exists()) {
-                audioFile.delete();
-            }
-            if (tempVideoFile != null && tempVideoFile.exists()) {
-                tempVideoFile.delete();
-            }
-        }
-    }
-
-    private File convertToCompressedAudio(File videoFile) throws Exception {
-        File audioFile = File.createTempFile("audio_compressed_", ".mp3");
-        
-        ProcessBuilder pb = new ProcessBuilder(
-            "ffmpeg",
-            "-i", videoFile.getAbsolutePath(),
-            "-vn",
-            "-ar", "16000",
-            "-ac", "1",
-            "-b:a", "24k",
-            "-f", "mp3",
-            "-y",
-            audioFile.getAbsolutePath()
-        );
-        
-        pb.redirectErrorStream(true);
-        Process process = pb.start();
-        
-        StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-                log.debug("FFmpeg: {}", line);
-            }
-        }
-        
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            log.error("FFmpeg 실패 출력:\n{}", output.toString());
-            throw new RuntimeException("FFmpeg 변환 실패: exit code " + exitCode);
-        }
-        
-        if (!audioFile.exists() || audioFile.length() == 0) {
-            throw new RuntimeException("오디오 파일 생성 실패");
-        }
-        
-        return audioFile;
-    }
-
-    private String generateAIFeedback(String questionText, String answerText) {
-        try {
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "gpt-4o-mini");
-            requestBody.put("messages", List.of(
-                Map.of("role", "system", "content", "당신은 면접 평가 전문가입니다. 답변을 평가하고 피드백을 제공하세요."),
-                Map.of("role", "user", "content", String.format("질문: %s\n\n답변: %s\n\n위 답변을 평가하고 다음 형식으로 피드백을 제공해주세요:\n점수: (0-100)\n강점: (구체적인 강점)\n개선점: (구체적인 개선점)", questionText, answerText))
-            ));
-            requestBody.put("max_tokens", 500);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + openaiApiKey);
-            headers.set("Content-Type", "application/json");
-
-            HttpEntity<Map<String, Object>> entity = 
-                new HttpEntity<>(requestBody, headers);
-
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                openaiApiUrl, entity, Map.class);
-
-            Map<String, Object> responseBody = response.getBody();
-            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            
-            return (String) message.get("content");
-        } catch (Exception e) {
-            log.error("AI feedback generation failed", e);
-            return "점수: 75\n강점: 질문에 대한 답변을 제공했습니다.\n개선점: 더 구체적인 예시와 함께 답변하면 좋습니다.";
-        }
-    }
-
-    private int extractScore(String feedback) {
-        try {
-            if (feedback.contains("점수:")) {
-                String scorePart = feedback.substring(feedback.indexOf("점수:") + 3).trim();
-                String scoreStr = scorePart.split("[^0-9]")[0];
-                return Integer.parseInt(scoreStr);
-            }
-        } catch (Exception e) {
-            log.warn("Failed to extract score", e);
-        }
-        return 75;
-    }
-
-    private String extractSection(String feedback, String section) {
-        try {
-            if (feedback.contains(section + ":")) {
-                String[] parts = feedback.split(section + ":");
-                if (parts.length > 1) {
-                    String content = parts[1].trim();
-                    int nextSection = content.indexOf("\n\n");
-                    if (nextSection > 0) {
-                        content = content.substring(0, nextSection);
+            List<Map<String, Object>> sessionList = sessionPage.getContent().stream()
+                .map(session -> {
+                    Map<String, Object> sessionMap = new HashMap<>();
+                    sessionMap.put("id", session.getId());
+                    sessionMap.put("title", session.getTitle());
+                    sessionMap.put("sessionType", session.getSessionType());
+                    sessionMap.put("createdAt", session.getCreatedAt());
+                    
+                    List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(session.getId());
+                    sessionMap.put("questionCount", questions.size());
+                    
+                    if (!questions.isEmpty()) {
+                        List<Answer> allAnswers = questions.stream()
+                            .flatMap(q -> answerRepository.findByQuestionIdOrderByCreatedAtAsc(q.getId()).stream())
+                            .toList();
+                        
+                        if (!allAnswers.isEmpty()) {
+                            List<Feedback> aiFeedbacks = feedbackRepository.findByAnswerInAndFeedbackType(
+                                allAnswers, Feedback.FeedbackType.AI);
+                            
+                            if (!aiFeedbacks.isEmpty()) {
+                                double avgScore = aiFeedbacks.stream()
+                                    .filter(f -> f.getScore() != null)
+                                    .mapToInt(Feedback::getScore)
+                                    .average()
+                                    .orElse(0.0);
+                                sessionMap.put("avgScore", avgScore);
+                            } else {
+                                sessionMap.put("avgScore", null);
+                            }
+                        } else {
+                            sessionMap.put("avgScore", null);
+                        }
+                    } else {
+                        sessionMap.put("avgScore", null);
                     }
-                    return content.trim();
-                }
-            }
+                    
+                    return sessionMap;
+                })
+                .collect(Collectors.toList());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", sessionList);
+            response.put("totalElements", sessionPage.getTotalElements());
+            response.put("totalPages", sessionPage.getTotalPages());
+            response.put("currentPage", page);
+            response.put("size", size);
+            
+            log.info("✅ 셀프면접 목록 반환 - 세션 수: {}", sessionList.size());
+            
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(response);
+            
         } catch (Exception e) {
-            log.warn("Failed to extract section: " + section, e);
+            log.error("셀프면접 목록 조회 실패", e);
+            return ResponseEntity.internalServerError()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("error", e.getMessage()));
         }
-        return "분석 중...";
     }
 }

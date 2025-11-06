@@ -87,7 +87,43 @@ class MockerViewWebSocket {
       this.handleControlMessage(JSON.parse(message.body));
     });
     
+    this.stompClient.subscribe(`/topic/session/${this.sessionId}`, (message) => {
+      const data = JSON.parse(message.body);
+      console.log('📡 세션 메시지 수신:', data);
+      
+      if (data.type === 'AI_TOGGLE' || data.type === 'AI_MODE_CHANGE') {
+        this.handleAIMessage(data);
+      }
+    });
+    
     console.log('✅ 모든 토픽 구독 완료');
+  }
+
+  handleAIMessage(data) {
+    console.log('🤖 AI 메시지 처리:', data);
+    
+    if (typeof handleAIToggleMessage === 'function') {
+      handleAIToggleMessage(data);
+    } else {
+      if (data.type === 'AI_TOGGLE') {
+        const toggle = document.getElementById('aiToggle');
+        const badge = document.getElementById('aiStatusText');
+        
+        if (toggle) toggle.checked = data.enabled;
+        if (badge) {
+          badge.style.background = data.enabled ? '#10b981' : '#6b7280';
+          badge.textContent = data.enabled ? '🤖 AI 활성' : '🤖 AI 비활성';
+        }
+        
+        this.showNotification(data.message);
+      } else if (data.type === 'AI_MODE_CHANGE') {
+        const modeSelect = document.getElementById('aiModeSelect');
+        if (modeSelect) {
+          modeSelect.value = data.mode;
+        }
+        this.showNotification(data.message);
+      }
+    }
   }
 
   joinSession() {

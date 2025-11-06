@@ -2,103 +2,397 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로그인 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+        }
+        
+        .top-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            z-index: 100;
+        }
+        
+        .top-logo a {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        body {
+            padding-top: 70px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo a {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .login-header h1 {
+            font-size: 1.625rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .login-header p {
+            font-size: 0.9375rem;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 0.9375rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+        
+        .btn-submit:hover {
+            background: #5568d3;
+        }
+        
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 28px 0;
+            gap: 12px;
+        }
+        
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+        
+        .divider-text {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        .oauth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn-oauth {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #1a1a1a;
+        }
+        
+        .btn-oauth:hover {
+            border-color: #667eea;
+            background: #fafbfc;
+        }
+        
+        .oauth-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .footer-links {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        @media (max-width: 480px) {
+            .top-logo {
+                padding: 14px 16px;
+            }
+            
+            .top-logo a {
+                font-size: 1.25rem;
+            }
+            
+            body {
+                padding: 16px;
+                padding-top: 60px;
+            }
+            
+            .login-card {
+                padding: 32px 24px;
+            }
+            
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .logo a {
+                font-size: 1.625rem;
+            }
+            
+            .form-input,
+            .btn-submit,
+            .btn-oauth {
+                padding: 11px 12px;
+                font-size: 0.875rem;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-logo">
-                <h1>Mockerview</h1>
-                <p>AI 모의면접 코치 플랫폼</p>
+    <div class="top-logo">
+        <a href="/">MockerView</a>
+    </div>
+    
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>로그인</h1>
+                <p>MockerView에 오신 것을 환영합니다</p>
             </div>
             
-            <div id="loginForm">
-                <div th:if="${error}" class="alert alert-error">
-                    <span th:text="${error}"></span>
-                </div>
-                
-                <div th:if="${success}" class="alert alert-success">
-                    <span th:text="${success}"></span>
+            <div th:if="${error}" class="alert alert-error">
+                <span th:text="${error}">로그인 실패</span>
+            </div>
+            
+            <div th:if="${success}" class="alert alert-success">
+                <span th:text="${success}">성공</span>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">아이디</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input"
+                        placeholder="아이디를 입력하세요"
+                        autocomplete="username"
+                        required
+                    >
                 </div>
                 
                 <div class="form-group">
-                    <input type="text" class="form-control" id="username" placeholder="아이디를 입력하세요" required>
+                    <label class="form-label" for="password">비밀번호</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input"
+                        placeholder="비밀번호를 입력하세요"
+                        autocomplete="current-password"
+                        required
+                    >
                 </div>
                 
-                <div class="form-group">
-                    <input type="password" class="form-control" id="password" placeholder="비밀번호를 입력하세요" required>
-                </div>
+                <button type="submit" class="btn-submit">로그인</button>
+            </form>
+            
+            <div class="divider">
+                <div class="divider-line"></div>
+                <span class="divider-text">또는</span>
+                <div class="divider-line"></div>
+            </div>
+            
+            <div class="oauth-buttons">
+                <a href="/oauth2/authorization/google" class="btn-oauth">
+                    <svg class="oauth-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google로 계속하기
+                </a>
                 
-                <button type="button" class="btn btn-primary btn-full" id="loginButton">로그인</button>
+                <a href="/oauth2/authorization/kakao" class="btn-oauth">
+                    <svg class="oauth-icon" viewBox="0 0 24 24">
+                        <path fill="#FEE500" d="M12 3C6.48 3 2 6.58 2 11c0 2.78 1.83 5.23 4.58 6.68-.2.73-.66 2.45-.75 2.83-.12.5.18.49.38.36.15-.1 2.31-1.58 3.19-2.18.53.07 1.07.11 1.6.11 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
+                    </svg>
+                    카카오로 계속하기
+                </a>
             </div>
             
-            <div class="auth-divider">
-                <span>또는</span>
-            </div>
-            
-            <div class="auth-link">
-                <p>계정이 없으신가요? <a th:href="@{/auth/register}">회원가입</a></p>
+            <div class="footer-links">
+                <a href="/auth/register">회원가입</a>
+                <a href="/auth/find-username">아이디 찾기</a>
+                <a href="/auth/reset-password">비밀번호 찾기</a>
             </div>
         </div>
     </div>
-
+    
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const loginButton = document.getElementById('loginButton');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        
-        loginButton.addEventListener('click', async function() {
-            const username = usernameInput.value;
-            const password = passwordInput.value;
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('✅ 폼 제출 이벤트 발생!');
             
-            if (!username.trim() || !password.trim()) {
-                alert('아이디와 비밀번호를 모두 입력해주세요.');
-                return;
-            }
-
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            console.log('📝 입력값:', username, password);
+            
             try {
                 const response = await fetch('/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password
-                    })
+                    body: JSON.stringify({ username, password })
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                    } else {
-                        alert("로그인 실패: 서버 응답 형식 오류");
-                    }
+                
+                const data = await response.json();
+                console.log('📬 응답:', data);
+                
+                if (data.success && data.redirect) {
+                    console.log('🚀 리다이렉트:', data.redirect);
+                    window.location.href = data.redirect;
                 } else {
-                    alert('로그인 실패: 아이디 또는 비밀번호를 확인하세요.');
+                    alert('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
                 }
             } catch (error) {
-                console.error('Fetch error:', error);
+                console.error('❌ Login error:', error);
                 alert('로그인 중 오류가 발생했습니다.');
             }
         });
-        
-        usernameInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loginButton.click();
-            }
-        });
-        
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loginButton.click();
-            }
-        });
-    });
     </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
 </body>
 </html>

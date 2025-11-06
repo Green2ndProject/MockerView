@@ -1,0 +1,85 @@
+{
+  "name": "MockerView - 실시간 협업 AI 모의면접",
+  "short_name": "MockerView",
+  "description": "실시간 협업 AI 모의면접 플랫폼. WebRTC 화상면접과 AI 피드백으로 완벽한 면접 준비",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "categories": ["education", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/images/android-launchericon-72-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/android-launchericon-96-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/android-launchericon-144-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/android-launchericon-192-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/android-launchericon-512-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "새 세션 생성",
+      "short_name": "새 세션",
+      "description": "새로운 면접 세션 시작",
+      "url": "/session/list",
+      "icons": [
+        {
+          "src": "/images/android-launchericon-96-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "셀프 면접",
+      "short_name": "셀프",
+      "description": "AI 셀프 면접 시작",
+      "url": "/selfinterview/create",
+      "icons": [
+        {
+          "src": "/images/android-launchericon-96-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "마이페이지",
+      "short_name": "마이페이지",
+      "description": "내 정보 및 통계",
+      "url": "/auth/mypage",
+      "icons": [
+        {
+          "src": "/images/android-launchericon-96-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}

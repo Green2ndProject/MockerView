@@ -2,55 +2,371 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>리뷰 작성 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/review.css">
-    <link rel="stylesheet" href="/css/pagination.css" />
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+        
+        .navbar {
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #667eea;
+            transition: all 0.3s;
+            border-radius: 3px;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        .page-header {
+            margin-top: 64px;
+            padding: 3rem 0 2rem;
+            background: #667eea;
+            color: white;
+        }
+        
+        .page-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-title p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .session-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .review-session-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .review-session-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+            border-color: #667eea;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+        
+        .card-header h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            flex: 1;
+        }
+        
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-ended {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        
         .badge-self {
             background: #e0f2fe;
             color: #0369a1;
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
+            margin-left: 6px;
         }
-
+        
+        .card-body {
+            margin-bottom: 1rem;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .value {
+            color: #212529;
+            font-weight: 600;
+        }
+        
+        .questions-preview {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+        }
+        
+        .count {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .card-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin: 2rem 0;
+        }
+        
+        .empty-state h3 {
+            color: #6c757d;
+            margin: 1rem 0;
+        }
+        
+        .empty-state p {
+            color: #adb5bd;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 3rem 0;
+        }
+        
+        .pagination button {
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .page-numbers {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
         @media (max-width: 768px) {
-            .session-grid { 
-                grid-template-columns: 1fr; 
-                gap: 12px; 
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                gap: 0;
+                padding: 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                transform: translateX(-100%);
+                opacity: 0;
+                transition: all 0.3s ease;
+                pointer-events: none;
+                height: calc(100vh - 64px);
+                overflow-y: auto;
             }
-            .review-session-card { margin-bottom: 12px; }
-            .card-header h3 { font-size: 16px; }
-            .info-row { 
-                flex-direction: column; 
-                align-items: flex-start;
-                gap: 4px;
+            
+            .navbar-nav.active {
+                transform: translateX(0);
+                opacity: 1;
+                pointer-events: all;
             }
-            .badge-self { margin-left: 0; margin-top: 8px; }
+            
+            .nav-link {
+                padding: 1.2rem 1.5rem;
+                width: 100%;
+                text-align: left;
+                border-bottom: 1px solid #f0f0f0;
+                font-size: 1.1rem;
+            }
+            
+            .nav-link:hover {
+                background: #f8f9ff;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .page-header {
+                padding: 2rem 0 1.5rem;
+            }
+            
+            .page-title h1 {
+                font-size: 1.5rem;
+            }
+            
+            .page-title p {
+                font-size: 0.95rem;
+            }
+            
+            .session-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
-<body>
+<body>    
     <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="/session/list">Mockerview</a>
-            <div class="navbar-nav">
-                <a class="nav-link" href="/session/list">세션 목록</a>
-                <a class="nav-link active" href="/review/list">리뷰 작성</a>
-                <a class="nav-link" href="/review/my">내 리뷰</a>
+            <div class="navbar-content">
+                <a class="navbar-brand" href="/session/list">MockerView</a>
+                <div class="hamburger" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/session/list">세션 목록</a>
+                    <a class="nav-link active" href="/review/list">리뷰 작성</a>
+                    <a class="nav-link" href="/review/my">내 리뷰</a>
+                </div>
             </div>
         </div>
     </nav>
     
-    <div class="container">
-        <div class="page-header">
-            <h1>리뷰 작성 가능한 세션</h1>
-            <p class="subtitle">완료된 면접에 대한 피드백을 작성해주세요</p>
+    <div class="page-header">
+        <div class="container">
+            <div class="page-title">
+                <h1>리뷰 작성 가능한 세션</h1>
+                <p>완료된 면접에 대한 피드백을 작성해주세요</p>
+            </div>
         </div>
-        
+    </div>
+    
+    <div class="container">
         <div th:if="${sessions != null and !sessions.empty}" class="session-grid">
             <div th:each="reviewSession : ${sessions}" class="review-session-card">
                 <div class="card-header">
@@ -91,52 +407,32 @@
             <h3>리뷰 작성 가능한 세션이 없습니다</h3>
             <p>완료된 면접 세션이 있으면 여기에 표시됩니다</p>
         </div>
+        
+        <div class="pagination" th:if="${totalPages > 1}">
+            <button th:disabled="${currentPage == 1}" th:onclick="'window.location.href=\'/review/list?page=1\''">처음</button>
+            <button th:disabled="${currentPage == 1}" th:onclick="'window.location.href=\'/review/list?page=' + ${currentPage - 1} + '\''">이전</button>
+            
+            <div class="page-numbers">
+                <button th:each="i : ${#numbers.sequence(startPage, endPage)}" 
+                        th:classappend="${i == currentPage ? 'active' : ''}"
+                        th:onclick="'window.location.href=\'/review/list?page=' + ${i} + '\''"
+                        th:text="${i}">1</button>
+            </div>
+            
+            <button th:disabled="${currentPage == totalPages}" th:onclick="'window.location.href=\'/review/list?page=' + ${currentPage + 1} + '\''">다음</button>
+            <button th:disabled="${currentPage == totalPages}" th:onclick="'window.location.href=\'/review/list?page=' + ${totalPages} + '\''">마지막</button>
+        </div>
     </div>
-    <div class="pagination hidden" id="pagination">
-        <button class="btn btn-outline btn-sm" id="prev-btn" disabled>이전</button>
-        <div class="page-numbers" id="page-numbers"></div>
-        <button class="btn btn-outline btn-sm" id="next-btn">다음</button>
-    </div>
-
-    <script th:src="@{/js/pagination.js}"></script>
-    <script th:inline="javascript">
-        const serverCurrentPage = /*[[${serverCurrentPage}]]*/ 1;
-        const serverTotalPages = /*[[${totalPages}]]*/ 1;
-
-        console.log("Total Pages from Server: " + serverTotalPages);
-        console.log("Current Page from Server: " + serverCurrentPage);
-
-
-        const itemsPerPage = 6;
-
-        function hideElement(element) {
-            if (element) element.classList.add("hidden");
+    
+    <script>
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
         }
-        function showElement(element) {
-            if (element) element.classList.remove("hidden");
-        }
-
-        function onPageChange(page) {
-            const url = new URL(window.location.href);
-            url.searchParams.set("page", page);
-            url.searchParams.set("size", itemsPerPage);
-            window.location.href = url.toString();
-        }
-
-        window.addEventListener("load", () => {
-            const paginationContainer = document.getElementById("pagination");
-            if (serverTotalPages > 1) {
-                showElement(paginationContainer);
-            } else {
-                hideElement(paginationContainer);
-            }
-            createPagination(
-                serverCurrentPage || 1,
-                serverTotalPages || 1,
-                onPageChange,
-                "#pagination"
-            );
-        });
     </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
 </body>
 </html>

@@ -15,25 +15,31 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f8f9fa;
             color: #212529;
+            line-height: 1.6;
         }
         
         .navbar {
-            background: #ffffff;
-            border-bottom: 2px solid #e9ecef;
-            padding: 16px 0;
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
         .navbar-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 64px;
         }
         
         .navbar-brand {
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: 700;
             color: #667eea;
             text-decoration: none;
@@ -41,59 +47,93 @@
         
         .navbar-nav {
             display: flex;
-            gap: 32px;
+            gap: 2rem;
         }
         
         .nav-link {
             color: #495057;
             text-decoration: none;
             font-weight: 500;
-            font-size: 15px;
+            transition: color 0.2s;
         }
         
         .nav-link:hover {
             color: #667eea;
         }
         
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: #667eea;
+            transition: all 0.3s;
+            border-radius: 2px;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 32px 24px;
+            padding: 0 1.5rem;
         }
         
         .page-header {
+            margin-top: 64px;
             background: #667eea;
             color: white;
-            padding: 40px 32px;
-            border-radius: 12px;
-            margin-bottom: 32px;
+            padding: 3rem 0;
+            border-radius: 0 0 24px 24px;
         }
         
         .page-header h1 {
-            font-size: 32px;
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
         }
         
         .session-meta {
-            font-size: 16px;
+            font-size: 1rem;
             opacity: 0.9;
         }
         
         .scoreboard {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             overflow: hidden;
+            margin: 2rem 0;
         }
         
         .score-row {
             display: grid;
             grid-template-columns: 80px 1fr 110px 110px 110px 120px;
             align-items: center;
-            padding: 24px 28px;
-            gap: 20px;
-            border-bottom: 1px solid #f1f3f5;
+            padding: 1.5rem 2rem;
+            gap: 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+        }
+        
+        .score-row.self-interview {
+            grid-template-columns: 80px 1fr 110px 110px 120px;
         }
         
         .score-row:last-child {
@@ -101,24 +141,33 @@
         }
         
         .score-row:hover {
-            background: #f8f9fa;
+            background: #f8f9ff;
         }
         
         .rank-badge {
-            font-size: 36px;
+            font-size: 2.5rem;
             font-weight: 800;
             text-align: center;
             color: #667eea;
         }
         
-        .rank-badge.first { color: #ffd700; }
-        .rank-badge.second { color: #c0c0c0; }
-        .rank-badge.third { color: #cd7f32; }
+        .rank-badge.first { 
+            color: #ffd700;
+            text-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+        }
+        .rank-badge.second { 
+            color: #c0c0c0;
+            text-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
+        }
+        .rank-badge.third { 
+            color: #cd7f32;
+            text-shadow: 0 2px 4px rgba(205, 127, 50, 0.3);
+        }
         
         .user-section {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 1rem;
         }
         
         .user-icon {
@@ -130,7 +179,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 1.5rem;
             font-weight: 700;
             flex-shrink: 0;
         }
@@ -140,14 +189,14 @@
         }
         
         .user-name {
-            font-size: 18px;
+            font-size: 1.125rem;
             font-weight: 600;
             color: #212529;
-            margin-bottom: 4px;
+            margin-bottom: 0.25rem;
         }
         
         .answer-count {
-            font-size: 14px;
+            font-size: 0.875rem;
             color: #6c757d;
         }
         
@@ -156,60 +205,61 @@
         }
         
         .score-title {
-            font-size: 11px;
-            color: #868e96;
+            font-size: 0.7rem;
+            color: #6c757d;
             text-transform: uppercase;
             font-weight: 600;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 0.5rem;
         }
         
         .score-number {
-            font-size: 26px;
+            font-size: 1.75rem;
             font-weight: 700;
             color: #212529;
         }
         
-        .score-ai { color: #3b82f6; }
-        .score-interviewer { color: #8b5cf6; }
-        .score-total { color: #10b981; font-size: 30px; }
+        .score-ai { color: #667eea; }
+        .score-interviewer { color: #f59e0b; }
+        .score-total { color: #10b981; font-size: 2rem; }
         
         .view-btn {
             background: #667eea;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 0.75rem 1.25rem;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
         }
         
         .view-btn:hover {
             background: #5568d3;
+            transform: translateY(-1px);
         }
         
         .empty-box {
             text-align: center;
-            padding: 100px 20px;
+            padding: 6rem 2rem;
         }
         
         .empty-icon {
-            font-size: 72px;
-            margin-bottom: 20px;
+            font-size: 4rem;
+            margin-bottom: 1rem;
         }
         
         .empty-title {
-            font-size: 22px;
+            font-size: 1.5rem;
             font-weight: 600;
             color: #495057;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
         }
         
         .empty-text {
-            font-size: 16px;
-            color: #868e96;
+            font-size: 1rem;
+            color: #6c757d;
         }
         
         .overlay {
@@ -250,26 +300,27 @@
         .popup-header {
             background: #667eea;
             color: white;
-            padding: 28px 32px;
+            padding: 2rem;
             position: sticky;
             top: 0;
             z-index: 10;
+            border-radius: 12px 12px 0 0;
         }
         
         .popup-title {
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
         }
         
         .close-btn {
             position: absolute;
-            top: 24px;
-            right: 28px;
+            top: 1.5rem;
+            right: 2rem;
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            font-size: 28px;
+            font-size: 2rem;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -277,6 +328,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
         }
         
         .close-btn:hover {
@@ -284,30 +336,30 @@
         }
         
         .popup-body {
-            padding: 32px;
+            padding: 2rem;
         }
         
         .answer-block {
             background: #f8f9fa;
             border-left: 4px solid #667eea;
             border-radius: 8px;
-            padding: 24px;
-            margin-bottom: 24px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         
         .question-label {
-            font-size: 17px;
+            font-size: 1.1rem;
             font-weight: 600;
             color: #212529;
-            margin-bottom: 12px;
+            margin-bottom: 0.75rem;
         }
         
         .answer-content {
             background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 16px;
-            margin-bottom: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
             color: #495057;
             line-height: 1.6;
         }
@@ -315,92 +367,135 @@
         .feedback-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            gap: 1rem;
         }
         
         .feedback-box {
             background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
         }
         
         .feedback-header {
-            font-size: 14px;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #667eea;
-            margin-bottom: 10px;
+            margin-bottom: 0.75rem;
         }
         
         .feedback-score-display {
-            font-size: 20px;
+            font-size: 1.25rem;
             font-weight: 700;
             color: #10b981;
-            margin-bottom: 10px;
+            margin-bottom: 0.75rem;
         }
         
         .feedback-content {
-            font-size: 14px;
+            font-size: 0.9rem;
             color: #495057;
             line-height: 1.5;
         }
         
         @media (max-width: 768px) {
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s;
+                pointer-events: none;
+            }
+            
+            .navbar-nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
+            }
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .page-header {
+                padding: 2rem 0;
+            }
+            
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .session-meta {
+                font-size: 0.9rem;
+            }
+            
             .score-row {
-                grid-template-columns: 60px 1fr 90px 110px;
-                padding: 20px;
-                gap: 12px;
+                grid-template-columns: 60px 1fr 90px;
+                padding: 1.25rem 1rem;
+                gap: 1rem;
+            }
+            
+            .rank-badge {
+                font-size: 2rem;
             }
             
             .score-item:nth-child(3),
-            .score-item:nth-child(4) {
+            .score-item:nth-child(4),
+            .score-item:nth-child(5) {
                 display: none;
+            }
+            
+            .user-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.25rem;
+            }
+            
+            .user-name {
+                font-size: 1rem;
+            }
+            
+            .score-number {
+                font-size: 1.5rem;
+            }
+            
+            .view-btn {
+                padding: 0.625rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .popup {
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            .popup-header {
+                padding: 1.5rem;
+            }
+            
+            .popup-title {
+                font-size: 1.25rem;
+            }
+            
+            .popup-body {
+                padding: 1.5rem;
             }
             
             .feedback-grid {
                 grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .navbar-content { flex-direction: column; gap: 12px; }
-            .navbar-nav { gap: 12px; }
-            .page-header { padding: 24px 16px; }
-            .page-header h1 { font-size: 24px; }
-            .session-meta { font-size: 14px; }
-            .stats-grid { 
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 12px; 
-            }
-            .score-row { 
-                grid-template-columns: 50px 1fr 80px; 
-                padding: 16px; 
-                gap: 12px; 
-            }
-            .rank-badge { font-size: 28px; }
-            .user-icon { 
-                width: 40px; 
-                height: 40px; 
-                font-size: 18px; 
-            }
-            .user-name { font-size: 16px; }
-            .score-item:nth-child(3),
-            .score-item:nth-child(4),
-            .score-item:nth-child(5) { display: none; }
-            .score-number { font-size: 20px; }
-            .view-btn { 
-                padding: 8px 16px; 
-                font-size: 13px; 
-            }
-            .modal-content { 
-                width: 95%; 
-                margin: 10% auto; 
-                padding: 20px; 
-            }
-            .popup-header { padding: 20px; }
-            .popup-title { font-size: 18px; }
-            .feedback-grid { 
-                grid-template-columns: 1fr; 
             }
         }
     </style>
@@ -409,6 +504,11 @@
     <nav class="navbar">
         <div class="navbar-content">
             <a class="navbar-brand" href="/session/list">Mockerview</a>
+            <div class="hamburger" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
             <div class="navbar-nav">
                 <a class="nav-link" href="/session/list">세션 목록</a>
                 <a class="nav-link" href="/auth/mypage">마이페이지</a>
@@ -416,17 +516,21 @@
         </div>
     </nav>
     
-    <div class="container">
-        <div class="page-header">
+    <div class="page-header">
+        <div class="container">
             <h1>🏆 면접 점수판</h1>
             <div class="session-meta">
                 <strong th:text="${interviewSession.title}">세션명</strong> • 
                 질문 <span th:text="${totalQuestions}">0</span>개
             </div>
         </div>
-        
+    </div>
+    
+    <div class="container">
         <div class="scoreboard" th:if="${userScores != null and !userScores.isEmpty()}">
-            <div class="score-row" th:each="item, iter : ${userScores}">
+            <div class="score-row" 
+                 th:classappend="${interviewSession.isSelfInterview == 'Y'} ? 'self-interview' : ''"
+                 th:each="item, iter : ${userScores}">
                 <div class="rank-badge" 
                         th:classappend="${iter.index == 0} ? 'first' : (${iter.index == 1} ? 'second' : (${iter.index == 2} ? 'third' : ''))">
                     <span th:text="${iter.index + 1}">1</span>
@@ -445,7 +549,7 @@
                     <div class="score-number score-ai" th:text="${item.avgAiScore}">0</div>
                 </div>
                 
-                <div class="score-item">
+                <div class="score-item" th:if="${interviewSession.isSelfInterview != 'Y'}">
                     <div class="score-title">면접관</div>
                     <div class="score-number score-interviewer" th:text="${item.avgInterviewerScore}">0</div>
                 </div>
@@ -497,6 +601,13 @@
     </div>
     
     <script>
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
+        }
+
         function showPopup(index) {
             document.getElementById('popup-' + index).classList.add('active');
             document.getElementById('overlay').classList.add('active');
@@ -515,5 +626,7 @@
             document.body.style.overflow = 'auto';
         }
     </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
 </body>
 </html>

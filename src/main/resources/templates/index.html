@@ -1,323 +1,982 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mockerview - AI 모의면접 플랫폼</title>
-    <link rel="stylesheet" th:href="@{/css/index.css}">
-    <link rel="icon" href="/favicon.ico" />
-</head>
-<style>
-    .btn-out {
-        display: inline-block;
-        padding: 12px 24px;
-        background: #667eea;
-        color: white;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: background 0.3s;
-    }
+    <title>MockerView - 실시간 협업 AI 모의면접</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MockerView">
+    <link rel="apple-touch-icon" href="/images/180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/images/167.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/android-launchericon-192-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/android-launchericon-512-512.png">
     
-    .btn-out:hover {
-        background: #5568d3;
-    }
-    
-    .btn-pri {
-        display: inline-block;
-        padding: 12px 24px;
-        border: 2px solid #667eea;
-        color: #667eea;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    
-    .btn-pri:hover {
-        background: #667eea;
-        color: white;
-    }
-
-    .session-explain {
-        padding: 80px 0;
-        background: #f8f9fa;
-    }
-
-    .session-explain h2 {
-        text-align: center;
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        color: #333;
-    }
-
-    .session-explain .subtitle {
-        text-align: center;
-        font-size: 1.2rem;
-        color: #666;
-        margin-bottom: 3rem;
-    }
-
-    .session-types {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2rem;
-        margin-top: 3rem;
-    }
-
-    .session-type-card {
-        background: white;
-        border: 2px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 2rem;
-        transition: all 0.3s;
-        text-align: center;
-    }
-
-    .session-type-card:hover {
-        transform: translateY(-8px);
-        border-color: #667eea;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
-    }
-
-    .session-type-icon {
-        font-size: 3.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .session-type-card h3 {
-        font-size: 1.5rem;
-        margin-bottom: 0.75rem;
-        color: #333;
-    }
-
-    .session-type-card p {
-        font-size: 1rem;
-        line-height: 1.6;
-        color: #666;
-    }
-
-    .session-flow {
-        margin-top: 4rem;
-        text-align: center;
-        background: white;
-        padding: 3rem;
-        border-radius: 16px;
-        border: 2px solid #e5e7eb;
-    }
-
-    .session-flow h3 {
-        font-size: 1.8rem;
-        margin-bottom: 2rem;
-        color: #333;
-    }
-
-    .flow-steps {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .flow-step {
-        background: #667eea;
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 12px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-    .flow-step:hover {
-        transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .flow-arrow {
-        font-size: 1.5rem;
-        color: #667eea;
-    }
-
-    @media (max-width: 768px) {
-        .session-types {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
-        .session-explain h2 {
-            font-size: 2rem;
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #1a1a1a;
+            line-height: 1.7;
+            overflow-x: hidden;
+            background: #ffffff;
+            font-size: 16px;
         }
-
-        .session-explain .subtitle {
+        
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+            padding: 1rem 0;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .navbar.scrolled {
+            box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: #667eea;
+            letter-spacing: -0.3px;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9375rem;
+            transition: color 0.2s;
+            letter-spacing: -0.2px;
+        }
+        
+        .nav-links a:hover {
+            color: #667eea;
+        }
+        
+        .hero {
+            padding: 140px 2rem 100px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+        
+        .hero-content {
+            max-width: 560px;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #f0f4ff;
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 28px;
+            letter-spacing: -0.2px;
+        }
+        
+        .hero h1 {
+            font-size: 3.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -1.5px;
+            margin-bottom: 24px;
+            color: #0a0a0a;
+        }
+        
+        .hero h1 .highlight {
+            color: #667eea;
+        }
+        
+        .hero-description {
+            font-size: 1.0625rem;
+            color: #6b7280;
+            margin-bottom: 36px;
+            line-height: 1.75;
+            font-weight: 400;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 48px;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9375rem;
+            text-decoration: none;
+            transition: all 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.2px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102,126,234,0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 1.5px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f9fafb;
+        }
+        
+        .hero-features {
+            display: flex;
+            gap: 32px;
+            padding-top: 32px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .hero-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .hero-feature-icon {
+            width: 40px;
+            height: 40px;
+            background: #f0f4ff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        .hero-feature-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .hero-feature-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        
+        .hero-feature-value {
+            font-size: 0.9375rem;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        
+        .hero-visual {
+            position: relative;
+        }
+        
+        .hero-image {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+            border-radius: 24px;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            margin-bottom: 16px;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .hero-card:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .hero-card:nth-child(2) {
+            animation-delay: 2s;
+        }
+        
+        .hero-card:nth-child(3) {
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px); 
+            }
+            50% { 
+                transform: translateY(-12px); 
+            }
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .card-avatar {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .card-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .card-badge {
+            padding: 4px 10px;
+            background: #f0f4ff;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+        
+        .card-content {
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        
+        .comparison {
+            padding: 100px 2rem;
+            background: #fafbfc;
+        }
+        
+        .comparison-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+        
+        .section-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 100px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            color: #0a0a0a;
+        }
+        
+        .section-header p {
+            font-size: 1.0625rem;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+        
+        .comparison-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.4s;
+        }
+        
+        .comparison-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-color: #667eea;
+        }
+        
+        .comparison-icon {
+            width: 56px;
+            height: 56px;
+            background: #667eea;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 24px;
+        }
+        
+        .comparison-card h3 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            color: #0a0a0a;
+        }
+        
+        .comparison-card p {
+            color: #6b7280;
+            line-height: 1.7;
+            font-size: 0.9375rem;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .comparison-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+        
+        .comparison-list li:before {
+            content: "✓";
+            color: #667eea;
+            font-weight: 700;
             font-size: 1rem;
         }
-
-        .flow-steps {
-            flex-direction: column;
+        
+        .features {
+            padding: 100px 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
-
-        .flow-arrow {
-            transform: rotate(90deg);
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
         }
-
-        .session-flow {
-            padding: 2rem 1rem;
+        
+        .feature-card {
+            background: white;
+            padding: 36px 28px;
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.4s;
         }
-    }
-</style>
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-color: #667eea;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.1875rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.3px;
+            color: #0a0a0a;
+        }
+        
+        .feature-card p {
+            color: #6b7280;
+            line-height: 1.7;
+            font-size: 0.9375rem;
+        }
+        
+        .pricing {
+            padding: 100px 2rem;
+            background: #fafbfc;
+        }
+        
+        .pricing-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+        
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 32px 24px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.4s;
+            position: relative;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .pricing-card.popular {
+            border-color: #667eea;
+            box-shadow: 0 8px 24px rgba(102,126,234,0.12);
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+        
+        .plan-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+            color: #0a0a0a;
+        }
+        
+        .plan-price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+        }
+        
+        .plan-price span {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            font-weight: 600;
+        }
+        
+        .plan-description {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            margin-bottom: 20px;
+        }
+        
+        .plan-features {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+        
+        .plan-features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        .plan-features li:before {
+            content: "✓";
+            color: #667eea;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .footer {
+            background: #0a0a0a;
+            color: #6b7280;
+            padding: 48px 2rem;
+            text-align: center;
+        }
+        
+        .footer p {
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+        
+        @media (max-width: 1280px) {
+            .pricing-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+            
+            .hero-visual {
+                order: 1;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero {
+                padding: 120px 1.5rem 80px;
+            }
+            
+            .hero h1 {
+                font-size: 2.25rem;
+                letter-spacing: -1px;
+            }
+            
+            .hero-features {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .section-header h2 {
+                font-size: 2rem;
+            }
+            
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
 <body>
     <nav class="navbar">
-        <div class="container">
-            <a class="logo" href="/">Mockerview</a>
-            <div class="nav-menu">
-                <a href="#session">세션이란?</a>
-                <a href="#features">특징</a>
-                <a href="#how">사용방법</a>
-                <a th:href="@{/auth/login}" class="btn-out">로그인</a>
-                <a th:href="@{/auth/register}" class="btn-pri">시작하기</a>
+        <div class="nav-container">
+            <a href="/" class="logo">MockerView</a>
+            <div class="nav-links">
+                <a href="/auth/login">로그인</a>
+                <a href="/auth/register">회원가입</a>
             </div>
         </div>
     </nav>
-
+    
     <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1>AI 기반<br>실시간 모의면접</h1>
-                    <p>혼자가 아닌 함께, AI와 면접관의 피드백으로 성장하세요</p>
-                    <div class="hero-buttons">
-                        <a th:href="@{/auth/register}" class="btn-primary">무료로 시작하기</a>
-                        <a href="#session" class="btn-outline">더 알아보기</a>
+        <div class="hero-grid">
+            <div class="hero-visual">
+                <div class="hero-image">
+                    <div class="hero-card">
+                        <div class="card-header">
+                            <div class="card-avatar">김</div>
+                            <div class="card-name">김민수</div>
+                            <div class="card-badge">면접 중</div>
+                        </div>
+                        <div class="card-content">
+                            "저는 팀 프로젝트에서 프론트엔드를 담당했고, React와 JavaScript를 활용해..."
+                        </div>
                     </div>
-                </div>
-                <div class="hero-visual">
-                    <div class="visual-card card-1">
-                        <div class="icon">💬</div>
-                        <div class="text">실시간 협업</div>
+                    <div class="hero-card">
+                        <div class="card-header">
+                            <div class="card-avatar" style="background: #10b981;">AI</div>
+                            <div class="card-name">AI 피드백</div>
+                            <div class="card-badge">분석 완료</div>
+                        </div>
+                        <div class="card-content">
+                            <strong>강점:</strong> 구체적인 기술 스택 언급<br>
+                            <strong>개선점:</strong> 프로젝트 성과를 수치로 보완
+                        </div>
                     </div>
-                    <div class="visual-card card-2">
-                        <div class="icon">🤖</div>
-                        <div class="text">AI 피드백</div>
-                    </div>
-                    <div class="visual-card card-3">
-                        <div class="icon">📊</div>
-                        <div class="text">성장 추적</div>
+                    <div class="hero-card">
+                        <div class="card-header">
+                            <div class="card-avatar" style="background: #f59e0b;">이</div>
+                            <div class="card-name">면접관</div>
+                            <div class="card-badge">피드백</div>
+                        </div>
+                        <div class="card-content">
+                            "기술 스택은 좋은데, 왜 그 기술을 선택했는지 이유를 추가하면 더 좋을 것 같아요."
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section id="session" class="session-explain">
-        <div class="container">
-            <h2>💡 세션이 뭔가요?</h2>
-            <p class="subtitle">세션은 온라인 모의면접을 진행하는 "가상 면접장"입니다</p>
             
-            <div class="session-types">
-                <div class="session-type-card">
-                    <div class="session-type-icon">👥</div>
-                    <h3>그룹 세션</h3>
-                    <p>면접관과 여러 면접자가 함께 참여하는 실전 면접 연습장입니다. 친구들과 스터디처럼 모여서 면접 보는 느낌!</p>
+            <div class="hero-content">
+                <div class="hero-badge">
+                    ⚡ 국내 최초 실시간 협업 면접
                 </div>
-                <div class="session-type-card">
-                    <div class="session-type-icon">🎯</div>
-                    <h3>셀프 세션</h3>
-                    <p>AI와 1:1로 연습하는 혼자만의 면접 공간입니다. 부담 없이 혼자 연습하고 싶을 때 딱!</p>
+                <h1>
+                    혼자가 아닌,<br>
+                    <span class="highlight">함께 성장하는</span><br>
+                    모의면접 플랫폼
+                </h1>
+                <p class="hero-description">
+                    스터디원들과 실시간으로 함께 면접을 연습하고, AI와 팀원에게 즉시 피드백을 받으세요. 
+                    WebRTC 화상면접부터 텍스트 면접까지, 실전처럼 준비할 수 있습니다.
+                </p>
+                <div class="hero-cta">
+                    <a href="/auth/register" class="btn btn-primary">
+                        무료로 시작하기 →
+                    </a>
+                    <a href="/auth/login" class="btn btn-secondary">
+                        세션 둘러보기
+                    </a>
                 </div>
-                <div class="session-type-card">
-                    <div class="session-type-icon">📝</div>
-                    <h3>리뷰 세션</h3>
-                    <p>종료된 면접을 다시 보면서 피드백을 작성하는 복습 공간입니다. 자기 답변 돌아보고 발전하기!</p>
-                </div>
-            </div>
-
-            <div class="session-flow">
-                <h3>세션 흐름은 이렇게!</h3>
-                <div class="flow-steps">
-                    <div class="flow-step">🏠 세션 생성</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">👋 참가자 입장</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">❓ 질문 & 답변</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">🤖 AI 피드백</div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-step">🎉 점수판 확인</div>
+                <div class="hero-features">
+                    <div class="hero-feature">
+                        <div class="hero-feature-icon">👥</div>
+                        <div class="hero-feature-text">
+                            <div class="hero-feature-label">Max Players</div>
+                            <div class="hero-feature-value">최대 10명 동시 참여</div>
+                        </div>
+                    </div>
+                    <div class="hero-feature">
+                        <div class="hero-feature-icon">⚡</div>
+                        <div class="hero-feature-text">
+                            <div class="hero-feature-label">Response Time</div>
+                            <div class="hero-feature-value">실시간 동기화</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
-
-    <section id="features" class="features">
-        <div class="container">
+    
+    <section class="comparison">
+        <div class="comparison-container">
+            <div class="section-header">
+                <div class="section-badge">WHY MOCKERVIEW?</div>
+                <h2>타 플랫폼과 완전히 다른 경험</h2>
+                <p>혼자 연습하는 면접 앱은 이제 그만. 실전처럼 팀과 함께 성장하세요.</p>
+            </div>
+            <div class="comparison-grid">
+                <div class="comparison-card">
+                    <div class="comparison-icon">👥</div>
+                    <h3>멀티플레이어 면접</h3>
+                    <p>최대 10명이 동시에 참여하는 실시간 그룹 면접. 스터디원들과 함께 실전처럼 연습하고 서로 피드백을 주고받으세요.</p>
+                    <ul class="comparison-list">
+                        <li>실시간 동시 참여 시스템</li>
+                        <li>팀원 간 즉시 코멘트</li>
+                        <li>면접관/면접자 역할 분담</li>
+                    </ul>
+                </div>
+                <div class="comparison-card">
+                    <div class="comparison-icon">🎥</div>
+                    <h3>WebRTC 화상 면접</h3>
+                    <p>Agora 엔진 기반의 고품질 화상/음성 시스템. 텍스트, 음성, 화상 중 선택해서 단계별로 난이도를 조절하며 연습할 수 있습니다.</p>
+                    <ul class="comparison-list">
+                        <li>HD 화질 화상 면접</li>
+                        <li>음성 전용 모드 지원</li>
+                        <li>텍스트 면접 연습</li>
+                    </ul>
+                </div>
+                <div class="comparison-card">
+                    <div class="comparison-icon">⚡</div>
+                    <h3>WebSocket 실시간 동기화</h3>
+                    <p>모든 참가자가 동시에 같은 질문을 보고, 답변과 피드백이 즉시 공유됩니다. 지연 없이 완벽하게 동기화되는 협업 경험을 제공합니다.</p>
+                    <ul class="comparison-list">
+                        <li>질문 동시 노출</li>
+                        <li>실시간 답변 공유</li>
+                        <li>즉시 피드백 알림</li>
+                    </ul>
+                </div>
+                <div class="comparison-card">
+                    <div class="comparison-icon">🤝</div>
+                    <h3>AI + 팀 이중 피드백</h3>
+                    <p>GPT-4 기반 AI 분석과 면접관/팀원의 실시간 코멘트를 동시에 받아보세요. 다각도의 피드백으로 빠르게 성장할 수 있습니다.</p>
+                    <ul class="comparison-list">
+                        <li>AI 자동 강약점 분석</li>
+                        <li>팀원 실시간 코멘트</li>
+                        <li>개선점 즉시 추천</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="features">
+        <div class="section-header">
             <h2>핵심 기능</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">💬</div>
-                    <h3>실시간 협업</h3>
-                    <p>여러 명이 동시에 참여하여 실제 면접 환경을 재현합니다</p>
+            <p>면접 준비에 필요한 모든 것을 한 곳에서</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🎯</span>
+                <h3>셀프 면접 모드</h3>
+                <p>혼자서도 연습 가능한 AI 면접 시스템. 랜덤 질문 생성부터 AI 피드백까지 자동으로 제공됩니다.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <h3>성장 추적 대시보드</h3>
+                <p>모든 면접 기록이 자동 저장되어 실력 향상을 시각적으로 확인할 수 있습니다.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💾</span>
+                <h3>무제한 기록 보관</h3>
+                <p>지난 면접 세션을 언제든 다시 확인하고 복습할 수 있습니다.</p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="pricing">
+        <div class="pricing-container">
+            <div class="section-header">
+                <h2>요금제</h2>
+                <p>모든 플랜에서 협업 기능 100% 제공</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <span class="plan-icon">🎯</span>
+                    <div class="plan-name">Free</div>
+                    <div class="plan-price">₩0<span>/월</span></div>
+                    <div class="plan-description">시작하기에 완벽</div>
+                    <ul class="plan-features">
+                        <li>월 5개 세션</li>
+                        <li>월 3개 리뷰 읽기</li>
+                        <li>기본 AI 피드백</li>
+                        <li>세션 기록 저장</li>
+                    </ul>
+                    <a href="/auth/register" class="btn btn-primary" style="width:100%">시작하기</a>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3>AI 피드백</h3>
-                    <p>GPT 기반 답변 분석으로 강점과 약점을 파악합니다</p>
+                
+                <div class="pricing-card">
+                    <span class="plan-icon">🚀</span>
+                    <div class="plan-name">Basic</div>
+                    <div class="plan-price">₩9,900<span>/월</span></div>
+                    <div class="plan-description">개인 연습용</div>
+                    <ul class="plan-features">
+                        <li>월 30개 세션</li>
+                        <li>월 50개 리뷰 읽기</li>
+                        <li>AI 상세 분석</li>
+                        <li>이메일 지원</li>
+                        <li>답변 PDF 저장</li>
+                    </ul>
+                    <a href="/payment/plans" class="btn btn-primary" style="width:100%">선택하기</a>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>성장 추적</h3>
-                    <p>모든 세션 기록을 저장하여 발전 과정을 확인합니다</p>
+                
+                <div class="pricing-card popular">
+                    <div class="popular-badge">BEST</div>
+                    <span class="plan-icon">⭐</span>
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price">₩29,900<span>/월</span></div>
+                    <div class="plan-description">취준생 추천</div>
+                    <ul class="plan-features">
+                        <li>월 100개 세션</li>
+                        <li>무제한 리뷰 읽기</li>
+                        <li>AI 심화 분석</li>
+                        <li>우선 지원</li>
+                        <li>PDF 리포트</li>
+                    </ul>
+                    <a href="/payment/plans" class="btn btn-primary" style="width:100%">선택하기</a>
+                </div>
+                
+                <div class="pricing-card">
+                    <span class="plan-icon">👥</span>
+                    <div class="plan-name">Team</div>
+                    <div class="plan-price">₩99,000<span>/월</span></div>
+                    <div class="plan-description">팀 단위 준비</div>
+                    <ul class="plan-features">
+                        <li>월 500개 세션</li>
+                        <li>무제한 리뷰 읽기</li>
+                        <li>팀 관리 기능</li>
+                        <li>전담 지원</li>
+                        <li>API 접근</li>
+                    </ul>
+                    <a href="/payment/plans" class="btn btn-primary" style="width:100%">선택하기</a>
+                </div>
+                
+                <div class="pricing-card">
+                    <span class="plan-icon">🏢</span>
+                    <div class="plan-name">Enterprise</div>
+                    <div class="plan-price">문의<span></span></div>
+                    <div class="plan-description">맞춤형 솔루션</div>
+                    <ul class="plan-features">
+                        <li>무제한 세션</li>
+                        <li>무제한 리뷰 읽기</li>
+                        <li>전담 계정 관리자</li>
+                        <li>24/7 우선 지원</li>
+                        <li>API 무제한 접근</li>
+                        <li>커스텀 브랜딩</li>
+                        <li>SLA 99.9% 보장</li>
+                    </ul>
+                    <a href="mailto:contact@mockerview.com" class="btn btn-primary" style="width:100%">영업팀 문의</a>
                 </div>
             </div>
         </div>
     </section>
-
-    <section id="how" class="how">
-        <div class="container">
-            <h2>사용 방법</h2>
-            <div class="step-grid">
-                <div class="step-card">
-                    <div class="step-number">1</div>
-                    <h3>세션 생성</h3>
-                    <p>면접 세션을 만들고 참여자를 초대하세요</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-number">2</div>
-                    <h3>면접 진행</h3>
-                    <p>질문을 출제하고 답변을 실시간으로 공유하세요</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-number">3</div>
-                    <h3>피드백 확인</h3>
-                    <p>AI와 면접관의 피드백으로 실력을 향상시키세요</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="cta">
-        <div class="container">
-            <h2>지금 바로 시작하세요</h2>
-            <p>면접 준비, 더 이상 혼자 고민하지 마세요</p>
-            <a th:href="@{/auth/register}" class="btn-white">무료로 시작하기</a>
-        </div>
-    </section>
-
+    
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-left">
-                    <h5>Mockerview</h5>
-                    <p>AI 기반 실시간 모의면접 플랫폼</p>
-                </div>
-                <div class="footer-right">
-                    <p>&copy; 2025 Mockerview. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
+        <p>&copy; 2025 MockerView. 국내 최초 실시간 협업 AI 모의면접 플랫폼 • 모든 권리 보유</p>
     </footer>
+    
+    <div id="preloader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #667eea; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s;">
+        <div style="text-align: center; color: white;">
+            <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <div style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">MockerView</div>
+        </div>
+    </div>
 
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
+    <script src="/js/payment-redirect.js"></script>
     <script th:src="@{/js/index.js}"></script>
+    <script>
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+    window.addEventListener('load', function() {
+        const preloader = document.getElementById('preloader');
+        setTimeout(() => {
+            preloader.style.opacity = '0';
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 500);
+        }, 800);
+    });
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('✅ ServiceWorker registered:', registration.scope);
+                    
+                    setInterval(() => {
+                        registration.update();
+                    }, 60000);
+                })
+                .catch(error => {
+                    console.log('❌ ServiceWorker registration failed:', error);
+                });
+        });
+    }
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log('💾 PWA install prompt ready');
+    });
+    window.addEventListener('appinstalled', async () => {
+        console.log('✅ PWA installed!');
+        setTimeout(async () => {
+            if (window.pushNotifications) {
+                const granted = await window.pushNotifications.requestPermission();
+                if (granted) {
+                    console.log('🔔 Push notifications enabled!');
+                }
+            }
+        }, 3000);
+    });
+
+    window.addEventListener('load', () => {
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                console.log('✅ Notification permission: granted');
+            } else if (Notification.permission === 'denied') {
+                console.log('❌ Notification permission: denied');
+            } else {
+                console.log('⚠️ Notification permission: not requested');
+            }
+        }
+    });
+    </script>
 </body>
 </html>

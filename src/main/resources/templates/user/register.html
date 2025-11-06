@@ -2,106 +2,878 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입 - MockerView</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <script src="https://www.google.com/recaptcha/api.js?render=6Lf6jvUrAAAAAHtI4wWpNTihwCfgDciz0rS6rqs3"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .grecaptcha-badge {
+            display: none !important;
+        }
+        
+        .top-logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            z-index: 100;
+        }
+        
+        .top-logo a {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        body {
+            padding-top: 90px;
+        }
+        
+        .register-container {
+            width: 100%;
+            max-width: 520px;
+        }
+        
+        .register-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+        
+        .register-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .register-header h1 {
+            font-size: 1.625rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .register-header p {
+            font-size: 0.9375rem;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .form-label .required {
+            color: #ef4444;
+            margin-left: 2px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 0.9375rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .form-input.valid {
+            border-color: #10b981;
+        }
+        
+        .form-input.invalid {
+            border-color: #ef4444;
+        }
+        
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .check-btn, .verify-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .check-btn:hover, .verify-btn:hover {
+            background: #5568d3;
+        }
+        
+        .check-btn:disabled, .verify-btn:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .validation-msg {
+            font-size: 0.8125rem;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .validation-msg.success {
+            color: #10b981;
+        }
+        
+        .validation-msg.error {
+            color: #ef4444;
+        }
+        
+        .validation-msg.info {
+            color: #6b7280;
+        }
+        
+        .password-strength {
+            margin-top: 8px;
+        }
+        
+        .strength-bar {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s;
+            width: 0%;
+        }
+        
+        .strength-fill.weak {
+            width: 33%;
+            background: #ef4444;
+        }
+        
+        .strength-fill.medium {
+            width: 66%;
+            background: #f59e0b;
+        }
+        
+        .strength-fill.strong {
+            width: 100%;
+            background: #10b981;
+        }
+        
+        .strength-text {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+        
+        .role-selection {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .role-option {
+            position: relative;
+        }
+        
+        .role-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .role-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .role-option input[type="radio"]:checked + .role-label {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .role-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        
+        .role-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+        
+        .btn-submit:hover {
+            background: #5568d3;
+        }
+        
+        .btn-submit:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            gap: 12px;
+        }
+        
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+        
+        .divider-text {
+            font-size: 0.8125rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        .oauth-section {
+            margin-top: 24px;
+        }
+        
+        .oauth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn-oauth {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #1a1a1a;
+        }
+        
+        .btn-oauth:hover {
+            border-color: #667eea;
+            background: #fafbfc;
+        }
+        
+        .oauth-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .footer-links {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .recaptcha-notice {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            line-height: 1.4;
+        }
+        
+        .recaptcha-notice a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .recaptcha-notice a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 480px) {
+            .top-logo {
+                padding: 14px 16px;
+            }
+            
+            .top-logo a {
+                font-size: 1.25rem;
+            }
+            
+            body {
+                padding: 16px;
+                padding-top: 80px;
+            }
+            
+            .register-card {
+                padding: 32px 24px;
+            }
+            
+            .register-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .form-input,
+            .btn-submit,
+            .btn-oauth {
+                padding: 11px 12px;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-logo">
-                <h1>Mockerview</h1>
-                <p>AI 모의면접 코치 플랫폼</p>
+    <div class="top-logo">
+        <a href="/">MockerView</a>
+    </div>
+    
+    <div class="register-container">
+        <div class="register-card">
+            <div class="register-header">
+                <h1>회원가입</h1>
+                <p>MockerView와 함께 시작하세요</p>
             </div>
             
-            <form th:action="@{/auth/register}" method="post" id="registerForm">
-                <div th:if="${error}" class="alert alert-error">
-                    <span th:text="${error}"></span>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">아이디<span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            class="form-input"
+                            placeholder="영문, 숫자 4-20자"
+                            pattern="[a-zA-Z0-9]{4,20}"
+                            required
+                        >
+                        <button type="button" class="check-btn" id="checkUsernameBtn">중복확인</button>
+                    </div>
+                    <div class="validation-msg" id="usernameMsg"></div>
                 </div>
                 
                 <div class="form-group">
-                    <input type="text" class="form-control" name="username" placeholder="아이디 (4자 이상)" required>
+                    <label class="form-label" for="email">이메일<span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form-input"
+                            placeholder="example@email.com"
+                            required
+                        >
+                        <button type="button" class="verify-btn" id="sendCodeBtn">인증요청</button>
+                    </div>
+                    <div class="validation-msg" id="emailMsg"></div>
+                </div>
+                
+                <div class="form-group" id="verificationGroup" style="display: none;">
+                    <label class="form-label" for="verificationCode">인증 코드<span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="text" 
+                            id="verificationCode" 
+                            name="verificationCode" 
+                            class="form-input"
+                            placeholder="6자리 코드 입력"
+                            maxlength="6"
+                        >
+                        <button type="button" class="verify-btn" id="verifyCodeBtn">확인</button>
+                    </div>
+                    <div class="validation-msg" id="codeMsg"></div>
                 </div>
                 
                 <div class="form-group">
-                    <input type="password" class="form-control" name="password" placeholder="비밀번호 (6자 이상)" required>
+                    <label class="form-label" for="password">비밀번호<span class="required">*</span></label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input"
+                        placeholder="영문, 숫자, 특수문자 포함 8자 이상"
+                        required
+                    >
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label class="form-label" for="confirmPassword">비밀번호 확인<span class="required">*</span></label>
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        name="confirmPassword" 
+                        class="form-input"
+                        placeholder="비밀번호를 다시 입력하세요"
+                        required
+                    >
+                    <div class="validation-msg" id="confirmPasswordMsg"></div>
                 </div>
                 
                 <div class="form-group">
-                    <input type="password" class="form-control" name="confirmPassword" placeholder="비밀번호 확인" required>
+                    <label class="form-label" for="name">이름<span class="required">*</span></label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        class="form-input"
+                        placeholder="실명을 입력하세요"
+                        required
+                    >
                 </div>
                 
                 <div class="form-group">
-                    <input type="text" class="form-control" name="name" placeholder="이름을 입력하세요" required>
+                    <label class="form-label">역할 선택<span class="required">*</span></label>
+                    <div class="role-selection">
+                        <div class="role-option">
+                            <input type="radio" id="roleStudent" name="role" value="STUDENT" checked>
+                            <label for="roleStudent" class="role-label">
+                                <div class="role-icon">🎓</div>
+                                <div class="role-name">면접자</div>
+                            </label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" id="roleHost" name="role" value="HOST">
+                            <label for="roleHost" class="role-label">
+                                <div class="role-icon">👔</div>
+                                <div class="role-name">면접관</div>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <input type="email" class="form-control" name="email" placeholder="이메일을 입력하세요" required>
-                </div>
-                
-                <div class="form-group">
-                    <select class="form-select" name="role" required>
-                        <option value="">역할을 선택하세요</option>
-                        <option value="STUDENT">면접자 (학생/취준생)</option>
-                        <option value="HOST">면접관 (강사/멘토)</option>
-                        <option value="REVIEWER">리뷰어 (평가 전문가)</option>
-                    </select>
-                    <small style="color: var(--gray-500); font-size: 0.75rem; margin-top: 0.5rem; display: block;">
-                        면접자: 모의면접에 참여하여 질문에 답변<br>
-                        면접관: 세션을 생성하고 질문을 출제하며 피드백 제공<br>
-                        리뷰어: 답변에 대한 평가와 피드백 제공
-                    </small>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-full">회원가입</button>
+                <button type="submit" class="btn-submit" id="submitBtn" disabled>회원가입</button>
             </form>
             
-            <div class="auth-link">
-                <p>이미 계정이 있으신가요? <a th:href="@{/auth/login}">로그인</a></p>
+            <div class="divider">
+                <div class="divider-line"></div>
+                <span class="divider-text">또는</span>
+                <div class="divider-line"></div>
+            </div>
+            
+            <div class="oauth-section">
+                <div class="oauth-buttons">
+                    <a href="/oauth2/authorization/google" class="btn-oauth">
+                        <svg class="oauth-icon" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Google로 가입하기
+                    </a>
+                    
+                    <a href="/oauth2/authorization/kakao" class="btn-oauth">
+                        <svg class="oauth-icon" viewBox="0 0 24 24">
+                            <path fill="#FEE500" d="M12 3C6.48 3 2 6.58 2 11c0 2.78 1.83 5.23 4.58 6.68-.2.73-.66 2.45-.75 2.83-.12.5.18.49.38.36.15-.1 2.31-1.58 3.19-2.18.53.07 1.07.11 1.6.11 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
+                        </svg>
+                        카카오로 가입하기
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer-links">
+                이미 계정이 있으신가요? <a href="/auth/login">로그인</a>
+            </div>
+            
+            <div class="recaptcha-notice">
+                This site is protected by reCAPTCHA and the Google
+                <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a> and
+                <a href="https://policies.google.com/terms" target="_blank">Terms of Service</a> apply.
             </div>
         </div>
     </div>
-
+    
     <script>
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            const username = document.querySelector('input[name="username"]').value;
-            const password = document.querySelector('input[name="password"]').value;
-            const confirmPassword = document.querySelector('input[name="confirmPassword"]').value;
-            const name = document.querySelector('input[name="name"]').value;
-            const email = document.querySelector('input[name="email"]').value;
-            const role = document.querySelector('select[name="role"]').value;
+        const RECAPTCHA_SITE_KEY = '6Lf6jvUrAAAAAHtI4wWpNTihwCfgDciz0rS6rqs3';
+        
+        let usernameChecked = false;
+        let isUsernameValid = false;
+        let emailVerified = false;
+        let verificationCode = '';
+        
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const verificationCodeInput = document.getElementById('verificationCode');
+        const checkUsernameBtn = document.getElementById('checkUsernameBtn');
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        usernameInput.addEventListener('input', () => {
+            usernameChecked = false;
+            isUsernameValid = false;
+            checkUsernameBtn.disabled = false;
+            document.getElementById('usernameMsg').innerHTML = '';
+            usernameInput.classList.remove('valid', 'invalid');
+            updateSubmitButton();
+        });
+        
+        checkUsernameBtn.addEventListener('click', async () => {
+            const username = usernameInput.value.trim();
             
-            if (username.length < 4) {
-                e.preventDefault();
-                alert('아이디는 4자 이상이어야 합니다.');
+            if (username.length < 4 || username.length > 20) {
+                showMessage('usernameMsg', '아이디는 4-20자여야 합니다.', 'error');
                 return;
             }
             
-            if (password.length < 6) {
-                e.preventDefault();
-                alert('비밀번호는 6자 이상이어야 합니다.');
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                showMessage('usernameMsg', '영문과 숫자만 사용 가능합니다.', 'error');
                 return;
             }
+            
+            checkUsernameBtn.disabled = true;
+            checkUsernameBtn.textContent = '확인중...';
+            
+            try {
+                const response = await fetch(`/auth/check-username?username=${username}`);
+                const data = await response.json();
+                
+                if (data.available) {
+                    showMessage('usernameMsg', '✓ 사용 가능한 아이디입니다.', 'success');
+                    usernameInput.classList.add('valid');
+                    usernameInput.classList.remove('invalid');
+                    usernameChecked = true;
+                    isUsernameValid = true;
+                } else {
+                    showMessage('usernameMsg', '이미 사용 중인 아이디입니다.', 'error');
+                    usernameInput.classList.add('invalid');
+                    usernameInput.classList.remove('valid');
+                    usernameChecked = true;
+                    isUsernameValid = false;
+                }
+            } catch (error) {
+                showMessage('usernameMsg', '중복 확인 중 오류가 발생했습니다.', 'error');
+            } finally {
+                checkUsernameBtn.textContent = '중복확인';
+                checkUsernameBtn.disabled = false;
+                updateSubmitButton();
+            }
+        });
+        
+        sendCodeBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                showMessage('emailMsg', '올바른 이메일 형식이 아닙니다.', 'error');
+                return;
+            }
+            
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = '전송중...';
+            
+            try {
+                const response = await fetch('/auth/send-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('emailMsg', '✓ ' + data.message, 'success');
+                    document.getElementById('verificationGroup').style.display = 'block';
+                    emailInput.disabled = true;
+                } else {
+                    showMessage('emailMsg', data.message, 'error');
+                    sendCodeBtn.disabled = false;
+                }
+            } catch (error) {
+                showMessage('emailMsg', '인증 코드 전송에 실패했습니다.', 'error');
+                sendCodeBtn.disabled = false;
+            } finally {
+                sendCodeBtn.textContent = '재전송';
+            }
+        });
+        
+        verifyCodeBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim();
+            const code = verificationCodeInput.value.trim();
+            
+            if (code.length !== 6) {
+                showMessage('codeMsg', '6자리 코드를 입력하세요.', 'error');
+                return;
+            }
+            
+            verifyCodeBtn.disabled = true;
+            verifyCodeBtn.textContent = '확인중...';
+            
+            try {
+                const response = await fetch('/auth/verify-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code })
+                });
+                
+                const data = await response.json();
+                
+                if (data.valid) {
+                    showMessage('codeMsg', '✓ ' + data.message, 'success');
+                    verificationCodeInput.classList.add('valid');
+                    verificationCodeInput.disabled = true;
+                    verifyCodeBtn.disabled = true;
+                    emailVerified = true;
+                    verificationCode = code;
+                    updateSubmitButton();
+                } else {
+                    showMessage('codeMsg', data.message, 'error');
+                    verifyCodeBtn.disabled = false;
+                }
+            } catch (error) {
+                showMessage('codeMsg', '인증 확인에 실패했습니다.', 'error');
+                verifyCodeBtn.disabled = false;
+            } finally {
+                verifyCodeBtn.textContent = '확인';
+            }
+        });
+        
+        passwordInput.addEventListener('input', () => {
+            const password = passwordInput.value;
+            const strength = checkPasswordStrength(password);
+            
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+            
+            strengthFill.className = 'strength-fill';
+            
+            if (password.length === 0) {
+                strengthText.textContent = '';
+                return;
+            }
+            
+            if (strength.score === 1) {
+                strengthFill.classList.add('weak');
+                strengthText.textContent = '약함 - ' + strength.feedback;
+                strengthText.style.color = '#ef4444';
+            } else if (strength.score === 2) {
+                strengthFill.classList.add('medium');
+                strengthText.textContent = '보통 - ' + strength.feedback;
+                strengthText.style.color = '#f59e0b';
+            } else if (strength.score === 3) {
+                strengthFill.classList.add('strong');
+                strengthText.textContent = '강함 - 안전한 비밀번호입니다';
+                strengthText.style.color = '#10b981';
+            }
+            
+            validateConfirmPassword();
+        });
+        
+        confirmPasswordInput.addEventListener('input', validateConfirmPassword);
+        
+        function validateConfirmPassword() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword.length === 0) {
+                showMessage('confirmPasswordMsg', '', '');
+                confirmPasswordInput.classList.remove('valid', 'invalid');
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                showMessage('confirmPasswordMsg', '✓ 비밀번호가 일치합니다.', 'success');
+                confirmPasswordInput.classList.add('valid');
+                confirmPasswordInput.classList.remove('invalid');
+            } else {
+                showMessage('confirmPasswordMsg', '비밀번호가 일치하지 않습니다.', 'error');
+                confirmPasswordInput.classList.add('invalid');
+                confirmPasswordInput.classList.remove('valid');
+            }
+        }
+        
+        function checkPasswordStrength(password) {
+            let score = 0;
+            let feedback = [];
+            
+            if (password.length >= 8) score++;
+            else feedback.push('8자 이상');
+            
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+            else if (/[a-zA-Z]/.test(password)) score += 0.5;
+            else feedback.push('영문 포함');
+            
+            if (/[0-9]/.test(password)) score++;
+            else feedback.push('숫자 포함');
+            
+            if (/[^a-zA-Z0-9]/.test(password)) score++;
+            else feedback.push('특수문자 포함');
+            
+            const finalScore = Math.min(Math.floor(score), 3);
+            
+            return {
+                score: finalScore,
+                feedback: feedback.join(', ')
+            };
+        }
+        
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'validation-msg ' + type;
+        }
+        
+        function updateSubmitButton() {
+            submitBtn.disabled = !usernameChecked || !isUsernameValid || !emailVerified;
+        }
+        
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!usernameChecked || !isUsernameValid) {
+                alert('아이디 중복 확인을 완료해주세요.');
+                return;
+            }
+            
+            if (!emailVerified) {
+                alert('이메일 인증을 완료해주세요.');
+                return;
+            }
+            
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
             
             if (password !== confirmPassword) {
-                e.preventDefault();
                 alert('비밀번호가 일치하지 않습니다.');
                 return;
             }
             
-            if (!name.trim() || !email.trim() || !role) {
-                e.preventDefault();
-                alert('모든 필드를 입력해주세요.');
+            const strength = checkPasswordStrength(password);
+            if (strength.score < 2) {
+                alert('더 강력한 비밀번호를 사용해주세요.');
                 return;
             }
             
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                e.preventDefault();
-                alert('올바른 이메일 형식을 입력해주세요.');
-                return;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '처리 중...';
+            
+            try {
+                const recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {action: 'register'});
+                
+                const formData = {
+                    username: usernameInput.value,
+                    password: password,
+                    name: document.getElementById('name').value,
+                    email: emailInput.value,
+                    role: document.querySelector('input[name="role"]:checked').value,
+                    emailVerificationCode: verificationCode,
+                    recaptchaToken: recaptchaToken
+                };
+                
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('회원가입이 완료되었습니다!');
+                    window.location.href = '/auth/login';
+                } else {
+                    alert(data.message || '회원가입에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                alert('회원가입 중 오류가 발생했습니다.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '회원가입';
             }
         });
     </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
 </body>
 </html>

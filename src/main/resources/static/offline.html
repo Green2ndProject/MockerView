@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오프라인 - MockerView</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .offline-container {
+            text-align: center;
+            color: white;
+            max-width: 500px;
+        }
+        
+        .offline-icon {
+            font-size: 6rem;
+            margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+        
+        p {
+            font-size: 1.125rem;
+            margin-bottom: 32px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .btn-retry {
+            padding: 14px 32px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Pretendard', sans-serif;
+        }
+        
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        .offline-tips {
+            margin-top: 48px;
+            padding: 24px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .offline-tips h3 {
+            font-size: 1.125rem;
+            margin-bottom: 16px;
+        }
+        
+        .offline-tips ul {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .offline-tips li {
+            padding: 8px 0;
+            font-size: 0.9375rem;
+            opacity: 0.9;
+        }
+        
+        .offline-tips li:before {
+            content: "• ";
+            margin-right: 8px;
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .offline-icon {
+                font-size: 4rem;
+            }
+            
+            p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <h1>오프라인 상태</h1>
+        <p>
+            인터넷 연결을 확인해주세요.<br>
+            연결이 복구되면 자동으로 동기화됩니다.
+        </p>
+        <button class="btn-retry" onclick="location.reload()">다시 시도</button>
+        
+        <div class="offline-tips">
+            <h3>💡 오프라인에서도 가능한 작업</h3>
+            <ul>
+                <li>이전에 방문한 페이지 보기</li>
+                <li>캐시된 세션 목록 확인</li>
+                <li>저장된 답변 복습하기</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        window.addEventListener('online', () => {
+            console.log('Network restored!');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        });
+        
+        setInterval(() => {
+            fetch('/', { method: 'HEAD', cache: 'no-cache' })
+                .then(() => {
+                    location.reload();
+                })
+                .catch(() => {
+                    console.log('Still offline...');
+                });
+        }, 5000);
+    </script>
+</body>
+</html>

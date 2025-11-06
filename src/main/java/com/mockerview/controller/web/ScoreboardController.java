@@ -45,6 +45,15 @@ public class ScoreboardController {
                 return "session/scoreboard";
             }
             
+            List<Feedback> allFeedbacks = feedbackRepository.findByAnswerIn(answers);
+            Map<Long, List<Feedback>> feedbacksByAnswerId = allFeedbacks.stream()
+                    .collect(Collectors.groupingBy(f -> f.getAnswer().getId()));
+            
+            answers.forEach(answer -> {
+                List<Feedback> answerFeedbacks = feedbacksByAnswerId.getOrDefault(answer.getId(), new ArrayList<>());
+                answer.setFeedbacks(answerFeedbacks);
+            });
+            
             Map<Long, List<Answer>> answersByUser = answers.stream()
                     .filter(a -> a.getUser() != null)
                     .collect(Collectors.groupingBy(answer -> answer.getUser().getId()));
@@ -80,7 +89,14 @@ public class ScoreboardController {
                 dto.setAnswerCount(userAnswers.size());
                 dto.setAvgAiScore(Math.round(avgAiScore * 10) / 10.0);
                 dto.setAvgInterviewerScore(Math.round(avgInterviewerScore * 10) / 10.0);
-                dto.setTotalScore(Math.round((avgAiScore + avgInterviewerScore) / 2 * 10) / 10.0);
+                
+                double totalScore;
+                if ("Y".equals(interviewSession.getIsSelfInterview())) {
+                    totalScore = avgAiScore;
+                } else {
+                    totalScore = (avgAiScore + avgInterviewerScore) / 2;
+                }
+                dto.setTotalScore(Math.round(totalScore * 10) / 10.0);
                 dto.setAnswers(userAnswers);
                 
                 userScores.add(dto);

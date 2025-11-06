@@ -3,6 +3,7 @@ package com.mockerview.controller.api;
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.dto.ReviewDTO;
 import com.mockerview.service.ReviewService;
+import com.mockerview.service.SubscriptionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,9 +19,11 @@ import java.util.Map;
 public class ReviewApiController {
 
     private final ReviewService reviewService;
+    private final SubscriptionService subscriptionService;
 
-    public ReviewApiController(ReviewService reviewService) {
+    public ReviewApiController(ReviewService reviewService, SubscriptionService subscriptionService) {
         this.reviewService = reviewService;
+        this.subscriptionService = subscriptionService;
     }
 
     @PostMapping
@@ -78,6 +81,47 @@ public class ReviewApiController {
     public ResponseEntity<List<ReviewDTO>> getReviewsBySession(@PathVariable Long sessionId) {
         List<ReviewDTO> reviews = reviewService.getReviewsBySession(sessionId);
         return ResponseEntity.ok(reviews);
+    }
+    
+    @PostMapping("/track-read/{sessionId}")
+    public ResponseEntity<Map<String, Object>> trackReviewRead(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        log.info("리뷰 읽기 카운팅 - sessionId: {}, userId: {}", sessionId, userDetails.getUserId());
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            boolean canRead = subscriptionService.canReadReviewAndIncrement(userDetails.getUserId());
+            
+            if (!canRead) {
+                Map<String, Object> limitInfo = subscriptionService.getReviewReadInfo(userDetails.getUserId());
+                response.put("success", false);
+                response.put("message", "리뷰 읽기 한도를 초과했습니다.");
+                response.put("limitReached", true);
+                response.put("limitInfo", limitInfo);
+                return ResponseEntity.ok(response);
+            }
+            
+            Map<String, Object> limitInfo = subscriptionService.getReviewReadInfo(userDetails.getUserId());
+            response.put("success", true);
+            response.put("limitReached", false);
+            response.put("limitInfo", limitInfo);
+            
+            log.info("리뷰 읽기 카운팅 완료 - userId: {}, used: {}/{}", 
+                userDetails.getUserId(), 
+                limitInfo.get("usedReads"), 
+                limitInfo.get("readLimit"));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("리뷰 읽기 카운팅 중 오류", e);
+            response.put("success", false);
+            response.put("message", "리뷰 읽기 카운팅 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 }
 

@@ -2,6 +2,7 @@ package com.mockerview.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,15 +24,10 @@ public class QuestionPool {
     @Column(name = "DIFFICULTY", length = 20)
     private String difficulty;
 
-    @Lob
-    @Column(name = "QUESTION_TEXT", nullable = false)
+    @Column(name = "QUESTION_TEXT", nullable = false, columnDefinition = "TEXT")
     private String text;
 
-    @Column(name = "CREATED_AT")
+    @CreationTimestamp
+    @Column(name = "CREATED_AT", updatable = false)
     private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 }

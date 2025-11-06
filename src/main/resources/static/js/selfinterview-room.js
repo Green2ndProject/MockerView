@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.log('SESSION_DATA loaded:', SESSION_DATA);
         console.log('Questions:', questions);
         
+        if (questions.length === 0) {
+            alert('질문을 불러올 수 없습니다.');
+            return;
+        }
+        
         initializeSession();
         startSessionTimer();
     } catch (error) {
@@ -35,11 +40,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function initializeSession() {
-    if (questions.length === 0) {
-        alert('질문을 불러올 수 없습니다.');
-        return;
-    }
-
     document.getElementById('progress-total').textContent = questions.length;
     document.getElementById('session-stats').textContent = `총 ${questions.length}개 질문`;
     renderQuestionList();
@@ -78,7 +78,7 @@ function loadQuestion(index) {
     const question = questions[index];
 
     document.getElementById('question-number').textContent = `Q${index + 1}`;
-    document.getElementById('current-question-text').textContent = question.questionText;
+    document.getElementById('current-question-text').textContent = question.text;
     
     const answerTextArea = document.getElementById('answerText');
     if (answerTextArea) {
@@ -109,7 +109,7 @@ function renderQuestionList() {
     questions.forEach((q, index) => {
         const li = document.createElement('li');
         li.className = 'question-nav-item';
-        li.innerHTML = `<strong>Q${index + 1}</strong> ${q.questionText.substring(0, 30)}...`;
+        li.innerHTML = `<strong>Q${index + 1}</strong> ${q.text.substring(0, 30)}...`;
         li.onclick = () => loadQuestion(index);
         questionList.appendChild(li);
     });
@@ -135,8 +135,9 @@ window.submitTextAnswer = async function() {
         return;
     }
 
-    if (!SESSION_DATA || !SESSION_DATA.sessionId) {
+    if (!SESSION_DATA || !SESSION_DATA.id) {
         alert('세션 정보를 불러올 수 없습니다.');
+        console.error('SESSION_DATA:', SESSION_DATA);
         return;
     }
 
@@ -146,18 +147,22 @@ window.submitTextAnswer = async function() {
         answerText: answerText
     };
 
+    console.log('Submitting answer:', answerData);
+    console.log('To endpoint:', `/api/selfinterview/${SESSION_DATA.id}/answer`);
+
     try {
         document.getElementById('ai-status').textContent = '분석중...';
         document.getElementById('ai-status').style.color = '#f59e0b';
 
-        const response = await authFetch(`/api/selfinterview/${SESSION_DATA.sessionId}/answer`, {
+        const response = await authFetch(`/api/selfinterview/${SESSION_DATA.id}/answer`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(answerData)
         });
 
         if (!response.ok) {
-            throw new Error('답변 제출 실패');
+            const errorText = await response.text();
+            throw new Error('답변 제출 실패: ' + errorText);
         }
 
         const result = await response.json();
@@ -185,7 +190,7 @@ window.submitTextAnswer = async function() {
 };
 
 window.submitVoiceAnswerSelf = async function(audioBlob) {
-    if (!SESSION_DATA || !SESSION_DATA.sessionId) {
+    if (!SESSION_DATA || !SESSION_DATA.id) {
         alert('세션 정보를 불러올 수 없습니다.');
         return;
     }
@@ -194,7 +199,6 @@ window.submitVoiceAnswerSelf = async function(audioBlob) {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'answer.webm');
     formData.append('questionId', question.id);
-    formData.append('sessionId', SESSION_DATA.sessionId);
 
     try {
         document.getElementById('ai-status').textContent = '음성 변환 중...';
@@ -203,7 +207,7 @@ window.submitVoiceAnswerSelf = async function(audioBlob) {
         const token = document.cookie.split(';').find(c => c.trim().startsWith('Authorization='));
         const authToken = token ? token.split('=')[1] : '';
         
-        const response = await fetch('/api/selfinterview/transcribe', {
+        const response = await fetch(`/api/session/${SESSION_DATA.id}/voice-answer`, {
             method: 'POST',
             headers: {
                 'Authorization': authToken
@@ -268,7 +272,7 @@ function displayFeedback(feedback, question, questionNumber) {
     feedbackCard.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <div style="font-weight: 600; color: #374151; font-size: 0.875rem;">
-                Q${questionNumber}: ${question.questionText.substring(0, 40)}...
+                Q${questionNumber}: ${question.text.substring(0, 40)}...
             </div>
             <div style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.875rem; font-weight: 600;">
                 ${feedback.score}점
@@ -283,7 +287,7 @@ function displayFeedback(feedback, question, questionNumber) {
         <div style="background: #fef3c7; padding: 1rem; border-radius: 6px;">
             <div style="font-weight: 600; color: #f59e0b; font-size: 0.875rem; margin-bottom: 0.5rem;">💡 개선점</div>
             <div style="color: #374151; font-size: 0.875rem; line-height: 1.5;">
-                ${feedback.improvements || '분석 중...'}
+                ${feedback.improvementSuggestions || feedback.improvements || '분석 중...'}
             </div>
         </div>
     `;
@@ -317,57 +321,14 @@ function completeInterview() {
     if (avgScoreEl) avgScoreEl.textContent = `${avgScore}점`;
     if (answeredCountEl) answeredCountEl.textContent = `${answers.length}개`;
     if (totalTimeEl) totalTimeEl.textContent = `${totalTime}분`;
-    
-    console.log('✅ 면접 완료 통계:', {
-        평균점수: avgScore,
-        답변수: answers.length,
-        소요시간: totalTime
-    });
 }
+
 function toggleResultView() {
     completeInterview();
 }
 
 function viewDetailedResults() {
-    if (SESSION_DATA && SESSION_DATA.sessionId) {
-        window.location.href = `/session/detail/${SESSION_DATA.sessionId}`;
+    if (SESSION_DATA && SESSION_DATA.id) {
+        window.location.href = `/session/detail/${SESSION_DATA.id}`;
     }
-
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
-
-    window.toggleRecording = async function() {
-        if (!isRecording) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    await submitVoiceAnswerSelf(audioBlob);
-                };
-
-                mediaRecorder.start();
-                isRecording = true;
-                document.getElementById('recordingStatus').textContent = '🔴 녹음 중...';
-                document.getElementById('toggleRecording').textContent = '⏹️ 녹음 중지';
-                
-            } catch (error) {
-                console.error('마이크 접근 실패:', error);
-                alert('마이크 권한을 허용해주세요.');
-            }
-        } else {
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            isRecording = false;
-            document.getElementById('recordingStatus').textContent = '처리 중...';
-            document.getElementById('toggleRecording').textContent = '🎤 녹음 시작';
-        }
-    };
 }

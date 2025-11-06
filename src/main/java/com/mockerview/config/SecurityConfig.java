@@ -1,137 +1,118 @@
 package com.mockerview.config;
 
+import com.mockerview.jwt.JWTFilter;
+import com.mockerview.jwt.JWTUtil;
+import com.mockerview.jwt.LoginFilter;
+import com.mockerview.oauth.CustomOAuth2UserService;
+import com.mockerview.oauth.OAuth2SuccessHandler;
+import com.mockerview.repository.UserRepository;
+import com.mockerview.service.RefreshTokenService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.mockerview.jwt.JWTFilter;
-import com.mockerview.jwt.JWTLogoutHandler;
-import com.mockerview.jwt.JWTUtil;
-import com.mockerview.jwt.LoginFilter;
-import com.mockerview.repository.UserRepository;
-import com.mockerview.service.CustomUserDetailsService;
-
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JWTLogoutHandler jwtLogoutHandler;
-    private final JWTUtil jwtUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final JWTUtil jwtUtil;
     private final UserRepository userRepository;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final RefreshTokenService refreshTokenService;
 
-    public SecurityConfig(JWTUtil jwtUtil, 
-                        AuthenticationConfiguration authenticationConfiguration,
-                        JWTLogoutHandler jwtLogoutHandler,
-                        UserRepository userRepository) throws Exception {
-        this.jwtUtil = jwtUtil;
-        this.authenticationConfiguration = authenticationConfiguration;
-        this.jwtLogoutHandler = jwtLogoutHandler;
-        this.userRepository = userRepository;
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider(
-                CustomUserDetailsService customUserDetailsService, 
-                PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(customUserDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-                DaoAuthenticationProvider authenticationProvider) throws Exception {
-        return new ProviderManager(authenticationProvider);
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers("/error", "/favicon.ico", "/manifest.json", 
+                                "/service-worker.js", "/offline.html",
+                                "/*.png", "/*.jpg", "/*.ico");
     }
 
     @Bean
-    public LoginFilter loginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) throws Exception {
-        LoginFilter filter = new LoginFilter(authenticationManager, jwtUtil);
-        return filter;
-    }
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .requiresChannel(channel -> 
+                    channel
+                        .requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
+                        .requiresSecure()
+                )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/auth/login")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/auth/**", "/api/join", "/api/login", "/api/auth/logout", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/analysis/**").permitAll()
+                        .requestMatchers("/api/analysis/**").permitAll()
+                        .requestMatchers("/api/batch/**").permitAll()
+                        .requestMatchers("/api/debug/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/session/*/join").permitAll()
+                        .requestMatchers("/api/users/withdraw").authenticated()
+                        .requestMatchers("/api/users/change-password").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(new JWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenService), 
+                            UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
 
-    @Bean
-    public JWTFilter jwtFilter() {
-        return new JWTFilter(jwtUtil, userRepository);
+        return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+            "https://mockerview.net",
+            "https://www.mockerview.net"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, LoginFilter loginFilter) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index").permitAll()
-                .requestMatchers("/auth/login", "/auth/register", "/error", "/favicon.ico").permitAll()
-                .requestMatchers("/user/login", "/user/register", "/user/loginProc", "/user/registerProc").permitAll()
-                .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/api/**").permitAll()
-                .requestMatchers("/auth/mypage").authenticated()
-                .requestMatchers("/session/list").authenticated()
-                .anyRequest().authenticated())
-            .csrf(csrf -> csrf.disable())
-            .headers(headers -> headers.disable())
-            .requestCache((cache) -> cache.disable())
-            .formLogin(login -> login.disable())
-            .httpBasic(auth -> auth.disable())
-            .addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtFilter(), LoginFilter.class)
-            .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling((exceptionHandling) -> exceptionHandling
-                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/auth/login")))
-            .logout((logout) -> logout
-                .logoutUrl("/auth/logout")
-                .logoutSuccessUrl("/?logout=success")
-                .addLogoutHandler(jwtLogoutHandler)
-                .permitAll());
-            
-        return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers(
-            "/error",
-            "/favicon.ico"
-        );
     }
 }

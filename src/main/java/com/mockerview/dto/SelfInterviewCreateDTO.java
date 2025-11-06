@@ -8,4 +8,8 @@ public class SelfInterviewCreateDTO {
     private Integer questionCount;
     private String category;
     private String difficulty;
+    private Integer difficultyLevel;
+    private String sessionType;
+    private String questionType;
+    private Boolean aiEnabled;
 }

@@ -1,264 +1,302 @@
 package com.mockerview.controller.websocket;
 
-import com.mockerview.dto.*;
+import com.mockerview.dto.AnswerMessage;
+import com.mockerview.dto.InterviewerFeedbackMessage;
+import com.mockerview.dto.SessionParticipantDTO;
+import com.mockerview.dto.SessionStatusMessage;
+import com.mockerview.entity.Answer;
 import com.mockerview.entity.Session;
+import com.mockerview.entity.SessionParticipant;
+import com.mockerview.entity.User;
 import com.mockerview.repository.AnswerRepository;
 import com.mockerview.repository.QuestionRepository;
+import com.mockerview.repository.SessionParticipantRepository;
 import com.mockerview.repository.SessionRepository;
-import com.mockerview.service.SessionService;
-import com.mockerview.service.AIFeedbackService;
-import com.mockerview.service.InterviewerFeedbackService;
+import com.mockerview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
-/**
- * WebSocket을 통한 실시간 면접 세션 처리 컨트롤러
- * 질문 출제, 답변 제출, 피드백 처리 등의 면접 관련 실시간 기능을 담당
- */
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Controller
 @RequiredArgsConstructor
-@Slf4j
 public class SessionWebSocketController {
-    
-    private final SessionService sessionService;
-    private final AIFeedbackService aiFeedbackService;
-    private final InterviewerFeedbackService interviewerFeedbackService;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final SessionRepository sessionRepository;
-    private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
-    
-    private final Map<Long, Set<String>> sessionParticipants = new ConcurrentHashMap<>();
 
-    /**
-     * 면접 질문을 처리합니다.
-     * 질문을 저장하고, questionId, questionerId, timestamp를 설정한 후, 
-     * /topic/session/{sessionId}/question으로 브로드캐스팅합니다.
-     */
-    @MessageMapping("/session/{sessionId}/question")
-    @SendTo("/topic/session/{sessionId}/question")
-    public QuestionMessage handleQuestion(
-            @DestinationVariable Long sessionId, 
-            Map<String, Object> payload,
-            SimpMessageHeaderAccessor headerAccessor) {
-        try {
-            Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
-            String userName = (String) headerAccessor.getSessionAttributes().get("userName");
-            
-            if (sessionId == null) {
-                throw new IllegalArgumentException("SessionId가 null입니다");
-            }
-            
-            if (userId == null) {
-                throw new IllegalArgumentException("UserId가 null입니다. WebSocket 인증이 실패했습니다.");
-            }
-            
-            String questionText = (String) payload.get("text");
-            Integer orderNo = payload.get("orderNo") != null ? ((Number) payload.get("orderNo")).intValue() : 1;
-            Integer timerSeconds = payload.get("timerSeconds") != null ? ((Number) payload.get("timerSeconds")).intValue() : 60;
-            
-            log.info("질문 수신 - sessionId: {}, 사용자: {} (ID: {}), Timer: {}", 
-                    sessionId, userName, userId, timerSeconds);
-            
-            Long questionId = sessionService.saveQuestion(
-                sessionId, 
-                questionText, 
-                orderNo, 
-                userId,
-                timerSeconds
-            );
-            
-            QuestionMessage message = new QuestionMessage();
-            message.setQuestionId(questionId);
-            message.setQuestionText(questionText);
-            message.setOrderNo(orderNo);
-            message.setTimer(timerSeconds);
-            message.setQuestionerId(userId);
-            message.setTimestamp(LocalDateTime.now());
+        private final SimpMessagingTemplate messagingTemplate;
+        private final SessionRepository sessionRepository;
+        private final QuestionRepository questionRepository;
+        private final AnswerRepository answerRepository;
+        private final SessionParticipantRepository participantRepository;
+        private final UserRepository userRepository;
 
-            SessionStatusMessage statusMessage = sessionService.getSessionStatus(sessionId);
-            messagingTemplate.convertAndSend(
-                "/topic/session/" + sessionId + "/status", 
-                statusMessage
-            );
-            
-            log.info("질문 저장 완료 - questionId: {}", questionId);
-            
-            return message;
-            
-        } catch (Exception e) {
-            log.error("질문 처리 오류: ", e);
-            throw new RuntimeException("질문 처리 실패", e); 
+        private final Map<Long, Set<String>> sessionParticipants = new ConcurrentHashMap<>();
+
+        @MessageMapping("/session/{sessionId}/join")
+        public void handleJoin(
+                @DestinationVariable Long sessionId,
+                @Payload Map<String, Object> message
+        ) {
+                Long userId = Long.valueOf(message.get("userId").toString());
+                String role = message.get("role").toString();
+                
+                log.info("🚪 WebSocket 참가 요청: sessionId={}, userId={}, role={}", sessionId, userId, role);
+
+                Session session = sessionRepository.findById(sessionId)
+                        .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+                
+                User user = userRepository.findById(userId)
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+                User.UserRole userRole = User.UserRole.valueOf(role);
+
+                SessionParticipant participant = participantRepository
+                        .findBySessionIdAndUserId(sessionId, userId)
+                        .orElse(SessionParticipant.builder()
+                                .session(session)
+                                .user(user)
+                                .role(userRole)
+                                .build());
+                
+                participant.setRole(userRole);
+                participant.setIsOnline(true);
+                participant.setJoinedAt(LocalDateTime.now());
+                participantRepository.save(participant);
+
+                log.info("✅ WebSocket 참가자 저장: userId={}, role={}", userId, userRole);
+
+                List<SessionParticipantDTO> participants = participantRepository
+                        .findOnlineParticipants(sessionId)
+                        .stream()
+                        .map(SessionParticipantDTO::from)
+                        .collect(Collectors.toList());
+
+                log.info("📤 참가자 브로드캐스트: {}명", participants.size());
+                participants.forEach(p -> log.info("   - userId={}, role={}, name={}", 
+                        p.getUserId(), p.getRole(), p.getUserName()));
+
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId, participants);
+
+                log.info("✅ WebSocket 참가 완료: userId={}, role={}", userId, userRole);
         }
-    }
 
-    /**
-     * 면접 답변을 처리합니다.
-     * 답변을 저장하고, /topic/session/{sessionId}/answer로 브로드캐스팅한 후,
-     * AI 피드백 생성을 비동기적으로 요청합니다.
-     */
-    @MessageMapping("/session/{sessionId}/answer")
-    public void handleAnswer(
-            @DestinationVariable Long sessionId, 
-            AnswerMessage message,
-            SimpMessageHeaderAccessor headerAccessor) {
-        try {
-            Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
-            String userName = (String) headerAccessor.getSessionAttributes().get("userName");
-            
-            if (sessionId == null) {
-                throw new IllegalArgumentException("SessionId가 null입니다");
-            }
-            
-            if (userId == null) {
-                throw new IllegalArgumentException("UserId가 null입니다. WebSocket 인증이 실패했습니다.");
-            }
-            
-            log.info("답변 수신 - sessionId: {}, 사용자: {} (ID: {})", sessionId, userName, userId);
-            
-            message.setUserId(userId);
-            message.setUserName(userName);
-            message.setTimestamp(LocalDateTime.now());
-            
-            Long answerId = sessionService.saveAnswer(message);
-            message.setAnswerId(answerId);
-            
-            messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/answer", message);
-            
-            log.info("답변 저장 완료 - answerId: {}, AI 피드백 요청 시작", answerId);
-            
-            aiFeedbackService.generateFeedbackAsync(answerId, sessionId);
-            
-            log.info("AI 피드백 비동기 요청 완료 - answerId: {}", answerId);
-            
-        } catch (Exception e) {
-            log.error("답변 처리 오류: ", e);
+        @MessageMapping("/session/{sessionId}/leave")
+        public void handleLeave(
+                @DestinationVariable Long sessionId,
+                @Payload Map<String, Object> message
+        ) {
+                Long userId = Long.valueOf(message.get("userId").toString());
+                log.info("퇴장 요청: sessionId={}, userId={}", sessionId, userId);
+
+                participantRepository.findBySessionIdAndUserId(sessionId, userId)
+                        .ifPresent(participant -> {
+                                participant.setIsOnline(false);
+                                participantRepository.save(participant);
+                        });
+
+                List<SessionParticipantDTO> participants = participantRepository
+                        .findOnlineParticipants(sessionId)
+                        .stream()
+                        .map(SessionParticipantDTO::from)
+                        .collect(Collectors.toList());
+
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/participants", participants);
+                log.info("퇴장 완료: userId={}", userId);
         }
-    }
 
-    /**
-     * 면접관 피드백을 처리하고 브로드캐스팅합니다.
-     */
-    @MessageMapping("/session/{sessionId}/interviewer-feedback")
-    public void handleInterviewerFeedback(@DestinationVariable Long sessionId, InterviewerFeedbackMessage request) {
-        log.info("면접관 피드백 수신 - sessionId: {}, 리뷰어: {} (ID: {})", 
-                sessionId, request.getReviewerName(), request.getReviewerId());
-        
-        interviewerFeedbackService.submitInterviewerFeedback(request);
-        
-        messagingTemplate.convertAndSend(
-            "/topic/session/" + sessionId + "/interviewer-feedback", 
-            request
-        );
-    
-        log.info("면접관 피드백 처리 완료");
-    }
-    
-    /**
-     * 세션 참가를 처리하고 현재 세션 상태를 반환(브로드캐스팅)합니다.
-     */
-    @MessageMapping("/session/{sessionId}/join")
-    public void handleJoin(@DestinationVariable Long sessionId, SessionStatusMessage message) {
-        log.info("참가 요청: sessionId={}, userName={}", sessionId, message.getUserName());
-        
-        sessionParticipants.computeIfAbsent(sessionId, k -> new CopyOnWriteArraySet<>())
-            .add(message.getUserName());
-        
-        Session session = sessionRepository.findById(sessionId).orElse(null);
-        Long questionCount = questionRepository.countBySessionId(sessionId);
-        Long answerCount = answerRepository.countBySessionId(sessionId);
-        
-        SessionStatusMessage statusMessage = SessionStatusMessage.builder()
-            .sessionId(sessionId)
-            .status(session != null ? session.getStatus().name() : "WAITING")
-            .questionCount(questionCount.intValue())
-            .answerCount(answerCount.intValue())
-            .participants(new ArrayList<>(sessionParticipants.get(sessionId)))
-            .action("JOIN")
-            .userName(message.getUserName())
-            .timestamp(LocalDateTime.now())
-            .build();
-        
-        messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/status", statusMessage);
-        log.info("참가 완료: {}, 현재 참가자: {}", message.getUserName(), statusMessage.getParticipants());
-    }
-
-    /**
-     * 세션 시작을 처리하고 변경된 세션 상태를 브로드캐스팅합니다.
-     */
-    @MessageMapping("/session/{sessionId}/start")
-    @SendTo("/topic/session/{sessionId}/status")
-    public SessionStatusMessage handleStartSession(@DestinationVariable Long sessionId) {
-        try {
-            log.info("세션 시작 - sessionId: {}", sessionId);
-            
-            sessionService.startSession(sessionId);
-            
-            SessionStatusMessage status = sessionService.getSessionStatus(sessionId);
-            
-            return status;
-            
-        } catch (Exception e) {
-            log.error("세션 시작 처리 오류: ", e);
-            return null;
+        @MessageMapping("/session/{sessionId}/question")
+        public void handleQuestion(
+                @DestinationVariable Long sessionId,
+                @Payload Map<String, Object> message,
+                SimpMessageHeaderAccessor headerAccessor
+        ) {
+                log.info("질문 메시지: sessionId={}, message={}", sessionId, message);
+                
+                try {
+                        String content = (String) message.get("content");
+                        Long userId = Long.valueOf(message.get("userId").toString());
+                        
+                        Session session = sessionRepository.findById(sessionId)
+                                .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+                        
+                        User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+                        
+                        long questionCount = questionRepository.countBySessionId(sessionId);
+                        
+                        com.mockerview.entity.Question question = com.mockerview.entity.Question.builder()
+                                .session(session)
+                                .questioner(user)
+                                .text(content)
+                                .orderNo((int) questionCount + 1)
+                                .createdAt(java.time.LocalDateTime.now())
+                                .build();
+                        
+                        questionRepository.save(question);
+                        log.info("✅ 질문 DB 저장 완료: questionId={}, text={}", question.getId(), content);
+                        
+                } catch (Exception e) {
+                        log.error("❌ 질문 DB 저장 실패", e);
+                }
+                
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/question", message);
         }
-    }
 
-    /**
-     * 세션 종료를 처리하고 변경된 세션 상태를 브로드캐스팅합니다.
-     */
-    @MessageMapping("/session/{sessionId}/end")
-    @SendTo("/topic/session/{sessionId}/status")
-    public SessionStatusMessage handleEndSession(@DestinationVariable Long sessionId) {
-        try {
-            log.info("세션 종료 - sessionId: {}", sessionId);
-            
-            sessionService.endSession(sessionId);
-            
-            SessionStatusMessage status = sessionService.getSessionStatus(sessionId);
-            
-            return status;
-            
-        } catch (Exception e) {
-            log.error("세션 종료 처리 오류: ", e);
-            return null;
+        @MessageMapping("/session/{sessionId}/answer")
+        public void handleAnswer(
+                @DestinationVariable Long sessionId,
+                @Payload AnswerMessage message,
+                SimpMessageHeaderAccessor headerAccessor
+        ) {
+                log.info("답변 메시지: sessionId={}, message={}", sessionId, message);
+                
+                Long answerId = null;
+                try {
+                        User user = userRepository.findById(message.getUserId())
+                                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+                        
+                        List<com.mockerview.entity.Question> questions = questionRepository.findBySessionIdOrderByOrderNo(sessionId);
+                        
+                        if (!questions.isEmpty()) {
+                                com.mockerview.entity.Question lastQuestion = questions.get(questions.size() - 1);
+                                
+                                Answer answer = Answer.builder()
+                                        .question(lastQuestion)
+                                        .user(user)
+                                        .answerText(message.getAnswerText())
+                                        .createdAt(java.time.LocalDateTime.now())
+                                        .build();
+                                
+                                answerRepository.save(answer);
+                                answerId = answer.getId();
+                                log.info("✅ 답변 DB 저장 완료: answerId={}, questionId={}, text={}", 
+                                        answer.getId(), lastQuestion.getId(), message.getAnswerText());
+                        } else {
+                                log.warn("⚠️ 질문이 없어서 답변 저장 실패");
+                        }
+                        
+                } catch (Exception e) {
+                        log.error("❌ 답변 DB 저장 실패", e);
+                }
+                
+                if (answerId != null) {
+                        message.setAnswerId(answerId);
+                }
+                
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/answer", message);
         }
-    }
 
-    /**
-     * 세션 제어 메시지를 처리하고 브로드캐스팅합니다.
-     * 타이머 시작/정지, 질문 전환 등의 제어 명령을 전달합니다.
-     */
-    @MessageMapping("/session/{sessionId}/control")
-    public void handleControl(
-            @DestinationVariable Long sessionId,
-            Map<String, Object> message,
-            SimpMessageHeaderAccessor headerAccessor) {
-        try {
-            String action = (String) message.get("action");
-            log.info("제어 메시지 수신 - sessionId: {}, action: {}", sessionId, action);
-            
-            messagingTemplate.convertAndSend(
-                "/topic/session/" + sessionId + "/control",
-                message
-            );
-            
-            log.info("제어 메시지 브로드캐스트 완료");
-            
-        } catch (Exception e) {
-            log.error("제어 메시지 처리 오류: ", e);
+        @MessageMapping("/session/{sessionId}/interviewer-feedback")
+        public void handleInterviewerFeedback(
+                @DestinationVariable Long sessionId,
+                @Payload InterviewerFeedbackMessage message
+        ) {
+                log.info("면접관 피드백: sessionId={}, message={}", sessionId, message);
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/interviewer-feedback", message);
         }
-    }
+
+        @MessageMapping("/session/{sessionId}/start")
+        public void handleStartSession(@DestinationVariable Long sessionId) {
+                log.info("세션 시작: sessionId={}", sessionId);
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/start", 
+                Map.of("action", "START"));
+        }
+
+        @MessageMapping("/session/{sessionId}/end")
+        public void handleEndSession(@DestinationVariable Long sessionId) {
+                log.info("세션 종료: sessionId={}", sessionId);
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/control", 
+                Map.of("action", "END"));
+                sessionParticipants.remove(sessionId);
+        }
+
+        @MessageMapping("/session/{sessionId}/control")
+        public void handleControl(
+                @DestinationVariable Long sessionId,
+                @Payload Map<String, Object> message,
+                SimpMessageHeaderAccessor headerAccessor
+        ) {
+                log.info("제어 메시지: sessionId={}, message={}", sessionId, message);
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/control", message);
+        }
+
+        @MessageMapping("/session/{sessionId}/subtitle")
+        public void handleSubtitle(
+                @DestinationVariable Long sessionId,
+                @Payload Map<String, Object> message
+        ) {
+                try {
+                        Long userId = Long.valueOf(message.get("userId").toString());
+                        String text = (String) message.get("text");
+                        Boolean isFinal = (Boolean) message.get("isFinal");
+                        
+                        log.info("자막 메시지: sessionId={}, userId={}, text={}, isFinal={}", 
+                                sessionId, userId, text, isFinal);
+
+                        if (Boolean.TRUE.equals(isFinal) && text != null && !text.trim().isEmpty()) {
+                                Session session = sessionRepository.findById(sessionId)
+                                        .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+                                
+                                User user = userRepository.findById(userId)
+                                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+                                SessionParticipant participant = participantRepository
+                                        .findBySessionIdAndUserId(sessionId, userId)
+                                        .orElseThrow(() -> new RuntimeException("참가자 정보를 찾을 수 없습니다"));
+
+                                if (participant.getRole() == User.UserRole.HOST || 
+                                        participant.getRole() == User.UserRole.REVIEWER) {
+                                        long questionCount = questionRepository.countBySessionId(sessionId);
+                                        
+                                        com.mockerview.entity.Question question = com.mockerview.entity.Question.builder()
+                                                .session(session)
+                                                .questioner(user)
+                                                .text(text.trim())
+                                                .orderNo((int) questionCount + 1)
+                                                .createdAt(LocalDateTime.now())
+                                                .build();
+                                        
+                                        questionRepository.save(question);
+                                        log.info("✅ 자막 → 질문 저장 완료: questionId={}, text={}", question.getId(), text.trim());
+                                        
+                                } else if (participant.getRole() == User.UserRole.STUDENT) {
+                                        List<com.mockerview.entity.Question> questions = 
+                                                questionRepository.findBySessionIdOrderByOrderNo(sessionId);
+                                        
+                                        if (!questions.isEmpty()) {
+                                                com.mockerview.entity.Question lastQuestion = questions.get(questions.size() - 1);
+                                                
+                                                Answer answer = Answer.builder()
+                                                        .question(lastQuestion)
+                                                        .user(user)
+                                                        .answerText(text.trim())
+                                                        .createdAt(LocalDateTime.now())
+                                                        .build();
+                                                
+                                                answerRepository.save(answer);
+                                                message.put("answerId", answer.getId());
+                                                log.info("✅ 자막 → 답변 저장 완료: answerId={}, questionId={}, text={}", 
+                                                        answer.getId(), lastQuestion.getId(), text.trim());
+                                        } else {
+                                                log.warn("⚠️ 질문이 없어서 답변 저장 실패");
+                                        }
+                                }
+                        }
+                        
+                } catch (Exception e) {
+                        log.error("❌ 자막 처리 실패", e);
+                }
+                
+                messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/subtitle", message);
+        }
+
 }

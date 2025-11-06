@@ -1,142 +1,110 @@
 package com.mockerview.jwt;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Iterator;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mockerview.service.RefreshTokenService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.util.StreamUtils;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.dto.LoginDTO;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+@Slf4j
+public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
-public class LoginFilter extends GenericFilterBean { 
-
-    private final ObjectMapper objectMapper = new ObjectMapper(); 
-
+    private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
-    private final AuthenticationManager authenticationManager; 
+    private final RefreshTokenService refreshTokenService;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenService = refreshTokenService;
+        setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/auth/login", "POST"));
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-        throws IOException, ServletException {
-
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
-
-        if (req.getMethod().equals("GET") && req.getRequestURI().equals("/auth/login")) {
-            chain.doFilter(req, res);
-            return; 
-        }
-
-        if (req.getMethod().equals("POST") && req.getRequestURI().equals("/auth/login")) {
-            
-            try {
-                // 기존 attemptAuthentication 내부 로직 복사
-                String jsonBody = StreamUtils.copyToString(req.getInputStream(), java.nio.charset.StandardCharsets.UTF_8);
-
-                System.out.println("✅ Raw JSON Body: " + jsonBody); 
-
-                if (jsonBody.isEmpty()) {
-                    throw new java.io.IOException("Request body is empty.");
-                }
-
-                LoginDTO data = new ObjectMapper().readValue(jsonBody, LoginDTO.class);
-
-                System.out.println("Json 파싱성공 username : " + data.getUsername());
-                String username = data.getUsername();
-                String password = data.getPassword();
-
-                UsernamePasswordAuthenticationToken authToken = 
-                    new UsernamePasswordAuthenticationToken(username, password, null);
-
-                // AuthenticationManager를 사용하여 인증 시도
-                Authentication authentication = authenticationManager.authenticate(authToken);
-
-                // 인증 성공 처리
-                successfulAuthentication(req, res, chain, authentication);
-                return; // 성공했으니 여기서 필터 체인 종료
-                
-            } catch (AuthenticationException e) {
-                // 인증 실패 처리
-                unsuccessfulAuthentication(req, res, e);
-                return; // 실패했으니 여기서 필터 체인 종료
-            } catch (Exception e) {
-              System.err.println("🚨 JSON Parsing Error or other Exception: " + e.getMessage()); // 이 로그 추가염
-                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                res.setContentType("application/json;charset=UTF-8"); // 클라이언트 JSON 파싱 에러 방지
-                res.getWriter().write("{\"error\": \"JSON Parsing Error\"}");
-                res.getWriter().flush();
-                return;
-            }
-        }
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) 
+            throws AuthenticationException {
         
-        chain.doFilter(req, res);
+        try {
+            String body = request.getReader().lines()
+                    .reduce("", (accumulator, actual) -> accumulator + actual);
+            
+            log.info("✅ Raw JSON Body: {}", body);
+            
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> credentials = mapper.readValue(body, Map.class);
+            
+            String username = credentials.get("username");
+            String password = credentials.get("password");
+            
+            log.info("Json 파싱성공 username : {}", username);
+            
+            UsernamePasswordAuthenticationToken authToken = 
+                new UsernamePasswordAuthenticationToken(username, password, null);
+            
+            return authenticationManager.authenticate(authToken);
+            
+        } catch (IOException e) {
+            log.error("❌ JSON 파싱 실패", e);
+            throw new RuntimeException(e);
+        }
     }
-    
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain,
-        Authentication authentication) throws IOException, ServletException {
-        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        String username = customUserDetails.getUsername();
-
+    @Override
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, 
+                                          FilterChain chain, Authentication authentication) 
+            throws IOException {
+        
+        String username = authentication.getName();
+        
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
-
         GrantedAuthority auth = iterator.next();
-
         String role = auth.getAuthority();
-        String token = jwtUtil.createJwt(username, role, 1000 * 60 * 60 * 3L);
-
-        // 수정함: JavaScript에서 쿠키를 읽을 수 있도록 HttpOnly를 false로 변경해씀
-        Cookie cookie = new Cookie("Authorization", token);
-        cookie.setMaxAge(3*60*60);
-        cookie.setPath("/");
-        cookie.setHttpOnly(false); // true -> false로 변경! JavaScript에서 쿠키 읽어야댐
-
-        response.addCookie(cookie);
-
-        try {
-            response.setStatus(HttpServletResponse.SC_OK); // 200 OK
-            response.setContentType("application/json;charset=UTF-8");
-
-            String jsonResponse = "{\"success\": true, \"redirectUrl\": \"/session/list\"}";
-            response.getWriter().write(jsonResponse);
-            
-            return;
-
-        } catch (IOException e) {
-            throw new RuntimeException("Error writing JSON response", e);
-        }
         
-    
+        String accessToken = jwtUtil.createJwt(username, role, 60 * 60 * 1000L);
+        String refreshToken = refreshTokenService.createRefreshToken(username);
+        
+        Cookie accessCookie = new Cookie("Authorization", accessToken);
+        accessCookie.setMaxAge(60 * 60);
+        accessCookie.setPath("/");
+        accessCookie.setHttpOnly(false);
+        
+        Cookie refreshCookie = new Cookie("RefreshToken", refreshToken);
+        refreshCookie.setMaxAge(30 * 24 * 60 * 60);
+        refreshCookie.setPath("/");
+        refreshCookie.setHttpOnly(true);
+        
+        response.addCookie(accessCookie);
+        response.addCookie(refreshCookie);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"success\":true,\"redirect\":\"/session/list\"}");
+        
+        log.info("✅ Login successful - Access Token: 1h, Refresh Token: 30d");
     }
 
-    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-        AuthenticationException failed) throws IOException, ServletException {
-        response.setStatus(401); 
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, 
+                                             AuthenticationException failed) 
+            throws IOException {
+        
+        response.setStatus(401);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"success\":false,\"message\":\"로그인 실패\"}");
     }
 }

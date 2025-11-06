@@ -5,6 +5,8 @@ import com.mockerview.entity.*;
 import com.mockerview.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -96,6 +98,11 @@ public class ReviewService {
         }
 
         @Transactional(readOnly = true)
+        public Page<Review> getMyReviewsPageable(Long reviewerId, Pageable pageable) {
+        return reviewRepository.findByReviewerId(reviewerId, pageable);
+        }
+
+        @Transactional(readOnly = true)
         public Session getSessionWithDetails(Long sessionId) {
         Session session = sessionRepository.findByIdWithHost(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
@@ -104,6 +111,11 @@ public class ReviewService {
         }
         session.getQuestions().size();
         return session;
+        }
+
+        @Transactional(readOnly = true)
+        public boolean existsByReviewerIdAndAnswerId(Long reviewerId, Long answerId) {
+        return reviewRepository.existsByReviewerIdAndAnswerId(reviewerId, answerId);
         }
 
         private ReviewDTO convertToDTO(Review review) {

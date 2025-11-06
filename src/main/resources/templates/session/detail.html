@@ -4,48 +4,146 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>세션 결과 - Mockerview</title>
-    <link rel="stylesheet" href="/css/common.css">
     <style>
-        body {
-            background: #f5f5f5;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #495057;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: #667eea;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1001;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: #667eea;
+            transition: all 0.3s;
+            border-radius: 3px;
+        }
+        
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+        
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
         .results-header {
+            margin-top: 64px;
             background: #667eea;
             color: white;
             padding: 3rem 0;
             text-align: center;
         }
+        
         .results-header h1 {
             font-size: 2rem;
             margin-bottom: 1rem;
-            font-weight: 600;
+            font-weight: 700;
         }
+        
         .session-meta {
             display: flex;
             justify-content: center;
             gap: 2rem;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
+        
         .results-container {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
+        
         .stat-card {
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             text-align: center;
-            border: 1px solid #e5e7eb;
+            border: 2px solid transparent;
+            transition: all 0.3s;
         }
+        
+        .stat-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
@@ -53,151 +151,260 @@
             display: block;
             margin-bottom: 0.5rem;
         }
+        
         .stat-label {
-            color: #6b7280;
-            font-size: 0.875rem;
+            color: #6c757d;
+            font-size: 0.9rem;
             font-weight: 500;
         }
+        
         .qa-section {
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             margin-bottom: 2rem;
-            border: 1px solid #e5e7eb;
         }
+        
         .section-title {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #1f2937;
+            color: #212529;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 2px solid #667eea;
         }
+        
         .qa-item {
-            border-left: 3px solid #667eea;
+            border-left: 4px solid #667eea;
             padding-left: 1.5rem;
             margin-bottom: 2.5rem;
         }
+        
         .question-text {
-            font-size: 1.125rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            color: #374151;
+            color: #212529;
             margin-bottom: 1rem;
         }
+        
         .answer-card {
             background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
             padding: 1.25rem;
             margin-bottom: 1rem;
+            transition: all 0.2s;
         }
+        
+        .answer-card:hover {
+            border-color: #667eea;
+        }
+        
         .answer-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.75rem;
         }
+        
         .answer-author {
             font-weight: 600;
-            color: #4b5563;
+            color: #212529;
         }
+        
         .score-group {
             display: flex;
             gap: 8px;
         }
+        
         .answer-score {
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 500;
+            padding: 0.35rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
             color: white;
         }
+        
         .answer-score.ai {
-            background: #3b82f6;
+            background: #667eea;
         }
+        
         .answer-score.interviewer {
             background: #f59e0b;
         }
+        
         .answer-text {
-            color: #6b7280;
+            color: #495057;
             line-height: 1.6;
         }
+        
         .feedback-section {
             margin-top: 1rem;
             padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #e0e0e0;
         }
+        
         .feedback-title {
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            color: #6b7280;
+            color: #6c757d;
             margin-bottom: 0.75rem;
         }
+        
         .feedback-card {
-            background: #fef3c7;
-            border: 1px solid #fde68a;
-            border-radius: 6px;
-            padding: 0.875rem;
+            background: #fffbeb;
+            border: 2px solid #fde68a;
+            border-radius: 8px;
+            padding: 1rem;
             margin-bottom: 0.75rem;
         }
+        
         .feedback-card.ai {
             background: #eff6ff;
             border-color: #dbeafe;
         }
+        
         .feedback-author-tag {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: #92400e;
             margin-bottom: 0.5rem;
         }
+        
         .feedback-card.ai .feedback-author-tag {
             color: #1e40af;
         }
+        
         .feedback-text {
-            font-size: 0.875rem;
-            color: #374151;
+            font-size: 0.9rem;
+            color: #212529;
             line-height: 1.6;
         }
+        
         .action-buttons {
             display: flex;
             gap: 1rem;
             justify-content: center;
-            margin-top: 2rem;
+            margin: 2rem 0;
         }
+        
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
         .empty-state {
             text-align: center;
-            padding: 2rem;
-            color: #9ca3af;
+            padding: 3rem;
+            color: #6c757d;
         }
-
+        
         @media (max-width: 768px) {
-            .results-header { padding: 2rem 0; }
-            .results-header h1 { font-size: 24px; }
-            .session-meta { 
-                flex-direction: column; 
-                gap: 8px; 
-                font-size: 13px; 
+            .navbar-nav {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                transition: all 0.3s;
+                pointer-events: none;
             }
-            .stats-grid { 
-                grid-template-columns: repeat(2, 1fr); 
-                gap: 12px; 
+            
+            .navbar-nav.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: all;
             }
-            .stat-card { padding: 20px; }
-            .stat-number { font-size: 32px; }
-            .qa-section { padding: 16px; }
-            .qa-item { padding-left: 12px; }
-            .question-text { font-size: 16px; }
-            .answer-card { padding: 12px; }
-            .feedback-grid { 
-                grid-template-columns: 1fr; 
-                gap: 12px; 
+            
+            .nav-link {
+                padding: 0.75rem 1rem;
+                width: 100%;
+                text-align: center;
             }
-            .action-buttons { 
-                flex-direction: column; 
-                gap: 8px; 
+            
+            .hamburger {
+                display: flex;
             }
-            .action-buttons .btn { width: 100%; }
+            
+            .results-header {
+                padding: 2rem 0;
+            }
+            
+            .results-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .session-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .stat-card {
+                padding: 1.5rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .qa-section {
+                padding: 1rem;
+            }
+            
+            .qa-item {
+                padding-left: 1rem;
+            }
+            
+            .question-text {
+                font-size: 1rem;
+            }
+            
+            .answer-card {
+                padding: 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -206,12 +413,15 @@
         <div class="container">
             <div class="navbar-content">
                 <a class="navbar-brand" href="/session/list">Mockerview</a>
+                <div class="hamburger" onclick="toggleMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
                 <div class="navbar-nav">
                     <a class="nav-link" href="/session/list">세션 목록</a>
-                    <div th:if="${currentUser != null}">
-                        <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
-                        <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
-                    </div>
+                    <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+                    <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
                 </div>
             </div>
         </div>
@@ -284,16 +494,14 @@
                                     </span>
                                 </div>
                                 <div class="feedback-content">
-                                    <div class="feedback-summary" th:if="${feedback.summary != null and !feedback.summary.isEmpty()}">
-                                        <strong>요약:</strong> <span th:text="${feedback.summary}">요약</span>
+                                    <div th:if="${feedback.summary != null and !feedback.summary.isEmpty()}" class="feedback-text">
+                                        <strong>요약:</strong> <span th:text="${feedback.summary}"></span>
                                     </div>
-                                    <div class="feedback-section" th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}" style="margin-top: 8px;">
-                                        <strong>강점:</strong>
-                                        <div th:text="${feedback.strengths}">강점 내용</div>
+                                    <div th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}" class="feedback-text" style="margin-top: 0.5rem;">
+                                        <strong>강점:</strong> <span th:text="${feedback.strengths}"></span>
                                     </div>
-                                    <div class="feedback-section" th:if="${feedback.improvementSuggestions != null and !feedback.improvementSuggestions.isEmpty()}" style="margin-top: 8px;">
-                                        <strong>개선점:</strong>
-                                        <div th:text="${feedback.improvementSuggestions}">개선점 내용</div>
+                                    <div th:if="${feedback.improvementSuggestions != null and !feedback.improvementSuggestions.isEmpty()}" class="feedback-text" style="margin-top: 0.5rem;">
+                                        <strong>개선점:</strong> <span th:text="${feedback.improvementSuggestions}"></span>
                                     </div>
                                 </div>
                             </div>
@@ -305,8 +513,19 @@
 
         <div class="action-buttons">
             <button class="btn btn-secondary" onclick="history.back()">뒤로가기</button>
-            <a th:href="@{/session/list}" class="btn btn-primary" style="text-decoration: none;">세션 목록</a>
+            <a th:href="@{/session/list}" class="btn btn-primary">세션 목록</a>
         </div>
     </div>
+
+    <script>
+        function toggleMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navbarNav = document.querySelector('.navbar-nav');
+            hamburger.classList.toggle('active');
+            navbarNav.classList.toggle('active');
+        }
+    </script>
+    <script src="/js/push-init.js"></script>
+    <script src="/js/push-notifications.js"></script>
 </body>
 </html>

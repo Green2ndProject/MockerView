@@ -50,8 +50,38 @@ public class Question {
     @JsonIgnoreProperties({"question"})
     private List<Answer> answers = new ArrayList<>();
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+    
+    @Column(name = "difficulty_level")
+    @Builder.Default
+    private Integer difficultyLevel = 2;
+    
+    @Column(name = "question_type")
+    @Builder.Default
+    private String questionType = "TECHNICAL";
+    
+    @Column(name = "is_ai_generated")
+    @Builder.Default
+    private Boolean isAiGenerated = false;
+    
+    @Column(name = "ai_prompt_hash")
+    private String aiPromptHash;
+    
+    @Column(name = "tags")
+    private String tags;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+    
+    public String getContent() {
+        return text;
+    }
+    
+    public Integer getQuestionOrder() {
+        return orderNo;
     }
 }
