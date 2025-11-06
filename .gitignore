@@ -28,6 +28,7 @@ target/
 .env.local
 .env.development
 .env.production
+.env.*
 
 # 임시 파일
 *.tmp
@@ -36,3 +37,7 @@ bin/
 run-local.sh
 run.sh
 .env
+
+# 로컬 전용 DB 데이터
+postgres_data/
+redis_data/
