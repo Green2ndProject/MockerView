@@ -1,7 +1,7 @@
 spring:
   application:
     name: mockerview
-  
+
   main:
     allow-bean-definition-overriding: true
 
@@ -32,7 +32,7 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
-  
+
   cache:
     type: redis
     redis:
@@ -89,7 +89,6 @@ spring:
 server:
   port: 8080
   address: 0.0.0.0
-  connection-timeout: 300000
   tomcat:
     connection-timeout: 300000
     threads:
@@ -161,7 +160,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
