@@ -18,7 +18,7 @@ public class AnalysisViewController {
 
     private final UserRepository userRepository;
 
-    @GetMapping("/voice/result")
+    @GetMapping("/voice-result")
     public String voiceAnalysisPage(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         Model model
@@ -32,7 +32,7 @@ public class AnalysisViewController {
         return "analysis/voice-result";
     }
 
-    @GetMapping("/facial/result")
+    @GetMapping("/facial-result")
     public String facialAnalysisPage(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         Model model
@@ -46,7 +46,7 @@ public class AnalysisViewController {
         return "analysis/facial-result";
     }
 
-    @GetMapping("/mbti/result")
+    @GetMapping("/mbti-result")
     public String mbtiAnalysisPage(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         Model model
@@ -60,7 +60,7 @@ public class AnalysisViewController {
         return "analysis/mbti-result";
     }
 
-    @GetMapping("/growth/result")
+    @GetMapping("/growth-comparison")
     public String growthComparisonPage(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         Model model

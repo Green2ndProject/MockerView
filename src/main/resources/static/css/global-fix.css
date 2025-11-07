@@ -1,0 +1,84 @@
+/* 전역 리셋 및 레이아웃 수정 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 70px !important;
+    margin: 0 !important;
+    overflow-x: hidden;
+    overflow-y: auto !important; /* 스크롤 가능하게 */
+}
+
+/* 네비게이션 바 고정 */
+.navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1000 !important;
+    height: 70px;
+}
+
+/* 메인 컨텐츠 영역 */
+.container,
+.main-content,
+main {
+    flex: 1 0 auto !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 40px 20px !important;
+}
+
+/* 푸터 하단 고정 */
+.footer {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    width: 100% !important;
+    position: relative !important;
+}
+
+/* 게스트 페이지 (로그인, 회원가입) */
+body.guest-page {
+    padding-top: 0 !important;
+}
+
+body.guest-page .navbar {
+    position: relative !important;
+}
+
+/* 반응형 수정 */
+@media (max-width: 768px) {
+    body {
+        padding-top: 60px !important;
+    }
+    
+    .navbar {
+        height: 60px;
+    }
+    
+    .container {
+        padding: 20px 15px !important;
+    }
+}
+
+/* 스크롤 가능하게 */
+body.no-scroll {
+    overflow: hidden !important;
+}
+
+/* 중복 푸터 숨기기 (임시) */
+.footer + .footer {
+    display: none !important;
+}
