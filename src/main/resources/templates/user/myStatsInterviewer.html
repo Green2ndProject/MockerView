@@ -287,8 +287,8 @@
             <div th:if="${topInterviewees != null and !topInterviewees.isEmpty()}">
                 <div class="ranking-item" th:each="interviewee, stat : ${topInterviewees}">
                     <div class="rank-badge"
-                         th:classappend="${stat.index == 0} ? 'gold' : (${stat.index == 1} ? 'silver' : (${stat.index == 2} ? 'bronze' : 'other'))"
-                         th:text="${stat.index + 1}">1</div>
+                        th:classappend="${stat.index == 0} ? 'gold' : (${stat.index == 1} ? 'silver' : (${stat.index == 2} ? 'bronze' : 'other'))"
+                        th:text="${stat.index + 1}">1</div>
                     <div class="ranking-name" th:text="${interviewee[1]}">사용자명</div>
                     <div class="ranking-score" th:text="${#numbers.formatDecimal(interviewee[2], 1, 1)} + '점'">0.0점</div>
                 </div>
