@@ -51,7 +51,7 @@ public class MyPageController {
             User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
             
-            log.info("마이페이지 로드 - userId: {}, username: {}", user.getId(), user.getUsername());
+            log.info("🎯 마이페이지 로드 - userId: {}, username: {}, role: {}", user.getId(), user.getUsername(), user.getRole());
             
             com.mockerview.entity.Subscription subscription = subscriptionService.getActiveSubscription(user.getId());
             
@@ -74,29 +74,57 @@ public class MyPageController {
             }
             
             List<Answer> userAnswers = answerRepository.findByUserIdWithFeedbacks(user.getId());
-            log.info("사용자 답변 수: {}", userAnswers.size());
+            log.info("📝 사용자 답변 수: {}", userAnswers.size());
             
-            List<Answer> answersWithVideo = userAnswers.stream()
-                .filter(a -> a.getVideoUrl() != null && !a.getVideoUrl().isEmpty())
-                .collect(Collectors.toList());
-            log.info("녹화가 있는 답변 수: {}", answersWithVideo.size());
+            List<Answer> answersWithVideo = new ArrayList<>();
             
             for (Answer answer : userAnswers) {
-                if (answer.getQuestion() != null && answer.getQuestion().getSession() != null) {
-                    answer.getQuestion().getSession().getTitle();
+                try {
+                    if (answer.getQuestion() != null) {
+                        org.hibernate.Hibernate.initialize(answer.getQuestion());
+                        if (answer.getQuestion().getSession() != null) {
+                            org.hibernate.Hibernate.initialize(answer.getQuestion().getSession());
+                        }
+                    }
+                    
+                    if (answer.getVideoUrl() != null && !answer.getVideoUrl().trim().isEmpty()) {
+                        answersWithVideo.add(answer);
+                        log.info("🎥 Answer #{} has video: {}", answer.getId(), answer.getVideoUrl());
+                    }
+                } catch (Exception e) {
+                    log.warn("⚠️ 답변 처리 실패: answerId={}, error={}", answer.getId(), e.getMessage());
                 }
             }
             
+            log.info("📹 녹화가 있는 답변 수: {}", answersWithVideo.size());
+            
             List<Session> hostedSessions = sessionRepository.findByHostId(user.getId());
-            log.info("호스팅한 세션 수: {}", hostedSessions.size());
+            log.info("🎬 호스팅한 세션 수: {}", hostedSessions.size());
             
             List<Session> sessionsWithRecording = sessionRepository.findByHostIdWithRecording(user.getId());
-            log.info("녹화가 있는 세션 수: {}", sessionsWithRecording.size());
+            log.info("🎞️ 녹화가 있는 세션 수: {}", sessionsWithRecording.size());
             
-            Set<Long> participatedSessionIds = userAnswers.stream()
-                .filter(a -> a.getQuestion() != null && a.getQuestion().getSession() != null)
-                .map(answer -> answer.getQuestion().getSession().getId())
-                .collect(Collectors.toSet());
+            for (Session session : sessionsWithRecording) {
+                log.info("🎥 Session #{} has recording: {}", session.getId(), session.getVideoRecordingUrl());
+            }
+            
+            long recordedSessionCount = hostedSessions.stream()
+                .filter(s -> s.getVideoRecordingUrl() != null && !s.getVideoRecordingUrl().trim().isEmpty())
+                .count();
+            
+            log.info("✅ 실제 녹화된 세션: {}", recordedSessionCount);
+            
+            Set<Long> participatedSessionIds = new HashSet<>();
+            for (Answer answer : userAnswers) {
+                try {
+                    if (answer.getQuestion() != null && answer.getQuestion().getSession() != null) {
+                        participatedSessionIds.add(answer.getQuestion().getSession().getId());
+                    }
+                } catch (Exception e) {
+                    log.warn("⚠️ 세션 ID 추출 실패: answerId={}", answer.getId());
+                }
+            }
+            log.info("👥 참여한 세션 수: {}", participatedSessionIds.size());
             
             model.addAttribute("user", user);
             model.addAttribute("userAnswers", userAnswers);
@@ -105,14 +133,16 @@ public class MyPageController {
             model.addAttribute("hostedSessions", hostedSessions);
             model.addAttribute("participatedSessionCount", participatedSessionIds.size());
             model.addAttribute("answerCount", userAnswers.size());
+            model.addAttribute("recordedSessionCount", recordedSessionCount);
             
-            log.info("마이페이지 로드 완료 - 답변: {}, 호스팅: {}, 녹화: {}, 세션녹화: {}", 
+            log.info("✅ 마이페이지 로드 완료 - 답변: {}, 호스팅: {}, 개인녹화: {}, 세션녹화: {}", 
                 userAnswers.size(), hostedSessions.size(), answersWithVideo.size(), sessionsWithRecording.size());
             
             return "user/mypage";
             
         } catch (Exception e) {
-            log.error("마이페이지 로드 실패", e);
+            log.error("❌ 마이페이지 로드 실패", e);
+            e.printStackTrace();
             model.addAttribute("error", "마이페이지를 불러올 수 없습니다: " + e.getMessage());
             return "error";
         }
@@ -147,8 +177,13 @@ public class MyPageController {
 
     private String loadInterviewerStats(User currentUser, Model model) {
         try {
+            log.info("📊 면접관 통계 로드 시작 - userId: {}", currentUser.getId());
+            
             List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
+            log.info("✅ 호스팅 세션 조회 완료: {} 개", hostedSessions.size());
+            
             List<Feedback> givenFeedbacks = feedbackRepository.findByReviewerId(currentUser.getId());
+            log.info("✅ 제공 피드백 조회 완료: {} 개", givenFeedbacks.size());
             
             long totalHostedSessions = hostedSessions.size();
             long endedSessionsCount = hostedSessions.stream()
@@ -170,15 +205,18 @@ public class MyPageController {
                     sessionsByMonth.put(month, sessionsByMonth.getOrDefault(month, 0L) + 1);
                 }
             }
+            log.info("✅ 월별 데이터 생성 완료: {} 개월", sessionsByMonth.size());
             
             List<Object[]> topInterviewees = new ArrayList<>();
             try {
                 topInterviewees = answerRepository.findAllUserAverageScores();
-                if (topInterviewees.size() > 10) {
+                if (topInterviewees != null && topInterviewees.size() > 10) {
                     topInterviewees = topInterviewees.subList(0, 10);
                 }
+                log.info("✅ 상위 면접자 조회 완료: {} 명", topInterviewees.size());
             } catch (Exception e) {
-                log.warn("상위 면접자 조회 실패", e);
+                log.warn("⚠️ 상위 면접자 조회 실패", e);
+                topInterviewees = new ArrayList<>();
             }
             
             model.addAttribute("totalHostedSessions", totalHostedSessions);
@@ -190,12 +228,21 @@ public class MyPageController {
             model.addAttribute("hostedSessions", hostedSessions);
             model.addAttribute("givenFeedbacks", givenFeedbacks);
             
+            log.info("✅ 면접관 통계 로드 완료");
             return "user/myStatsInterviewer";
             
         } catch (Exception e) {
-            log.error("면접관 통계 로드 실패", e);
-            model.addAttribute("error", "통계를 불러올 수 없습니다.");
-            return "redirect:/auth/mypage";
+            log.error("❌ 면접관 통계 로드 실패 - userId: {}", currentUser.getId(), e);
+            e.printStackTrace();
+            model.addAttribute("totalHostedSessions", 0L);
+            model.addAttribute("endedSessionsCount", 0L);
+            model.addAttribute("totalFeedbacksGiven", 0L);
+            model.addAttribute("avgGivenScore", 0.0);
+            model.addAttribute("sessionsByMonth", new LinkedHashMap<>());
+            model.addAttribute("topInterviewees", new ArrayList<>());
+            model.addAttribute("hostedSessions", new ArrayList<>());
+            model.addAttribute("givenFeedbacks", new ArrayList<>());
+            return "user/myStatsInterviewer";
         }
     }
 

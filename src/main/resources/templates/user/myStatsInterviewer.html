@@ -3,20 +3,18 @@
 <head th:replace="~{fragments/head :: head('면접관 활동 통계')}"></head>
 <style th:replace="~{fragments/styles :: navbar-styles}"></style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
     body {
         background: #f8f9fa;
         padding-top: 70px;
     }
-    
+
     .container {
         max-width: 1400px;
         margin: 0 auto;
         padding: 20px;
     }
-    
+
     .stats-header {
         display: flex;
         justify-content: space-between;
@@ -44,6 +42,8 @@
         font-size: 0.75rem;
         cursor: pointer;
         transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
     }
 
     .btn-primary {
@@ -57,45 +57,31 @@
         color: #667eea;
         border: 1px solid #667eea;
     }
-    
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         margin-bottom: 20px;
     }
-    
+
     .stat-card {
         background: white;
         padding: 16px;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-    
+
     .stat-label {
         font-size: 0.75rem;
         color: #6b7280;
         margin-bottom: 4px;
     }
-    
+
     .stat-number {
         font-size: 1.5rem;
         font-weight: 700;
         color: #1a1a1a;
-    }
-    
-    .stat-change {
-        font-size: 0.6875rem;
-        font-weight: 600;
-        margin-top: 2px;
-    }
-    
-    .positive {
-        color: #10b981;
-    }
-    
-    .negative {
-        color: #ef4444;
     }
 
     .main-content {
@@ -104,14 +90,14 @@
         gap: 20px;
         margin-bottom: 20px;
     }
-    
+
     .chart-container {
         background: white;
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-    
+
     .chart-header {
         font-size: 0.875rem;
         font-weight: 700;
@@ -120,47 +106,7 @@
     }
 
     canvas {
-        max-height: 200px;
-    }
-    
-    .feedback-quality {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-    
-    .quality-metrics {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-    
-    .metric-item {
-        text-align: center;
-        padding: 12px;
-        background: #f9fafb;
-        border-radius: 6px;
-    }
-    
-    .metric-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .metric-label {
-        font-size: 0.6875rem;
-        color: #6b7280;
-        margin-top: 2px;
-    }
-
-    .bottom-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        max-height: 250px;
     }
 
     .ranking-container {
@@ -171,352 +117,289 @@
     }
 
     .ranking-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-    .ranking-title {
         font-size: 0.875rem;
         font-weight: 700;
         color: #1a1a1a;
-    }
-
-    .ranking-filter {
-        display: flex;
-        gap: 4px;
-    }
-
-    .filter-btn {
-        padding: 3px 8px;
-        font-size: 0.625rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 4px;
-        background: #f3f4f6;
-        color: #6b7280;
-        cursor: pointer;
-    }
-
-    .filter-btn.active {
-        background: #667eea;
-        color: white;
-    }
-
-    .ranking-list {
-        max-height: 280px;
-        overflow-y: auto;
+        margin-bottom: 12px;
     }
 
     .ranking-item {
         display: flex;
         align-items: center;
         padding: 8px;
+        border-radius: 6px;
         margin-bottom: 6px;
         background: #f9fafb;
-        border-radius: 6px;
-        font-size: 0.75rem;
     }
 
-    .ranking-item.current-user {
-        background: #fef3c7;
+    .ranking-item:hover {
+        background: #f3f4f6;
     }
 
-    .rank-number {
-        font-weight: 700;
-        color: #667eea;
+    .rank-badge {
         width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-right: 12px;
     }
 
-    .rank-info {
+    .rank-badge.gold {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+
+    .rank-badge.silver {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .rank-badge.bronze {
+        background: #fed7aa;
+        color: #d97706;
+    }
+
+    .rank-badge.other {
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .ranking-name {
         flex: 1;
-        margin-left: 8px;
-    }
-
-    .rank-name {
+        font-size: 0.8125rem;
         font-weight: 600;
         color: #374151;
     }
 
-    .rank-stats {
-        font-size: 0.625rem;
-        color: #6b7280;
+    .ranking-score {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: #667eea;
     }
 
-    .rank-score {
-        font-weight: 700;
-        color: #10b981;
-    }
-    
-    .recent-sessions {
+    .sessions-container {
         background: white;
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        margin-bottom: 20px;
     }
-    
+
     .sessions-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-    
-    .sessions-title {
         font-size: 0.875rem;
         font-weight: 700;
         color: #1a1a1a;
+        margin-bottom: 12px;
     }
-    
-    .view-all {
-        font-size: 0.75rem;
-        color: #667eea;
-        text-decoration: none;
-        font-weight: 600;
-    }
-    
-    .sessions-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    
+
     .session-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        background: #f9fafb;
+        padding: 12px;
         border-radius: 6px;
-        font-size: 0.75rem;
+        background: #f9fafb;
+        margin-bottom: 8px;
+        border-left: 3px solid #667eea;
     }
-    
-    .session-info {
-        flex: 1;
-    }
-    
+
     .session-title {
+        font-size: 0.8125rem;
         font-weight: 600;
-        color: #374151;
-        margin-bottom: 2px;
+        color: #1a1a1a;
+        margin-bottom: 4px;
     }
-    
+
     .session-meta {
-        font-size: 0.625rem;
-        color: #6b7280;
-    }
-    
-    .session-stats {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-    }
-    
-    .session-stat {
         font-size: 0.6875rem;
         color: #6b7280;
     }
-    
-    .stat-value {
-        font-weight: 600;
-        color: #374151;
-    }
-    
+
     .empty-state {
         text-align: center;
+        padding: 60px 20px;
         color: #9ca3af;
-        padding: 20px;
-        font-size: 0.75rem;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+    }
+
+    .empty-text {
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .main-content {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 </head>
 <body>
-    <div th:replace="~{fragments/navbar :: navbar}"></div>
-    
-    <div class="container">
-        <div class="stats-header">
-            <h1>면접관 활동 통계</h1>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportToPDF()">PDF 내보내기</button>
-                <button class="btn btn-outline" onclick="exportToCSV()">CSV 내보내기</button>
-            </div>
+<nav th:replace="~{fragments/navbar :: navbar}"></nav>
+
+<div class="container">
+    <div class="stats-header">
+        <h1>📊 면접관 활동 통계</h1>
+        <div class="export-buttons">
+            <a href="/auth/mypage" class="btn btn-outline">← 돌아가기</a>
         </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">주최한 면접</div>
-                <div class="stat-number" th:text="${hostedSessions}">0</div>
-                <div class="stat-change" th:classappend="${sessionChange != null and sessionChange.startsWith('+') ? 'positive' : 'negative'}" th:text="${sessionChange}"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">총 면접자 수</div>
-                <div class="stat-number" th:text="${totalCandidates}">0</div>
-                <div class="stat-change" th:classappend="${candidateChange != null and candidateChange.startsWith('+') ? 'positive' : 'negative'}" th:text="${candidateChange}"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">작성한 피드백</div>
-                <div class="stat-number" th:text="${feedbackCount}">0</div>
-                <div class="stat-change" th:classappend="${feedbackChange != null and feedbackChange.startsWith('+') ? 'positive' : 'negative'}" th:text="${feedbackChange}"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">평균 평점</div>
-                <div class="stat-number" th:text="${averageRating}">0</div>
-                <div class="stat-change" th:classappend="${ratingChange != null and ratingChange.startsWith('+') ? 'positive' : ''}" th:text="${ratingChange}"></div>
-            </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">주최한 면접</div>
+            <div class="stat-number" th:text="${totalHostedSessions}">0</div>
         </div>
 
-        <div class="main-content">
-            <div class="chart-container">
-                <h2 class="chart-header">월별 면접 활동 추이</h2>
-                <canvas id="activityChart"></canvas>
-            </div>
-            <div class="feedback-quality">
-                <h2 class="chart-header">피드백 품질 지표</h2>
-                <div class="quality-metrics">
-                    <div class="metric-item">
-                        <div class="metric-value" th:text="${helpfulRate}">0%</div>
-                        <div class="metric-label">도움이 됨</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-value" th:text="${specificRate}">0%</div>
-                        <div class="metric-label">구체적임</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-value" th:text="${constructiveRate}">0%</div>
-                        <div class="metric-label">건설적임</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-value" th:text="${actionableRate}">0%</div>
-                        <div class="metric-label">실행 가능함</div>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-label">완료된 세션</div>
+            <div class="stat-number" th:text="${endedSessionsCount}">0</div>
         </div>
 
-        <div class="bottom-grid">
-            <div class="ranking-container">
-                <div class="ranking-header">
-                    <h2 class="ranking-title">면접자 순위</h2>
-                    <div class="ranking-filter">
-                        <button class="filter-btn active" onclick="filterRanking('all')">전체</button>
-                        <button class="filter-btn" onclick="filterRanking('weekly')">주간</button>
-                        <button class="filter-btn" onclick="filterRanking('monthly')">월간</button>
-                    </div>
-                </div>
-                <div class="ranking-list">
-                    <div th:each="rank : ${intervieweeRankings}" 
-                         class="ranking-item" 
-                         th:classappend="${rank.isCurrentUser ? 'current-user' : ''}">
-                        <span class="rank-number" th:text="${rank.rank}"></span>
-                        <div class="rank-info">
-                            <div class="rank-name" th:text="${rank.name}"></div>
-                            <div class="rank-stats" th:text="${rank.stats}"></div>
-                        </div>
-                        <span class="rank-score" th:text="${rank.score}"></span>
-                    </div>
+        <div class="stat-card">
+            <div class="stat-label">제공한 피드백</div>
+            <div class="stat-number" th:text="${totalFeedbacksGiven}">0</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">평균 점수</div>
+            <div class="stat-number" th:text="${avgGivenScore}">0.0</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="chart-container">
+            <div class="chart-header">월별 세션 추이</div>
+            <canvas id="sessionsByMonthChart"></canvas>
+        </div>
+
+        <div class="ranking-container">
+            <div class="ranking-header">면접자 순위 Top 10</div>
+            <div th:if="${topInterviewees != null and !topInterviewees.isEmpty()}">
+                <div class="ranking-item" th:each="interviewee, stat : ${topInterviewees}">
+                    <div class="rank-badge"
+                         th:classappend="${stat.index == 0} ? 'gold' : (${stat.index == 1} ? 'silver' : (${stat.index == 2} ? 'bronze' : 'other'))"
+                         th:text="${stat.index + 1}">1</div>
+                    <div class="ranking-name" th:text="${interviewee[1]}">사용자명</div>
+                    <div class="ranking-score" th:text="${#numbers.formatDecimal(interviewee[2], 1, 1)} + '점'">0.0점</div>
                 </div>
             </div>
+            <div class="empty-state" th:if="${topInterviewees == null or topInterviewees.isEmpty()}">
+                <div class="empty-icon">👤</div>
+                <div class="empty-text">아직 데이터가 없습니다</div>
+            </div>
+        </div>
+    </div>
 
-            <div class="recent-sessions">
-                <div class="sessions-header">
-                    <h2 class="sessions-title">최근 주최한 면접</h2>
-                    <a href="/sessions/my-hosted" class="view-all">전체 보기 →</a>
-                </div>
-                <div class="sessions-list" th:if="${recentSessions != null and !recentSessions.isEmpty()}">
-                    <div class="session-item" th:each="session : ${recentSessions}">
-                        <div class="session-info">
-                            <div class="session-title" th:text="${session.title}"></div>
-                            <div class="session-meta">
-                                <span th:text="${session.date}"></span> · 
-                                <span th:text="${session.duration}"></span>
-                            </div>
-                        </div>
-                        <div class="session-stats">
-                            <div class="session-stat">
-                                참가자: <span class="stat-value" th:text="${session.participants}"></span>
-                            </div>
-                            <div class="session-stat">
-                                평점: <span class="stat-value" th:text="${session.rating}"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="empty-state" th:unless="${recentSessions != null and !recentSessions.isEmpty()}">
-                    아직 주최한 면접이 없습니다
+    <div class="sessions-container" th:if="${hostedSessions != null and !hostedSessions.isEmpty()}">
+        <div class="sessions-header">최근 주최한 면접 세션</div>
+        <div th:each="sess, stat : ${hostedSessions}">
+            <div class="session-item" th:if="${stat.index < 10}">
+                <div class="session-title" th:text="${sess.title}">세션 제목</div>
+                <div class="session-meta">
+                    <span th:text="${#temporals.format(sess.createdAt, 'yyyy년 MM월 dd일 HH:mm')}">날짜</span>
+                    <span> • </span>
+                    <span th:text="${sess.status}">상태</span>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div th:replace="~{fragments/footer :: footer}"></div>
-    
-    <div th:replace="~{fragments/scripts :: navbar-script}"></div>
-    <div th:replace="~{fragments/scripts :: common-scripts}"></div>
-    
-    <script th:inline="javascript">
-        const activityData = /*[[${activityChartData}]]*/ null;
-        
-        if (activityData) {
-            const ctx = document.getElementById('activityChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: activityData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
+
+    <div class="sessions-container" th:if="${hostedSessions == null or hostedSessions.isEmpty()}">
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">아직 주최한 면접이 없습니다</div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const sessionsByMonthData = /*[[${sessionsByMonth}]]*/ {};
+    const months = Object.keys(sessionsByMonthData).sort();
+    const counts = months.map(m => sessionsByMonthData[m]);
+
+    const ctx = document.getElementById('sessionsByMonthChart');
+    if (ctx && months.length > 0) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: '세션 수',
+                    data: counts,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 13,
+                            weight: 600
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        cornerRadius: 6
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: '#f3f4f6'
                         }
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
                         }
                     }
                 }
-            });
-        }
-
-        function filterRanking(period) {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-        }
-
-        function exportToPDF() {
-            const element = document.querySelector('.container');
-            html2canvas(element).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jspdf.jsPDF('l', 'mm', 'a4');
-                const imgWidth = 280;
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                pdf.addImage(imgData, 'PNG', 5, 5, imgWidth, imgHeight);
-                pdf.save('interviewer-stats.pdf');
-            });
-        }
-
-        function exportToCSV() {
-            const csvData = [];
-            csvData.push(['면접관 활동 통계']);
-            csvData.push(['']);
-            csvData.push(['항목', '값']);
-            
-            document.querySelectorAll('.stat-card').forEach(card => {
-                const label = card.querySelector('.stat-label').textContent;
-                const value = card.querySelector('.stat-number').textContent;
-                csvData.push([label, value]);
-            });
-            
-            const csvContent = csvData.map(e => e.join(',')).join('\n');
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'interviewer-stats.csv';
-            link.click();
-        }
-    </script>
+            }
+        });
+    } else if (ctx) {
+        const canvas = ctx.getContext('2d');
+        canvas.font = '14px sans-serif';
+        canvas.fillStyle = '#9ca3af';
+        canvas.textAlign = 'center';
+        canvas.fillText('아직 데이터가 없습니다', ctx.width / 2, ctx.height / 2);
+    }
+</script>
 </body>
 </html>
