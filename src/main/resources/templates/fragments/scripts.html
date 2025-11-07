@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="navbar-script">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('mobileMenuToggle');
+    const links = document.getElementById('navLinks');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    if (toggle && links && overlay) {
+        toggle.addEventListener('click', function() {
+            toggle.classList.toggle('active');
+            links.classList.toggle('active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = links.classList.contains('active') ? 'hidden' : '';
+        });
+        overlay.addEventListener('click', function() {
+            toggle.classList.remove('active');
+            links.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+});
+</script>
+</div>
+
+<div th:fragment="common-scripts">
+<script src="/js/push-init.js"></script>
+</div>
+</body>
+</html>

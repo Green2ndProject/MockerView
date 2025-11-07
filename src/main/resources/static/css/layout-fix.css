@@ -1,0 +1,33 @@
+/* 글로벌 레이아웃 픽스 */
+html {
+    height: 100%;
+}
+
+body {
+    padding-top: 70px !important; /* navbar 높이 */
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+}
+
+.container,
+.main-content,
+main {
+    flex: 1 !important;
+}
+
+.footer {
+    margin-top: auto !important;
+    width: 100% !important;
+}
+
+/* Navbar 스크롤 시 그림자 효과 */
+.navbar.scrolled {
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+}
+
+/* 게스트 페이지는 padding-top 없음 (로그인, 회원가입) */
+body.guest-page {
+    padding-top: 0 !important;
+}
