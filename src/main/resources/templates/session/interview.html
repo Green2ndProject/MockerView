@@ -1,1856 +1,2225 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>면접 진행</title>
-    
+
     <script>
-        if (location.protocol !== 'https:' && !location.hostname.includes('localhost')) {
-            location.replace('https:' + window.location.href.substring(window.location.protocol.length));
-        }
+      if (
+        location.protocol !== "https:" &&
+        !location.hostname.includes("localhost")
+      ) {
+        location.replace(
+          "https:" +
+            window.location.href.substring(window.location.protocol.length)
+        );
+      }
     </script>
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.18.0.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #1a1a1a;
-            height: 100vh;
-            overflow: hidden;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #1a1a1a;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-        .container {
-            display: grid;
-            grid-template-rows: 60px 1fr;
-            height: 100vh;
-        }
+      .container {
+        display: grid;
+        grid-template-rows: 60px 1fr;
+        height: 100vh;
+      }
 
-        .header {
-            background: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 24px;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      .header {
+        background: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 24px;
+        border-bottom: 1px solid #e5e7eb;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      .logo {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      .timer {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+
+      .btn-end {
+        padding: 10px 24px;
+        background: white;
+        color: #ef4444;
+        border: 2px solid #ef4444;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-end:hover {
+        background: #ef4444;
+        color: white;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 280px 1fr 350px;
+        gap: 16px;
+        padding: 16px;
+        height: calc(100vh - 60px);
+        overflow: hidden;
+      }
+
+      .left-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+      }
+
+      .video-section {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .section-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6b7280;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .video-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      /*비디오 그리고 hover 감지 CSS*/
+      .video-grid:hover {
+        border: 2px solid #667eea;
+        border-radius: 6px;
+      }
+
+      .video-wrapper {
+        position: relative;
+        background: #000;
+        border-radius: 6px;
+        overflow: hidden;
+        aspect-ratio: 4/3;
+      }
+
+      .video-wrapper video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .video-label {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        backdrop-filter: blur(4px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+      }
+
+      .interviewer-badge {
+        background: #667eea;
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .center-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+      }
+
+      .qa-container {
+        background: white;
+        border-radius: 8px;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .qa-item {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .qa-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+
+      .qa-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .qa-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .question-badge {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .answer-badge {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .qa-author {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .qa-content {
+        font-size: 0.9375rem;
+        color: #1a1a1a;
+        line-height: 1.6;
+      }
+
+      .qa-time {
+        font-size: 0.6875rem;
+        color: #9ca3af;
+        margin-top: 4px;
+      }
+
+      .right-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+      }
+
+      .control-panel {
+        background: white;
+        border-radius: 8px;
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .panel-title {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+      }
+
+      .btn-action {
+        width: 100%;
+        padding: 12px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 8px;
+      }
+
+      .btn-action:hover {
+        background: #5568d3;
+      }
+
+      .btn-action:last-child {
+        margin-bottom: 0;
+      }
+
+      .btn-secondary {
+        background: #f3f4f6;
+        color: #1a1a1a;
+      }
+
+      .btn-secondary:hover {
+        background: #e5e7eb;
+      }
+
+      .btn-voice {
+        background: #10b981;
+      }
+
+      .btn-voice:hover {
+        background: #059669;
+      }
+
+      .btn-voice.recording {
+        background: #ef4444;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .form-group {
+        margin-bottom: 12px;
+      }
+
+      .form-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .form-textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 10px;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        resize: vertical;
+        font-family: inherit;
+      }
+
+      .form-textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .form-select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        background: white;
+      }
+
+      .form-select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .star {
+        cursor: pointer;
+        color: #e5e7eb;
+        transition: color 0.2s;
+        user-select: none;
+      }
+
+      .star:hover,
+      .star.active {
+        color: #fbbf24;
+      }
+
+      .subtitle-section {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 80px;
+        max-height: 120px;
+        overflow-y: auto;
+        font-size: 0.875rem;
+        color: #4b5563;
+        line-height: 1.6;
+        position: relative;
+      }
+
+      .subtitle-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .subtitle-text {
+        color: #1a1a1a;
+        font-weight: 500;
+      }
+
+      .subtitle-interim {
+        color: #9ca3af;
+        font-style: italic;
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+
+      @media (max-width: 1280px) {
+        .main-content {
+          grid-template-columns: 240px 1fr 320px;
+          gap: 12px;
+          padding: 12px;
         }
 
         .logo {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #667eea;
+          font-size: 1.125rem;
         }
 
         .timer {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1a1a1a;
+          font-size: 1.25rem;
         }
+      }
 
-        .btn-end {
-            padding: 10px 24px;
-            background: white;
-            color: #ef4444;
-            border: 2px solid #ef4444;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-end:hover {
-            background: #ef4444;
-            color: white;
-        }
-
+      @media (max-width: 1024px) {
         .main-content {
-            display: grid;
-            grid-template-columns: 280px 1fr 350px;
-            gap: 16px;
-            padding: 16px;
-            height: calc(100vh - 60px);
-            overflow: hidden;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto;
+          gap: 12px;
         }
 
         .left-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-        }
-
-        .video-section {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #6b7280;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .video-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .video-wrapper {
-            position: relative;
-            background: #000;
-            border-radius: 6px;
-            overflow: hidden;
-            aspect-ratio: 4/3;
-        }
-
-        .video-wrapper video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .video-label {
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 700;
-            backdrop-filter: blur(4px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            z-index: 10;
-        }
-
-        .interviewer-badge {
-            background: #667eea;
-            color: white;
-            border-color: rgba(255, 255, 255, 0.3);
+          order: 1;
+          max-height: 300px;
         }
 
         .center-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-        }
-
-        .qa-container {
-            background: white;
-            border-radius: 8px;
-            padding: 16px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .qa-item {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .qa-item:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
-
-        .qa-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .qa-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .question-badge {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .answer-badge {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .qa-author {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 600;
-        }
-
-        .qa-content {
-            font-size: 0.9375rem;
-            color: #1a1a1a;
-            line-height: 1.6;
-        }
-
-        .qa-time {
-            font-size: 0.6875rem;
-            color: #9ca3af;
-            margin-top: 4px;
+          order: 2;
+          max-height: 400px;
         }
 
         .right-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
+          order: 3;
+          max-height: 400px;
         }
 
-        .control-panel {
-            background: white;
-            border-radius: 8px;
-            padding: 16px;
-            border: 1px solid #e5e7eb;
+        .video-grid {
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+
+        .video-wrapper {
+          flex: 1;
+          min-width: 200px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .header {
+          padding: 0 16px;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .logo {
+          font-size: 1rem;
+        }
+
+        .timer {
+          font-size: 1.125rem;
+        }
+
+        .btn-end {
+          padding: 8px 16px;
+          font-size: 0.8125rem;
+        }
+
+        .main-content {
+          padding: 8px;
+          gap: 8px;
+        }
+
+        .qa-container,
+        .video-section,
+        .control-panel,
+        .subtitle-display {
+          padding: 12px;
+        }
+
+        .section-title {
+          font-size: 0.6875rem;
         }
 
         .panel-title {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 12px;
+          font-size: 0.8125rem;
+        }
+
+        .qa-content {
+          font-size: 0.875rem;
         }
 
         .btn-action {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 8px;
+          padding: 10px;
+          font-size: 0.8125rem;
         }
 
-        .btn-action:hover {
-            background: #5568d3;
+        .input-field {
+          padding: 10px;
+          font-size: 0.8125rem;
+          min-height: 60px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .header {
+          grid-template-columns: 1fr;
+          height: auto;
+          padding: 12px;
         }
 
-        .btn-action:last-child {
-            margin-bottom: 0;
+        .timer {
+          order: -1;
+          width: 100%;
+          text-align: center;
+          font-size: 1rem;
         }
 
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #1a1a1a;
+        .logo {
+          font-size: 0.9375rem;
         }
 
-        .btn-secondary:hover {
-            background: #e5e7eb;
+        .btn-end {
+          width: 100%;
+          margin-top: 8px;
         }
 
-        .btn-voice {
-            background: #10b981;
+        .container {
+          grid-template-rows: auto 1fr;
         }
 
-        .btn-voice:hover {
-            background: #059669;
+        .main-content {
+          height: calc(100vh - 100px);
         }
 
-        .btn-voice.recording {
-            background: #ef4444;
-            animation: pulse 1.5s infinite;
+        .video-grid {
+          flex-direction: column;
         }
 
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.7;
-            }
+        .video-wrapper {
+          min-width: 100%;
         }
 
-        .form-group {
-            margin-bottom: 12px;
+        .left-sidebar,
+        .center-panel,
+        .right-panel {
+          max-height: none;
         }
-
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-textarea {
-            width: 100%;
-            min-height: 80px;
-            padding: 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            resize: vertical;
-            font-family: inherit;
-        }
-
-        .form-textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            background: white;
-        }
-
-        .form-select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .star {
-            cursor: pointer;
-            color: #e5e7eb;
-            transition: color 0.2s;
-            user-select: none;
-        }
-
-        .star:hover,
-        .star.active {
-            color: #fbbf24;
-        }
-
-        .subtitle-section {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 12px;
-            min-height: 80px;
-            max-height: 120px;
-            overflow-y: auto;
-            font-size: 0.875rem;
-            color: #4b5563;
-            line-height: 1.6;
-            position: relative;
-        }
-
-        .subtitle-content {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .subtitle-text {
-            color: #1a1a1a;
-            font-weight: 500;
-        }
-
-        .subtitle-interim {
-            color: #9ca3af;
-            font-style: italic;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #9ca3af;
-        }
-
-        @media (max-width: 1280px) {
-            .main-content {
-                grid-template-columns: 240px 1fr 320px;
-                gap: 12px;
-                padding: 12px;
-            }
-
-            .logo {
-                font-size: 1.125rem;
-            }
-
-            .timer {
-                font-size: 1.25rem;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto;
-                gap: 12px;
-            }
-
-            .left-sidebar {
-                order: 1;
-                max-height: 300px;
-            }
-
-            .center-panel {
-                order: 2;
-                max-height: 400px;
-            }
-
-            .right-panel {
-                order: 3;
-                max-height: 400px;
-            }
-
-            .video-grid {
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-
-            .video-wrapper {
-                flex: 1;
-                min-width: 200px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                padding: 0 16px;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .logo {
-                font-size: 1rem;
-            }
-
-            .timer {
-                font-size: 1.125rem;
-            }
-
-            .btn-end {
-                padding: 8px 16px;
-                font-size: 0.8125rem;
-            }
-
-            .main-content {
-                padding: 8px;
-                gap: 8px;
-            }
-
-            .qa-container,
-            .video-section,
-            .control-panel,
-            .subtitle-display {
-                padding: 12px;
-            }
-
-            .section-title {
-                font-size: 0.6875rem;
-            }
-
-            .panel-title {
-                font-size: 0.8125rem;
-            }
-
-            .qa-content {
-                font-size: 0.875rem;
-            }
-
-            .btn-action {
-                padding: 10px;
-                font-size: 0.8125rem;
-            }
-
-            .input-field {
-                padding: 10px;
-                font-size: 0.8125rem;
-                min-height: 60px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                grid-template-columns: 1fr;
-                height: auto;
-                padding: 12px;
-            }
-
-            .timer {
-                order: -1;
-                width: 100%;
-                text-align: center;
-                font-size: 1rem;
-            }
-
-            .logo {
-                font-size: 0.9375rem;
-            }
-
-            .btn-end {
-                width: 100%;
-                margin-top: 8px;
-            }
-
-            .container {
-                grid-template-rows: auto 1fr;
-            }
-
-            .main-content {
-                height: calc(100vh - 100px);
-            }
-
-            .video-grid {
-                flex-direction: column;
-            }
-
-            .video-wrapper {
-                min-width: 100%;
-            }
-
-            .left-sidebar,
-            .center-panel,
-            .right-panel {
-                max-height: none;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <div class="logo">MockerView</div>
-            <div class="timer" id="timer">00:00:00</div>
-            <button class="btn-end" onclick="endInterview()">면접 종료</button>
+      <div class="header">
+        <div class="logo">MockerView</div>
+        <div class="timer" id="timer">00:00:00</div>
+        <button class="btn-end" onclick="endInterview()">면접 종료</button>
+      </div>
+
+      <div class="main-content">
+        <div class="left-sidebar">
+          <div class="video-section">
+            <div class="section-title">면접관</div>
+            <div class="video-grid" id="interviewerVideos"></div>
+          </div>
+
+          <div class="video-section">
+            <div class="section-title">면접자</div>
+            <div class="video-grid" id="intervieweeVideos"></div>
+          </div>
+
+          <div class="subtitle-section">
+            <div class="subtitle-content" id="subtitleContent">
+              <span style="color: #9ca3af">자막이 여기에 표시됩니다...</span>
+            </div>
+          </div>
         </div>
 
-        <div class="main-content">
-            <div class="left-sidebar">
-                <div class="video-section">
-                    <div class="section-title">면접관</div>
-                    <div class="video-grid" id="interviewerVideos"></div>
-                </div>
-
-                <div class="video-section">
-                    <div class="section-title">면접자</div>
-                    <div class="video-grid" id="intervieweeVideos"></div>
-                </div>
-
-                <div class="subtitle-section">
-                    <div class="subtitle-content" id="subtitleContent">
-                        <span style="color: #9ca3af;">자막이 여기에 표시됩니다...</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="center-panel">
-                <div class="qa-container" id="qaContainer">
-                    <p style="text-align: center; color: #9ca3af; font-size: 0.875rem;">
-                        질문과 답변이 여기에 표시됩니다
-                    </p>
-                </div>
-            </div>
-
-            <div class="right-panel">
-                <div class="control-panel" th:if="${participantRole.name() == 'HOST' or participantRole.name() == 'REVIEWER'}">
-                    <div class="panel-title">📝 면접관 컨트롤</div>
-                    <button class="btn-action btn-voice" id="voiceQuestionBtn" onclick="toggleVoiceQuestion()">🎤 음성으로 질문하기</button>
-                </div>
-
-                <div class="control-panel" th:if="${participantRole.name() == 'STUDENT'}">
-                    <div class="panel-title">💬 답변 작성</div>
-                    <button class="btn-action btn-voice" id="voiceAnswerBtn" onclick="toggleVoiceAnswer()">🎤 음성으로 답변하기</button>
-                </div>
-
-                <div class="control-panel" th:if="${participantRole.name() == 'HOST' or participantRole.name() == 'REVIEWER'}">
-                    <div class="panel-title" onclick="toggleEvaluationPanel()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                        <span>📊 면접자 평가</span>
-                        <span id="evalToggleIcon" style="transition: transform 0.3s;">▼</span>
-                    </div>
-                    <div id="evaluationPanel" style="display: none; margin-top: 12px;">
-                        <div class="form-group">
-                            <label class="form-label">면접자 선택</label>
-                            <select id="intervieweeSelect" class="form-select" onchange="loadIntervieweeData()">
-                                <option value="">선택하세요</option>
-                            </select>
-                        </div>
-
-                        <div id="aiFeedbackSection" style="display: none; margin-bottom: 16px; padding: 12px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 8px; border-left: 4px solid #0ea5e9;">
-                            <div style="font-weight: 600; margin-bottom: 12px; color: #0369a1; display: flex; align-items: center; gap: 8px;">
-                                <span>🤖</span>
-                                <span>AI 피드백 (참고용)</span>
-                            </div>
-                            <div id="aiFeedbackContent" style="font-size: 13px; color: #334155; line-height: 1.6;">
-                                <div id="aiStrengths" style="margin-bottom: 8px;"></div>
-                                <div id="aiWeaknesses" style="margin-bottom: 8px;"></div>
-                                <div id="aiImprovements"></div>
-                            </div>
-                            <button onclick="copyAIToForm()" style="margin-top: 10px; padding: 6px 12px; background: #0ea5e9; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                📋 AI 피드백 복사하기
-                            </button>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">평가 점수</label>
-                            <div style="display: flex; gap: 8px; font-size: 1.5rem;">
-                                <span class="star" data-rating="1" onclick="setRating(1)">★</span>
-                                <span class="star" data-rating="2" onclick="setRating(2)">★</span>
-                                <span class="star" data-rating="3" onclick="setRating(3)">★</span>
-                                <span class="star" data-rating="4" onclick="setRating(4)">★</span>
-                                <span class="star" data-rating="5" onclick="setRating(5)">★</span>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">강점 (면접관 의견)</label>
-                            <textarea id="strengths" class="form-textarea" placeholder="AI 피드백을 참고하여 면접자의 강점을 입력하세요"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">약점 (면접관 의견)</label>
-                            <textarea id="weaknesses" class="form-textarea" placeholder="AI 피드백을 참고하여 개선이 필요한 부분을 입력하세요"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">개선 사항 (면접관 의견)</label>
-                            <textarea id="improvements" class="form-textarea" placeholder="AI 피드백을 참고하여 구체적인 개선 방법을 입력하세요"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">종합 의견 (면접관 최종 평가)</label>
-                            <textarea id="notes" class="form-textarea" placeholder="면접에 대한 종합적인 평가 의견을 입력하세요"></textarea>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                            <button class="btn-action btn-secondary" onclick="saveEvaluation()">임시저장</button>
-                            <button class="btn-action" onclick="submitEvaluation()">제출하기</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="control-panel">
-                    <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>🤖 AI 피드백</span>
-                        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; cursor: pointer; margin: 0;">
-                            <input type="checkbox" id="aiToggle" checked onchange="toggleAI()" style="cursor: pointer; width: 16px; height: 16px;">
-                            <span id="aiToggleLabel">ON</span>
-                        </label>
-                    </div>
-                    <div id="aiPanel">
-                        <div id="aiFeedback" style="font-size: 0.8125rem; color: #4b5563; line-height: 1.6; padding: 12px; background: #f9fafb; border-radius: 6px; min-height: 100px; margin-top: 12px;">
-                            AI 피드백이 여기에 표시됩니다...
-                        </div>
-                        <button class="btn-action" style="margin-top: 8px;" onclick="requestAIFeedback()">AI 피드백 요청</button>
-                    </div>
-                </div>
-
-                <div class="control-panel">
-                    <div class="panel-title">🎬 녹화</div>
-                    <button id="startRecordBtn" class="btn-action" onclick="startRecording()">🎬 녹화 시작</button>
-                    <button id="stopRecordBtn" class="btn-action" onclick="stopRecording()" style="display: none; background: #ef4444;">⏹️ 녹화 중지</button>
-                    <div id="recordingIndicator" style="display: none; color: #ef4444; font-weight: 600; text-align: center; margin-top: 8px; font-size: 0.75rem;">
-                        🔴 녹화 중...
-                    </div>
-                    <div id="uploadProgress" style="display: none; margin-top: 8px;">
-                        <div style="background: #f3f4f6; border-radius: 4px; overflow: hidden; height: 4px;">
-                            <div id="uploadProgressBar" style="width: 0%; height: 100%; background: #667eea; transition: width 0.3s;"></div>
-                        </div>
-                        <small id="uploadStatus" style="color: #6b7280; font-size: 0.75rem; margin-top: 4px; display: block;"></small>
-                    </div>
-                </div>
-
-                <div class="control-panel">
-                    <div class="panel-title">⚙️ 설정</div>
-                    <button class="btn-action btn-secondary" onclick="toggleMic()">🎤 마이크</button>
-                    <button class="btn-action btn-secondary" onclick="toggleCamera()">📹 카메라</button>
-                </div>
-            </div>
+        <div class="center-panel">
+          <div class="qa-container" id="qaContainer">
+            <p style="text-align: center; color: #9ca3af; font-size: 0.875rem">
+              질문과 답변이 여기에 표시됩니다
+            </p>
+          </div>
         </div>
+
+        <div class="right-panel">
+          <div
+            class="control-panel"
+            th:if="${participantRole.name() == 'HOST' or participantRole.name() == 'REVIEWER'}"
+          >
+            <div class="panel-title">📝 면접관 컨트롤</div>
+            <button
+              class="btn-action btn-voice"
+              id="voiceQuestionBtn"
+              onclick="toggleVoiceQuestion()"
+            >
+              🎤 음성으로 질문하기
+            </button>
+          </div>
+
+          <div
+            class="control-panel"
+            th:if="${participantRole.name() == 'STUDENT'}"
+          >
+            <div class="panel-title">💬 답변 작성</div>
+            <button
+              class="btn-action btn-voice"
+              id="voiceAnswerBtn"
+              onclick="toggleVoiceAnswer()"
+            >
+              🎤 음성으로 답변하기
+            </button>
+          </div>
+
+          <div
+            class="control-panel"
+            th:if="${participantRole.name() == 'HOST' or participantRole.name() == 'REVIEWER'}"
+          >
+            <div
+              class="panel-title"
+              onclick="toggleEvaluationPanel()"
+              style="
+                cursor: pointer;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <span>📊 면접자 평가</span>
+              <span id="evalToggleIcon" style="transition: transform 0.3s"
+                >▼</span
+              >
+            </div>
+            <div id="evaluationPanel" style="display: none; margin-top: 12px">
+              <div class="form-group">
+                <label class="form-label">면접자 선택</label>
+                <select
+                  id="intervieweeSelect"
+                  class="form-select"
+                  onchange="loadIntervieweeData()"
+                >
+                  <option value="">선택하세요</option>
+                </select>
+              </div>
+
+              <div
+                id="aiFeedbackSection"
+                style="
+                  display: none;
+                  margin-bottom: 16px;
+                  padding: 12px;
+                  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                  border-radius: 8px;
+                  border-left: 4px solid #0ea5e9;
+                "
+              >
+                <div
+                  style="
+                    font-weight: 600;
+                    margin-bottom: 12px;
+                    color: #0369a1;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <span>🤖</span>
+                  <span>AI 피드백 (참고용)</span>
+                </div>
+                <div
+                  id="aiFeedbackContent"
+                  style="font-size: 13px; color: #334155; line-height: 1.6"
+                >
+                  <div id="aiStrengths" style="margin-bottom: 8px"></div>
+                  <div id="aiWeaknesses" style="margin-bottom: 8px"></div>
+                  <div id="aiImprovements"></div>
+                </div>
+                <button
+                  onclick="copyAIToForm()"
+                  style="
+                    margin-top: 10px;
+                    padding: 6px 12px;
+                    background: #0ea5e9;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 12px;
+                  "
+                >
+                  📋 AI 피드백 복사하기
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">평가 점수</label>
+                <div style="display: flex; gap: 8px; font-size: 1.5rem">
+                  <span class="star" data-rating="1" onclick="setRating(1)"
+                    >★</span
+                  >
+                  <span class="star" data-rating="2" onclick="setRating(2)"
+                    >★</span
+                  >
+                  <span class="star" data-rating="3" onclick="setRating(3)"
+                    >★</span
+                  >
+                  <span class="star" data-rating="4" onclick="setRating(4)"
+                    >★</span
+                  >
+                  <span class="star" data-rating="5" onclick="setRating(5)"
+                    >★</span
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">강점 (면접관 의견)</label>
+                <textarea
+                  id="strengths"
+                  class="form-textarea"
+                  placeholder="AI 피드백을 참고하여 면접자의 강점을 입력하세요"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">약점 (면접관 의견)</label>
+                <textarea
+                  id="weaknesses"
+                  class="form-textarea"
+                  placeholder="AI 피드백을 참고하여 개선이 필요한 부분을 입력하세요"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">개선 사항 (면접관 의견)</label>
+                <textarea
+                  id="improvements"
+                  class="form-textarea"
+                  placeholder="AI 피드백을 참고하여 구체적인 개선 방법을 입력하세요"
+                ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">종합 의견 (면접관 최종 평가)</label>
+                <textarea
+                  id="notes"
+                  class="form-textarea"
+                  placeholder="면접에 대한 종합적인 평가 의견을 입력하세요"
+                ></textarea>
+              </div>
+
+              <div
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px"
+              >
+                <button
+                  class="btn-action btn-secondary"
+                  onclick="saveEvaluation()"
+                >
+                  임시저장
+                </button>
+                <button class="btn-action" onclick="submitEvaluation()">
+                  제출하기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-panel">
+            <div
+              class="panel-title"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <span>🤖 AI 피드백</span>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 0.75rem;
+                  cursor: pointer;
+                  margin: 0;
+                "
+              >
+                <input
+                  type="checkbox"
+                  id="aiToggle"
+                  checked
+                  onchange="toggleAI()"
+                  style="cursor: pointer; width: 16px; height: 16px"
+                />
+                <span id="aiToggleLabel">ON</span>
+              </label>
+            </div>
+            <div id="aiPanel">
+              <div
+                id="aiFeedback"
+                style="
+                  font-size: 0.8125rem;
+                  color: #4b5563;
+                  line-height: 1.6;
+                  padding: 12px;
+                  background: #f9fafb;
+                  border-radius: 6px;
+                  min-height: 100px;
+                  margin-top: 12px;
+                "
+              >
+                AI 피드백이 여기에 표시됩니다...
+              </div>
+              <button
+                class="btn-action"
+                style="margin-top: 8px"
+                onclick="requestAIFeedback()"
+              >
+                AI 피드백 요청
+              </button>
+            </div>
+          </div>
+
+          <div class="control-panel">
+            <div class="panel-title">🎬 녹화</div>
+            <button
+              id="startRecordBtn"
+              class="btn-action"
+              onclick="startRecording()"
+            >
+              🎬 녹화 시작
+            </button>
+            <button
+              id="stopRecordBtn"
+              class="btn-action"
+              onclick="stopRecording()"
+              style="display: none; background: #ef4444"
+            >
+              ⏹️ 녹화 중지
+            </button>
+            <div
+              id="recordingIndicator"
+              style="
+                display: none;
+                color: #ef4444;
+                font-weight: 600;
+                text-align: center;
+                margin-top: 8px;
+                font-size: 0.75rem;
+              "
+            >
+              🔴 녹화 중...
+            </div>
+            <div id="uploadProgress" style="display: none; margin-top: 8px">
+              <div
+                style="
+                  background: #f3f4f6;
+                  border-radius: 4px;
+                  overflow: hidden;
+                  height: 4px;
+                "
+              >
+                <div
+                  id="uploadProgressBar"
+                  style="
+                    width: 0%;
+                    height: 100%;
+                    background: #667eea;
+                    transition: width 0.3s;
+                  "
+                ></div>
+              </div>
+              <small
+                id="uploadStatus"
+                style="
+                  color: #6b7280;
+                  font-size: 0.75rem;
+                  margin-top: 4px;
+                  display: block;
+                "
+              ></small>
+            </div>
+          </div>
+
+          <div class="control-panel">
+            <div class="panel-title">⚙️ 설정</div>
+            <button class="btn-action btn-secondary" onclick="toggleMic()">
+              🎤 마이크
+            </button>
+            <button class="btn-action btn-secondary" onclick="toggleCamera()">
+              📹 카메라
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
-<script th:inline="javascript">
-    const sessionId = /*[[${sessionId}]]*/ null;
-    const currentUserId = /*[[${currentUser.id}]]*/ null;
-    const currentUserName = /*[[${currentUser.name}]]*/ 'User';
-    const currentUserRole = /*[[${participantRole.name()}]]*/ 'STUDENT';
-    const agoraAppId = /*[[${agoraToken.appId}]]*/ null;
-    const agoraChannel = /*[[${agoraToken.channel}]]*/ null;
-    const agoraToken = /*[[${agoraToken.token}]]*/ null;
+    <script th:inline="javascript">
+      const sessionId = /*[[${sessionId}]]*/ null;
+      const currentUserId = /*[[${currentUser.id}]]*/ null;
+      const currentUserName = /*[[${currentUser.name}]]*/ "User";
+      const currentUserRole = /*[[${participantRole.name()}]]*/ "STUDENT";
+      const agoraAppId = /*[[${agoraToken.appId}]]*/ null;
+      const agoraChannel = /*[[${agoraToken.channel}]]*/ null;
+      const agoraToken = /*[[${agoraToken.token}]]*/ null;
 
-    console.log('=== Interview Page Loaded ===');
-    console.log('Session ID:', sessionId);
-    console.log('Current User ID:', currentUserId);
-    console.log('User Role:', currentUserRole);
-    console.log('Protocol:', location.protocol);
-    console.log('Hostname:', location.hostname);
+      console.log("=== Interview Page Loaded ===");
+      console.log("Session ID:", sessionId);
+      console.log("Current User ID:", currentUserId);
+      console.log("User Role:", currentUserRole);
+      console.log("Protocol:", location.protocol);
+      console.log("Hostname:", location.hostname);
 
-    let agoraClient = null;
-    let localAudioTrack = null;
-    let localVideoTrack = null;
-    let qaList = [];
-    let questionCount = 0;
-    let answerCount = 0;
-    let currentRating = 0;
-    let evaluations = {};
-    let stompClient = null;
-    let participantRoles = {};
-    let participantNames = {};
+      let agoraClient = null;
+      let localAudioTrack = null;
+      let localVideoTrack = null;
+      let qaList = [];
+      let questionCount = 0;
+      let answerCount = 0;
+      let currentRating = 0;
+      let evaluations = {};
+      let stompClient = null;
+      let participantRoles = {};
+      let participantNames = {};
 
-    let recognition = null;
-    let isRecordingQuestion = false;
-    let isRecordingAnswer = false;
-    let finalTranscript = '';
-    let interimTranscript = '';
+      let recognition = null;
+      let isRecordingQuestion = false;
+      let isRecordingAnswer = false;
+      let finalTranscript = "";
+      let interimTranscript = "";
 
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let isRecording = false;
-    let recordingStream = null;
+      let mediaRecorder = null;
+      let recordedChunks = [];
+      let isRecording = false;
+      let recordingStream = null;
 
-    async function init() {
-        console.log('=== 초기화 시작 ===');
-        
-        if (location.protocol === 'http:' && !location.hostname.includes('localhost')) {
-            console.warn('⚠️ HTTP 환경 감지! 일부 기능이 제한될 수 있습니다.');
+      async function init() {
+        console.log("=== 초기화 시작 ===");
+
+        if (
+          location.protocol === "http:" &&
+          !location.hostname.includes("localhost")
+        ) {
+          console.warn("⚠️ HTTP 환경 감지! 일부 기능이 제한될 수 있습니다.");
         }
-        
+
         await joinSession();
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         await loadParticipantRoles();
-        
-        console.log('=== 역할 로드 완료, Agora 시작 ===');
+
+        console.log("=== 역할 로드 완료, Agora 시작 ===");
         await initAgora();
-        console.log('=== Agora 완료, WebSocket 시작 ===');
+        console.log("=== Agora 완료, WebSocket 시작 ===");
         connectWebSocket();
         startTimer();
-        
-        if (currentUserRole === 'HOST' || currentUserRole === 'REVIEWER') {
-            console.log('=== HOST/REVIEWER 모드: 면접자 로드 시작 ===');
-            
-            let attempt = 0;
-            const maxAttempts = 5;
-            const loadWithRetry = async () => {
-                attempt++;
-                console.log(`📋 면접자 로딩 시도 ${attempt}/${maxAttempts}`);
-                
-                const success = await loadInterviewees();
-                
-                if (!success && attempt < maxAttempts) {
-                    console.log(`⏳ 2초 후 재시도...`);
-                    setTimeout(loadWithRetry, 2000);
-                } else if (success) {
-                    console.log('✅ 면접자 로딩 완료!');
-                } else {
-                    console.error('❌ 면접자 로딩 최종 실패');
-                }
-            };
-            
-            setTimeout(loadWithRetry, 3000);
+
+        if (currentUserRole === "HOST" || currentUserRole === "REVIEWER") {
+          console.log("=== HOST/REVIEWER 모드: 면접자 로드 시작 ===");
+
+          let attempt = 0;
+          const maxAttempts = 5;
+          const loadWithRetry = async () => {
+            attempt++;
+            console.log(`📋 면접자 로딩 시도 ${attempt}/${maxAttempts}`);
+
+            const success = await loadInterviewees();
+
+            if (!success && attempt < maxAttempts) {
+              console.log(`⏳ 2초 후 재시도...`);
+              setTimeout(loadWithRetry, 2000);
+            } else if (success) {
+              console.log("✅ 면접자 로딩 완료!");
+            } else {
+              console.error("❌ 면접자 로딩 최종 실패");
+            }
+          };
+
+          setTimeout(loadWithRetry, 3000);
         }
 
         initVoiceRecognition();
-        
-        console.log('=== 초기화 완료 ===');
-    }
 
-    function initVoiceRecognition() {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            console.warn('Web Speech API not supported');
-            const voiceQuestionBtn = document.getElementById('voiceQuestionBtn');
-            const voiceAnswerBtn = document.getElementById('voiceAnswerBtn');
-            if (voiceQuestionBtn) voiceQuestionBtn.style.display = 'none';
-            if (voiceAnswerBtn) voiceAnswerBtn.style.display = 'none';
-            return;
+        console.log("=== 초기화 완료 ===");
+      }
+
+      function initVoiceRecognition() {
+        if (
+          !("webkitSpeechRecognition" in window) &&
+          !("SpeechRecognition" in window)
+        ) {
+          console.warn("Web Speech API not supported");
+          const voiceQuestionBtn = document.getElementById("voiceQuestionBtn");
+          const voiceAnswerBtn = document.getElementById("voiceAnswerBtn");
+          if (voiceQuestionBtn) voiceQuestionBtn.style.display = "none";
+          if (voiceAnswerBtn) voiceAnswerBtn.style.display = "none";
+          return;
         }
 
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
-        recognition.lang = 'ko-KR';
+        recognition.lang = "ko-KR";
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.maxAlternatives = 1;
 
-        recognition.onresult = function(event) {
-            let interim = '';
-            let final = '';
+        recognition.onresult = function (event) {
+          let interim = "";
+          let final = "";
 
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const transcript = event.results[i][0].transcript;
-                if (event.results[i].isFinal) {
-                    final += transcript + ' ';
-                } else {
-                    interim += transcript;
-                }
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              final += transcript + " ";
+            } else {
+              interim += transcript;
             }
+          }
 
-            if (final) {
-                final = filterHallucination(final);
-                if (final.trim()) {
-                    finalTranscript += final;
-                }
+          if (final) {
+            final = filterHallucination(final);
+            if (final.trim()) {
+              finalTranscript += final;
             }
+          }
 
-            interimTranscript = interim;
-            updateSubtitle(finalTranscript, interimTranscript);
-            
-            broadcastSubtitle(finalTranscript, interimTranscript);
+          interimTranscript = interim;
+          updateSubtitle(finalTranscript, interimTranscript);
+
+          broadcastSubtitle(finalTranscript, interimTranscript);
         };
 
-        recognition.onerror = function(event) {
-            console.error('Speech recognition error:', event.error);
-            if (event.error === 'no-speech') {
-                console.log('No speech detected');
-            }
+        recognition.onerror = function (event) {
+          console.error("Speech recognition error:", event.error);
+          if (event.error === "no-speech") {
+            console.log("No speech detected");
+          }
         };
 
-        recognition.onend = function() {
-            if (isRecordingQuestion || isRecordingAnswer) {
-                recognition.start();
-            }
+        recognition.onend = function () {
+          if (isRecordingQuestion || isRecordingAnswer) {
+            recognition.start();
+          }
         };
 
-        console.log('✅ 음성 인식 초기화 완료');
-    }
+        console.log("✅ 음성 인식 초기화 완료");
+      }
 
-    function filterHallucination(text) {
+      function filterHallucination(text) {
         const hallucinationPatterns = [
-            /좋은\s*날\s*씹니다/g,
-            /시청해\s*주셔서\s*감사합니다/g,
-            /구독\s*좋아요/g,
-            /알람\s*설정/g,
-            /자막\s*제공/g,
-            /\[음악\]/g,
-            /\[박수\]/g,
-            /\[\s*\]/g,
-            /MBC\s*뉴스/g,
-            /KBS\s*뉴스/g,
-            /연합뉴스/g,
-            /자막\s*:\s*/g
+          /좋은\s*날\s*씹니다/g,
+          /시청해\s*주셔서\s*감사합니다/g,
+          /구독\s*좋아요/g,
+          /알람\s*설정/g,
+          /자막\s*제공/g,
+          /\[음악\]/g,
+          /\[박수\]/g,
+          /\[\s*\]/g,
+          /MBC\s*뉴스/g,
+          /KBS\s*뉴스/g,
+          /연합뉴스/g,
+          /자막\s*:\s*/g,
         ];
 
         let filtered = text;
-        hallucinationPatterns.forEach(pattern => {
-            filtered = filtered.replace(pattern, '');
+        hallucinationPatterns.forEach((pattern) => {
+          filtered = filtered.replace(pattern, "");
         });
 
         filtered = filtered.trim();
-        
+
         if (filtered.length < 2) {
-            return '';
+          return "";
         }
 
         return filtered;
-    }
+      }
 
-    function broadcastSubtitle(finalText, interimText) {
+      function broadcastSubtitle(finalText, interimText) {
         if (!stompClient || !stompClient.connected) return;
-        
-        const text = finalText + (interimText ? ' ' + interimText : '');
+
+        const text = finalText + (interimText ? " " + interimText : "");
         if (!text.trim()) return;
 
-        stompClient.send(`/app/session/${sessionId}/subtitle`, {}, JSON.stringify({
+        stompClient.send(
+          `/app/session/${sessionId}/subtitle`,
+          {},
+          JSON.stringify({
             userId: currentUserId,
             speaker: currentUserName,
             text: text,
-            isFinal: interimText === ''
-        }));
-    }
+            isFinal: interimText === "",
+          })
+        );
+      }
 
-    function toggleVoiceQuestion() {
-        const btn = document.getElementById('voiceQuestionBtn');
-        
+      function toggleVoiceQuestion() {
+        const btn = document.getElementById("voiceQuestionBtn");
+
         if (!isRecordingQuestion) {
-            finalTranscript = '';
-            interimTranscript = '';
-            isRecordingQuestion = true;
-            isRecordingAnswer = false;
-            
-            try {
-                recognition.start();
-                btn.textContent = '⏹️ 질문 완료 (전송)';
-                btn.classList.add('recording');
-                console.log('🎤 질문 녹음 시작');
-            } catch (e) {
-                console.error('Recognition start error:', e);
-            }
-        } else {
-            stopVoiceRecording();
-            btn.textContent = '🎤 음성으로 질문하기';
-            btn.classList.remove('recording');
-            isRecordingQuestion = false;
-            
-            if (finalTranscript.trim()) {
-                sendVoiceQuestion();
-            }
-            
-            console.log('⏹️ 질문 녹음 중지 및 전송');
-        }
-    }
+          finalTranscript = "";
+          interimTranscript = "";
+          isRecordingQuestion = true;
+          isRecordingAnswer = false;
 
-    function toggleVoiceAnswer() {
-        const btn = document.getElementById('voiceAnswerBtn');
-        
+          try {
+            recognition.start();
+            btn.textContent = "⏹️ 질문 완료 (전송)";
+            btn.classList.add("recording");
+            console.log("🎤 질문 녹음 시작");
+          } catch (e) {
+            console.error("Recognition start error:", e);
+          }
+        } else {
+          stopVoiceRecording();
+          btn.textContent = "🎤 음성으로 질문하기";
+          btn.classList.remove("recording");
+          isRecordingQuestion = false;
+
+          if (finalTranscript.trim()) {
+            sendVoiceQuestion();
+          }
+
+          console.log("⏹️ 질문 녹음 중지 및 전송");
+        }
+      }
+
+      function toggleVoiceAnswer() {
+        const btn = document.getElementById("voiceAnswerBtn");
+
         if (!isRecordingAnswer) {
-            finalTranscript = '';
-            interimTranscript = '';
-            isRecordingAnswer = true;
-            isRecordingQuestion = false;
-            
-            try {
-                recognition.start();
-                btn.textContent = '⏹️ 답변 완료 (전송)';
-                btn.classList.add('recording');
-                console.log('🎤 답변 녹음 시작');
-            } catch (e) {
-                console.error('Recognition start error:', e);
-            }
-        } else {
-            stopVoiceRecording();
-            btn.textContent = '🎤 음성으로 답변하기';
-            btn.classList.remove('recording');
-            isRecordingAnswer = false;
-            
-            if (finalTranscript.trim()) {
-                sendVoiceAnswer();
-            }
-            
-            console.log('⏹️ 답변 녹음 중지 및 전송');
-        }
-    }
+          finalTranscript = "";
+          interimTranscript = "";
+          isRecordingAnswer = true;
+          isRecordingQuestion = false;
 
-    function stopVoiceRecording() {
+          try {
+            recognition.start();
+            btn.textContent = "⏹️ 답변 완료 (전송)";
+            btn.classList.add("recording");
+            console.log("🎤 답변 녹음 시작");
+          } catch (e) {
+            console.error("Recognition start error:", e);
+          }
+        } else {
+          stopVoiceRecording();
+          btn.textContent = "🎤 음성으로 답변하기";
+          btn.classList.remove("recording");
+          isRecordingAnswer = false;
+
+          if (finalTranscript.trim()) {
+            sendVoiceAnswer();
+          }
+
+          console.log("⏹️ 답변 녹음 중지 및 전송");
+        }
+      }
+
+      function stopVoiceRecording() {
         if (recognition) {
-            recognition.stop();
+          recognition.stop();
         }
         if (finalTranscript.trim()) {
-            addPermanentSubtitle(finalTranscript, currentUserName);
+          addPermanentSubtitle(finalTranscript, currentUserName);
         }
-    }
+      }
 
-    async function sendVoiceQuestion() {
+      async function sendVoiceQuestion() {
         const question = finalTranscript.trim();
-        
+
         if (!question) {
-            alert('질문이 비어있습니다');
-            return;
+          alert("질문이 비어있습니다");
+          return;
         }
 
         if (!stompClient || !stompClient.connected) {
-            alert('서버 연결이 끊어졌습니다');
-            return;
+          alert("서버 연결이 끊어졌습니다");
+          return;
         }
 
         try {
-            const response = await fetch(`/api/session/${sessionId}/questions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': getCookie('Authorization')
-                },
-                body: JSON.stringify({
-                    text: question,
-                    orderNo: 0
-                })
-            });
+          const response = await fetch(`/api/session/${sessionId}/questions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: getCookie("Authorization"),
+            },
+            body: JSON.stringify({
+              text: question,
+              orderNo: 0,
+            }),
+          });
 
-            if (response.ok) {
-                console.log('✅ 질문 DB 저장 완료');
-            }
+          if (response.ok) {
+            console.log("✅ 질문 DB 저장 완료");
+          }
         } catch (error) {
-            console.error('❌ 질문 DB 저장 실패:', error);
+          console.error("❌ 질문 DB 저장 실패:", error);
         }
 
-        stompClient.send(`/app/session/${sessionId}/question`, {}, JSON.stringify({
+        stompClient.send(
+          `/app/session/${sessionId}/question`,
+          {},
+          JSON.stringify({
             content: question,
             userId: currentUserId,
-            author: currentUserName || `User ${currentUserId}`
-        }));
+            author: currentUserName || `User ${currentUserId}`,
+          })
+        );
 
-        finalTranscript = '';
-        interimTranscript = '';
-        console.log('📤 음성 질문 전송:', question);
-    }
+        finalTranscript = "";
+        interimTranscript = "";
+        console.log("📤 음성 질문 전송:", question);
+      }
 
-    function sendVoiceAnswer() {
+      function sendVoiceAnswer() {
         const answer = finalTranscript.trim();
-        
+
         if (!answer) {
-            alert('답변이 비어있습니다');
-            return;
+          alert("답변이 비어있습니다");
+          return;
         }
 
         if (!stompClient || !stompClient.connected) {
-            alert('서버 연결이 끊어졌습니다');
-            return;
+          alert("서버 연결이 끊어졌습니다");
+          return;
         }
 
         const payload = {
-            sessionId: sessionId,
-            userId: currentUserId,
-            userName: currentUserName || `User ${currentUserId}`,
-            answerText: answer,
-            timestamp: new Date().toISOString()
+          sessionId: sessionId,
+          userId: currentUserId,
+          userName: currentUserName || `User ${currentUserId}`,
+          answerText: answer,
+          timestamp: new Date().toISOString(),
         };
 
-        console.log('📤 음성 답변 전송 payload:', payload);
+        console.log("📤 음성 답변 전송 payload:", payload);
 
-        stompClient.send(`/app/session/${sessionId}/answer`, {}, JSON.stringify(payload));
+        stompClient.send(
+          `/app/session/${sessionId}/answer`,
+          {},
+          JSON.stringify(payload)
+        );
 
-        finalTranscript = '';
-        interimTranscript = '';
-        console.log('📤 음성 답변 전송 완료');
-    }
+        finalTranscript = "";
+        interimTranscript = "";
+        console.log("📤 음성 답변 전송 완료");
+      }
 
-    function updateSubtitle(finalText, interimText) {
-        const container = document.getElementById('subtitleContent');
-        
-        let lastPermanent = container.querySelector('.subtitle-permanent:last-child');
+      function updateSubtitle(finalText, interimText) {
+        const container = document.getElementById("subtitleContent");
+
+        let lastPermanent = container.querySelector(
+          ".subtitle-permanent:last-child"
+        );
         if (!lastPermanent) {
-            lastPermanent = document.createElement('div');
-            lastPermanent.className = 'subtitle-permanent';
-            lastPermanent.style.marginBottom = '8px';
-            container.appendChild(lastPermanent);
+          lastPermanent = document.createElement("div");
+          lastPermanent.className = "subtitle-permanent";
+          lastPermanent.style.marginBottom = "8px";
+          container.appendChild(lastPermanent);
         }
-        
-        lastPermanent.innerHTML = '';
-        
+
+        lastPermanent.innerHTML = "";
+
         if (finalText) {
-            const finalSpan = document.createElement('span');
-            finalSpan.className = 'subtitle-text';
-            finalSpan.textContent = finalText;
-            lastPermanent.appendChild(finalSpan);
+          const finalSpan = document.createElement("span");
+          finalSpan.className = "subtitle-text";
+          finalSpan.textContent = finalText;
+          lastPermanent.appendChild(finalSpan);
         }
-        
+
         if (interimText) {
-            const interimSpan = document.createElement('span');
-            interimSpan.className = 'subtitle-interim';
-            interimSpan.textContent = ' ' + interimText;
-            lastPermanent.appendChild(interimSpan);
+          const interimSpan = document.createElement("span");
+          interimSpan.className = "subtitle-interim";
+          interimSpan.textContent = " " + interimText;
+          lastPermanent.appendChild(interimSpan);
         }
 
-        container.parentElement.scrollTop = container.parentElement.scrollHeight;
-    }
+        container.parentElement.scrollTop =
+          container.parentElement.scrollHeight;
+      }
 
-    function addPermanentSubtitle(text, speaker) {
-        const container = document.getElementById('subtitleContent');
-        
-        const emptyMsg = container.querySelector('span[style*="color: #9ca3af"]');
+      function addPermanentSubtitle(text, speaker) {
+        const container = document.getElementById("subtitleContent");
+
+        const emptyMsg = container.querySelector(
+          'span[style*="color: #9ca3af"]'
+        );
         if (emptyMsg) {
-            emptyMsg.remove();
+          emptyMsg.remove();
         }
 
-        const permanentDiv = document.createElement('div');
-        permanentDiv.className = 'subtitle-permanent';
-        permanentDiv.style.marginBottom = '8px';
-        
-        const speakerSpan = document.createElement('strong');
-        speakerSpan.textContent = speaker + ': ';
-        speakerSpan.style.color = '#667eea';
-        
-        const textSpan = document.createElement('span');
-        textSpan.className = 'subtitle-text';
+        const permanentDiv = document.createElement("div");
+        permanentDiv.className = "subtitle-permanent";
+        permanentDiv.style.marginBottom = "8px";
+
+        const speakerSpan = document.createElement("strong");
+        speakerSpan.textContent = speaker + ": ";
+        speakerSpan.style.color = "#667eea";
+
+        const textSpan = document.createElement("span");
+        textSpan.className = "subtitle-text";
         textSpan.textContent = text;
-        
+
         permanentDiv.appendChild(speakerSpan);
         permanentDiv.appendChild(textSpan);
         container.appendChild(permanentDiv);
 
-        container.parentElement.scrollTop = container.parentElement.scrollHeight;
-    }
+        container.parentElement.scrollTop =
+          container.parentElement.scrollHeight;
+      }
 
-    function clearSubtitle() {
-        const container = document.getElementById('subtitleContent');
-        container.innerHTML = '<span style="color: #9ca3af;">자막이 여기에 표시됩니다...</span>';
-    }
+      function clearSubtitle() {
+        const container = document.getElementById("subtitleContent");
+        container.innerHTML =
+          '<span style="color: #9ca3af;">자막이 여기에 표시됩니다...</span>';
+      }
 
-    async function joinSession() {
+      async function joinSession() {
         try {
-            console.log('🚪 세션 참가 API 호출');
-            const response = await fetch(`/api/session/${sessionId}/participants/join?role=${currentUserRole}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': getCookie('Authorization')
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+          console.log("🚪 세션 참가 API 호출");
+          const response = await fetch(
+            `/api/session/${sessionId}/participants/join?role=${currentUserRole}`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: getCookie("Authorization"),
+              },
             }
+          );
 
-            const result = await response.json();
-            console.log('✅ 세션 참가 완료:', result);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log("✅ 세션 참가 완료:", result);
         } catch (error) {
-            console.error('❌ 세션 참가 실패:', error);
+          console.error("❌ 세션 참가 실패:", error);
         }
-    }
+      }
 
-    async function loadParticipantRoles() {
+      async function loadParticipantRoles() {
         let retries = 0;
         const maxRetries = 3;
-        
+
         while (retries < maxRetries) {
-            try {
-                console.log(`🔍 API 호출 (시도 ${retries + 1}/${maxRetries}): /api/session/${sessionId}/participants`);
-                const response = await fetch(`/api/session/${sessionId}/participants`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+          try {
+            console.log(
+              `🔍 API 호출 (시도 ${
+                retries + 1
+              }/${maxRetries}): /api/session/${sessionId}/participants`
+            );
+            const response = await fetch(
+              `/api/session/${sessionId}/participants`
+            );
 
-                const participants = await response.json();
-                
-                console.log('=== 참가자 원본 데이터 ===');
-                console.log(JSON.stringify(participants, null, 2));
-                
-                if (!Array.isArray(participants)) {
-                    console.error('❌ 응답이 배열이 아닙니다:', participants);
-                    retries++;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    continue;
-                }
-
-                if (participants.length === 0) {
-                    console.warn(`⚠️ 참가자가 없습니다! (시도 ${retries + 1}/${maxRetries})`);
-                    retries++;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    continue;
-                }
-                
-                participantRoles = {};
-                participantNames = {};
-                
-                participants.forEach(p => {
-                    console.log(`👤 User ${p.userId}: role=${p.role}, name=${p.userName}`);
-                    participantRoles[p.userId] = p.role;
-                    participantNames[p.userId] = p.userName || `User ${p.userId}`;
-                });
-
-                console.log('✅ 참가자 역할 매핑:', participantRoles);
-                console.log('✅ 참가자 이름 매핑:', participantNames);
-                console.log('✅ 현재 사용자 역할:', currentUserRole);
-                
-                if (Object.keys(participantRoles).length > 0) {
-                    return;
-                }
-            } catch (error) {
-                console.error(`❌ 참가자 역할 로드 실패 (시도 ${retries + 1}):`, error);
-            }
-            
-            retries++;
-            if (retries < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-        }
-        
-        console.error('❌ 참가자 역할 로드 최종 실패');
-    }
-
-    function connectWebSocket() {
-        const socket = new SockJS('/ws');
-        stompClient = Stomp.over(socket);
-        
-        stompClient.connect({}, function(frame) {
-            console.log('✅ WebSocket 연결 성공');
-            
-            stompClient.subscribe(`/topic/session/${sessionId}/question`, function(message) {
-                const data = JSON.parse(message.body);
-                console.log('📩 질문 수신:', data);
-                questionCount++;
-                qaList.push({
-                    type: 'question',
-                    number: questionCount,
-                    author: data.author || '면접관',
-                    content: data.content,
-                    time: new Date().toLocaleTimeString(),
-                    userId: data.userId
-                });
-                renderQA();
-            });
-
-            stompClient.subscribe(`/topic/session/${sessionId}/answer`, function(message) {
-                const data = JSON.parse(message.body);
-                console.log('📩 답변 수신:', data);
-                
-                if (data.userId === currentUserId && data.answerId) {
-                    window.lastAnswerId = data.answerId;
-                    console.log('✅ 내 답변 ID 저장:', data.answerId);
-                }
-                
-                answerCount++;
-                qaList.push({
-                    type: 'answer',
-                    number: answerCount,
-                    author: data.userName || data.author || '면접자',
-                    content: data.answerText || data.content || '',
-                    time: new Date().toLocaleTimeString(),
-                    userId: data.userId,
-                    answerId: data.answerId
-                });
-                renderQA();
-            });
-
-            stompClient.subscribe(`/topic/session/${sessionId}`, function(message) {
-                const data = JSON.parse(message.body);
-                console.log('📩 일반 메시지 수신:', data);
-                
-                if (Array.isArray(data)) {
-                    console.log('📋 참가자 목록 업데이트:', data);
-                    
-                    data.forEach(p => {
-                        participantRoles[p.userId] = p.role;
-                        participantNames[p.userId] = p.userName || `User ${p.userId}`;
-                        console.log(`🔄 매핑: userId=${p.userId}, role=${p.role}, name=${p.userName}`);
-                    });
-                    
-                    console.log('✅ 역할 매핑 업데이트:', participantRoles);
-                    
-                    if (currentUserRole === 'HOST' || currentUserRole === 'REVIEWER') {
-                        console.log('👥 면접자 리스트 즉시 업데이트');
-                        updateIntervieweeList(data);
-                    }
-                }
-            });
-
-            stompClient.subscribe(`/topic/session/${sessionId}/subtitle`, function(message) {
-                const data = JSON.parse(message.body);
-                console.log('📺 자막 수신:', data);
-                
-                if (data.userId === currentUserId && data.isFinal && data.answerId) {
-                    window.lastAnswerId = data.answerId;
-                    console.log('✅ 자막 답변 ID 저장:', data.answerId);
-                }
-                
-                if (data.userId !== currentUserId && data.isFinal) {
-                    addPermanentSubtitle(data.text, data.speaker);
-                }
-            });
-            
-            stompClient.send(`/app/session/${sessionId}/join`, {}, JSON.stringify({
-                userId: currentUserId,
-                role: currentUserRole
-            }));
-        }, function(error) {
-            console.error('❌ WebSocket 연결 실패:', error);
-            setTimeout(connectWebSocket, 5000);
-        });
-    }
-
-    function handleWebSocketMessage(data) {
-        const select = document.getElementById('intervieweeSelect');
-        if (!select) return;
-
-        const currentValue = select.value;
-        select.innerHTML = '<option value="">선택하세요</option>';
-        
-        participants.filter(p => p.role === 'STUDENT').forEach(p => {
-            const option = document.createElement('option');
-            option.value = p.userId;
-            option.textContent = p.userName;
-            select.appendChild(option);
-        });
-
-        if (currentValue) {
-            select.value = currentValue;
-        }
-    }
-
-    function toggleEvaluationPanel() {
-        const panel = document.getElementById('evaluationPanel');
-        const icon = document.getElementById('evalToggleIcon');
-        if (panel.style.display === 'none') {
-            panel.style.display = 'block';
-            icon.style.transform = 'rotate(180deg)';
-        } else {
-            panel.style.display = 'none';
-            icon.style.transform = 'rotate(0deg)';
-        }
-    }
-
-    async function loadInterviewees() {
-        try {
-            console.log('=== 면접자 드롭다운 로드 시작 ===');
-            const response = await fetch(`/api/session/${sessionId}/participants`);
-            
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+              throw new Error(
+                `HTTP ${response.status}: ${response.statusText}`
+              );
             }
 
             const participants = await response.json();
-            console.log('📋 전체 참가자:', participants);
-            
+
+            console.log("=== 참가자 원본 데이터 ===");
+            console.log(JSON.stringify(participants, null, 2));
+
             if (!Array.isArray(participants)) {
-                console.error('❌ 응답이 배열이 아닙니다:', participants);
-                return false;
+              console.error("❌ 응답이 배열이 아닙니다:", participants);
+              retries++;
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              continue;
             }
 
-            const students = participants.filter(p => {
-                console.log(`🔍 참가자 ${p.userId} (${p.userName}): role=${p.role}`);
-                return p.role === 'STUDENT';
-            });
-            
-            console.log('🎓 필터링된 학생:', students);
-
-            const select = document.getElementById('intervieweeSelect');
-            if (!select) {
-                console.warn('⚠️ intervieweeSelect 요소가 없습니다');
-                return false;
+            if (participants.length === 0) {
+              console.warn(
+                `⚠️ 참가자가 없습니다! (시도 ${retries + 1}/${maxRetries})`
+              );
+              retries++;
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              continue;
             }
 
-            select.innerHTML = '<option value="">선택하세요</option>';
-            
-            students.forEach(student => {
-                const option = document.createElement('option');
-                option.value = student.userId;
-                option.textContent = student.userName || `User ${student.userId}`;
-                select.appendChild(option);
-                console.log(`✅ 추가된 옵션: ${option.textContent} (${option.value})`);
+            participantRoles = {};
+            participantNames = {};
+
+            participants.forEach((p) => {
+              console.log(
+                `👤 User ${p.userId}: role=${p.role}, name=${p.userName}`
+              );
+              participantRoles[p.userId] = p.role;
+              participantNames[p.userId] = p.userName || `User ${p.userId}`;
             });
 
-            console.log(`✅ 총 ${students.length}명의 면접자 로드 완료`);
-            return students.length > 0;
-        } catch (error) {
-            console.error('❌ 면접자 로드 실패:', error);
-            return false;
+            console.log("✅ 참가자 역할 매핑:", participantRoles);
+            console.log("✅ 참가자 이름 매핑:", participantNames);
+            console.log("✅ 현재 사용자 역할:", currentUserRole);
+
+            if (Object.keys(participantRoles).length > 0) {
+              return;
+            }
+          } catch (error) {
+            console.error(
+              `❌ 참가자 역할 로드 실패 (시도 ${retries + 1}):`,
+              error
+            );
+          }
+
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
         }
-    }
 
-    function updateIntervieweeList(participants) {
-        const select = document.getElementById('intervieweeSelect');
+        console.error("❌ 참가자 역할 로드 최종 실패");
+      }
+
+      function connectWebSocket() {
+        const socket = new SockJS("/ws");
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect(
+          {},
+          function (frame) {
+            console.log("✅ WebSocket 연결 성공");
+
+            stompClient.subscribe(
+              `/topic/session/${sessionId}/question`,
+              function (message) {
+                const data = JSON.parse(message.body);
+                console.log("📩 질문 수신:", data);
+                questionCount++;
+                qaList.push({
+                  type: "question",
+                  number: questionCount,
+                  author: data.author || "면접관",
+                  content: data.content,
+                  time: new Date().toLocaleTimeString(),
+                  userId: data.userId,
+                });
+                renderQA();
+              }
+            );
+
+            stompClient.subscribe(
+              `/topic/session/${sessionId}/answer`,
+              function (message) {
+                const data = JSON.parse(message.body);
+                console.log("📩 답변 수신:", data);
+
+                if (data.userId === currentUserId && data.answerId) {
+                  window.lastAnswerId = data.answerId;
+                  console.log("✅ 내 답변 ID 저장:", data.answerId);
+                }
+
+                answerCount++;
+                qaList.push({
+                  type: "answer",
+                  number: answerCount,
+                  author: data.userName || data.author || "면접자",
+                  content: data.answerText || data.content || "",
+                  time: new Date().toLocaleTimeString(),
+                  userId: data.userId,
+                  answerId: data.answerId,
+                });
+                renderQA();
+              }
+            );
+
+            stompClient.subscribe(
+              `/topic/session/${sessionId}`,
+              function (message) {
+                const data = JSON.parse(message.body);
+                console.log("📩 일반 메시지 수신:", data);
+
+                if (Array.isArray(data)) {
+                  console.log("📋 참가자 목록 업데이트:", data);
+
+                  data.forEach((p) => {
+                    participantRoles[p.userId] = p.role;
+                    participantNames[p.userId] =
+                      p.userName || `User ${p.userId}`;
+                    console.log(
+                      `🔄 매핑: userId=${p.userId}, role=${p.role}, name=${p.userName}`
+                    );
+                  });
+
+                  console.log("✅ 역할 매핑 업데이트:", participantRoles);
+
+                  if (
+                    currentUserRole === "HOST" ||
+                    currentUserRole === "REVIEWER"
+                  ) {
+                    console.log("👥 면접자 리스트 즉시 업데이트");
+                    updateIntervieweeList(data);
+                  }
+                }
+              }
+            );
+
+            stompClient.subscribe(
+              `/topic/session/${sessionId}/subtitle`,
+              function (message) {
+                const data = JSON.parse(message.body);
+                console.log("📺 자막 수신:", data);
+
+                if (
+                  data.userId === currentUserId &&
+                  data.isFinal &&
+                  data.answerId
+                ) {
+                  window.lastAnswerId = data.answerId;
+                  console.log("✅ 자막 답변 ID 저장:", data.answerId);
+                }
+
+                if (data.userId !== currentUserId && data.isFinal) {
+                  addPermanentSubtitle(data.text, data.speaker);
+                }
+              }
+            );
+
+            stompClient.send(
+              `/app/session/${sessionId}/join`,
+              {},
+              JSON.stringify({
+                userId: currentUserId,
+                role: currentUserRole,
+              })
+            );
+          },
+          function (error) {
+            console.error("❌ WebSocket 연결 실패:", error);
+            setTimeout(connectWebSocket, 5000);
+          }
+        );
+      }
+
+      function handleWebSocketMessage(data) {
+        const select = document.getElementById("intervieweeSelect");
         if (!select) return;
 
         const currentValue = select.value;
         select.innerHTML = '<option value="">선택하세요</option>';
-        
-        const students = participants.filter(p => p.role === 'STUDENT');
-        console.log('=== WebSocket 업데이트로 면접자 리스트 갱신 ===');
-        console.log('학생 수:', students.length);
-        
-        students.forEach(student => {
-            const option = document.createElement('option');
+
+        participants
+          .filter((p) => p.role === "STUDENT")
+          .forEach((p) => {
+            const option = document.createElement("option");
+            option.value = p.userId;
+            option.textContent = p.userName;
+            select.appendChild(option);
+          });
+
+        if (currentValue) {
+          select.value = currentValue;
+        }
+      }
+
+      function toggleEvaluationPanel() {
+        const panel = document.getElementById("evaluationPanel");
+        const icon = document.getElementById("evalToggleIcon");
+        if (panel.style.display === "none") {
+          panel.style.display = "block";
+          icon.style.transform = "rotate(180deg)";
+        } else {
+          panel.style.display = "none";
+          icon.style.transform = "rotate(0deg)";
+        }
+      }
+
+      async function loadInterviewees() {
+        try {
+          console.log("=== 면접자 드롭다운 로드 시작 ===");
+          const response = await fetch(
+            `/api/session/${sessionId}/participants`
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const participants = await response.json();
+          console.log("📋 전체 참가자:", participants);
+
+          if (!Array.isArray(participants)) {
+            console.error("❌ 응답이 배열이 아닙니다:", participants);
+            return false;
+          }
+
+          const students = participants.filter((p) => {
+            console.log(
+              `🔍 참가자 ${p.userId} (${p.userName}): role=${p.role}`
+            );
+            return p.role === "STUDENT";
+          });
+
+          console.log("🎓 필터링된 학생:", students);
+
+          const select = document.getElementById("intervieweeSelect");
+          if (!select) {
+            console.warn("⚠️ intervieweeSelect 요소가 없습니다");
+            return false;
+          }
+
+          select.innerHTML = '<option value="">선택하세요</option>';
+
+          students.forEach((student) => {
+            const option = document.createElement("option");
             option.value = student.userId;
             option.textContent = student.userName || `User ${student.userId}`;
             select.appendChild(option);
+            console.log(
+              `✅ 추가된 옵션: ${option.textContent} (${option.value})`
+            );
+          });
+
+          console.log(`✅ 총 ${students.length}명의 면접자 로드 완료`);
+          return students.length > 0;
+        } catch (error) {
+          console.error("❌ 면접자 로드 실패:", error);
+          return false;
+        }
+      }
+
+      function updateIntervieweeList(participants) {
+        const select = document.getElementById("intervieweeSelect");
+        if (!select) return;
+
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">선택하세요</option>';
+
+        const students = participants.filter((p) => p.role === "STUDENT");
+        console.log("=== WebSocket 업데이트로 면접자 리스트 갱신 ===");
+        console.log("학생 수:", students.length);
+
+        students.forEach((student) => {
+          const option = document.createElement("option");
+          option.value = student.userId;
+          option.textContent = student.userName || `User ${student.userId}`;
+          select.appendChild(option);
         });
 
         if (currentValue) {
-            select.value = currentValue;
+          select.value = currentValue;
         }
-    }
+      }
 
-    function setRating(rating) {
+      function setRating(rating) {
         currentRating = rating;
-        const stars = document.querySelectorAll('.star');
+        const stars = document.querySelectorAll(".star");
         stars.forEach((star, index) => {
-            if (index < rating) {
-                star.classList.add('active');
-            } else {
-                star.classList.remove('active');
-            }
+          if (index < rating) {
+            star.classList.add("active");
+          } else {
+            star.classList.remove("active");
+          }
         });
-    }
+      }
 
-    function saveEvaluation() {
-        const userId = document.getElementById('intervieweeSelect').value;
+      function saveEvaluation() {
+        const userId = document.getElementById("intervieweeSelect").value;
         if (!userId) {
-            alert('면접자를 선택하세요');
-            return;
+          alert("면접자를 선택하세요");
+          return;
         }
 
         evaluations[userId] = {
-            rating: currentRating,
-            strengths: document.getElementById('strengths').value,
-            weaknesses: document.getElementById('weaknesses').value,
-            improvements: document.getElementById('improvements').value,
-            notes: document.getElementById('notes').value
+          rating: currentRating,
+          strengths: document.getElementById("strengths").value,
+          weaknesses: document.getElementById("weaknesses").value,
+          improvements: document.getElementById("improvements").value,
+          notes: document.getElementById("notes").value,
         };
 
-        alert('임시 저장되었습니다');
-    }
+        alert("임시 저장되었습니다");
+      }
 
-    function loadSavedEvaluation() {
-        const userId = document.getElementById('intervieweeSelect').value;
+      function loadSavedEvaluation() {
+        const userId = document.getElementById("intervieweeSelect").value;
         if (!userId) {
-            setRating(0);
-            document.getElementById('strengths').value = '';
-            document.getElementById('weaknesses').value = '';
-            document.getElementById('improvements').value = '';
-            document.getElementById('notes').value = '';
-            return;
+          setRating(0);
+          document.getElementById("strengths").value = "";
+          document.getElementById("weaknesses").value = "";
+          document.getElementById("improvements").value = "";
+          document.getElementById("notes").value = "";
+          return;
         }
 
         const saved = evaluations[userId];
         if (saved) {
-            setRating(saved.rating);
-            document.getElementById('strengths').value = saved.strengths;
-            document.getElementById('weaknesses').value = saved.weaknesses;
-            document.getElementById('improvements').value = saved.improvements;
-            document.getElementById('notes').value = saved.notes;
+          setRating(saved.rating);
+          document.getElementById("strengths").value = saved.strengths;
+          document.getElementById("weaknesses").value = saved.weaknesses;
+          document.getElementById("improvements").value = saved.improvements;
+          document.getElementById("notes").value = saved.notes;
         } else {
-            setRating(0);
-            document.getElementById('strengths').value = '';
-            document.getElementById('weaknesses').value = '';
-            document.getElementById('improvements').value = '';
-            document.getElementById('notes').value = '';
+          setRating(0);
+          document.getElementById("strengths").value = "";
+          document.getElementById("weaknesses").value = "";
+          document.getElementById("improvements").value = "";
+          document.getElementById("notes").value = "";
         }
-    }
+      }
 
-    async function loadIntervieweeData() {
-        const userId = document.getElementById('intervieweeSelect').value;
-        
+      async function loadIntervieweeData() {
+        const userId = document.getElementById("intervieweeSelect").value;
+
         if (!userId) {
-            document.getElementById('aiFeedbackSection').style.display = 'none';
-            loadSavedEvaluation();
-            return;
+          document.getElementById("aiFeedbackSection").style.display = "none";
+          loadSavedEvaluation();
+          return;
         }
 
-        console.log('📊 면접자 데이터 로드:', userId);
+        console.log("📊 면접자 데이터 로드:", userId);
 
         try {
-            const response = await fetch(`/api/session/${sessionId}/interviewee/${userId}/feedback`);
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log('✅ AI 피드백 데이터:', data);
-                
-                if (data.aiFeedback) {
-                    document.getElementById('aiFeedbackSection').style.display = 'block';
-                    
-                    document.getElementById('aiStrengths').innerHTML = 
-                        `<strong style="color: #10b981;">💪 강점:</strong> ${data.aiFeedback.strengths || '분석 중...'}`;
-                    
-                    document.getElementById('aiWeaknesses').innerHTML = 
-                        `<strong style="color: #f59e0b;">⚠️ 약점:</strong> ${data.aiFeedback.weaknesses || '분석 중...'}`;
-                    
-                    document.getElementById('aiImprovements').innerHTML = 
-                        `<strong style="color: #3b82f6;">💡 개선:</strong> ${data.aiFeedback.improvements || '분석 중...'}`;
-                    
-                    window.currentAIFeedback = data.aiFeedback;
-                } else {
-                    document.getElementById('aiFeedbackSection').style.display = 'none';
-                }
+          const response = await fetch(
+            `/api/session/${sessionId}/interviewee/${userId}/feedback`
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log("✅ AI 피드백 데이터:", data);
+
+            if (data.aiFeedback) {
+              document.getElementById("aiFeedbackSection").style.display =
+                "block";
+
+              document.getElementById(
+                "aiStrengths"
+              ).innerHTML = `<strong style="color: #10b981;">💪 강점:</strong> ${
+                data.aiFeedback.strengths || "분석 중..."
+              }`;
+
+              document.getElementById(
+                "aiWeaknesses"
+              ).innerHTML = `<strong style="color: #f59e0b;">⚠️ 약점:</strong> ${
+                data.aiFeedback.weaknesses || "분석 중..."
+              }`;
+
+              document.getElementById(
+                "aiImprovements"
+              ).innerHTML = `<strong style="color: #3b82f6;">💡 개선:</strong> ${
+                data.aiFeedback.improvements || "분석 중..."
+              }`;
+
+              window.currentAIFeedback = data.aiFeedback;
             } else {
-                console.warn('⚠️ AI 피드백 없음');
-                document.getElementById('aiFeedbackSection').style.display = 'none';
+              document.getElementById("aiFeedbackSection").style.display =
+                "none";
             }
+          } else {
+            console.warn("⚠️ AI 피드백 없음");
+            document.getElementById("aiFeedbackSection").style.display = "none";
+          }
         } catch (error) {
-            console.error('❌ AI 피드백 로드 실패:', error);
-            document.getElementById('aiFeedbackSection').style.display = 'none';
+          console.error("❌ AI 피드백 로드 실패:", error);
+          document.getElementById("aiFeedbackSection").style.display = "none";
         }
 
         loadSavedEvaluation();
-    }
+      }
 
-    function copyAIToForm() {
+      function copyAIToForm() {
         if (!window.currentAIFeedback) {
-            alert('AI 피드백이 없습니다');
-            return;
+          alert("AI 피드백이 없습니다");
+          return;
         }
 
         const ai = window.currentAIFeedback;
-        document.getElementById('strengths').value = ai.strengths || '';
-        document.getElementById('weaknesses').value = ai.weaknesses || '';
-        document.getElementById('improvements').value = ai.improvements || '';
-        
-        alert('AI 피드백이 복사되었습니다. 필요에 따라 수정하세요.');
-    }
+        document.getElementById("strengths").value = ai.strengths || "";
+        document.getElementById("weaknesses").value = ai.weaknesses || "";
+        document.getElementById("improvements").value = ai.improvements || "";
 
-    async function submitEvaluation() {
-        const userId = document.getElementById('intervieweeSelect').value;
+        alert("AI 피드백이 복사되었습니다. 필요에 따라 수정하세요.");
+      }
+
+      async function submitEvaluation() {
+        const userId = document.getElementById("intervieweeSelect").value;
         if (!userId) {
-            alert('면접자를 선택하세요');
-            return;
+          alert("면접자를 선택하세요");
+          return;
         }
 
         if (currentRating === 0) {
-            alert('평가 점수를 선택하세요');
-            return;
+          alert("평가 점수를 선택하세요");
+          return;
         }
 
         const payload = {
-            intervieweeId: parseInt(userId),
-            rating: currentRating,
-            strengths: document.getElementById('strengths').value,
-            weaknesses: document.getElementById('weaknesses').value,
-            improvements: document.getElementById('improvements').value,
-            notes: document.getElementById('notes').value
+          intervieweeId: parseInt(userId),
+          rating: currentRating,
+          strengths: document.getElementById("strengths").value,
+          weaknesses: document.getElementById("weaknesses").value,
+          improvements: document.getElementById("improvements").value,
+          notes: document.getElementById("notes").value,
         };
 
-        console.log('📤 평가 제출 payload:', payload);
+        console.log("📤 평가 제출 payload:", payload);
 
         try {
-            const response = await fetch(`/api/session/${sessionId}/feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': getCookie('Authorization')
-                },
-                body: JSON.stringify(payload)
-            });
+          const response = await fetch(`/api/session/${sessionId}/feedback`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: getCookie("Authorization"),
+            },
+            body: JSON.stringify(payload),
+          });
 
-            console.log('📥 평가 제출 응답 상태:', response.status);
+          console.log("📥 평가 제출 응답 상태:", response.status);
 
-            if (response.ok) {
-                const result = await response.json();
-                console.log('✅ 평가 제출 성공:', result);
-                alert('평가 제출 완료');
-                delete evaluations[userId];
-                loadIntervieweeData();
-            } else {
-                const errorData = await response.json();
-                console.error('❌ 평가 제출 실패:', response.status, errorData);
-                alert(`평가 제출 실패: ${errorData.message || '서버 에러'}`);
-            }
+          if (response.ok) {
+            const result = await response.json();
+            console.log("✅ 평가 제출 성공:", result);
+            alert("평가 제출 완료");
+            delete evaluations[userId];
+            loadIntervieweeData();
+          } else {
+            const errorData = await response.json();
+            console.error("❌ 평가 제출 실패:", response.status, errorData);
+            alert(`평가 제출 실패: ${errorData.message || "서버 에러"}`);
+          }
         } catch (error) {
-            console.error('❌ 평가 제출 오류:', error);
-            alert('평가 제출에 실패했습니다: ' + error.message);
+          console.error("❌ 평가 제출 오류:", error);
+          alert("평가 제출에 실패했습니다: " + error.message);
         }
-    }
+      }
 
-    async function initAgora() {
+      async function initAgora() {
         try {
-            console.log('🔍 미디어 권한 확인...');
-            await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            console.log('✅ 미디어 권한 승인됨');
+          console.log("🔍 미디어 권한 확인...");
+          await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+          console.log("✅ 미디어 권한 승인됨");
         } catch (error) {
-            console.error('❌ 미디어 권한 거부:', error);
-            alert('카메라와 마이크 권한이 필요합니다. 브라우저 설정에서 권한을 허용해주세요.');
-            throw error;
+          console.error("❌ 미디어 권한 거부:", error);
+          alert(
+            "카메라와 마이크 권한이 필요합니다. 브라우저 설정에서 권한을 허용해주세요."
+          );
+          throw error;
         }
 
-        agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+        agoraClient = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
-        agoraClient.on('network-quality', (stats) => {
-            if (stats.downlinkNetworkQuality > 3 || stats.uplinkNetworkQuality > 3) {
-                console.warn('⚠️ 네트워크 품질 저하:', stats);
-            }
+        agoraClient.on("network-quality", (stats) => {
+          if (
+            stats.downlinkNetworkQuality > 3 ||
+            stats.uplinkNetworkQuality > 3
+          ) {
+            console.warn("⚠️ 네트워크 품질 저하:", stats);
+          }
         });
 
-        agoraClient.on('connection-state-change', (curState, revState) => {
-            console.log(`🔌 연결 상태 변경: ${revState} → ${curState}`);
-            if (curState === 'DISCONNECTED') {
-                console.error('❌ Agora 연결 끊김!');
-            }
+        agoraClient.on("connection-state-change", (curState, revState) => {
+          console.log(`🔌 연결 상태 변경: ${revState} → ${curState}`);
+          if (curState === "DISCONNECTED") {
+            console.error("❌ Agora 연결 끊김!");
+          }
         });
 
-        agoraClient.on('user-published', async (user, mediaType) => {
-            try {
-                await agoraClient.subscribe(user, mediaType);
-                console.log('✅ User published:', user.uid, mediaType);
+        agoraClient.on("user-published", async (user, mediaType) => {
+          try {
+            await agoraClient.subscribe(user, mediaType);
+            console.log("✅ User published:", user.uid, mediaType);
 
-                if (mediaType === 'video') {
-                    const remoteVideoTrack = user.videoTrack;
-                    const userId = user.uid;
-                    
-                    console.log(`=== 비디오 추가 시도 ===`);
-                    console.log(`User ID: ${userId}`);
-                    console.log(`현재 사용자 ID: ${currentUserId}`);
-                    console.log(`매핑된 역할: ${participantRoles[userId]}`);
-                    console.log(`전체 역할 매핑:`, participantRoles);
-                    
-                    const userRole = participantRoles[userId] || 'STUDENT';
-                    console.log(`최종 역할: ${userRole}`);
-                    
-                    const container = (userRole === 'HOST' || userRole === 'REVIEWER') ? 
-                        document.getElementById('interviewerVideos') : 
-                        document.getElementById('intervieweeVideos');
+            if (mediaType === "video") {
+              const remoteVideoTrack = user.videoTrack;
+              const userId = user.uid;
 
-                    console.log(`컨테이너: ${container.id}`);
+              console.log(`=== 비디오 추가 시도 ===`);
+              console.log(`User ID: ${userId}`);
+              console.log(`현재 사용자 ID: ${currentUserId}`);
+              console.log(`매핑된 역할: ${participantRoles[userId]}`);
+              console.log(`전체 역할 매핑:`, participantRoles);
 
-                    let videoWrapper = document.getElementById(`video-${userId}`);
-                    if (!videoWrapper) {
-                        videoWrapper = document.createElement('div');
-                        videoWrapper.className = 'video-wrapper';
-                        videoWrapper.id = `video-${userId}`;
-                        
-                        const label = document.createElement('div');
-                        label.className = 'video-label' + ((userRole === 'HOST' || userRole === 'REVIEWER') ? ' interviewer-badge' : '');
-                        label.id = `label-${userId}`;
-                        const displayName = participantNames[userId] || `User ${userId}`;
-                        const roleText = (userRole === 'HOST' || userRole === 'REVIEWER') ? ' 👔' : ' 🎓';
-                        label.textContent = displayName + roleText;
-                        
-                        videoWrapper.appendChild(label);
-                        container.appendChild(videoWrapper);
-                    }
-                    
-                    setTimeout(() => {
-                        try {
-                            remoteVideoTrack.play(`video-${userId}`, { fit: 'cover' });
-                            console.log(`✅ 비디오 플레이 완료: ${userId}`);
-                        } catch (playError) {
-                            console.error(`❌ 비디오 플레이 실패: ${userId}`, playError);
-                        }
-                    }, 200);
+              const userRole = participantRoles[userId] || "STUDENT";
+              console.log(`최종 역할: ${userRole}`);
 
-                    console.log(`✅ 비디오 추가 완료: ${participantNames[userId] || userId}, Role: ${userRole}`);
+              const container =
+                userRole === "HOST" || userRole === "REVIEWER"
+                  ? document.getElementById("interviewerVideos")
+                  : document.getElementById("intervieweeVideos");
+
+              console.log(`컨테이너: ${container.id}`);
+
+              let videoWrapper = document.getElementById(`video-${userId}`);
+              if (!videoWrapper) {
+                videoWrapper = document.createElement("div");
+                videoWrapper.className = "video-wrapper";
+                videoWrapper.id = `video-${userId}`;
+
+                const label = document.createElement("div");
+                label.className =
+                  "video-label" +
+                  (userRole === "HOST" || userRole === "REVIEWER"
+                    ? " interviewer-badge"
+                    : "");
+                label.id = `label-${userId}`;
+                const displayName =
+                  participantNames[userId] || `User ${userId}`;
+                const roleText =
+                  userRole === "HOST" || userRole === "REVIEWER"
+                    ? " 👔"
+                    : " 🎓";
+                label.textContent = displayName + roleText;
+
+                videoWrapper.appendChild(label);
+                container.appendChild(videoWrapper);
+              }
+
+              setTimeout(() => {
+                try {
+                  remoteVideoTrack.play(`video-${userId}`, { fit: "cover" });
+                  console.log(`✅ 비디오 플레이 완료: ${userId}`);
+                } catch (playError) {
+                  console.error(`❌ 비디오 플레이 실패: ${userId}`, playError);
                 }
+              }, 200);
 
-                if (mediaType === 'audio') {
-                    const remoteAudioTrack = user.audioTrack;
-                    remoteAudioTrack.play();
-                    console.log(`✅ 오디오 플레이 완료: ${user.uid}`);
-                }
-            } catch (error) {
-                console.error(`❌ user-published 처리 실패:`, error);
+              console.log(
+                `✅ 비디오 추가 완료: ${
+                  participantNames[userId] || userId
+                }, Role: ${userRole}`
+              );
             }
+
+            if (mediaType === "audio") {
+              const remoteAudioTrack = user.audioTrack;
+              remoteAudioTrack.play();
+              console.log(`✅ 오디오 플레이 완료: ${user.uid}`);
+            }
+          } catch (error) {
+            console.error(`❌ user-published 처리 실패:`, error);
+          }
         });
 
-        agoraClient.on('user-unpublished', (user) => {
-            const videoElement = document.getElementById(`video-${user.uid}`);
-            if (videoElement) {
-                videoElement.remove();
-            }
+        agoraClient.on("user-unpublished", (user) => {
+          const videoElement = document.getElementById(`video-${user.uid}`);
+          if (videoElement) {
+            videoElement.remove();
+          }
         });
 
         try {
-            console.log('=== Agora 연결 시도 (Testing Mode) ===');
-            console.log('App ID:', agoraAppId);
-            console.log('Channel:', agoraChannel);
-            console.log('UID:', parseInt(currentUserId));
-            console.log('Token: null (Testing Mode)');
-            
-            await agoraClient.join(agoraAppId, agoraChannel, null, parseInt(currentUserId));
-            console.log('✅ Agora 연결 성공!');
+          console.log("=== Agora 연결 시도 (Testing Mode) ===");
+          console.log("App ID:", agoraAppId);
+          console.log("Channel:", agoraChannel);
+          console.log("UID:", parseInt(currentUserId));
+          console.log("Token: null (Testing Mode)");
+
+          await agoraClient.join(
+            agoraAppId,
+            agoraChannel,
+            null,
+            parseInt(currentUserId)
+          );
+          console.log("✅ Agora 연결 성공!");
         } catch (error) {
-            console.error('❌ Agora 연결 실패:', error);
-            console.error('Error Code:', error.code);
-            console.error('Error Message:', error.message);
-            alert(`Agora 연결 실패: ${error.message}`);
-            throw error;
+          console.error("❌ Agora 연결 실패:", error);
+          console.error("Error Code:", error.code);
+          console.error("Error Message:", error.message);
+          alert(`Agora 연결 실패: ${error.message}`);
+          throw error;
         }
 
         try {
-            console.log('📹 카메라 트랙 생성 시도...');
-            localVideoTrack = await AgoraRTC.createCameraVideoTrack({ 
-                encoderConfig: "720p_2"
-            });
-            console.log('✅ 카메라 트랙 생성 성공');
+          console.log("📹 카메라 트랙 생성 시도...");
+          localVideoTrack = await AgoraRTC.createCameraVideoTrack({
+            encoderConfig: "720p_2",
+          });
+          console.log("✅ 카메라 트랙 생성 성공");
         } catch (error) {
-            console.error('❌ 카메라 트랙 생성 실패:', error);
-            alert('카메라를 사용할 수 없습니다. 브라우저 권한을 확인해주세요.');
-            throw error;
+          console.error("❌ 카메라 트랙 생성 실패:", error);
+          alert("카메라를 사용할 수 없습니다. 브라우저 권한을 확인해주세요.");
+          throw error;
         }
 
         try {
-            console.log('🎤 마이크 트랙 생성 시도...');
-            localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-                AEC: true,
-                ANS: true
-            });
-            console.log('✅ 마이크 트랙 생성 성공');
+          console.log("🎤 마이크 트랙 생성 시도...");
+          localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+            AEC: true,
+            ANS: true,
+          });
+          console.log("✅ 마이크 트랙 생성 성공");
         } catch (error) {
-            console.error('❌ 마이크 트랙 생성 실패:', error);
-            alert('마이크를 사용할 수 없습니다. 브라우저 권한을 확인해주세요.');
-            throw error;
+          console.error("❌ 마이크 트랙 생성 실패:", error);
+          alert("마이크를 사용할 수 없습니다. 브라우저 권한을 확인해주세요.");
+          throw error;
         }
 
-        const container = (currentUserRole === 'HOST' || currentUserRole === 'REVIEWER') ? 
-            document.getElementById('interviewerVideos') : 
-            document.getElementById('intervieweeVideos');
+        const container =
+          currentUserRole === "HOST" || currentUserRole === "REVIEWER"
+            ? document.getElementById("interviewerVideos")
+            : document.getElementById("intervieweeVideos");
 
-        const videoWrapper = document.createElement('div');
-        videoWrapper.className = 'video-wrapper';
+        const videoWrapper = document.createElement("div");
+        videoWrapper.className = "video-wrapper";
         videoWrapper.id = `video-${currentUserId}`;
-        
-        const label = document.createElement('div');
-        label.className = 'video-label' + ((currentUserRole === 'HOST' || currentUserRole === 'REVIEWER') ? ' interviewer-badge' : '');
+
+        const label = document.createElement("div");
+        label.className =
+          "video-label" +
+          (currentUserRole === "HOST" || currentUserRole === "REVIEWER"
+            ? " interviewer-badge"
+            : "");
         label.id = `label-${currentUserId}`;
-        const userName = participantNames[currentUserId] || '나';
-        const roleEmoji = (currentUserRole === 'HOST' || currentUserRole === 'REVIEWER') ? ' 👔' : ' 🎓';
+        const userName = participantNames[currentUserId] || "나";
+        const roleEmoji =
+          currentUserRole === "HOST" || currentUserRole === "REVIEWER"
+            ? " 👔"
+            : " 🎓";
         label.textContent = userName + roleEmoji;
-        
+
         videoWrapper.appendChild(label);
         container.appendChild(videoWrapper);
-        
-        localVideoTrack.play(`video-${currentUserId}`, { fit: 'cover' });
+
+        localVideoTrack.play(`video-${currentUserId}`, { fit: "cover" });
 
         await agoraClient.publish([localAudioTrack, localVideoTrack]);
-        console.log('✅ 로컬 미디어 발행 완료:', userName);
-    }
+        console.log("✅ 로컬 미디어 발행 완료:", userName);
+      }
 
+      function renderQA() {
+        const container = document.getElementById("qaContainer");
 
-    function renderQA() {
-        const container = document.getElementById('qaContainer');
-        
         if (qaList.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #9ca3af; font-size: 0.875rem;">질문과 답변이 여기에 표시됩니다</p>';
-            return;
+          container.innerHTML =
+            '<p style="text-align: center; color: #9ca3af; font-size: 0.875rem;">질문과 답변이 여기에 표시됩니다</p>';
+          return;
         }
 
-        container.innerHTML = qaList.map(item => `
+        container.innerHTML = qaList
+          .map(
+            (item) => `
             <div class="qa-item">
                 <div class="qa-header">
-                    <span class="qa-badge ${item.type === 'question' ? 'question-badge' : 'answer-badge'}">
-                        ${item.type === 'question' ? '질문' : '답변'} ${item.number}
+                    <span class="qa-badge ${
+                      item.type === "question"
+                        ? "question-badge"
+                        : "answer-badge"
+                    }">
+                        ${item.type === "question" ? "질문" : "답변"} ${
+              item.number
+            }
                     </span>
                     <span class="qa-author">${item.author}</span>
                 </div>
                 <div class="qa-content">${item.content}</div>
                 <div class="qa-time">${item.time}</div>
             </div>
-        `).join('');
+        `
+          )
+          .join("");
 
         container.scrollTop = container.scrollHeight;
-    }
+      }
 
-    function toggleAI() {
-        const aiPanel = document.getElementById('aiPanel');
-        const aiToggle = document.getElementById('aiToggle');
-        const aiToggleLabel = document.getElementById('aiToggleLabel');
-        
+      function toggleAI() {
+        const aiPanel = document.getElementById("aiPanel");
+        const aiToggle = document.getElementById("aiToggle");
+        const aiToggleLabel = document.getElementById("aiToggleLabel");
+
         if (aiToggle.checked) {
-            aiPanel.style.display = 'block';
-            aiToggleLabel.textContent = 'ON';
+          aiPanel.style.display = "block";
+          aiToggleLabel.textContent = "ON";
         } else {
-            aiPanel.style.display = 'none';
-            aiToggleLabel.textContent = 'OFF';
+          aiPanel.style.display = "none";
+          aiToggleLabel.textContent = "OFF";
         }
-    }
+      }
 
-    async function requestAIFeedback() {
-        console.log('🤖 AI 피드백 요청 시작');
-        
+      async function requestAIFeedback() {
+        console.log("🤖 AI 피드백 요청 시작");
+
         const feedbackQAList = [...qaList];
 
-        const subtitleMessages = document.querySelectorAll('#subtitleContent .subtitle-permanent');
+        const subtitleMessages = document.querySelectorAll(
+          "#subtitleContent .subtitle-permanent"
+        );
         if (subtitleMessages.length > 0) {
-            subtitleMessages.forEach(subtitle => {
-                const fullText = subtitle.textContent;
-                const colonIndex = fullText.indexOf(':');
-                
-                if (colonIndex > 0) {
-                    const speaker = fullText.substring(0, colonIndex).trim();
-                    const content = fullText.substring(colonIndex + 1).trim();
-                    
-                    if (content && content !== '자막이 여기에 표시됩니다...') {
-                        feedbackQAList.push({
-                            type: speaker.includes('질문') ? 'question' : 'answer',
-                            content: content,
-                            author: speaker.replace(' (질문)', '').replace(' (답변)', '')
-                        });
-                    }
-                }
-            });
+          subtitleMessages.forEach((subtitle) => {
+            const fullText = subtitle.textContent;
+            const colonIndex = fullText.indexOf(":");
+
+            if (colonIndex > 0) {
+              const speaker = fullText.substring(0, colonIndex).trim();
+              const content = fullText.substring(colonIndex + 1).trim();
+
+              if (content && content !== "자막이 여기에 표시됩니다...") {
+                feedbackQAList.push({
+                  type: speaker.includes("질문") ? "question" : "answer",
+                  content: content,
+                  author: speaker.replace(" (질문)", "").replace(" (답변)", ""),
+                });
+              }
+            }
+          });
         }
 
         if (feedbackQAList.length === 0) {
-            alert('피드백할 내용이 없습니다');
-            return;
+          alert("피드백할 내용이 없습니다");
+          return;
         }
 
-        console.log('📋 피드백 대상:', feedbackQAList);
+        console.log("📋 피드백 대상:", feedbackQAList);
 
-        const aiFeedbackDiv = document.getElementById('aiFeedback');
-        aiFeedbackDiv.innerHTML = '⏳ AI 피드백 생성 중...';
+        const aiFeedbackDiv = document.getElementById("aiFeedback");
+        aiFeedbackDiv.innerHTML = "⏳ AI 피드백 생성 중...";
 
         try {
-            const response = await fetch(`/api/session/${sessionId}/ai-feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': getCookie('Authorization')
-                },
-                body: JSON.stringify({
-                    qaList: feedbackQAList
-                })
-            });
+          const response = await fetch(
+            `/api/session/${sessionId}/ai-feedback`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: getCookie("Authorization"),
+              },
+              body: JSON.stringify({
+                qaList: feedbackQAList,
+              }),
+            }
+          );
 
-            if (response.ok) {
-                const feedback = await response.json();
-                aiFeedbackDiv.innerHTML = `
-                    <div><strong>💪 강점:</strong> ${feedback.strengths || 'N/A'}</div>
-                    <div><strong>⚠️ 약점:</strong> ${feedback.weaknesses || 'N/A'}</div>
-                    <div><strong>💡 개선:</strong> ${feedback.improvements || 'N/A'}</div>
+          if (response.ok) {
+            const feedback = await response.json();
+            aiFeedbackDiv.innerHTML = `
+                    <div><strong>💪 강점:</strong> ${
+                      feedback.strengths || "N/A"
+                    }</div>
+                    <div><strong>⚠️ 약점:</strong> ${
+                      feedback.weaknesses || "N/A"
+                    }</div>
+                    <div><strong>💡 개선:</strong> ${
+                      feedback.improvements || "N/A"
+                    }</div>
                 `;
-            } else {
-                throw new Error('AI 피드백 요청 실패');
-            }
+          } else {
+            throw new Error("AI 피드백 요청 실패");
+          }
         } catch (error) {
-            console.error('AI 피드백 오류:', error);
-            aiFeedbackDiv.innerHTML = '❌ AI 피드백 생성 실패';
+          console.error("AI 피드백 오류:", error);
+          aiFeedbackDiv.innerHTML = "❌ AI 피드백 생성 실패";
         }
-    }
+      }
 
-    let timerSeconds = 0;
-    let timerInterval = null;
+      let timerSeconds = 0;
+      let timerInterval = null;
 
-    function startTimer() {
+      function startTimer() {
         timerInterval = setInterval(() => {
-            timerSeconds++;
-            const hours = Math.floor(timerSeconds / 3600);
-            const minutes = Math.floor((timerSeconds % 3600) / 60);
-            const seconds = timerSeconds % 60;
-            
-            document.getElementById('timer').textContent = 
-                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+          timerSeconds++;
+          const hours = Math.floor(timerSeconds / 3600);
+          const minutes = Math.floor((timerSeconds % 3600) / 60);
+          const seconds = timerSeconds % 60;
+
+          document.getElementById("timer").textContent = `${String(
+            hours
+          ).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(
+            seconds
+          ).padStart(2, "0")}`;
         }, 1000);
-    }
+      }
 
-    async function toggleMic() {
+      async function toggleMic() {
         if (localAudioTrack) {
-            const enabled = localAudioTrack.enabled;
-            await localAudioTrack.setEnabled(!enabled);
-            event.target.textContent = enabled ? '🎤 마이크 (OFF)' : '🎤 마이크';
+          const enabled = localAudioTrack.enabled;
+          await localAudioTrack.setEnabled(!enabled);
+          event.target.textContent = enabled ? "🎤 마이크 (OFF)" : "🎤 마이크";
         }
-    }
+      }
 
-    async function toggleCamera() {
+      async function toggleCamera() {
         if (localVideoTrack) {
-            const enabled = localVideoTrack.enabled;
-            await localVideoTrack.setEnabled(!enabled);
-            event.target.textContent = enabled ? '📹 카메라 (OFF)' : '📹 카메라';
+          const enabled = localVideoTrack.enabled;
+          await localVideoTrack.setEnabled(!enabled);
+          event.target.textContent = enabled ? "📹 카메라 (OFF)" : "📹 카메라";
         }
-    }
+      }
 
-    async function endInterview() {
-        const isHost = currentUserRole === 'HOST' || currentUserRole === 'REVIEWER';
-        
+      async function endInterview() {
+        const isHost =
+          currentUserRole === "HOST" || currentUserRole === "REVIEWER";
+
         if (isHost) {
-            showEndModal();
+          showEndModal();
         } else {
-            if (!confirm('면접을 종료하시겠습니까?')) {
-                return;
-            }
-            await cleanupAndExit();
-            window.location.href = '/session/list';
+          if (!confirm("면접을 종료하시겠습니까?")) {
+            return;
+          }
+          await cleanupAndExit();
+          window.location.href = "/session/list";
         }
-    }
+      }
 
-    function showEndModal() {
-        const modal = document.createElement('div');
-        modal.id = 'endModal';
+      function showEndModal() {
+        const modal = document.createElement("div");
+        modal.id = "endModal";
         modal.style.cssText = `
             position: fixed;
             top: 0;
@@ -1864,7 +2233,7 @@
             z-index: 10000;
         `;
 
-        const modalContent = document.createElement('div');
+        const modalContent = document.createElement("div");
         modalContent.style.cssText = `
             background: white;
             padding: 32px;
@@ -1905,347 +2274,386 @@
 
         modal.appendChild(modalContent);
         document.body.appendChild(modal);
-    }
+      }
 
-    function closeEndModal() {
-        const modal = document.getElementById('endModal');
+      function closeEndModal() {
+        const modal = document.getElementById("endModal");
         if (modal) {
-            modal.remove();
+          modal.remove();
         }
-    }
+      }
 
-    async function goToSessionList() {
+      async function goToSessionList() {
         await cleanupAndExit();
-        window.location.href = '/session/list';
-    }
+        window.location.href = "/session/list";
+      }
 
-    async function cleanupAndExit() {
+      async function cleanupAndExit() {
         if (recognition) {
-            recognition.stop();
+          recognition.stop();
         }
 
         if (timerInterval) {
-            clearInterval(timerInterval);
+          clearInterval(timerInterval);
         }
 
         if (localAudioTrack) {
-            localAudioTrack.close();
+          localAudioTrack.close();
         }
         if (localVideoTrack) {
-            localVideoTrack.close();
+          localVideoTrack.close();
         }
         if (agoraClient) {
-            await agoraClient.leave();
+          await agoraClient.leave();
         }
         if (stompClient) {
-            stompClient.send(`/app/session/${sessionId}/leave`, {}, JSON.stringify({
-                userId: currentUserId
-            }));
-            stompClient.disconnect();
+          stompClient.send(
+            `/app/session/${sessionId}/leave`,
+            {},
+            JSON.stringify({
+              userId: currentUserId,
+            })
+          );
+          stompClient.disconnect();
         }
-    }
+      }
 
-    async function startRecording() {
+      async function startRecording() {
         try {
-            if (isRecording) {
-                console.warn('⚠️ 이미 녹화 중입니다');
-                return;
+          if (isRecording) {
+            console.warn("⚠️ 이미 녹화 중입니다");
+            return;
+          }
+
+          if (mediaRecorder && mediaRecorder.state === "recording") {
+            console.warn("⚠️ MediaRecorder가 이미 녹화 중입니다");
+            return;
+          }
+
+          console.log("🔍 화면 녹화 API 지원 확인...");
+          console.log("navigator.mediaDevices:", navigator.mediaDevices);
+          console.log(
+            "getDisplayMedia:",
+            navigator.mediaDevices?.getDisplayMedia
+          );
+
+          if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getDisplayMedia
+          ) {
+            console.error("❌ getDisplayMedia 미지원");
+            alert(
+              "⚠️ 이 브라우저는 화면 녹화를 지원하지 않습니다.\n\n해결방법:\n1. Chrome/Edge 최신 버전 사용\n2. HTTPS로 접속 (https://mockerview.net)\n3. localhost가 아닌 경우 반드시 HTTPS 필요"
+            );
+            return;
+          }
+
+          console.log("✅ getDisplayMedia 지원됨");
+          console.log("🎬 녹화 시작");
+
+          let streamToRecord;
+
+          try {
+            console.log("🖥️ 화면 공유 요청...");
+            streamToRecord = await navigator.mediaDevices.getDisplayMedia({
+              video: {
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                frameRate: { ideal: 30 },
+              },
+              audio: true,
+            });
+            console.log("✅ 화면 공유 스트림 획득 완료");
+          } catch (e) {
+            if (e.name === "NotAllowedError") {
+              console.log("ℹ️ 사용자가 화면 공유 취소");
+              return;
             }
+            console.error("❌ 화면 공유 실패:", e);
+            alert(`화면 공유 실패: ${e.message}`);
+            return;
+          }
 
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                console.warn('⚠️ MediaRecorder가 이미 녹화 중입니다');
-                return;
+          if (!streamToRecord || !streamToRecord.active) {
+            console.error("❌ 스트림이 활성화되지 않음");
+            alert("스트림이 활성화되지 않았습니다");
+            return;
+          }
+
+          const videoTracks = streamToRecord.getVideoTracks();
+          if (
+            videoTracks.length === 0 ||
+            videoTracks[0].readyState !== "live"
+          ) {
+            console.error("❌ 비디오 트랙이 없거나 종료됨");
+            alert("비디오 트랙을 사용할 수 없습니다");
+            return;
+          }
+
+          console.log("✅ 비디오 트랙 확인:", videoTracks[0].label);
+
+          recordedChunks = [];
+          recordingStream = streamToRecord;
+
+          let options;
+          const supportedTypes = [
+            "video/webm;codecs=vp9,opus",
+            "video/webm;codecs=vp8,opus",
+            "video/webm;codecs=vp8",
+            "video/webm",
+            "video/mp4",
+          ];
+
+          for (const type of supportedTypes) {
+            if (MediaRecorder.isTypeSupported(type)) {
+              options = {
+                mimeType: type,
+                videoBitsPerSecond: 2500000,
+              };
+              console.log("✅ 지원되는 코덱:", type);
+              break;
             }
+          }
 
-            console.log('🔍 화면 녹화 API 지원 확인...');
-            console.log('navigator.mediaDevices:', navigator.mediaDevices);
-            console.log('getDisplayMedia:', navigator.mediaDevices?.getDisplayMedia);
+          if (!options) {
+            options = {};
+            console.warn("⚠️ 기본 코덱 사용");
+          }
 
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-                console.error('❌ getDisplayMedia 미지원');
-                alert('⚠️ 이 브라우저는 화면 녹화를 지원하지 않습니다.\n\n해결방법:\n1. Chrome/Edge 최신 버전 사용\n2. HTTPS로 접속 (https://mockerview.net)\n3. localhost가 아닌 경우 반드시 HTTPS 필요');
-                return;
+          try {
+            mediaRecorder = new MediaRecorder(streamToRecord, options);
+            console.log("✅ MediaRecorder 생성:", {
+              state: mediaRecorder.state,
+              mimeType: mediaRecorder.mimeType,
+            });
+          } catch (e) {
+            console.error("❌ MediaRecorder 생성 실패:", e);
+            alert("MediaRecorder를 생성할 수 없습니다: " + e.message);
+            return;
+          }
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+              recordedChunks.push(event.data);
+              console.log(
+                `📊 청크 수집: ${event.data.size} bytes (총 ${recordedChunks.length}개)`
+              );
             }
+          };
 
-            console.log('✅ getDisplayMedia 지원됨');
-            console.log('🎬 녹화 시작');
-            
-            let streamToRecord;
-            
-            try {
-                console.log('🖥️ 화면 공유 요청...');
-                streamToRecord = await navigator.mediaDevices.getDisplayMedia({
-                    video: { 
-                        width: { ideal: 1920 }, 
-                        height: { ideal: 1080 }, 
-                        frameRate: { ideal: 30 } 
-                    },
-                    audio: true
-                });
-                console.log('✅ 화면 공유 스트림 획득 완료');
-            } catch (e) {
-                if (e.name === 'NotAllowedError') {
-                    console.log('ℹ️ 사용자가 화면 공유 취소');
-                    return;
-                }
-                console.error('❌ 화면 공유 실패:', e);
-                alert(`화면 공유 실패: ${e.message}`);
-                return;
-            }
-
-            if (!streamToRecord || !streamToRecord.active) {
-                console.error('❌ 스트림이 활성화되지 않음');
-                alert('스트림이 활성화되지 않았습니다');
-                return;
-            }
-
-            const videoTracks = streamToRecord.getVideoTracks();
-            if (videoTracks.length === 0 || videoTracks[0].readyState !== 'live') {
-                console.error('❌ 비디오 트랙이 없거나 종료됨');
-                alert('비디오 트랙을 사용할 수 없습니다');
-                return;
-            }
-
-            console.log('✅ 비디오 트랙 확인:', videoTracks[0].label);
-
-            recordedChunks = [];
-            recordingStream = streamToRecord;
-
-            let options;
-            const supportedTypes = [
-                'video/webm;codecs=vp9,opus',
-                'video/webm;codecs=vp8,opus',
-                'video/webm;codecs=vp8',
-                'video/webm',
-                'video/mp4'
-            ];
-
-            for (const type of supportedTypes) {
-                if (MediaRecorder.isTypeSupported(type)) {
-                    options = { 
-                        mimeType: type,
-                        videoBitsPerSecond: 2500000
-                    };
-                    console.log('✅ 지원되는 코덱:', type);
-                    break;
-                }
-            }
-
-            if (!options) {
-                options = {}; 
-                console.warn('⚠️ 기본 코덱 사용');
-            }
-
-            try {
-                mediaRecorder = new MediaRecorder(streamToRecord, options);
-                console.log('✅ MediaRecorder 생성:', {
-                    state: mediaRecorder.state,
-                    mimeType: mediaRecorder.mimeType
-                });
-            } catch (e) {
-                console.error('❌ MediaRecorder 생성 실패:', e);
-                alert('MediaRecorder를 생성할 수 없습니다: ' + e.message);
-                return;
-            }
-
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data && event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                    console.log(`📊 청크 수집: ${event.data.size} bytes (총 ${recordedChunks.length}개)`);
-                }
-            };
-
-            mediaRecorder.onstop = async () => {
-                console.log('⏹️ 녹화 중지됨');
-                isRecording = false;
-                
-                if (recordedChunks.length === 0) {
-                    console.error('❌ 녹화 데이터 없음');
-                    alert('녹화 데이터가 수집되지 않았습니다');
-                    return;
-                }
-                
-                await uploadRecording();
-            };
-
-            mediaRecorder.onerror = (event) => {
-                console.error('❌ MediaRecorder 오류:', event.error);
-                alert('녹화 중 오류 발생: ' + event.error);
-                isRecording = false;
-            };
-
-            console.log('🎬 mediaRecorder.start(1000) 호출...');
-            mediaRecorder.start(1000);
-            isRecording = true;
-            
-            console.log('✅ 녹화 시작 완료');
-            console.log('  - State:', mediaRecorder.state);
-            console.log('  - MimeType:', mediaRecorder.mimeType);
-
-            document.getElementById('startRecordBtn').style.display = 'none';
-            document.getElementById('stopRecordBtn').style.display = 'block';
-            document.getElementById('recordingIndicator').style.display = 'block';
-
-            streamToRecord.getVideoTracks()[0].onended = () => {
-                console.log('ℹ️ 사용자가 화면 공유 중지');
-                stopRecording();
-            };
-
-        } catch (error) {
-            console.error('❌ 녹화 시작 실패:', error);
-            console.error('Error name:', error.name);
-            console.error('Error message:', error.message);
-            alert('녹화 시작 실패: ' + error.message);
-            isRecording = false;
-        }
-    }
-
-    function stopRecording() {
-        if (mediaRecorder && isRecording) {
-            console.log('⏹️ 녹화 중지 요청');
-            
-            try {
-                if (mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                }
-            } catch (error) {
-                console.error('❌ 녹화 중지 오류:', error);
-            }
-            
+          mediaRecorder.onstop = async () => {
+            console.log("⏹️ 녹화 중지됨");
             isRecording = false;
 
-            if (recordingStream) {
-                recordingStream.getTracks().forEach(track => track.stop());
-                recordingStream = null;
-            }
-
-            document.getElementById('startRecordBtn').style.display = 'block';
-            document.getElementById('stopRecordBtn').style.display = 'none';
-            document.getElementById('recordingIndicator').style.display = 'none';
-
-            console.log('⏹️ 녹화 중지 완료');
-        }
-    }
-
-    async function uploadRecording() {
-        try {
             if (recordedChunks.length === 0) {
-                console.warn('⚠️ 녹화 데이터가 없습니다');
-                alert('녹화 데이터가 없습니다');
-                return;
+              console.error("❌ 녹화 데이터 없음");
+              alert("녹화 데이터가 수집되지 않았습니다");
+              return;
             }
 
-            console.log('📤 녹화 업로드 시작:', recordedChunks.length, '개 청크');
+            await uploadRecording();
+          };
 
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const fileSize = (blob.size / 1024 / 1024).toFixed(2);
-            console.log('📦 파일 크기:', fileSize, 'MB');
+          mediaRecorder.onerror = (event) => {
+            console.error("❌ MediaRecorder 오류:", event.error);
+            alert("녹화 중 오류 발생: " + event.error);
+            isRecording = false;
+          };
 
-            if (blob.size === 0) {
-                console.error('❌ 파일 크기 0바이트');
-                alert('녹화 파일이 비어있습니다');
-                return;
-            }
+          console.log("🎬 mediaRecorder.start(1000) 호출...");
+          mediaRecorder.start(1000);
+          isRecording = true;
 
-            document.getElementById('uploadProgress').style.display = 'block';
-            document.getElementById('uploadStatus').textContent = '업로드 중... (0%)';
+          console.log("✅ 녹화 시작 완료");
+          console.log("  - State:", mediaRecorder.state);
+          console.log("  - MimeType:", mediaRecorder.mimeType);
 
-            const formData = new FormData();
-            formData.append('video', blob, `recording_${sessionId}_${Date.now()}.webm`);
+          document.getElementById("startRecordBtn").style.display = "none";
+          document.getElementById("stopRecordBtn").style.display = "block";
+          document.getElementById("recordingIndicator").style.display = "block";
 
-            const xhr = new XMLHttpRequest();
-
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percentComplete = Math.round((e.loaded / e.total) * 100);
-                    document.getElementById('uploadProgressBar').style.width = percentComplete + '%';
-                    document.getElementById('uploadStatus').textContent = `업로드 중... (${percentComplete}%)`;
-                }
-            });
-
-            xhr.addEventListener('load', () => {
-                if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    console.log('✅ 업로드 완료:', response);
-                    document.getElementById('uploadStatus').textContent = '✅ 업로드 완료!';
-                    setTimeout(() => {
-                        document.getElementById('uploadProgress').style.display = 'none';
-                    }, 2000);
-                    alert('녹화가 성공적으로 저장되었습니다!');
-                } else {
-                    throw new Error('업로드 실패: ' + xhr.status);
-                }
-            });
-
-            xhr.addEventListener('error', () => {
-                throw new Error('네트워크 오류');
-            });
-
-            const token = getCookie('Authorization');
-            console.log('🔑 토큰 확인:', token ? '있음' : '없음');
-            
-            if (!token) {
-                console.error('❌ Authorization 토큰 없음!');
-                alert('로그인 세션이 만료되었습니다. 다시 로그인해주세요.');
-                document.getElementById('uploadProgress').style.display = 'none';
-                return;
-            }
-            
-            if (currentUserRole === 'HOST') {
-                xhr.open('POST', `/api/recording/${sessionId}/upload`);
-                xhr.setRequestHeader('Authorization', token.startsWith('Bearer ') ? token : 'Bearer ' + token);
-            } else {
-                let lastAnswerId = window.lastAnswerId;
-                
-                if (!lastAnswerId) {
-                    console.warn('⚠️ answerId 없음, 폴링 시작...');
-                    document.getElementById('uploadStatus').textContent = '답변 ID 확인 중...';
-                    
-                    for (let i = 0; i < 10; i++) {
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                        lastAnswerId = window.lastAnswerId;
-                        if (lastAnswerId) {
-                            console.log('✅ 폴링으로 answerId 획득:', lastAnswerId);
-                            break;
-                        }
-                    }
-                    
-                    if (!lastAnswerId) {
-                        alert('답변 ID를 찾을 수 없습니다.\n음성으로 답변한 후 2-3초 대기 후 녹화를 중지해주세요.');
-                        document.getElementById('uploadProgress').style.display = 'none';
-                        return;
-                    }
-                }
-                
-                console.log('📤 업로드 URL:', `/api/recording/answer/${lastAnswerId}/upload`);
-                xhr.open('POST', `/api/recording/answer/${lastAnswerId}/upload`);
-                xhr.setRequestHeader('Authorization', token.startsWith('Bearer ') ? token : 'Bearer ' + token);
-            }
-            
-            xhr.send(formData);
-
+          streamToRecord.getVideoTracks()[0].onended = () => {
+            console.log("ℹ️ 사용자가 화면 공유 중지");
+            stopRecording();
+          };
         } catch (error) {
-            console.error('❌ 녹화 업로드 실패:', error);
-            document.getElementById('uploadStatus').textContent = '❌ 업로드 실패';
-            alert('녹화 업로드에 실패했습니다: ' + error.message);
+          console.error("❌ 녹화 시작 실패:", error);
+          console.error("Error name:", error.name);
+          console.error("Error message:", error.message);
+          alert("녹화 시작 실패: " + error.message);
+          isRecording = false;
         }
-    }
+      }
 
-    function getCookie(name) {
+      function stopRecording() {
+        if (mediaRecorder && isRecording) {
+          console.log("⏹️ 녹화 중지 요청");
+
+          try {
+            if (mediaRecorder.state === "recording") {
+              mediaRecorder.stop();
+            }
+          } catch (error) {
+            console.error("❌ 녹화 중지 오류:", error);
+          }
+
+          isRecording = false;
+
+          if (recordingStream) {
+            recordingStream.getTracks().forEach((track) => track.stop());
+            recordingStream = null;
+          }
+
+          document.getElementById("startRecordBtn").style.display = "block";
+          document.getElementById("stopRecordBtn").style.display = "none";
+          document.getElementById("recordingIndicator").style.display = "none";
+
+          console.log("⏹️ 녹화 중지 완료");
+        }
+      }
+
+      async function uploadRecording() {
+        try {
+          if (recordedChunks.length === 0) {
+            console.warn("⚠️ 녹화 데이터가 없습니다");
+            alert("녹화 데이터가 없습니다");
+            return;
+          }
+
+          console.log("📤 녹화 업로드 시작:", recordedChunks.length, "개 청크");
+
+          const blob = new Blob(recordedChunks, { type: "video/webm" });
+          const fileSize = (blob.size / 1024 / 1024).toFixed(2);
+          console.log("📦 파일 크기:", fileSize, "MB");
+
+          if (blob.size === 0) {
+            console.error("❌ 파일 크기 0바이트");
+            alert("녹화 파일이 비어있습니다");
+            return;
+          }
+
+          document.getElementById("uploadProgress").style.display = "block";
+          document.getElementById("uploadStatus").textContent =
+            "업로드 중... (0%)";
+
+          const formData = new FormData();
+          formData.append(
+            "video",
+            blob,
+            `recording_${sessionId}_${Date.now()}.webm`
+          );
+
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.addEventListener("progress", (e) => {
+            if (e.lengthComputable) {
+              const percentComplete = Math.round((e.loaded / e.total) * 100);
+              document.getElementById("uploadProgressBar").style.width =
+                percentComplete + "%";
+              document.getElementById(
+                "uploadStatus"
+              ).textContent = `업로드 중... (${percentComplete}%)`;
+            }
+          });
+
+          xhr.addEventListener("load", () => {
+            if (xhr.status === 200) {
+              const response = JSON.parse(xhr.responseText);
+              console.log("✅ 업로드 완료:", response);
+              document.getElementById("uploadStatus").textContent =
+                "✅ 업로드 완료!";
+              setTimeout(() => {
+                document.getElementById("uploadProgress").style.display =
+                  "none";
+              }, 2000);
+              alert("녹화가 성공적으로 저장되었습니다!");
+            } else {
+              throw new Error("업로드 실패: " + xhr.status);
+            }
+          });
+
+          xhr.addEventListener("error", () => {
+            throw new Error("네트워크 오류");
+          });
+
+          const token = getCookie("Authorization");
+          console.log("🔑 토큰 확인:", token ? "있음" : "없음");
+
+          if (!token) {
+            console.error("❌ Authorization 토큰 없음!");
+            alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+            document.getElementById("uploadProgress").style.display = "none";
+            return;
+          }
+
+          if (currentUserRole === "HOST") {
+            xhr.open("POST", `/api/recording/${sessionId}/upload`);
+            xhr.setRequestHeader(
+              "Authorization",
+              token.startsWith("Bearer ") ? token : "Bearer " + token
+            );
+          } else {
+            let lastAnswerId = window.lastAnswerId;
+
+            if (!lastAnswerId) {
+              console.warn("⚠️ answerId 없음, 폴링 시작...");
+              document.getElementById("uploadStatus").textContent =
+                "답변 ID 확인 중...";
+
+              for (let i = 0; i < 10; i++) {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                lastAnswerId = window.lastAnswerId;
+                if (lastAnswerId) {
+                  console.log("✅ 폴링으로 answerId 획득:", lastAnswerId);
+                  break;
+                }
+              }
+
+              if (!lastAnswerId) {
+                alert(
+                  "답변 ID를 찾을 수 없습니다.\n음성으로 답변한 후 2-3초 대기 후 녹화를 중지해주세요."
+                );
+                document.getElementById("uploadProgress").style.display =
+                  "none";
+                return;
+              }
+            }
+
+            console.log(
+              "📤 업로드 URL:",
+              `/api/recording/answer/${lastAnswerId}/upload`
+            );
+            xhr.open("POST", `/api/recording/answer/${lastAnswerId}/upload`);
+            xhr.setRequestHeader(
+              "Authorization",
+              token.startsWith("Bearer ") ? token : "Bearer " + token
+            );
+          }
+
+          xhr.send(formData);
+        } catch (error) {
+          console.error("❌ 녹화 업로드 실패:", error);
+          document.getElementById("uploadStatus").textContent =
+            "❌ 업로드 실패";
+          alert("녹화 업로드에 실패했습니다: " + error.message);
+        }
+      }
+
+      function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
+        if (parts.length === 2) return parts.pop().split(";").shift();
         return null;
-    }
+      }
 
-    window.addEventListener('load', init);
-    window.addEventListener('beforeunload', () => {
+      window.addEventListener("load", init);
+      window.addEventListener("beforeunload", () => {
         if (stompClient) {
-            stompClient.disconnect();
+          stompClient.disconnect();
         }
-    });
-</script>
+      });
+    </script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>
