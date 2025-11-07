@@ -1,0 +1,36 @@
+<button th:fragment="messageWidgetBtn" id="chat-toggle-btn" class="chat-toggle-btn">
+    <span id="unread-badge" class="unread-badge hidden">
+        0
+    </span>
+</button>
+
+<div th:fragment="messageWidget" id="chat-widget-container" class="chat-widget-container"> 
+    <div class="chat-sidebar">
+        <div class="search-header">
+            <h3>면접자 검색</h3>
+            <input type="text" id="candidate-search" placeholder ="이름/ID를 입력하세요">
+        </div>
+        <ul id="candidate-list" class="candidate-list">
+            <li class="candidate-item">
+                <span class="name"></span>
+                <span class="status online">●</span>
+                <span class="badge">3</span>
+            </li>
+        </ul>
+    </div>
+    <div class="chat-main">
+        <div class="chat-header" id="chat-header">
+            <h4>[대화 상대를 선택하세요]</h4>
+            <button id="chat-close-btn" class="close-btn"></button>
+        </div>
+
+        <div id="message-history" class="message-history">
+        </div>
+
+        <div class="chat-input-area">
+            <textarea id="message-input" placeholder="메시지 입력..."></textarea>
+            <button id="send-btn" disalbed>전송</button>
+        </div>
+    </div>
+</div>
+

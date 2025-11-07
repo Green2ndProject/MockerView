@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>세션 목록 - MockerView</title>
     <link rel="stylesheet" href="/css/session-limit-modal.css">
+    <link rel="stylesheet" href="/css/chat-widget.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
@@ -928,6 +929,9 @@
         </div>
     </div>
 
+    <div th:replace="fragments/chat-widget :: messageWidget"></div>
+    <div th:replace="fragments/chat-widget :: messageWidgetBtn"></div>
+    
     <script>
         function toggleMenu() {
             const hamburger = document.querySelector('.hamburger');
@@ -1031,5 +1035,6 @@
     <script src="/js/session-limit-check.js"></script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
+    <script src="/js/chat-widget.js"></script>
 </body>
 </html>
