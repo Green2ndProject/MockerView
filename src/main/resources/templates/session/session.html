@@ -1,709 +1,446 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>면접 대기실 - MockerView</title>
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<head th:replace="~{fragments/head :: head('면접 대기실')}"></head>
+<style th:replace="~{fragments/styles :: navbar-styles}"></style>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<style>
+    body {
+        padding-top: 70px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #1a1a1a;
-        }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        flex: 1;
+    }
 
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
 
-        .navbar-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .header h1 {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 10px;
+    }
 
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
+    .header p {
+        color: #6b7280;
+    }
 
-        .navbar-nav {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
+    .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+    }
 
-        .nav-link {
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 0.9375rem;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
+    .waiting-room {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        border: 1px solid #e5e7eb;
+    }
 
-        .nav-link:hover {
-            color: #667eea;
-        }
+    .chat-panel {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+    }
 
-        .nav-link.active {
-            color: #667eea;
-        }
+    .section {
+        margin-bottom: 30px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid #f3f4f6;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
+    .section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 15px;
+    }
 
-        .header h1 {
-            font-size: 2rem;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
+    .participants {
+        display: grid;
+        gap: 15px;
+    }
 
-        .header p {
-            color: #6b7280;
-        }
+    .participant-group {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 15px;
+    }
 
+    .group-title {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .participant-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .participant-item {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+        color: #374151;
+    }
+
+    .invite-section {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 15px;
+    }
+
+    .invite-url {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .invite-input {
+        flex: 1;
+        padding: 10px;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        background: white;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-copy {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-copy:hover {
+        background: #5568d3;
+    }
+
+    .start-section {
+        text-align: center;
+        padding-top: 20px;
+    }
+
+    .btn-start {
+        background: #667eea;
+        color: white;
+        padding: 15px 40px;
+        font-size: 1.125rem;
+    }
+
+    .btn-start:hover {
+        background: #5568d3;
+    }
+
+    .btn-start:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+
+    .chat-message {
+        margin-bottom: 12px;
+        padding: 10px;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .chat-message-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+
+    .chat-user {
+        font-weight: 600;
+        color: #667eea;
+        font-size: 0.875rem;
+    }
+
+    .chat-time {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    .chat-text {
+        font-size: 0.875rem;
+        color: #374151;
+    }
+
+    .chat-input-area {
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 10px;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .btn-send {
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-send:hover {
+        background: #5568d3;
+    }
+
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+    }
+
+    .modal-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+
+    .modal-message {
+        font-size: 0.9375rem;
+        color: #6b7280;
+        margin-bottom: 24px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 12px;
+    }
+
+    .modal-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .modal-btn-cancel {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .modal-btn-cancel:hover {
+        background: #e5e7eb;
+    }
+
+    .modal-btn-confirm {
+        background: #667eea;
+        color: white;
+    }
+
+    .modal-btn-confirm:hover {
+        background: #5568d3;
+    }
+
+    .toast {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: white;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+        min-width: 300px;
+    }
+
+    .toast-success {
+        border-left: 4px solid #10b981;
+    }
+
+    .toast-icon {
+        font-size: 1.5rem;
+    }
+
+    .toast-content {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+    }
+
+    .toast-message {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 968px) {
         .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }
-
-        .waiting-room {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            border: 1px solid #e5e7eb;
+            grid-template-columns: 1fr;
         }
 
         .chat-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            border: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            height: 600px;
+            height: 400px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 20px 15px;
         }
 
-        .section {
-            margin-bottom: 30px;
-            padding-bottom: 30px;
-            border-bottom: 1px solid #f3f4f6;
+        .header h1 {
+            font-size: 1.5rem;
         }
 
-        .section:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-
-        .section-title {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 15px;
-        }
-
-        .participants {
-            display: grid;
-            gap: 15px;
-        }
-
-        .participant-group {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 15px;
-        }
-
-        .group-title {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .participant-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .participant-item {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 0.875rem;
-            color: #374151;
-        }
-
-        .invite-section {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 15px;
-        }
-
-        .invite-url {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .invite-input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            background: white;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.9375rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-copy {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-copy:hover {
-            background: #5568d3;
-        }
-
-        .start-section {
-            text-align: center;
-            padding-top: 20px;
-        }
-
-        .btn-start {
-            background: #667eea;
-            color: white;
-            padding: 15px 40px;
-            font-size: 1.125rem;
-        }
-
-        .btn-start:hover {
-            background: #5568d3;
-        }
-
-        .btn-start:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            padding: 15px;
-            background: #f9fafb;
-            border-radius: 8px;
-        }
-
-        .chat-message {
-            margin-bottom: 12px;
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .chat-message-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-
-        .chat-user {
-            font-weight: 600;
-            color: #667eea;
-            font-size: 0.875rem;
-        }
-
-        .chat-time {
-            font-size: 0.75rem;
-            color: #9ca3af;
-        }
-
-        .chat-text {
-            font-size: 0.875rem;
-            color: #374151;
+        .waiting-room, .chat-panel {
+            padding: 20px;
         }
 
         .chat-input-area {
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 0.875rem;
+            flex-direction: column;
         }
 
         .btn-send {
-            background: #667eea;
-            color: white;
+            width: 100%;
+        }
+
+        .invite-url {
+            flex-direction: column;
+        }
+
+        .btn-copy {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .waiting-room,
+        .chat-panel {
+            padding: 15px;
+        }
+
+        .section-title {
+            font-size: 0.9375rem;
+        }
+
+        .participant-group {
+            padding: 10px;
+        }
+
+        .participant-list {
+            gap: 6px;
+        }
+
+        .participant-item {
+            font-size: 0.75rem;
+            padding: 5px 8px;
+        }
+
+        .btn-start {
             padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
             font-size: 0.9375rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
         }
 
-        .btn-send:hover {
-            background: #5568d3;
+        .chat-panel {
+            height: 350px;
+            padding: 15px;
         }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .modal-icon {
-            font-size: 3rem;
-            margin-bottom: 16px;
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-        }
-
-        .modal-message {
-            font-size: 0.9375rem;
-            color: #6b7280;
-            margin-bottom: 24px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.9375rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .modal-btn-cancel {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .modal-btn-cancel:hover {
-            background: #e5e7eb;
-        }
-
-        .modal-btn-confirm {
-            background: #667eea;
-            color: white;
-        }
-
-        .modal-btn-confirm:hover {
-            background: #5568d3;
-        }
-
-        .toast {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: white;
-            border-radius: 12px;
-            padding: 16px 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 10000;
-            animation: slideIn 0.3s ease-out;
-            min-width: 300px;
-        }
-
-        .toast-success {
-            border-left: 4px solid #10b981;
-        }
-
-        .toast-icon {
-            font-size: 1.5rem;
-        }
-
-        .toast-content {
-            flex: 1;
-        }
-
-        .toast-title {
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 4px;
-        }
-
-        .toast-message {
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @media (max-width: 968px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chat-panel {
-                height: 400px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px 15px;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .waiting-room, .chat-panel {
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 1024px) {
-            .navbar-content {
-                padding: 1rem;
-            }
-
-            .navbar-nav {
-                gap: 1.5rem;
-            }
-
-            .container {
-                padding: 30px 15px;
-            }
-
-            .header h1 {
-                font-size: 1.75rem;
-            }
-
-            .main-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .chat-panel {
-                height: 500px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .navbar-content {
-                flex-direction: column;
-                gap: 15px;
-                padding: 15px;
-            }
-
-            .navbar-brand {
-                font-size: 1.25rem;
-            }
-
-            .navbar-nav {
-                width: 100%;
-                justify-content: center;
-                gap: 1rem;
-            }
-
-            .nav-link {
-                font-size: 0.875rem;
-            }
-
-            .container {
-                padding: 20px 10px;
-            }
-
-            .header {
-                margin-bottom: 30px;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .header p {
-                font-size: 0.875rem;
-            }
-
-            .waiting-room,
-            .chat-panel {
-                padding: 20px;
-            }
-
-            .section {
-                margin-bottom: 20px;
-                padding-bottom: 20px;
-            }
-
-            .section-title {
-                font-size: 1rem;
-            }
-
-            .participant-group {
-                padding: 12px;
-            }
-
-            .group-title {
-                font-size: 0.8125rem;
-            }
-
-            .participant-item {
-                font-size: 0.8125rem;
-                padding: 6px 10px;
-            }
-
-            .invite-url {
-                flex-direction: column;
-            }
-
-            .invite-input {
-                font-size: 0.8125rem;
-            }
-
-            .btn-copy {
-                width: 100%;
-            }
-
-            .btn-start {
-                padding: 12px 30px;
-                font-size: 1rem;
-            }
-
-            .chat-panel {
-                height: 400px;
-            }
-
-            .chat-input-area {
-                flex-direction: column;
-            }
-
-            .btn-send {
-                width: 100%;
-            }
-
-            .modal-content {
-                padding: 30px 20px;
-            }
-
-            .modal-title {
-                font-size: 1.25rem;
-            }
-
-            .modal-buttons {
-                flex-direction: column;
-            }
-
-            .modal-btn {
-                width: 100%;
-            }
-
-            .toast {
-                right: 10px;
-                left: 10px;
-                top: 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .navbar-brand {
-                font-size: 1.125rem;
-            }
-
-            .navbar-nav {
-                flex-wrap: wrap;
-                gap: 0.75rem;
-            }
-
-            .header h1 {
-                font-size: 1.25rem;
-            }
-
-            .waiting-room,
-            .chat-panel {
-                padding: 15px;
-            }
-
-            .section-title {
-                font-size: 0.9375rem;
-            }
-
-            .participant-group {
-                padding: 10px;
-            }
-
-            .participant-list {
-                gap: 6px;
-            }
-
-            .participant-item {
-                font-size: 0.75rem;
-                padding: 5px 8px;
-            }
-
-            .invite-input {
-                padding: 8px;
-                font-size: 0.75rem;
-            }
-
-            .btn {
-                font-size: 0.875rem;
-                padding: 8px 16px;
-            }
-
-            .btn-start {
-                padding: 10px 20px;
-                font-size: 0.9375rem;
-            }
-
-            .chat-panel {
-                height: 350px;
-                padding: 15px;
-            }
-
-            .chat-messages {
-                padding: 10px;
-            }
-
-            .chat-message {
-                padding: 8px;
-            }
-
-            .chat-user {
-                font-size: 0.875rem;
-            }
-
-            .chat-time {
-                font-size: 0.6875rem;
-            }
-
-            .chat-text {
-                font-size: 0.875rem;
-            }
-
-            .chat-input {
-                padding: 8px;
-                font-size: 0.875rem;
-            }
-
-            .btn-send {
-                padding: 8px 16px;
-                font-size: 0.875rem;
-            }
-
-            .modal-content {
-                padding: 20px 15px;
-            }
-
-            .modal-icon {
-                font-size: 2.5rem;
-            }
-
-            .modal-title {
-                font-size: 1.125rem;
-            }
-
-            .modal-message {
-                font-size: 0.875rem;
-            }
-
-            .modal-btn {
-                padding: 10px 20px;
-                font-size: 0.875rem;
-            }
-        }
-    </style>
+    }
+</style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-content">
-            <a class="navbar-brand" href="/session/list">Mockerview</a>
-            <div class="navbar-nav">
-                <a class="nav-link active" href="/session/list">세션 관리</a>
-                <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/mypage}">마이페이지</a>
-                <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/logout}">로그아웃</a>
-            </div>
-        </div>
-    </nav>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
 
     <div class="container">
         <div class="header">
@@ -760,6 +497,8 @@
             </div>
         </div>
     </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
 
     <div class="modal-overlay" id="startModal">
         <div class="modal-content">
@@ -970,7 +709,8 @@
             connectWebSocket();
         });
     </script>
-    <script src="/js/push-init.js"></script>
-    <script src="/js/push-notifications.js"></script>
+    
+    <div th:replace="~{fragments/scripts :: navbar-script}"></div>
+    <div th:replace="~{fragments/scripts :: common-scripts}"></div>
 </body>
 </html>

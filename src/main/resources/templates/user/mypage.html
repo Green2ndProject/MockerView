@@ -4,1105 +4,793 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마이페이지 - MockerView</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #1a1a1a;
-        }
-        
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand {
-            font-size: 1.375rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .plan-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.6875rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        
-        .plan-badge.free {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-        
-        .plan-badge.basic {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .plan-badge.pro {
-            background: #fce7f3;
-            color: #9f1239;
-        }
-        
-        .plan-badge.team {
-            background: #f0fdf4;
-            color: #166534;
-        }
-        
-        .navbar-nav {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        
-        .nav-link {
-            color: #4a5568;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9375rem;
-            transition: color 0.2s;
-        }
-        
-        .nav-link:hover,
-        .nav-link.active {
-            color: #667eea;
-        }
-        
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px;
-            z-index: 1001;
-        }
-        
-        .hamburger span {
-            width: 25px;
-            height: 3px;
-            background: #667eea;
-            transition: all 0.3s;
-            border-radius: 3px;
-        }
-        
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(8px, 8px);
-        }
-        
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
-        }
-        
-        .page-header {
-            padding: 40px 0 28px;
-        }
-        
-        .page-title h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
-        }
-        
-        .page-title p {
-            font-size: 0.9375rem;
-            color: #6b7280;
-        }
-        
-        .content-grid {
-            display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 28px;
-            margin-bottom: 40px;
-        }
-        
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-        
-        .profile-card {
-            background: white;
-            border-radius: 14px;
-            padding: 28px 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            text-align: center;
-        }
-        
-        .profile-avatar {
-            width: 70px;
-            height: 70px;
-            background: #667eea;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.75rem;
-            color: white;
-            margin: 0 auto 16px;
-            font-weight: 700;
-        }
-        
-        .profile-name {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 4px;
-        }
-        
-        .profile-email {
-            font-size: 0.8125rem;
-            color: #6b7280;
-            margin-bottom: 14px;
-        }
-        
-        .profile-role {
-            display: inline-block;
-            padding: 5px 12px;
-            background: #f0f4ff;
-            color: #667eea;
-            border-radius: 16px;
-            font-size: 0.8125rem;
-            font-weight: 600;
-        }
-        
-        .quick-actions {
-            background: white;
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
-        .quick-actions h3 {
-            font-size: 0.8125rem;
-            font-weight: 700;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 14px;
-        }
-        
-        .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 11px 14px;
-            background: white;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #1a1a1a;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            margin-bottom: 8px;
-        }
-        
-        .action-btn:hover {
-            border-color: #667eea;
-            background: #fafbfc;
-        }
-        
-        .action-icon {
-            font-size: 1.125rem;
-        }
-        
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .section-card {
-            background: white;
-            border-radius: 14px;
-            padding: 28px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .section-header h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            letter-spacing: -0.5px;
-        }
-        
-        .btn {
-            padding: 9px 18px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            text-decoration: none;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-        
-        .btn-danger {
-            background: #dc2626;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #b91c1c;
-        }
-        
-        .subscription-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-        
-        .info-box {
-            padding: 18px;
-            background: #f9fafb;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .info-label {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        
-        .info-value {
-            font-size: 1.375rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-        
-        .info-desc {
-            font-size: 0.8125rem;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 7px;
-            background: #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: #667eea;
-            border-radius: 8px;
-            transition: width 0.3s;
-        }
-        
-        .form-group {
-            margin-bottom: 18px;
-        }
-        
-        .form-label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 11px 14px;
-            font-size: 0.9375rem;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-        }
-        
-        .form-input:disabled {
-            background: #f9fafb;
-            color: #9ca3af;
-            cursor: not-allowed;
-        }
-        
-        .alert {
-            padding: 12px 14px;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            margin-bottom: 18px;
-            font-weight: 500;
-        }
-        
-        .alert-success {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        
-        .alert-error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
-        .stats-highlight {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 14px;
-            padding: 24px 28px;
-            margin-bottom: 20px;
-        }
-
-        .stats-highlight-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 2px solid #f0f4ff;
-        }
-
-        .stats-highlight-title {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: #667eea;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-        }
-
-        .stat-item {
-            text-align: center;
-            padding: 18px;
-            background: #fafbfc;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s;
-        }
-
-        .stat-item:hover {
-            background: white;
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-        }
-
-        .stat-number {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 6px;
-        }
-
-        .stat-label {
-            font-size: 0.8125rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .btn-stats-detail {
-            background: #667eea;
-            color: white;
-            padding: 7px 14px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.8125rem;
-            text-decoration: none;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-stats-detail:hover {
-            background: #5568d3;
-        }
-        
-        @media (max-width: 1024px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                flex-direction: row;
-                overflow-x: auto;
-            }
-            
-            .profile-card,
-            .quick-actions {
-                min-width: 260px;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .navbar-nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                flex-direction: column;
-                gap: 0;
-                padding: 0;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                transform: translateX(-100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                pointer-events: none;
-                height: calc(100vh - 64px);
-                overflow-y: auto;
-            }
-            
-            .navbar-nav.active {
-                transform: translateX(0);
-                opacity: 1;
-                pointer-events: all;
-            }
-            
-            .nav-link {
-                padding: 1.2rem 1.5rem;
-                width: 100%;
-                text-align: left;
-                border-bottom: 1px solid #f0f0f0;
-                font-size: 1.1rem;
-            }
-            
-            .nav-link:hover {
-                background: #f8f9ff;
-            }
-            
-            .hamburger {
-                display: flex;
-            }
-            
-            .container {
-                padding: 0 16px;
-            }
-            
-            .page-header {
-                padding: 28px 0 20px;
-            }
-            
-            .page-title h1 {
-                font-size: 1.625rem;
-            }
-            
-            .section-card {
-                padding: 20px;
-            }
-            
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 14px;
-            }
-            
-            .subscription-info {
-                grid-template-columns: 1fr;
-            }
-            
-            .sidebar {
-                flex-direction: column;
-            }
-            
-            .profile-card,
-            .quick-actions {
-                min-width: auto;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-highlight {
-                padding: 18px;
-            }
-
-            .stats-highlight-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .profile-avatar {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-            }
-            
-            .profile-name {
-                font-size: 1rem;
-            }
-            
-            .section-header h2 {
-                font-size: 1.125rem;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .btn-stats-detail {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
 </head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; 
+    color: #1a1a1a; 
+    background: #f8f9fa;
+    padding-top: 70px;
+    min-height: 100vh;
+}
+.navbar { 
+    position: fixed; 
+    top: 0; 
+    width: 100%; 
+    background: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(12px); 
+    border-bottom: 1px solid rgba(0,0,0,0.04); 
+    padding: 1rem 0; 
+    z-index: 1000; 
+}
+.nav-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 0 2rem; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+.logo { 
+    font-size: 1.375rem; 
+    font-weight: 700; 
+    color: #667eea; 
+    text-decoration: none;
+    z-index: 1001;
+}
+.nav-links { 
+    display: flex; 
+    gap: 2rem; 
+    align-items: center; 
+}
+.nav-link { 
+    color: #4a5568; 
+    text-decoration: none; 
+    font-weight: 500; 
+    font-size: 0.9375rem; 
+    transition: color 0.2s; 
+}
+.nav-link:hover { color: #667eea; }
+.mobile-menu-toggle { 
+    display: none; 
+    flex-direction: column; 
+    gap: 5px; 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    padding: 8px; 
+    z-index: 1001; 
+}
+.hamburger-line { 
+    width: 24px; 
+    height: 2px; 
+    background: #667eea; 
+    transition: all 0.3s; 
+    border-radius: 2px; 
+}
+.mobile-menu-toggle.active .hamburger-line:nth-child(1) { 
+    transform: rotate(45deg) translate(6px, 6px); 
+}
+.mobile-menu-toggle.active .hamburger-line:nth-child(2) { 
+    opacity: 0; 
+}
+.mobile-menu-toggle.active .hamburger-line:nth-child(3) { 
+    transform: rotate(-45deg) translate(6px, -6px); 
+}
+.mobile-menu-overlay { 
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.5); 
+    z-index: 999; 
+    opacity: 0; 
+    transition: opacity 0.3s; 
+}
+.mobile-menu-overlay.active { 
+    display: block; 
+    opacity: 1; 
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+.page-header {
+    margin-bottom: 32px;
+}
+.page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+.page-header p {
+    color: #6b7280;
+    font-size: 0.9375rem;
+}
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+.profile-section {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 24px;
+}
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+.profile-info { flex: 1; }
+.profile-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+.profile-email {
+    color: #6b7280;
+    font-size: 0.9375rem;
+    margin-bottom: 8px;
+}
+.profile-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f3f4f6;
+    color: #4b5563;
+    border-radius: 20px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+.analysis-section {
+    margin-bottom: 24px;
+}
+.analysis-section h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+}
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+.analysis-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+}
+.analysis-card:hover {
+    box-shadow: 0 4px 12px rgba(102,126,234,0.12);
+    transform: translateY(-2px);
+}
+.analysis-icon {
+    font-size: 2.5rem;
+}
+.analysis-content { flex: 1; }
+.analysis-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+}
+.analysis-subtitle {
+    font-size: 0.8125rem;
+    color: #9ca3af;
+}
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+.menu-item {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    color: #1a1a1a;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+.menu-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102,126,234,0.08);
+    transform: translateY(-2px);
+}
+.menu-icon { font-size: 2rem; }
+.menu-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-align: center;
+}
+.stats-grid {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 24px;
+}
+.stats-grid h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 24px;
+}
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+}
+.stat-card {
+    text-align: center;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+    margin-bottom: 4px;
+}
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+.subscription-section {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 24px;
+}
+.subscription-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+}
+.plan-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+.plan-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #667eea;
+}
+.plan-details {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 4px;
+}
+.quick-actions {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.quick-actions h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+}
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.btn-action {
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+}
+.btn-action:hover {
+    background: #5568d3;
+    color: white;
+}
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 1.5px solid #667eea;
+}
+.btn-secondary:hover {
+    background: #f7f8ff;
+    color: #667eea;
+}
+.recordings-section {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 24px;
+}
+.recordings-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.recording-count {
+    font-size: 0.875rem;
+    color: #667eea;
+    font-weight: 600;
+    background: #f0f3ff;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+.recordings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+.recording-card {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+}
+.recording-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.1);
+}
+.recording-header {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.recording-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.recording-meta {
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+.recording-actions {
+    display: flex;
+    gap: 8px;
+}
+.btn-recording {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+.btn-play {
+    background: #667eea;
+    color: white;
+}
+.btn-play:hover {
+    background: #5568d3;
+}
+.btn-download {
+    background: white;
+    color: #667eea;
+    border: 1.5px solid #667eea;
+}
+.btn-download:hover {
+    background: #f7f8ff;
+}
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
+}
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+.empty-state-text {
+    font-size: 0.9375rem;
+}
+.footer { 
+    background: #000000; 
+    color: #ffffff; 
+    padding: 48px 2rem; 
+    text-align: center; 
+    margin-top: 40px;
+}
+.footer p { 
+    font-size: 0.875rem; 
+    margin: 0; 
+    opacity: 0.9; 
+}
+@media (max-width: 768px) {
+    .mobile-menu-toggle { display: flex; }
+    .nav-links { 
+        position: fixed; 
+        top: 0; 
+        right: -100%; 
+        height: 100vh; 
+        width: 280px; 
+        background: white; 
+        flex-direction: column; 
+        gap: 0; 
+        padding: 80px 0 0 0; 
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1); 
+        transition: right 0.3s ease-in-out; 
+        z-index: 1000; 
+        align-items: flex-start; 
+    }
+    .nav-links.active { right: 0; }
+    .nav-link { 
+        width: 100%; 
+        padding: 1.2rem 2rem; 
+        border-bottom: 1px solid #f3f4f6; 
+    }
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+    .menu-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .recordings-grid {
+        grid-template-columns: 1fr;
+    }
+    .action-buttons {
+        flex-direction: column;
+    }
+    .btn-action {
+        width: 100%;
+    }
+}
+@media (max-width: 480px) {
+    body { padding-top: 60px; }
+    .container { padding: 20px 12px; }
+    .page-header h1 { font-size: 1.5rem; }
+    .profile-section { padding: 20px; }
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    .profile-name { font-size: 1.25rem; }
+    .stats-grid { padding: 20px; }
+    .subscription-section { padding: 20px; }
+    .recordings-section { padding: 20px; }
+    .recording-card { padding: 12px; }
+    .menu-grid { grid-template-columns: 1fr; }
+}
+</style>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">
-                    MockerView
-                    <span class="plan-badge"
-                        th:classappend="${planType != null ? planType.toLowerCase() : 'free'}"
-                        th:text="${planType != null ? planType : 'FREE'}">FREE</span>
-                </a>
-                <div class="hamburger" onclick="toggleMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="navbar-nav">
-                    <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
-                    <a class="nav-link active" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a class="nav-link" th:if="${user.role.name() == 'ADMIN'}" th:href="@{/admin/dashboard}" style="color: #ff6b6b; font-weight: 600;">🔧 관리자</a>
-                    <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
-                </div>
-            </div>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="/" class="logo">MockerView</a>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="메뉴">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+        <div class="nav-links" id="navLinks">
+            <a href="/sessions/list" class="nav-link">면접 세션</a>
+            <a href="/selfinterview/list" class="nav-link">셀프 면접</a>
+            <a href="/review/list" class="nav-link">리뷰</a>
+            <a href="/auth/mypage" class="nav-link">마이페이지</a>
+            <a href="/auth/logout" class="nav-link" onclick="return confirm('로그아웃 하시겠습니까?')">로그아웃</a>
         </div>
-    </nav>
-    
+    </div>
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+</nav>
+
+<div class="container">
     <div class="page-header">
-        <div class="container">
-            <div class="page-title">
-                <h1>마이페이지</h1>
-                <p>계정 정보 및 구독 관리</p>
-            </div>
-        </div>
+        <h1 th:if="${user.role.name() == 'STUDENT'}">마이페이지</h1>
+        <h1 th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">면접관 대시보드<span class="role-badge">B2B</span></h1>
+        <p th:if="${user.role.name() == 'STUDENT'}">계정 정보 및 AI 분석 리포트</p>
+        <p th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">면접 세션 관리 및 피드백 현황</p>
     </div>
     
-    <div class="container">
-        <div th:if="${success}" class="alert alert-success">
-            <span th:text="${success}">성공 메시지</span>
+    <div class="profile-section">
+        <div class="profile-header">
+            <div class="profile-avatar" th:text="${user.name != null ? #strings.substring(user.name, 0, 1) : #strings.substring(user.username, 0, 1)}"></div>
+            <div class="profile-info">
+                <div class="profile-name" th:text="${user.name != null ? user.name : user.username}"></div>
+                <div class="profile-email" th:text="${user.email}"></div>
+                <span class="profile-badge" th:text="${user.role}"></span>
+            </div>
         </div>
         
-        <div th:if="${error}" class="alert alert-error">
-            <span th:text="${error}">에러 메시지</span>
-        </div>
-        
-        <div class="content-grid">
-            <div class="sidebar">
-                <div class="profile-card">
-                    <div class="profile-avatar" th:text="${#strings.substring(user.name, 0, 1)}">홍</div>
-                    <div class="profile-name" th:text="${user.name}">홍길동</div>
-                    <div class="profile-email" th:text="${user.email}">hong@example.com</div>
-                    <span class="profile-role">
-                        <span th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
-                        <span th:if="${user.role.name() == 'HOST'}">💼 면접관</span>
-                        <span th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
-                        <span th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
-                    </span>
-                </div>
-                
-                <div class="quick-actions">
-                    <h3>빠른 메뉴</h3>
-                    <a href="/session/list" class="action-btn">
-                        <span class="action-icon">🏠</span>
-                        세션 목록
+        <div th:if="${user.role.name() == 'STUDENT'}">
+            <div class="analysis-section">
+                <h2>🎯 AI 분석 리포트</h2>
+                <div class="analysis-grid">
+                    <a href="/analysis/growth-comparison" class="analysis-card">
+                        <div class="analysis-icon">📈</div>
+                        <div class="analysis-content">
+                            <div class="analysis-title">성장 비교 분석</div>
+                            <div class="analysis-subtitle">시간별 점수 추이</div>
+                        </div>
                     </a>
-                    <a href="/auth/mypage/stats" class="action-btn">
-                        <span class="action-icon">📊</span>
-                        활동 통계
+                    <a href="/analysis/mbti-result" class="analysis-card">
+                        <div class="analysis-icon">🧠</div>
+                        <div class="analysis-content">
+                            <div class="analysis-title">면접 MBTI</div>
+                            <div class="analysis-subtitle">성향 분석 리포트</div>
+                        </div>
                     </a>
-                    <a href="/payment/plans" class="action-btn">
-                        <span class="action-icon">💳</span>
-                        플랜 업그레이드
+                    <a href="/analysis/voice-result" class="analysis-card">
+                        <div class="analysis-icon">🎙️</div>
+                        <div class="analysis-content">
+                            <div class="analysis-title">음성 분석</div>
+                            <div class="analysis-subtitle">발음/억양/속도</div>
+                        </div>
                     </a>
-                    <a href="/payment/history" class="action-btn">
-                        <span class="action-icon">📜</span>
-                        결제 내역
+                    <a href="/analysis/facial-result" class="analysis-card">
+                        <div class="analysis-icon">😊</div>
+                        <div class="analysis-content">
+                            <div class="analysis-title">표정 분석</div>
+                            <div class="analysis-subtitle">비언어 커뮤니케이션</div>
+                        </div>
                     </a>
                 </div>
             </div>
             
-            <div class="main-content">
-                <div class="stats-highlight">
-                    <div class="stats-highlight-header">
-                        <h2 class="stats-highlight-title">
-                            <span>📊</span>
-                            나의 활동 통계
-                        </h2>
-                        <a href="/auth/mypage/stats" class="btn-stats-detail">
-                            상세 보기 →
-                        </a>
+            <div class="menu-grid">
+                <a href="/auth/mypage/stats" class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-title">활동 통계</span>
+                </a>
+                <a href="/payment/plans" class="menu-item">
+                    <span class="menu-icon">💎</span>
+                    <span class="menu-title">플랜 업그레이드</span>
+                </a>
+                <a href="/payment/history" class="menu-item">
+                    <span class="menu-icon">💳</span>
+                    <span class="menu-title">결제 내역</span>
+                </a>
+                <a href="/auth/mypage/withdraw" class="menu-item">
+                    <span class="menu-icon">🚪</span>
+                    <span class="menu-title">회원 탈퇴</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="menu-grid" th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">
+            <a href="/auth/mypage/stats" class="menu-item">
+                <span class="menu-icon">📊</span>
+                <span class="menu-title">면접관 통계</span>
+            </a>
+            <a href="/sessions/list" class="menu-item">
+                <span class="menu-icon">👥</span>
+                <span class="menu-title">세션 관리</span>
+            </a>
+            <a href="/payment/history" class="menu-item">
+                <span class="menu-icon">💳</span>
+                <span class="menu-title">결제 내역</span>
+            </a>
+            <a href="/auth/mypage/withdraw" class="menu-item">
+                <span class="menu-icon">🚪</span>
+                <span class="menu-title">회원 탈퇴</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="subscription-section" th:if="${planType != null}">
+        <h2>구독 정보</h2>
+        <div class="plan-info">
+            <div>
+                <div class="plan-name" th:text="${planType}">FREE</div>
+                <div class="plan-details">
+                    <span th:text="${usedSessions}">0</span> / <span th:text="${sessionLimit}">5</span> 세션 사용중
+                    <span th:if="${endDate != null}"> · 만료일: <span th:text="${#temporals.format(endDate, 'yyyy-MM-dd')}"></span></span>
+                </div>
+            </div>
+            <a href="/payment/plans" class="btn-action btn-secondary" th:if="${planType == 'FREE'}">업그레이드</a>
+        </div>
+    </div>
+    
+    <div class="stats-grid" th:if="${user.role.name() == 'STUDENT'}">
+        <h2>나의 활동 통계</h2>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" th:text="${participatedSessionCount != null ? participatedSessionCount : 0}">0</div>
+                <div class="stat-label">참여한 세션</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:text="${answerCount != null ? answerCount : 0}">0</div>
+                <div class="stat-label">작성한 답변</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:text="${answersWithVideo != null ? answersWithVideo.size() : 0}">0</div>
+                <div class="stat-label">영상 녹화</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="recordings-section" th:if="${user.role.name() == 'STUDENT' and answersWithVideo != null and !answersWithVideo.isEmpty()}">
+        <h2>
+            🎥 내 영상 녹화
+            <span class="recording-count" th:text="${answersWithVideo.size()} + '개'"></span>
+        </h2>
+        <div class="recordings-grid">
+            <div class="recording-card" th:each="answer : ${answersWithVideo}">
+                <div class="recording-header">
+                    <div class="recording-title" th:text="${answer.question != null and answer.question.session != null ? answer.question.session.title : '세션 제목 없음'}">세션 제목</div>
+                    <div class="recording-meta">
+                        <span th:text="${answer.question != null ? answer.question.text : '질문 없음'}">질문</span>
                     </div>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-number" th:text="${participatedSessionCount}">0</div>
-                            <div class="stat-label">참여한 세션</div>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <div class="stat-number" th:text="${answerCount}">0</div>
-                            <div class="stat-label">작성한 답변</div>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <div class="stat-number" th:text="${hostedSessions.size()}">0</div>
-                            <div class="stat-label">호스팅한 세션</div>
-                        </div>
+                    <div class="recording-meta" style="margin-top: 4px;">
+                        <span th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01</span>
                     </div>
                 </div>
-
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>구독 정보</h2>
-                        <a href="/payment/plans" class="btn btn-primary">플랜 변경</a>
-                    </div>
-                    
-                    <div class="subscription-info">
-                        <div class="info-box">
-                            <div class="info-label">현재 플랜</div>
-                            <div class="info-value" th:text="${planType != null ? planType : 'FREE'}">FREE</div>
-                        </div>
-                        
-                        <div class="info-box">
-                            <div class="info-label">세션 사용량</div>
-                            <div class="info-value">
-                                <span th:text="${usedSessions != null ? usedSessions : 0}">0</span>
-                                <span style="font-size: 0.875rem; color: #6b7280;">/ </span>
-                                <span style="font-size: 0.875rem; color: #6b7280;" th:text="${sessionLimit != null ? sessionLimit : 5}">5</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" 
-                                     th:style="'width: ' + ${sessionLimit != null && sessionLimit > 0 ? (usedSessions * 100 / sessionLimit) : 0} + '%'"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box">
-                            <div class="info-label">리뷰 읽기</div>
-                            <div class="info-value">
-                                <span th:text="${usedReviewReads != null ? usedReviewReads : 0}">0</span>
-                                <span style="font-size: 0.875rem; color: #6b7280;">/ </span>
-                                <span style="font-size: 0.875rem; color: #6b7280;" 
-                                      th:text="${reviewReadLimit != null ? (reviewReadLimit == 2147483647 ? '무제한' : reviewReadLimit) : 3}">3</span>
-                            </div>
-                            <div class="progress-bar" th:if="${reviewReadLimit != null && reviewReadLimit != 2147483647}">
-                                <div class="progress-fill" 
-                                     th:style="'width: ' + ${reviewReadLimit != null && reviewReadLimit > 0 ? (usedReviewReads * 100 / reviewReadLimit) : 0} + '%'"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box" th:if="${endDate != null}">
-                            <div class="info-label">갱신일</div>
-                            <div class="info-value" style="font-size: 1rem;" th:text="${#temporals.format(endDate, 'MM/dd')}">12/31</div>
-                            <div class="info-desc" th:text="${#temporals.format(endDate, 'yyyy년 MM월 dd일')}">2025년 12월 31일</div>
-                        </div>
-                    </div>
-                    
-                    <div th:if="${planType != 'FREE'}" style="padding: 14px; background: #f0f4ff; border-radius: 8px; margin-top: 14px;">
-                        <p style="font-size: 0.875rem; color: #667eea; font-weight: 500;">
-                            ⚡ 프리미엄 플랜을 이용 중입니다. 세션 생성과 AI 피드백을 마음껏 사용하세요!
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="section-card" th:if="${user.role.name() == 'STUDENT'}">
-                    <div class="section-header">
-                        <h2>📹 나의 녹화 영상</h2>
-                        <span style="color: #6b7280; font-size: 0.875rem;" 
-                                th:text="${answersWithVideo != null ? answersWithVideo.size() + '개' : '0개'}">0개</span>
-                    </div>
-                    
-                    <div th:if="${answersWithVideo != null and !answersWithVideo.isEmpty()}" 
-                            style="display: flex; flex-direction: column; gap: 12px;">
-                        <div th:each="answer : ${answersWithVideo}" 
-                                style="padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                                <div>
-                                    <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;" 
-                                            th:text="${answer.question.text}">녹화 내용</div>
-                                    <div style="font-size: 0.8125rem; color: #6b7280;">
-                                        <span th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 10:00</span>
-                                        <span th:if="${answer.question.session != null}">
-                                            · <span th:text="${answer.question.session.title}">세션명</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="playVideo(this)" 
-                                        th:attr="data-video-url=${answer.videoUrl}"
-                                        class="btn btn-primary" 
-                                        style="flex: 1; padding: 8px; font-size: 0.875rem;">
-                                    ▶ 재생
-                                </button>
-                                <a th:href="${answer.videoUrl}" 
-                                    target="_blank" 
-                                    download
-                                    class="btn" 
-                                    style="flex: 1; padding: 8px; font-size: 0.875rem; text-align: center; text-decoration: none;">
-                                    ⬇ 다운로드
-                                </a>
-                                <button onclick="deleteRecording(this)" 
-                                        th:attr="data-answer-id=${answer.id}"
-                                        class="btn btn-danger" 
-                                        style="padding: 8px 12px; font-size: 0.875rem;">
-                                    🗑️
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div th:if="${answersWithVideo == null or answersWithVideo.isEmpty()}" 
-                            style="text-align: center; padding: 40px 20px; color: #9ca3af;">
-                        <div style="font-size: 3rem; margin-bottom: 12px;">🎥</div>
-                        <div style="font-weight: 600; color: #6b7280; margin-bottom: 8px;">저장된 녹화가 없습니다</div>
-                        <div style="font-size: 0.875rem;">면접 중 녹화 버튼을 눌러 영상을 저장하세요</div>
-                    </div>
-                </div>
-                
-                <div class="section-card" th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">
-                    <div class="section-header">
-                        <h2>🎬 세션 전체 녹화</h2>
-                        <span style="color: #6b7280; font-size: 0.875rem;" 
-                                th:text="${sessionsWithRecording != null ? sessionsWithRecording.size() + '개' : '0개'}">0개</span>
-                    </div>
-                    
-                    <div th:if="${sessionsWithRecording != null and !sessionsWithRecording.isEmpty()}" 
-                            style="display: flex; flex-direction: column; gap: 12px;">
-                        <div th:each="sessionRec : ${sessionsWithRecording}" 
-                                style="padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                                <div>
-                                    <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;" 
-                                            th:text="${sessionRec.title}">세션명</div>
-                                    <div style="font-size: 0.8125rem; color: #6b7280;">
-                                        <span th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01 10:00</span>
-                                        <span th:if="${sessionRec.description != null and !session.description.isEmpty()}">
-                                            · <span th:text="${sessionRec.description}">설명</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="playVideo(this)" 
-                                        th:attr="data-video-url=${sessionRec.videoRecordingUrl}"
-                                        class="btn btn-primary" 
-                                        style="flex: 1; padding: 8px; font-size: 0.875rem;">
-                                    ▶ 재생
-                                </button>
-                                <a th:href="${sessionRec.videoRecordingUrl}" 
-                                    target="_blank" 
-                                    download
-                                    class="btn" 
-                                    style="flex: 1; padding: 8px; font-size: 0.875rem; text-align: center; text-decoration: none;">
-                                    ⬇ 다운로드
-                                </a>
-                                <button onclick="deleteSessionRecording(this)" 
-                                        th:attr="data-session-id=${sessionRec.id}"
-                                        class="btn btn-danger" 
-                                        style="padding: 8px 12px; font-size: 0.875rem;">
-                                    🗑️
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div th:if="${sessionsWithRecording == null or sessionsWithRecording.isEmpty()}" 
-                            style="text-align: center; padding: 40px 20px; color: #9ca3af;">
-                        <div style="font-size: 3rem; margin-bottom: 12px;">🎬</div>
-                        <div style="font-weight: 600; color: #6b7280; margin-bottom: 8px;">저장된 세션 녹화가 없습니다</div>
-                        <div style="font-size: 0.875rem;">면접 진행 중 화면 녹화를 시작하세요</div>
-                    </div>
-                </div>
-                
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>계정 정보</h2>
-                    </div>
-                    
-                    <form th:action="@{/auth/mypage/update}" method="post">
-                        <div class="form-group">
-                            <label class="form-label" for="username">아이디</label>
-                            <input type="text" id="username" class="form-input" th:value="${user.username}" disabled>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="name">이름</label>
-                            <input type="text" id="name" name="name" class="form-input" th:value="${user.name}" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="email">이메일</label>
-                            <input type="email" id="email" name="email" class="form-input" th:value="${user.email}" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">정보 수정</button>
-                    </form>
-                </div>
-                
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>비밀번호 변경</h2>
-                    </div>
-                    
-                    <form id="changePasswordForm">
-                        <div class="form-group">
-                            <label class="form-label" for="currentPassword">현재 비밀번호</label>
-                            <input type="password" id="currentPassword" name="currentPassword" class="form-input" placeholder="현재 비밀번호" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="newPassword">새 비밀번호</label>
-                            <input type="password" id="newPassword" name="newPassword" class="form-input" placeholder="새 비밀번호 (8자 이상)" required minlength="8">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="confirmNewPassword">새 비밀번호 확인</label>
-                            <input type="password" id="confirmNewPassword" class="form-input" placeholder="새 비밀번호 확인" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">비밀번호 변경</button>
-                    </form>
-                </div>
-                
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>회원 탈퇴</h2>
-                    </div>
-                    
-                    <p style="color: #6b7280; margin-bottom: 18px; font-size: 0.9375rem;">
-                        탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 신중하게 결정해주세요.
-                    </p>
-                    
-                    <button onclick="confirmWithdrawal()" class="btn btn-danger">회원 탈퇴</button>
+                <div class="recording-actions">
+                    <a th:href="${answer.videoUrl}" target="_blank" class="btn-recording btn-play">
+                        ▶️ 재생
+                    </a>
+                    <a th:href="${answer.videoUrl}" download class="btn-recording btn-download">
+                        ⬇️ 다운로드
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     
-    <script>
-        function toggleMenu() {
-            const hamburger = document.querySelector('.hamburger');
-            const navbarNav = document.querySelector('.navbar-nav');
-            hamburger.classList.toggle('active');
-            navbarNav.classList.toggle('active');
-        }
-        
-        function confirmWithdrawal() {
-            if (confirm('회원 탈퇴 페이지로 이동하시겠습니까?')) {
-                window.location.href = '/auth/mypage/withdraw';
-            }
-        }
+    <div class="stats-grid" th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">
+        <h2>면접관 활동 통계</h2>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" th:text="${hostedSessions != null ? hostedSessions.size() : 0}">0</div>
+                <div class="stat-label">주최한 세션</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:text="${sessionsWithRecording != null ? sessionsWithRecording.size() : 0}">0</div>
+                <div class="stat-label">녹화된 세션</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0</div>
+                <div class="stat-label">작성한 피드백</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="recordings-section" th:if="${(user.role.name() == 'HOST' or user.role.name() == 'REVIEWER') and sessionsWithRecording != null and !sessionsWithRecording.isEmpty()}">
+        <h2>
+            🎥 세션 영상 녹화
+            <span class="recording-count" th:text="${sessionsWithRecording.size()} + '개'"></span>
+        </h2>
+        <div class="recordings-grid">
+            <div class="recording-card" th:each="session : ${sessionsWithRecording}">
+                <div class="recording-header">
+                    <div class="recording-title" th:text="${session.title}">세션 제목</div>
+                    <div class="recording-meta">
+                        <span th:text="${session.status}">ENDED</span> · 
+                        <span th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd')}">2025-01-01</span>
+                    </div>
+                </div>
+                <div class="recording-actions">
+                    <a th:href="@{/sessions/detail/{id}(id=${session.id})}" class="btn-recording btn-play">
+                        👁️ 세션 보기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="quick-actions" th:if="${user.role.name() == 'STUDENT'}">
+        <h2>빠른 작업</h2>
+        <div class="action-buttons">
+            <a href="/sessions/list" class="btn-action">면접 참여하기</a>
+            <a href="/selfinterview/create" class="btn-action btn-secondary">셀프 면접 시작</a>
+            <a href="/review/my" class="btn-action btn-secondary">내 리뷰 보기</a>
+        </div>
+    </div>
+    
+    <div class="quick-actions" th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">
+        <h2>빠른 작업</h2>
+        <div class="action-buttons">
+            <a href="/sessions/create" class="btn-action">새 세션 생성</a>
+            <a href="/sessions/list" class="btn-action btn-secondary">세션 관리</a>
+            <a href="/auth/mypage/stats" class="btn-action btn-secondary">상세 통계 보기</a>
+        </div>
+    </div>
+</div>
 
-        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmNewPassword').value;
-            
-            if (newPassword !== confirmPassword) {
-                alert('새 비밀번호가 일치하지 않습니다.');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/users/change-password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        currentPassword: currentPassword,
-                        newPassword: newPassword
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('비밀번호가 변경되었습니다.');
-                    document.getElementById('changePasswordForm').reset();
-                } else {
-                    alert(data.message || '비밀번호 변경에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('비밀번호 변경 중 오류가 발생했습니다.');
-            }
+<footer class="footer">
+    <p>&copy; 2025 MockerView. 국내 최초 실시간 협업 AI 모의면접 플랫폼 • 모든 권리 보유</p>
+</footer>
+
+<script src="/js/push-init.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('mobileMenuToggle');
+    const links = document.getElementById('navLinks');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    if (toggle && links && overlay) {
+        toggle.addEventListener('click', function() {
+            toggle.classList.toggle('active');
+            links.classList.toggle('active');
+            overlay.classList.toggle('active');
+            document.body.style.overflow = links.classList.contains('active') ? 'hidden' : '';
         });
-
-        function playVideo(button) {
-            const videoUrl = button.getAttribute('data-video-url');
-            const modal = document.createElement('div');
-            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center;';
-            
-            const content = document.createElement('div');
-            content.style.cssText = 'max-width: 90%; max-height: 90%; position: relative;';
-            
-            const video = document.createElement('video');
-            video.src = videoUrl;
-            video.controls = true;
-            video.autoplay = true;
-            video.style.cssText = 'width: 100%; height: auto; max-height: 80vh; border-radius: 8px;';
-            
-            const closeBtn = document.createElement('button');
-            closeBtn.textContent = '✕';
-            closeBtn.style.cssText = 'position: absolute; top: -40px; right: 0; background: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px;';
-            closeBtn.onclick = () => {
-                document.body.removeChild(modal);
-            };
-            
-            content.appendChild(video);
-            content.appendChild(closeBtn);
-            modal.appendChild(content);
-            
-            modal.onclick = (e) => {
-                if (e.target === modal) {
-                    document.body.removeChild(modal);
-                }
-            };
-            
-            document.body.appendChild(modal);
-        }
-
-        async function deleteRecording(button) {
-            if (!confirm('이 녹화 영상을 삭제하시겠습니까?')) {
-                return;
-            }
-            
-            const answerId = button.getAttribute('data-answer-id');
-            
-            try {
-                const response = await fetch(`/api/recording/answer/${answerId}/video`, {
-                    method: 'DELETE',
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('녹화가 삭제되었습니다.');
-                    location.reload();
-                } else {
-                    alert(data.message || '삭제에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-
-        async function deleteSessionRecording(button) {
-            if (!confirm('이 세션 녹화 영상을 삭제하시겠습니까?')) {
-                return;
-            }
-            
-            const sessionId = button.getAttribute('data-session-id');
-            
-            try {
-                const response = await fetch(`/api/session/${sessionId}/recording`, {
-                    method: 'DELETE',
-                    credentials: 'include'
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('세션 녹화가 삭제되었습니다.');
-                    location.reload();
-                } else {
-                    alert(data.message || '삭제에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-    </script>
-    <script src="/js/push-init.js"></script>
-    <script src="/js/push-notifications.js"></script>
+        overlay.addEventListener('click', function() {
+            toggle.classList.remove('active');
+            links.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+});
+</script>
 </body>
 </html>

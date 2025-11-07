@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="navbar-guest" class="navbar">
+    <div class="nav-container">
+        <a href="/" class="logo">MockerView</a>
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="메뉴">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+        <div class="nav-links" id="navLinks">
+            <a href="/auth/login" class="nav-link">로그인</a>
+            <a href="/auth/register" class="nav-link">회원가입</a>
+        </div>
+    </div>
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+</nav>
+</body>
+</html>
