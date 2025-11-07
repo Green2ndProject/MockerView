@@ -354,6 +354,112 @@ body {
     background: #f7f8ff;
     color: #667eea;
 }
+.recordings-section {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 24px;
+}
+.recordings-section h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.recording-count {
+    font-size: 0.875rem;
+    color: #667eea;
+    font-weight: 600;
+    background: #f0f3ff;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+.recordings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+.recording-card {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+}
+.recording-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.1);
+}
+.recording-header {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.recording-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.recording-meta {
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+.recording-actions {
+    display: flex;
+    gap: 8px;
+}
+.btn-recording {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+.btn-play {
+    background: #667eea;
+    color: white;
+}
+.btn-play:hover {
+    background: #5568d3;
+}
+.btn-download {
+    background: white;
+    color: #667eea;
+    border: 1.5px solid #667eea;
+}
+.btn-download:hover {
+    background: #f7f8ff;
+}
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
+}
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+.empty-state-text {
+    font-size: 0.9375rem;
+}
 .footer { 
     background: #000000; 
     color: #ffffff; 
@@ -399,12 +505,32 @@ body {
     .menu-grid {
         grid-template-columns: 1fr 1fr;
     }
+    .recordings-grid {
+        grid-template-columns: 1fr;
+    }
     .action-buttons {
         flex-direction: column;
     }
     .btn-action {
         width: 100%;
     }
+}
+@media (max-width: 480px) {
+    body { padding-top: 60px; }
+    .container { padding: 20px 12px; }
+    .page-header h1 { font-size: 1.5rem; }
+    .profile-section { padding: 20px; }
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+    }
+    .profile-name { font-size: 1.25rem; }
+    .stats-grid { padding: 20px; }
+    .subscription-section { padding: 20px; }
+    .recordings-section { padding: 20px; }
+    .recording-card { padding: 12px; }
+    .menu-grid { grid-template-columns: 1fr; }
 }
 </style>
 <body>
@@ -429,9 +555,9 @@ body {
 
 <div class="container">
     <div class="page-header">
-        <h1 th:if="${user.role.name() == 'INTERVIEWEE'}">마이페이지</h1>
+        <h1 th:if="${user.role.name() == 'STUDENT'}">마이페이지</h1>
         <h1 th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">면접관 대시보드<span class="role-badge">B2B</span></h1>
-        <p th:if="${user.role.name() == 'INTERVIEWEE'}">계정 정보 및 AI 분석 리포트</p>
+        <p th:if="${user.role.name() == 'STUDENT'}">계정 정보 및 AI 분석 리포트</p>
         <p th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">면접 세션 관리 및 피드백 현황</p>
     </div>
     
@@ -552,6 +678,34 @@ body {
         </div>
     </div>
     
+    <div class="recordings-section" th:if="${user.role.name() == 'STUDENT' and answersWithVideo != null and !answersWithVideo.isEmpty()}">
+        <h2>
+            🎥 내 영상 녹화
+            <span class="recording-count" th:text="${answersWithVideo.size()} + '개'"></span>
+        </h2>
+        <div class="recordings-grid">
+            <div class="recording-card" th:each="answer : ${answersWithVideo}">
+                <div class="recording-header">
+                    <div class="recording-title" th:text="${answer.question != null and answer.question.session != null ? answer.question.session.title : '세션 제목 없음'}">세션 제목</div>
+                    <div class="recording-meta">
+                        <span th:text="${answer.question != null ? answer.question.text : '질문 없음'}">질문</span>
+                    </div>
+                    <div class="recording-meta" style="margin-top: 4px;">
+                        <span th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-01</span>
+                    </div>
+                </div>
+                <div class="recording-actions">
+                    <a th:href="${answer.videoUrl}" target="_blank" class="btn-recording btn-play">
+                        ▶️ 재생
+                    </a>
+                    <a th:href="${answer.videoUrl}" download class="btn-recording btn-download">
+                        ⬇️ 다운로드
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="stats-grid" th:if="${user.role.name() == 'HOST' or user.role.name() == 'REVIEWER'}">
         <h2>면접관 활동 통계</h2>
         <div class="stats-row">
@@ -566,6 +720,29 @@ body {
             <div class="stat-card">
                 <div class="stat-value">0</div>
                 <div class="stat-label">작성한 피드백</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="recordings-section" th:if="${(user.role.name() == 'HOST' or user.role.name() == 'REVIEWER') and sessionsWithRecording != null and !sessionsWithRecording.isEmpty()}">
+        <h2>
+            🎥 세션 영상 녹화
+            <span class="recording-count" th:text="${sessionsWithRecording.size()} + '개'"></span>
+        </h2>
+        <div class="recordings-grid">
+            <div class="recording-card" th:each="session : ${sessionsWithRecording}">
+                <div class="recording-header">
+                    <div class="recording-title" th:text="${session.title}">세션 제목</div>
+                    <div class="recording-meta">
+                        <span th:text="${session.status}">ENDED</span> · 
+                        <span th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd')}">2025-01-01</span>
+                    </div>
+                </div>
+                <div class="recording-actions">
+                    <a th:href="@{/sessions/detail/{id}(id=${session.id})}" class="btn-recording btn-play">
+                        👁️ 세션 보기
+                    </a>
+                </div>
             </div>
         </div>
     </div>
