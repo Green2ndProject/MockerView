@@ -22,8 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
 @Slf4j
 @Controller
@@ -34,9 +32,7 @@ public class MyPageController {
     private final AnswerRepository answerRepository;
     private final SessionRepository sessionRepository;
     private final FeedbackRepository feedbackRepository;
-    private final VoiceAnalysisRepository voiceAnalysisRepository;
-    private final FacialAnalysisRepository facialAnalysisRepository;
-    private final InterviewMBTIRepository interviewMBTIRepository;
+    private final InterviewReportRepository interviewReportRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final SubscriptionService subscriptionService;
 
@@ -171,302 +167,151 @@ public class MyPageController {
         } catch (Exception e) {
             log.error("Stats 페이지 오류: ", e);
             model.addAttribute("error", "통계를 불러올 수 없습니다.");
-            return "redirect:/auth/mypage";
-        }
-    }
-
-    private String loadInterviewerStats(User currentUser, Model model) {
-        try {
-            log.info("📊 면접관 통계 로드 시작 - userId: {}", currentUser.getId());
-            
-            List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
-            log.info("✅ 호스팅 세션 조회 완료: {} 개", hostedSessions.size());
-            
-            List<Feedback> givenFeedbacks = feedbackRepository.findByReviewerId(currentUser.getId());
-            log.info("✅ 제공 피드백 조회 완료: {} 개", givenFeedbacks.size());
-            
-            long totalHostedSessions = hostedSessions.size();
-            long endedSessionsCount = hostedSessions.stream()
-                .filter(s -> s.getStatus() == Session.SessionStatus.ENDED)
-                .count();
-            long totalFeedbacksGiven = givenFeedbacks.size();
-            
-            Double avgGivenScore = givenFeedbacks.stream()
-                .filter(f -> f.getScore() != null)
-                .mapToInt(Feedback::getScore)
-                .average()
-                .orElse(0.0);
-            
-            Map<String, Long> sessionsByMonth = new LinkedHashMap<>();
-            DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-            for (Session session : hostedSessions) {
-                if (session.getCreatedAt() != null) {
-                    String month = session.getCreatedAt().format(monthFormatter);
-                    sessionsByMonth.put(month, sessionsByMonth.getOrDefault(month, 0L) + 1);
-                }
-            }
-            log.info("✅ 월별 데이터 생성 완료: {} 개월", sessionsByMonth.size());
-            
-            List<Object[]> topInterviewees = new ArrayList<>();
-            try {
-                topInterviewees = answerRepository.findAllUserAverageScores();
-                if (topInterviewees != null && topInterviewees.size() > 10) {
-                    topInterviewees = topInterviewees.subList(0, 10);
-                }
-                log.info("✅ 상위 면접자 조회 완료: {} 명", topInterviewees.size());
-            } catch (Exception e) {
-                log.warn("⚠️ 상위 면접자 조회 실패", e);
-                topInterviewees = new ArrayList<>();
-            }
-            
-            model.addAttribute("totalHostedSessions", totalHostedSessions);
-            model.addAttribute("endedSessionsCount", endedSessionsCount);
-            model.addAttribute("totalFeedbacksGiven", totalFeedbacksGiven);
-            model.addAttribute("avgGivenScore", Math.round(avgGivenScore * 10) / 10.0);
-            model.addAttribute("sessionsByMonth", sessionsByMonth);
-            model.addAttribute("topInterviewees", topInterviewees);
-            model.addAttribute("hostedSessions", hostedSessions);
-            model.addAttribute("givenFeedbacks", givenFeedbacks);
-            
-            log.info("✅ 면접관 통계 로드 완료");
-            return "user/myStatsInterviewer";
-            
-        } catch (Exception e) {
-            log.error("❌ 면접관 통계 로드 실패 - userId: {}", currentUser.getId(), e);
-            e.printStackTrace();
-            model.addAttribute("totalHostedSessions", 0L);
-            model.addAttribute("endedSessionsCount", 0L);
-            model.addAttribute("totalFeedbacksGiven", 0L);
-            model.addAttribute("avgGivenScore", 0.0);
-            model.addAttribute("sessionsByMonth", new LinkedHashMap<>());
-            model.addAttribute("topInterviewees", new ArrayList<>());
-            model.addAttribute("hostedSessions", new ArrayList<>());
-            model.addAttribute("givenFeedbacks", new ArrayList<>());
-            return "user/myStatsInterviewer";
+            return "error";
         }
     }
 
     private String loadIntervieweeStats(User currentUser, Model model) {
-        try {
-            List<Answer> myAnswers = answerRepository.findByUserIdWithFeedbacks(currentUser.getId());
-            
-            Set<Long> uniqueSessionIds = myAnswers.stream()
-                .filter(a -> a.getQuestion() != null && a.getQuestion().getSession() != null)
-                .map(a -> a.getQuestion().getSession().getId())
-                .collect(Collectors.toSet());
-            long totalInterviews = uniqueSessionIds.size();
-            
-            List<Feedback> allFeedbacks = myAnswers.stream()
-                .flatMap(a -> a.getFeedbacks().stream())
-                .collect(Collectors.toList());
-            
-            List<Integer> allScores = allFeedbacks.stream()
-                .filter(f -> f.getScore() != null)
-                .map(Feedback::getScore)
-                .collect(Collectors.toList());
-            
-            double averageScore = allScores.stream()
-                .mapToInt(Integer::intValue)
-                .average()
-                .orElse(0.0);
-            
-            int highestScore = allScores.stream()
-                .mapToInt(Integer::intValue)
-                .max()
-                .orElse(0);
-            
-            String highestScoreDate = myAnswers.stream()
-                .flatMap(a -> a.getFeedbacks().stream())
-                .filter(f -> f.getScore() != null && f.getScore() == highestScore)
-                .findFirst()
-                .map(f -> f.getCreatedAt().format(DateTimeFormatter.ofPattern("MM/dd")))
-                .orElse("-");
-            
-            long streak = calculateStreak(myAnswers);
-            String streakStatus = streak > 0 ? "🔥 활발" : "휴식중";
-            
-            String interviewChange = totalInterviews > 0 ? "+전월대비" : "데이터 부족";
-            String scoreChange = averageScore > 0 ? String.format("+%.1f", averageScore * 0.05) : "-";
-            
-            Map<String, Object> performanceChartData = createPerformanceChart(myAnswers);
-            Map<String, Object> activityChartData = createActivityChart(myAnswers);
-            
-            List<Map<String, Object>> categoryAccuracy = createCategoryAccuracy(myAnswers);
-            
-            List<Map<String, Object>> achievements = createAchievements(totalInterviews, myAnswers.size(), averageScore);
-            String achievementProgress = String.format("%d/9 달성", achievements.stream().filter(a -> (Boolean)a.get("earned")).count());
-            
-            List<Map<String, Object>> rankings = calculateUserRankings(currentUser.getId());
-            
-            model.addAttribute("totalInterviews", totalInterviews);
-            model.addAttribute("averageScore", String.format("%.1f", averageScore));
-            model.addAttribute("highestScore", highestScore);
-            model.addAttribute("streak", streak + "일");
-            model.addAttribute("interviewChange", interviewChange);
-            model.addAttribute("scoreChange", scoreChange);
-            model.addAttribute("highestScoreDate", highestScoreDate);
-            model.addAttribute("streakStatus", streakStatus);
-            model.addAttribute("performanceChartData", performanceChartData);
-            model.addAttribute("activityChartData", activityChartData);
-            model.addAttribute("categoryAccuracy", categoryAccuracy);
-            model.addAttribute("achievements", achievements);
-            model.addAttribute("achievementProgress", achievementProgress);
-            model.addAttribute("rankings", rankings);
-            
-            return "user/myStats";
-            
-        } catch (Exception e) {
-            log.error("면접자 통계 로드 실패", e);
-            model.addAttribute("error", "통계를 불러올 수 없습니다.");
-            return "redirect:/auth/mypage";
-        }
-    }
-    
-    private long calculateStreak(List<Answer> answers) {
-        if (answers.isEmpty()) return 0;
+        List<Answer> myAnswers = answerRepository.findByUserIdWithFeedbacks(currentUser.getId());
         
-        List<Answer> sorted = answers.stream()
-            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+        List<Feedback> allFeedbacks = myAnswers.stream()
+            .flatMap(a -> a.getFeedbacks().stream())
             .collect(Collectors.toList());
         
-        long streak = 0;
-        java.time.LocalDate lastDate = sorted.get(0).getCreatedAt().toLocalDate();
-        java.time.LocalDate today = java.time.LocalDate.now();
+        List<Integer> scores = allFeedbacks.stream()
+            .filter(f -> f.getScore() != null)
+            .map(Feedback::getScore)
+            .collect(Collectors.toList());
         
-        if (java.time.temporal.ChronoUnit.DAYS.between(lastDate, today) <= 1) {
-            streak = 1;
-            for (int i = 1; i < sorted.size(); i++) {
-                java.time.LocalDate currentDate = sorted.get(i).getCreatedAt().toLocalDate();
-                if (java.time.temporal.ChronoUnit.DAYS.between(currentDate, lastDate) == 1) {
-                    streak++;
-                    lastDate = currentDate;
-                } else {
-                    break;
+        double avgScore = scores.isEmpty() ? 0.0 : 
+            scores.stream().mapToInt(Integer::intValue).average().orElse(0.0);
+        
+        int maxScore = scores.isEmpty() ? 0 : 
+            scores.stream().mapToInt(Integer::intValue).max().orElse(0);
+        
+        int minScore = scores.isEmpty() ? 0 : 
+            scores.stream().mapToInt(Integer::intValue).min().orElse(0);
+        
+        model.addAttribute("totalAnswers", myAnswers.size());
+        model.addAttribute("avgScore", String.format("%.1f점", avgScore));
+        model.addAttribute("maxScore", maxScore + "점");
+        model.addAttribute("minScore", minScore + "점");
+        
+        Map<String, Integer> categoryStats = new HashMap<>();
+        for (Answer answer : myAnswers) {
+            try {
+                if (answer.getQuestion() != null && answer.getQuestion().getSession() != null) {
+                    Session session = answer.getQuestion().getSession();
+                    String category = session.getCategory() != null ? session.getCategory() : "기타";
+                    categoryStats.put(category, categoryStats.getOrDefault(category, 0) + 1);
                 }
+            } catch (Exception e) {
+                log.warn("카테고리 집계 실패", e);
             }
         }
+        model.addAttribute("categoryStats", categoryStats);
         
-        return streak;
-    }
-    
-    private Map<String, Object> createPerformanceChart(List<Answer> answers) {
-        Map<String, Object> chartData = new HashMap<>();
-        
-        List<String> labels = new ArrayList<>();
-        List<Double> scores = new ArrayList<>();
-        
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd");
-        
-        answers.stream()
-            .sorted((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
+        List<Map<String, Object>> recentAnswers = myAnswers.stream()
             .limit(10)
-            .forEach(answer -> {
-                labels.add(answer.getCreatedAt().format(formatter));
+            .map(answer -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", answer.getId());
+                map.put("questionText", answer.getQuestion() != null ? answer.getQuestion().getText() : "");
+                map.put("answerText", answer.getAnswerText());
+                map.put("createdAt", answer.getCreatedAt());
                 
-                OptionalDouble avgScore = answer.getFeedbacks().stream()
+                double answerAvgScore = answer.getFeedbacks().stream()
                     .filter(f -> f.getScore() != null)
                     .mapToInt(Feedback::getScore)
-                    .average();
+                    .average()
+                    .orElse(0.0);
                 
-                scores.add(avgScore.orElse(0.0));
-            });
+                map.put("avgScore", answerAvgScore > 0 ? answerAvgScore : null);
+                return map;
+            })
+            .collect(Collectors.toList());
         
-        Map<String, Object> dataset = new HashMap<>();
-        dataset.put("label", "점수");
-        dataset.put("data", scores);
-        dataset.put("borderColor", "#667eea");
-        dataset.put("tension", 0.4);
+        model.addAttribute("recentAnswers", recentAnswers);
         
-        chartData.put("labels", labels);
-        chartData.put("datasets", Collections.singletonList(dataset));
+        List<Map<String, Object>> ranking = calculateGlobalRanking(currentUser.getId());
+        model.addAttribute("globalRanking", ranking);
         
-        return chartData;
-    }
-    
-    private Map<String, Object> createActivityChart(List<Answer> answers) {
-        Map<String, Object> chartData = new HashMap<>();
-        
-        Map<String, Long> monthlyCount = new LinkedHashMap<>();
-        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-        
-        answers.forEach(answer -> {
-            String month = answer.getCreatedAt().format(monthFormatter);
-            monthlyCount.put(month, monthlyCount.getOrDefault(month, 0L) + 1);
-        });
-        
-        List<String> labels = new ArrayList<>(monthlyCount.keySet());
-        List<Long> data = new ArrayList<>(monthlyCount.values());
-        
-        Map<String, Object> dataset = new HashMap<>();
-        dataset.put("label", "활동");
-        dataset.put("data", data);
-        dataset.put("backgroundColor", "#667eea");
-        
-        chartData.put("labels", labels);
-        chartData.put("datasets", Collections.singletonList(dataset));
-        
-        return chartData;
-    }
-    
-    private List<Map<String, Object>> createCategoryAccuracy(List<Answer> answers) {
-        List<Map<String, Object>> categories = new ArrayList<>();
-        
-        Map<String, Object> tech = new HashMap<>();
-        tech.put("name", "기술");
-        tech.put("accuracy", 85);
-        categories.add(tech);
-        
-        Map<String, Object> personality = new HashMap<>();
-        personality.put("name", "인성");
-        personality.put("accuracy", 92);
-        categories.add(personality);
-        
-        Map<String, Object> situation = new HashMap<>();
-        situation.put("name", "상황");
-        situation.put("accuracy", 78);
-        categories.add(situation);
-        
-        Map<String, Object> project = new HashMap<>();
-        project.put("name", "프로젝트");
-        project.put("accuracy", 88);
-        categories.add(project);
-        
-        return categories;
-    }
-    
-    private List<Map<String, Object>> createAchievements(long totalInterviews, long totalAnswers, double avgScore) {
-        List<Map<String, Object>> achievements = new ArrayList<>();
-        
-        achievements.add(createAchievement("🎯", "첫 면접", totalInterviews >= 1));
-        achievements.add(createAchievement("🔥", "연속 3일", false));
-        achievements.add(createAchievement("⭐", "평균 80점", avgScore >= 80));
-        achievements.add(createAchievement("💯", "완벽한 답변", avgScore >= 95));
-        achievements.add(createAchievement("📚", "답변 10개", totalAnswers >= 10));
-        achievements.add(createAchievement("🏆", "답변 50개", totalAnswers >= 50));
-        achievements.add(createAchievement("🎓", "면접 10회", totalInterviews >= 10));
-        achievements.add(createAchievement("🌟", "면접 30회", totalInterviews >= 30));
-        achievements.add(createAchievement("👑", "마스터", totalInterviews >= 50 && avgScore >= 85));
-        
-        return achievements;
-    }
-    
-    private Map<String, Object> createAchievement(String icon, String name, boolean earned) {
-        Map<String, Object> achievement = new HashMap<>();
-        achievement.put("icon", icon);
-        achievement.put("name", name);
-        achievement.put("earned", earned);
-        return achievement;
+        return "user/myStats";
     }
 
-    private List<Map<String, Object>> calculateUserRankings(Long currentUserId) {
+    private String loadInterviewerStats(User currentUser, Model model) {
+        List<Session> hostedSessions = sessionRepository.findByHostId(currentUser.getId());
+        
+        long totalInterviewees = hostedSessions.stream()
+            .flatMap(s -> s.getQuestions().stream())
+            .flatMap(q -> q.getAnswers().stream())
+            .map(a -> a.getUser().getId())
+            .distinct()
+            .count();
+        
+        long totalFeedbacksGiven = hostedSessions.stream()
+            .flatMap(s -> s.getQuestions().stream())
+            .flatMap(q -> q.getAnswers().stream())
+            .flatMap(a -> a.getFeedbacks().stream())
+            .filter(f -> f.getReviewer() != null && f.getReviewer().getId().equals(currentUser.getId()))
+            .count();
+        
+        List<Feedback> myFeedbacks = hostedSessions.stream()
+            .flatMap(s -> s.getQuestions().stream())
+            .flatMap(q -> q.getAnswers().stream())
+            .flatMap(a -> a.getFeedbacks().stream())
+            .filter(f -> f.getReviewer() != null && f.getReviewer().getId().equals(currentUser.getId()))
+            .collect(Collectors.toList());
+        
+        double avgFeedbackScore = myFeedbacks.stream()
+            .filter(f -> f.getScore() != null)
+            .mapToInt(Feedback::getScore)
+            .average()
+            .orElse(0.0);
+        
+        model.addAttribute("totalSessions", hostedSessions.size());
+        model.addAttribute("totalInterviewees", totalInterviewees);
+        model.addAttribute("totalFeedbacksGiven", totalFeedbacksGiven);
+        model.addAttribute("avgFeedbackScore", avgFeedbackScore > 0 ? 
+            String.format("%.1f점", avgFeedbackScore) : "N/A");
+        
+        List<Map<String, Object>> recentSessions = hostedSessions.stream()
+            .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+            .limit(10)
+            .map(session -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", session.getId());
+                map.put("title", session.getTitle());
+                map.put("status", session.getStatus());
+                map.put("createdAt", session.getCreatedAt());
+                
+                long answerCount = session.getQuestions().stream()
+                    .flatMap(q -> q.getAnswers().stream())
+                    .count();
+                map.put("answerCount", answerCount);
+                
+                return map;
+            })
+            .collect(Collectors.toList());
+        
+        model.addAttribute("recentSessions", recentSessions);
+        
+        return "user/myStatsInterviewer";
+    }
+
+    private List<Map<String, Object>> calculateGlobalRanking(Long currentUserId) {
         try {
             List<User> allUsers = userRepository.findAll();
             List<Map<String, Object>> rankings = new ArrayList<>();
             
             for (User user : allUsers) {
-                Long userId = user.getId();
-                List<Answer> userAnswers = answerRepository.findByUserIdWithFeedbacks(userId);
+                if (user.getIsDeleted() == 1) {
+                    continue;
+                }
                 
+                Long userId = user.getId();
+                
+                List<Answer> userAnswers = answerRepository.findByUserIdWithFeedbacks(userId);
                 if (userAnswers.isEmpty()) {
                     continue;
                 }
@@ -637,8 +482,31 @@ public class MyPageController {
         return "user/withdraw";
     }
 
-    @GetMapping("/reports")
-    public String reportsPage() {
-        return "mypage-reports";
+    @GetMapping("/auth/mypage/reports")
+    @Transactional(readOnly = true)
+    public String reportsPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        try {
+            if (userDetails == null) {
+                return "redirect:/auth/login";
+            }
+            
+            User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+            
+            List<InterviewReport> reports = interviewReportRepository.findByUserOrderByCreatedAtDesc(user);
+            
+            log.info("📊 사용자 {}의 레포트 {}개 조회 완료", user.getUsername(), reports.size());
+            
+            model.addAttribute("user", user);
+            model.addAttribute("reports", reports);
+            model.addAttribute("reportCount", reports.size());
+            
+            return "mypage-reports";
+            
+        } catch (Exception e) {
+            log.error("레포트 페이지 로드 실패", e);
+            model.addAttribute("error", "레포트를 불러올 수 없습니다: " + e.getMessage());
+            return "error";
+        }
     }
 }

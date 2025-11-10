@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -112,11 +111,16 @@ public class SelfInterviewApiController {
         @PostMapping("/{sessionId}/complete")
         public ResponseEntity<?> completeSelfInterview(
                 @PathVariable Long sessionId,
-                @AuthenticationPrincipal User user
+                Authentication auth
         ) {
                 try {
+                log.info("🔍 셀프 면접 완료 요청: sessionId={}, user={}", sessionId, auth.getName());
+                
                 Session session = sessionRepository.findById(sessionId)
                         .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+
+                User user = userRepository.findByUsername(auth.getName())
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
 
                 if (!session.getHost().getId().equals(user.getId())) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -124,19 +128,21 @@ public class SelfInterviewApiController {
                 }
 
                 session.setStatus(Session.SessionStatus.ENDED);
+                session.setEndTime(LocalDateTime.now());
                 sessionRepository.save(session);
 
-                log.info("✅ 셀프 면접 완료: sessionId={}", sessionId);
+                log.info("✅ 셀프 면접 완료: sessionId={}, userId={}", sessionId, user.getId());
 
                 sessionEndHandler.handleSessionEnd(sessionId);
 
                 return ResponseEntity.ok(Map.of(
+                        "success", true,
                         "message", "셀프 면접이 완료되었습니다",
                         "sessionId", sessionId,
                         "status", "ENDED"
                 ));
                 } catch (Exception e) {
-                log.error("셀프 면접 완료 실패: {}", e.getMessage());
+                log.error("❌ 셀프 면접 완료 실패: sessionId={}, error={}", sessionId, e.getMessage(), e);
                 return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
                 }
         }

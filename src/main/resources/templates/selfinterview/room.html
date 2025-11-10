@@ -956,6 +956,40 @@
                 document.getElementById('ai-status').style.color = '#ef4444';
             }
         }
+
+        async function viewDetailedResults() {
+            try {
+                console.log('🎬 면접 완료 처리 시작');
+                
+                if (!SESSION_DATA || !SESSION_DATA.sessionId) {
+                    alert('세션 정보를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                const response = await fetch(`/api/selfinterview/${SESSION_DATA.sessionId}/complete`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '면접 완료 처리 실패');
+                }
+                
+                const result = await response.json();
+                console.log('✅ 면접 완료:', result);
+                
+                alert('면접이 완료되었습니다! AI 리포트를 생성 중입니다...');
+                
+                setTimeout(() => {
+                    window.location.href = '/auth/mypage/reports';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('❌ 면접 완료 실패:', error);
+                alert('면접 완료 처리 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
     </script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
