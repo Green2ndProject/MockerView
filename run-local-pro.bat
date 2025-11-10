@@ -1,42 +1,43 @@
 @echo off
 echo ========================================
-echo MockerView PRO - 로컬 실행
+echo MockerView PRO - Local Run
 echo ========================================
 echo.
 
-echo PRO PostgreSQL 및 Redis 컨테이너 확인...
+echo Checking PostgreSQL container...
 docker ps | findstr mockerview_pro_postgres >nul 2>&1
 if errorlevel 1 (
-    echo PostgreSQL 컨테이너가 실행되지 않았습니다.
-    echo init-db-pro.bat를 먼저 실행하세요.
+    echo ERROR: PostgreSQL container not running!
+    echo Please run init-db-pro.bat first.
     pause
     exit /b 1
 )
 
+echo Checking Redis container...
 docker ps | findstr mockerview_pro_redis >nul 2>&1
 if errorlevel 1 (
-    echo Redis 컨테이너가 실행되지 않았습니다.
-    echo init-db-pro.bat를 먼저 실행하세요.
+    echo ERROR: Redis container not running!
+    echo Please run init-db-pro.bat first.
     pause
     exit /b 1
 )
 
 echo.
-echo Gradle 빌드 시작...
+echo Starting Gradle build...
 call gradlew.bat clean build -x test
 if errorlevel 1 (
     echo.
-    echo 빌드 실패!
+    echo ERROR: Build failed!
     pause
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo PRO 애플리케이션 시작
+echo Starting Application
 echo ========================================
-echo 포트: 8082
-echo 프로파일: dev
+echo Port: 8082
+echo Profile: dev
 echo PostgreSQL: localhost:5433
 echo Redis: localhost:6380
 echo.

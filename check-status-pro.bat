@@ -1,31 +1,31 @@
 @echo off
 echo ========================================
-echo MockerView PRO - 상태 확인
+echo MockerView PRO - Status Check
 echo ========================================
 echo.
 
-echo [PRO 컨테이너 상태]
+echo [Container Status]
 docker ps -a | findstr "mockerview_pro"
 
 echo.
-echo [PRO PostgreSQL 연결 테스트]
+echo [PostgreSQL Connection Test]
 docker exec mockerview_pro_postgres pg_isready -U mockerview_pro_user -d mockerview_pro
 
 echo.
-echo [PRO Redis 연결 테스트]
+echo [Redis Connection Test]
 docker exec mockerview_pro_redis redis-cli ping
 
 echo.
-echo [PRO 볼륨 정보]
+echo [Volume Info]
 docker volume ls | findstr "mockerview_pro"
 
 echo.
-echo [PRO 네트워크 정보]
+echo [Network Info]
 docker network ls | findstr "mockerview_pro"
 
 echo.
 echo ========================================
-echo 접속 정보
+echo Connection Information
 echo ========================================
 echo PostgreSQL: localhost:5433
 echo Redis: localhost:6380

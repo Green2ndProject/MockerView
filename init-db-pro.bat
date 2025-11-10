@@ -1,29 +1,29 @@
 @echo off
 echo ========================================
-echo MockerView PRO - PostgreSQL 초기화
+echo MockerView PRO - Initialize Database
 echo ========================================
 echo.
 
-echo 기존 PRO 컨테이너 중지 및 제거...
+echo Stopping existing containers...
 docker-compose down -v
 
 echo.
-echo PRO PostgreSQL 및 Redis 시작...
+echo Starting PostgreSQL and Redis...
 docker-compose up -d mockerview_pro_postgres mockerview_pro_redis
 
 echo.
-echo 컨테이너 상태 확인 중...
+echo Waiting for containers...
 timeout /t 5 /nobreak > nul
 
 docker ps | findstr "mockerview_pro"
 
 echo.
 echo ========================================
-echo PRO DB 초기화 완료!
+echo Database initialized successfully!
 echo ========================================
 echo PostgreSQL: localhost:5433
 echo Redis: localhost:6380
-echo DB명: mockerview_pro
-echo 사용자: mockerview_pro_user
+echo Database: mockerview_pro
+echo User: mockerview_pro_user
 echo ========================================
 pause

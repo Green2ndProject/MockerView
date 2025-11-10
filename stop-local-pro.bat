@@ -1,18 +1,18 @@
 @echo off
 echo ========================================
-echo MockerView PRO - 중지
+echo MockerView PRO - Stop
 echo ========================================
 echo.
 
-echo PRO 컨테이너 중지...
+echo Stopping containers...
 docker-compose down
 
 echo.
-echo 컨테이너 상태 확인...
+echo Checking status...
 docker ps -a | findstr "mockerview_pro"
 
 echo.
 echo ========================================
-echo PRO 중지 완료!
+echo Stopped successfully!
 echo ========================================
 pause

@@ -1,29 +1,29 @@
 @echo off
 echo ========================================
-echo MockerView PRO - PostgreSQL 리셋
+echo MockerView PRO - Reset Database
 echo ========================================
 echo.
 
-echo 기존 PRO 컨테이너 중지 및 제거...
+echo Stopping and removing containers...
 docker-compose down -v
 
 echo.
-echo PRO PostgreSQL 및 Redis 시작...
+echo Starting containers...
 docker-compose up -d
 
 echo.
-echo 컨테이너 상태 확인 중...
+echo Waiting for containers...
 timeout /t 5 /nobreak >nul
 docker ps --filter "name=mockerview_pro"
 
 echo.
 echo ========================================
-echo PRO DB 리셋 완료!
+echo Database reset complete!
 echo ========================================
 echo PostgreSQL: localhost:5433
 echo Redis: localhost:6380
-echo DB명: mockerview_pro
-echo 사용자: mockerview_pro_user
+echo Database: mockerview_pro
+echo User: mockerview_pro_user
 echo ========================================
 
 pause
