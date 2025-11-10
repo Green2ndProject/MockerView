@@ -1,7 +1,7 @@
 spring:
   application:
     name: mockerview
-
+  
   main:
     allow-bean-definition-overriding: true
 
@@ -32,7 +32,7 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
-
+  
   cache:
     type: redis
     redis:
