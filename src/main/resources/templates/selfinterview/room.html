@@ -882,7 +882,7 @@
         }
 
         async function submitVideoAnswer() {
-            if (!SESSION_DATA || !SESSION_DATA.id) {
+            if (!SESSION_DATA || !SESSION_DATA.sessionId) {
                 alert('세션 정보를 불러올 수 없습니다.');
                 return;
             }
@@ -900,7 +900,7 @@
                 const token = document.cookie.split(';').find(c => c.trim().startsWith('Authorization='));
                 const authToken = token ? token.split('=')[1] : '';
                 
-                const response = await fetch('/api/session/' + SESSION_DATA.id + '/video-answer', {
+                const response = await fetch('/api/session/' + SESSION_DATA.sessionId + '/video-answer', {
                     method: 'POST',
                     headers: {
                         'Authorization': authToken
