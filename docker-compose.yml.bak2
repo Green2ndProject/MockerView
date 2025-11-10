@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: mockerview_dev_user
       POSTGRES_PASSWORD: mockerview_dev_pass
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-dev.sql:/docker-entrypoint-initdb.d/init-dev.sql
