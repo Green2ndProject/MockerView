@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 리포트 - MockerView</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #5568d3;
+            --primary-light: #f0f2ff;
+            --text-dark: #2d3748;
+            --text-medium: #4a5568;
+            --text-light: #718096;
+            --bg-light: #f7fafc;
+            --border-color: #e2e8f0;
+            --success: #48bb78;
+            --warning: #ed8936;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .top-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        }
+
+        .top-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 35px;
+            align-items: center;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: width 0.2s;
+        }
+
+        .nav-menu a:hover::after {
+            width: 100%;
+        }
+
+        .page-title {
+            text-align: center;
+            padding: 60px 0 50px;
+            background: white;
+        }
+
+        .page-title h1 {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .page-title p {
+            font-size: 15px;
+            color: var(--text-light);
+            margin-top: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: white;
+            position: sticky;
+            top: 68px;
+            z-index: 99;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 22px;
+            text-align: center;
+            background: white;
+            border: none;
+            color: var(--text-medium);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab i {
+            margin-right: 8px;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--bg-light);
+        }
+
+        .content-section {
+            display: none;
+            padding: 40px 0;
+            min-height: 500px;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .report-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 35px;
+            margin-bottom: 24px;
+            transition: all 0.3s;
+        }
+
+        .report-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .report-date {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+
+        .report-score {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+
+        .report-score span {
+            font-size: 20px;
+            color: var(--text-light);
+            margin-left: 4px;
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .score-item {
+            text-align: center;
+            padding: 24px 20px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .score-item:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        .score-label {
+            font-size: 13px;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .score-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .report-section {
+            margin: 28px 0;
+            padding: 24px;
+            background: var(--bg-light);
+            border-radius: 12px;
+        }
+
+        .report-section h3 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-section p {
+            font-size: 15px;
+            color: var(--text-medium);
+            line-height: 1.8;
+        }
+
+        .btn-download {
+            display: inline-block;
+            padding: 14px 32px;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-download:hover {
+            background: var(--primary-dark);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-download i {
+            margin-right: 8px;
+        }
+
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .badge-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .badge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .badge-card.earned {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        .badge-card.earned::before {
+            background: var(--primary-color);
+        }
+
+        .badge-card.earned:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+        }
+
+        .badge-card.locked {
+            opacity: 0.4;
+            filter: grayscale(1);
+        }
+
+        .badge-emoji {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        .badge-name {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .badge-desc {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .badge-date {
+            font-size: 12px;
+            color: var(--primary-color);
+            margin-top: 12px;
+            font-weight: 700;
+        }
+
+        .progress-section {
+            background: white;
+            padding: 40px;
+            margin-bottom: 32px;
+            border-radius: 16px;
+            border: 2px solid var(--border-color);
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 28px;
+            background: var(--bg-light);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .stat-box:hover {
+            background: var(--primary-light);
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            background: white;
+            border-radius: 16px;
+            border: 2px dashed var(--border-color);
+        }
+
+        .empty-state i {
+            font-size: 72px;
+            color: var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .empty-state h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-medium);
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 15px;
+            color: var(--text-light);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="top-header">
+    <div class="container">
+        <a href="/" class="logo">MockerView</a>
+        <nav class="nav-menu">
+            <a href="/sessions">면접 시작</a>
+            <a href="/mypage">마이페이지</a>
+            <a href="/logout">로그아웃</a>
+        </nav>
+    </div>
+</header>
+
+<div class="page-title">
+    <h1>📊 나의 성장 기록</h1>
+    <p>AI가 분석한 면접 리포트와 배지를 확인하세요</p>
+</div>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('reports')">
+        <i class="fas fa-file-chart-line"></i> 면접 리포트
+    </button>
+    <button class="tab" onclick="switchTab('badges')">
+        <i class="fas fa-award"></i> 배지 컬렉션
+    </button>
+</div>
+
+<div class="container">
+    <div id="reports-section" class="content-section active">
+        <div id="reports-container"></div>
+    </div>
+
+    <div id="badges-section" class="content-section">
+        <div class="progress-section">
+            <div class="progress-stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="earned-badges">0</div>
+                    <div class="stat-label">획득한 배지</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="total-badges">16</div>
+                    <div class="stat-label">전체 배지</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="completion-rate">0%</div>
+                    <div class="stat-label">달성률</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="badge-grid" id="badges-container"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    
+    event.target.closest('.tab').classList.add('active');
+    document.getElementById(tab + '-section').classList.add('active');
+    
+    if (tab === 'reports') {
+        loadReports();
+    } else if (tab === 'badges') {
+        loadBadges();
+    }
+}
+
+async function loadReports() {
+    try {
+        const response = await fetch('/api/reports/my');
+        const reports = await response.json();
+        
+        const container = document.getElementById('reports-container');
+        
+        if (reports.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>아직 생성된 리포트가 없습니다</h3>
+                    <p>면접을 완료하면 AI가 자동으로 리포트를 생성합니다</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = reports.map(report => `
+            <div class="report-card">
+                <div class="report-header">
+                    <div>
+                        <div class="report-date">
+                            📅 ${new Date(report.createdAt).toLocaleDateString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            })}
+                        </div>
+                    </div>
+                    <div class="report-score">${report.overallScore}<span>점</span></div>
+                </div>
+                
+                <div class="score-grid">
+                    <div class="score-item">
+                        <div class="score-label">💬 커뮤니케이션</div>
+                        <div class="score-value">${report.communicationScore}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">💻 기술력</div>
+                        <div class="score-value">${report.technicalScore}</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">🎤 자신감</div>
+                        <div class="score-value">${report.confidenceScore}</div>
+                    </div>
+                </div>
+                
+                <div class="report-section">
+                    <h3>📊 전체 평가</h3>
+                    <p>${report.overallInsights || '분석 중입니다...'}</p>
+                </div>
+                
+                <div class="report-section">
+                    <h3>💪 주요 강점</h3>
+                    <p>${report.strengths || '분석 중입니다...'}</p>
+                </div>
+                
+                <div class="report-section">
+                    <h3>🎯 개선할 점</h3>
+                    <p>${report.weaknesses || '분석 중입니다...'}</p>
+                </div>
+                
+                ${report.pdfUrl ? `
+                    <a href="${report.pdfUrl}" target="_blank" class="btn-download">
+                        <i class="fas fa-download"></i> PDF 다운로드
+                    </a>
+                ` : '<span style="color: #718096; font-size: 14px;">⏳ PDF 생성 중...</span>'}
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('리포트 로드 실패:', error);
+    }
+}
+
+async function loadBadges() {
+    try {
+        const [badgesRes, progressRes] = await Promise.all([
+            fetch('/api/badges/my'),
+            fetch('/api/badges/progress')
+        ]);
+        
+        const myBadges = await badgesRes.json();
+        const progress = await progressRes.json();
+        
+        document.getElementById('earned-badges').textContent = progress.earned;
+        document.getElementById('total-badges').textContent = progress.total;
+        document.getElementById('completion-rate').textContent = Math.round(progress.percentage) + '%';
+        
+        const allBadgeTypes = [
+            {type: 'FIRST_INTERVIEW', name: '첫 면접 완료', desc: '첫 번째 면접을 완료했습니다', emoji: '🎯'},
+            {type: 'EARLY_BIRD', name: '얼리버드', desc: '오전 7시 전에 면접 진행', emoji: '🌅'},
+            {type: 'NIGHT_OWL', name: '올빼미', desc: '밤 11시 이후 면접 진행', emoji: '🦉'},
+            {type: 'PERFECT_SCORE', name: '완벽한 면접', desc: '90점 이상 획득', emoji: '💯'},
+            {type: 'INTERVIEW_10', name: '10회 달성', desc: '면접 10회 완료', emoji: '🏆'},
+            {type: 'INTERVIEW_50', name: '50회 달성', desc: '면접 50회 완료', emoji: '🎖️'},
+            {type: 'INTERVIEW_100', name: '100회 달성', desc: '면접 100회 완료', emoji: '👑'},
+            {type: 'STREAK_7', name: '7일 연속', desc: '7일 연속 면접 진행', emoji: '🔥'},
+            {type: 'STREAK_30', name: '30일 연속', desc: '30일 연속 면접 진행', emoji: '💎'},
+            {type: 'AI_MASTER', name: 'AI 마스터', desc: 'AI 피드백 100개 수령', emoji: '🤖'},
+            {type: 'QUICK_RESPONDER', name: '빠른 응답자', desc: '평균 답변 시간 30초 이하', emoji: '⚡'},
+            {type: 'DETAILED_ANSWER', name: '상세 답변왕', desc: '평균 답변 길이 200자 이상', emoji: '📝'},
+            {type: 'COMMUNICATION_PRO', name: '커뮤니케이션 전문가', desc: '커뮤니케이션 점수 95점 이상', emoji: '💬'},
+            {type: 'TECHNICAL_EXPERT', name: '기술 전문가', desc: '기술 점수 95점 이상', emoji: '💻'},
+            {type: 'CONFIDENT_SPEAKER', name: '자신감 만렙', desc: '자신감 점수 95점 이상', emoji: '🎤'},
+            {type: 'ALL_ROUNDER', name: '올라운더', desc: '모든 카테고리 면접 완료', emoji: '🌟'}
+        ];
+        
+        const earnedBadgeTypes = myBadges.map(b => b.badgeType);
+        
+        const container = document.getElementById('badges-container');
+        container.innerHTML = allBadgeTypes.map(badge => {
+            const earned = myBadges.find(b => b.badgeType === badge.type);
+            return `
+                <div class="badge-card ${earned ? 'earned' : 'locked'}">
+                    <div class="badge-emoji">${badge.emoji}</div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-desc">${badge.desc}</div>
+                    ${earned ? `<div class="badge-date">🎉 ${new Date(earned.earnedAt).toLocaleDateString('ko-KR')}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error('배지 로드 실패:', error);
+    }
+}
+
+loadReports();
+</script>
+
+</body>
+</html>

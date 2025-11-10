@@ -1,160 +1,141 @@
 package com.mockerview.controller.api;
 
-import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.entity.Answer;
-import com.mockerview.entity.Feedback;
-import com.mockerview.entity.Question;
-import com.mockerview.entity.Session;
-import com.mockerview.repository.AnswerRepository;
-import com.mockerview.repository.FeedbackRepository;
-import com.mockerview.repository.QuestionRepository;
+import com.mockerview.controller.websocket.SessionEndHandler;
+import com.mockerview.dto.SelfInterviewCreateDTO;
+import com.mockerview.entity.*;
+import com.mockerview.repository.CategoryRepository;
 import com.mockerview.repository.SessionRepository;
+import com.mockerview.repository.UserRepository;
+import com.mockerview.service.UnifiedQuestionGeneratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/selfinterview")
 @RequiredArgsConstructor
-@Slf4j
 public class SelfInterviewApiController {
 
     private final SessionRepository sessionRepository;
-    private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
-    private final FeedbackRepository feedbackRepository;
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
+    private final UnifiedQuestionGeneratorService questionGenerator;
+    private final SessionEndHandler sessionEndHandler;
 
-    @GetMapping(value = "/{sessionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getSessionData(
-            @PathVariable Long sessionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    @PostMapping("/create-with-ai")
+    public ResponseEntity<?> createWithAI(
+            @RequestBody SelfInterviewCreateDTO dto,
+            Authentication auth) {
         
         try {
-            log.info("셀프면접 데이터 조회 - sessionId: {}, userId: {}", 
-                    sessionId, userDetails.getUserId());
+            log.info("📥 AI 셀프면접 생성 요청 - 제목: {}, 카테고리: {}, 난이도: {}, 질문수: {}", 
+                    dto.getTitle(), dto.getCategory(), dto.getDifficulty(), dto.getQuestionCount());
             
-            Session session = sessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
+            User user = userRepository.findByUsername(auth.getName())
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+            Category category = categoryRepository.findByCode(dto.getCategory())
+                    .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+
+            Session session = Session.builder()
+                    .host(user)
+                    .title(dto.getTitle())
+                    .sessionType(dto.getSessionType() != null ? dto.getSessionType() : "TEXT")
+                    .difficulty(dto.getDifficulty() != null ? dto.getDifficulty() : "MEDIUM")
+                    .category(dto.getCategory())
+                    .isSelfInterview("Y")
+                    .isReviewable("Y")
+                    .aiEnabled(true)
+                    .aiMode("FULL")
+                    .sessionStatus(Session.SessionStatus.PLANNED)
+                    .createdAt(LocalDateTime.now())
+                    .lastActivity(LocalDateTime.now())
+                    .build();
+
+            session = sessionRepository.save(session);
+            log.info("✅ 세션 생성 완료 - sessionId: {}", session.getId());
+
+            int questionCount = dto.getQuestionCount() != null ? dto.getQuestionCount() : 5;
+            String questionType = dto.getQuestionType() != null ? dto.getQuestionType() : "TECHNICAL";
+            int difficultyLevel = dto.getDifficultyLevel() != null ? dto.getDifficultyLevel() : 2;
+
+            log.info("🔄 질문 생성 시작 - 총 {}개", questionCount);
             
-            List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(sessionId);
+            for (int i = 0; i < questionCount; i++) {
+                Question question = questionGenerator.generateQuestion(
+                        category,
+                        difficultyLevel,
+                        questionType,
+                        session
+                );
+                
+                question.setQuestioner(user);
+                question.setOrderNo(i + 1);
+                session.getQuestions().add(question);
+                
+                log.info("✅ 질문 {}/{} 생성 완료", i + 1, questionCount);
+            }
+
+            sessionRepository.save(session);
             
-            Map<String, Object> sessionData = new HashMap<>();
-            sessionData.put("id", session.getId());
-            sessionData.put("title", session.getTitle());
-            sessionData.put("sessionType", session.getSessionType());
-            sessionData.put("difficulty", session.getDifficulty());
-            sessionData.put("category", session.getCategory());
-            sessionData.put("status", session.getSessionStatus().name());
-            
-            List<Map<String, Object>> questionList = questions.stream()
-                .map(q -> {
-                    Map<String, Object> qMap = new HashMap<>();
-                    qMap.put("id", q.getId());
-                    qMap.put("text", q.getText());
-                    qMap.put("orderNo", q.getOrderNo());
-                    return qMap;
-                })
-                .collect(Collectors.toList());
-            
-            sessionData.put("questions", questionList);
-            
-            log.info("✅ 셀프면접 데이터 반환 - 질문 수: {}", questionList.size());
-            
-            return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(sessionData);
-            
+            log.info("🎉 AI 셀프면접 생성 완료 - sessionId: {}, 질문수: {}", 
+                    session.getId(), session.getQuestions().size());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("sessionId", session.getId());
+            response.put("questionCount", session.getQuestions().size());
+            response.put("message", "AI 면접이 생성되었습니다!");
+
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            log.error("셀프면접 데이터 조회 실패", e);
-            return ResponseEntity.internalServerError()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("error", e.getMessage()));
+            log.error("❌ AI 면접 생성 실패", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "면접 생성에 실패했습니다: " + e.getMessage()
+            ));
         }
     }
 
-    @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getSelfInterviewList(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "6") int size,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        
+    @PostMapping("/{sessionId}/complete")
+    public ResponseEntity<?> completeSelfInterview(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal User user
+    ) {
         try {
-            log.info("셀프면접 목록 조회 - userId: {}, page: {}", userDetails.getUserId(), page);
-            
-            Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-            Page<Session> sessionPage = sessionRepository.findSelfInterviewsByHostIdPageable(userDetails.getUserId(), pageable);
-            
-            List<Map<String, Object>> sessionList = sessionPage.getContent().stream()
-                .map(session -> {
-                    Map<String, Object> sessionMap = new HashMap<>();
-                    sessionMap.put("id", session.getId());
-                    sessionMap.put("title", session.getTitle());
-                    sessionMap.put("sessionType", session.getSessionType());
-                    sessionMap.put("createdAt", session.getCreatedAt());
-                    
-                    List<Question> questions = questionRepository.findBySessionIdOrderByOrderNoAsc(session.getId());
-                    sessionMap.put("questionCount", questions.size());
-                    
-                    if (!questions.isEmpty()) {
-                        List<Answer> allAnswers = questions.stream()
-                            .flatMap(q -> answerRepository.findByQuestionIdOrderByCreatedAtAsc(q.getId()).stream())
-                            .toList();
-                        
-                        if (!allAnswers.isEmpty()) {
-                            List<Feedback> aiFeedbacks = feedbackRepository.findByAnswerInAndFeedbackType(
-                                allAnswers, Feedback.FeedbackType.AI);
-                            
-                            if (!aiFeedbacks.isEmpty()) {
-                                double avgScore = aiFeedbacks.stream()
-                                    .filter(f -> f.getScore() != null)
-                                    .mapToInt(Feedback::getScore)
-                                    .average()
-                                    .orElse(0.0);
-                                sessionMap.put("avgScore", avgScore);
-                            } else {
-                                sessionMap.put("avgScore", null);
-                            }
-                        } else {
-                            sessionMap.put("avgScore", null);
-                        }
-                    } else {
-                        sessionMap.put("avgScore", null);
-                    }
-                    
-                    return sessionMap;
-                })
-                .collect(Collectors.toList());
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("content", sessionList);
-            response.put("totalElements", sessionPage.getTotalElements());
-            response.put("totalPages", sessionPage.getTotalPages());
-            response.put("currentPage", page);
-            response.put("size", size);
-            
-            log.info("✅ 셀프면접 목록 반환 - 세션 수: {}", sessionList.size());
-            
-            return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(response);
-            
+            Session session = sessionRepository.findById(sessionId)
+                    .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+
+            if (!session.getHost().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "권한이 없습니다"));
+            }
+
+            session.setStatus(Session.SessionStatus.ENDED);
+            sessionRepository.save(session);
+
+            log.info("✅ 셀프 면접 완료: sessionId={}", sessionId);
+
+            sessionEndHandler.handleSessionEnd(sessionId);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "셀프 면접이 완료되었습니다",
+                    "sessionId", sessionId,
+                    "status", "ENDED"
+            ));
         } catch (Exception e) {
-            log.error("셀프면접 목록 조회 실패", e);
-            return ResponseEntity.internalServerError()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("error", e.getMessage()));
+            log.error("셀프 면접 완료 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

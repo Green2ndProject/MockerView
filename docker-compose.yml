@@ -1,26 +1,48 @@
+version: '3.8'
+
 services:
-  postgres:
+  mockerview_pro_postgres:
     image: postgres:15
-    container_name: mockerview-postgres
+    container_name: mockerview_pro_postgres
     environment:
-      POSTGRES_DB: mockerview
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mockerview
+      POSTGRES_DB: mockerview_pro
+      POSTGRES_USER: mockerview_pro_user
+      POSTGRES_PASSWORD: mockerview_pro_pass
     ports:
       - "5433:5432"
     volumes:
-      - mockerview-pgdata:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mockerview_pro_postgres_data:/var/lib/postgresql/data
+      - ./init-pro.sql:/docker-entrypoint-initdb.d/init-pro.sql
+    networks:
+      - mockerview_pro_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mockerview_pro_user -d mockerview_pro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  redis:
-    image: redis:latest
-    container_name: mockerview-redis
+  mockerview_pro_redis:
+    image: redis:7
+    container_name: mockerview_pro_redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
-      - mockerview-redis-data:/data
-    command: redis-server --appendonly yes
+      - mockerview_pro_redis_data:/data
+    networks:
+      - mockerview_pro_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
-  mockerview-pgdata:
-  mockerview-redis-data:
+  mockerview_pro_postgres_data:
+    name: mockerview_pro_postgres_data
+  mockerview_pro_redis_data:
+    name: mockerview_pro_redis_data
+
+networks:
+  mockerview_pro_network:
+    name: mockerview_pro_network
+    driver: bridge

@@ -142,4 +142,16 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
 
         @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host.id = :hostId AND s.videoRecordingUrl IS NOT NULL AND s.videoRecordingUrl != '' ORDER BY s.createdAt DESC")
         List<Session> findByHostIdWithRecording(@Param("hostId") Long hostId);
+
+        @Query("SELECT COUNT(s) FROM Session s WHERE s.host = :user AND s.sessionStatus = :status")
+        long countByUserAndSessionStatus(@Param("user") User user, @Param("status") Session.SessionStatus status);
+
+        @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host = :user AND s.sessionStatus = :status")
+        List<Session> findByUserAndSessionStatus(@Param("user") User user, @Param("status") Session.SessionStatus status);
+
+        @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host = :user AND s.sessionStatus = :status ORDER BY s.createdAt DESC")
+        List<Session> findByUserAndSessionStatusOrderByCreatedAtDesc(@Param("user") User user, @Param("status") Session.SessionStatus status);
+
+        @Query("SELECT s FROM Session s LEFT JOIN FETCH s.host WHERE s.host = :user ORDER BY s.createdAt DESC")
+        List<Session> findByUser(@Param("user") User user);
 }
