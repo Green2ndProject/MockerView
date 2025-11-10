@@ -1,0 +1,141 @@
+spring:
+  application:
+    name: mockerview-pro
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5433/mockerview_pro
+    username: mockerview_pro_user
+    password: mockerview_pro_pass
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+        enable_lazy_load_no_trans: true
+    open-in-view: false
+  
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 2
+  
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 150MB
+  
+  mvc:
+    throw-exception-if-no-handler-found: true
+  
+  web:
+    resources:
+      add-mappings: false
+
+server:
+  port: 8082
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    connection-timeout: 300000
+    max-http-form-post-size: 100MB
+    max-swallow-size: 100MB
+
+jwt:
+  secret: ${JWT_SECRET:mockerview_pro_secret_key_for_development_only_change_in_production}
+  expiration: 3600000
+  refresh-expiration: 604800000
+
+oauth2:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8081/oauth2/callback/google}
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:}
+    client-secret: ${KAKAO_CLIENT_SECRET:}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8081/oauth2/callback/kakao}
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
+    model: gpt-4o-mini
+    whisper-model: whisper-1
+    max-tokens: 2000
+    temperature: 0.7
+
+agora:
+  app-id: ${AGORA_APP_ID:}
+  app-certificate: ${AGORA_APP_CERTIFICATE:}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}
+
+toss:
+  payments:
+    secret-key: ${TOSS_SECRET_KEY:}
+    client-key: ${TOSS_CLIENT_KEY:}
+
+recaptcha:
+  secret-key: ${RECAPTCHA_SECRET_KEY:}
+  site-key: ${RECAPTCHA_SITE_KEY:}
+
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY:}
+  private-key: ${VAPID_PRIVATE_KEY:}
+
+logging:
+  level:
+    root: INFO
+    com.mockerview: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.messaging: DEBUG
+    org.springframework.web.socket: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+pro:
+  features:
+    enabled: true
+    company-management: true
+    talent-pool: true
+    interview-reports: true
+    advanced-analytics: true
