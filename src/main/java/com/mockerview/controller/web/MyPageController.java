@@ -636,4 +636,9 @@ public class MyPageController {
     public String withdrawPage() {
         return "user/withdraw";
     }
+
+    @GetMapping("/reports")
+    public String reportsPage() {
+        return "mypage-reports";
+    }
 }
