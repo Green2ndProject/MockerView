@@ -78,7 +78,7 @@ function loadQuestion(index) {
     const question = questions[index];
 
     document.getElementById('question-number').textContent = `Q${index + 1}`;
-    document.getElementById('current-question-text').textContent = question.questionText;
+    document.getElementById('current-question-text').textContent = question.text;
     
     const answerTextArea = document.getElementById('answerText');
     if (answerTextArea) {
@@ -109,7 +109,7 @@ function renderQuestionList() {
     questions.forEach((q, index) => {
         const li = document.createElement('li');
         li.className = 'question-nav-item';
-        li.innerHTML = `<strong>Q${index + 1}</strong> ${q.questionText.substring(0, 30)}...`;
+        li.innerHTML = `<strong>Q${index + 1}</strong> ${q.text.substring(0, 30)}...`;
         li.onclick = () => loadQuestion(index);
         questionList.appendChild(li);
     });

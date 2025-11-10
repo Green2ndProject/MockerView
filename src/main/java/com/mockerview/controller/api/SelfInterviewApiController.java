@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -135,6 +137,50 @@ public class SelfInterviewApiController {
             ));
         } catch (Exception e) {
             log.error("셀프 면접 완료 실패: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{sessionId}")
+    public ResponseEntity<?> getSession(
+            @PathVariable Long sessionId,
+            Authentication auth) {
+        try {
+            Session session = sessionRepository.findById(sessionId)
+                    .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+
+            User user = userRepository.findByUsername(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+            if (!session.getHost().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "권한이 없습니다"));
+            }
+
+            List<Map<String, Object>> questionsList = session.getQuestions().stream()
+                    .map(q -> {
+                        Map<String, Object> qMap = new HashMap<>();
+                        qMap.put("id", q.getId());
+                        qMap.put("questionText", q.getText());
+                        qMap.put("orderNo", q.getOrderNo());
+                        qMap.put("difficultyLevel", q.getDifficultyLevel());
+                        qMap.put("questionType", q.getQuestionType());
+                        return qMap;
+                    })
+                    .collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("sessionId", session.getId());
+            response.put("title", session.getTitle());
+            response.put("status", session.getStatus().toString());
+            response.put("difficulty", session.getDifficulty());
+            response.put("category", session.getCategory());
+            response.put("questions", questionsList);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("세션 조회 실패: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
