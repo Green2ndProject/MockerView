@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 > nul
 echo ========================================
 echo MockerView PRO - 상태 확인
 echo ========================================
@@ -26,10 +25,10 @@ docker network ls | findstr "mockerview_pro"
 
 echo.
 echo ========================================
-echo 📍 접속 정보
+echo 접속 정보
 echo ========================================
 echo PostgreSQL: localhost:5433
 echo Redis: localhost:6380
-echo Application: localhost:8081
+echo Application: localhost:8082
 echo ========================================
 pause

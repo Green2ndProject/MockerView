@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 > nul
 echo ========================================
 echo MockerView PRO - PostgreSQL 초기화
 echo ========================================
@@ -20,7 +19,7 @@ docker ps | findstr "mockerview_pro"
 
 echo.
 echo ========================================
-echo PRO DB 초기화 완료! 🎉
+echo PRO DB 초기화 완료!
 echo ========================================
 echo PostgreSQL: localhost:5433
 echo Redis: localhost:6380

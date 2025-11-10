@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 > nul
 echo ========================================
 echo MockerView PRO - 중지
 echo ========================================
@@ -14,6 +13,6 @@ docker ps -a | findstr "mockerview_pro"
 
 echo.
 echo ========================================
-echo ✅ PRO 중지 완료!
+echo PRO 중지 완료!
 echo ========================================
 pause
