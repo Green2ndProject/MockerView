@@ -23,8 +23,8 @@ public class RefreshToken {
     @Column(nullable = false)
     private String username;
     
-    @Column(name = "expiry_date", nullable = false)
-    private LocalDateTime expiryDate;
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
     
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -33,6 +33,6 @@ public class RefreshToken {
     private LocalDateTime lastUsedAt;
     
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiryDate);
+        return LocalDateTime.now().isAfter(expiresAt);
     }
 }
