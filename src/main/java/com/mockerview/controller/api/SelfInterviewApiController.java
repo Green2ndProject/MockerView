@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -27,161 +26,168 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SelfInterviewApiController {
 
-    private final SessionRepository sessionRepository;
-    private final UserRepository userRepository;
-    private final CategoryRepository categoryRepository;
-    private final UnifiedQuestionGeneratorService questionGenerator;
-    private final SessionEndHandler sessionEndHandler;
+        private final SessionRepository sessionRepository;
+        private final UserRepository userRepository;
+        private final CategoryRepository categoryRepository;
+        private final UnifiedQuestionGeneratorService questionGenerator;
+        private final SessionEndHandler sessionEndHandler;
 
-    @PostMapping("/create-with-ai")
-    public ResponseEntity<?> createWithAI(
-            @RequestBody SelfInterviewCreateDTO dto,
-            Authentication auth) {
-        
-        try {
-            log.info("📥 AI 셀프면접 생성 요청 - 제목: {}, 카테고리: {}, 난이도: {}, 질문수: {}", 
-                    dto.getTitle(), dto.getCategory(), dto.getDifficulty(), dto.getQuestionCount());
-            
-            User user = userRepository.findByUsername(auth.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
-            Category category = categoryRepository.findByCode(dto.getCategory())
-                    .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
-
-            Session session = Session.builder()
-                    .host(user)
-                    .title(dto.getTitle())
-                    .sessionType(dto.getSessionType() != null ? dto.getSessionType() : "TEXT")
-                    .difficulty(dto.getDifficulty() != null ? dto.getDifficulty() : "MEDIUM")
-                    .category(dto.getCategory())
-                    .isSelfInterview("Y")
-                    .isReviewable("Y")
-                    .aiEnabled(true)
-                    .aiMode("FULL")
-                    .sessionStatus(Session.SessionStatus.PLANNED)
-                    .createdAt(LocalDateTime.now())
-                    .lastActivity(LocalDateTime.now())
-                    .build();
-
-            session = sessionRepository.save(session);
-            log.info("✅ 세션 생성 완료 - sessionId: {}", session.getId());
-
-            int questionCount = dto.getQuestionCount() != null ? dto.getQuestionCount() : 5;
-            String questionType = dto.getQuestionType() != null ? dto.getQuestionType() : "TECHNICAL";
-            int difficultyLevel = dto.getDifficultyLevel() != null ? dto.getDifficultyLevel() : 2;
-
-            log.info("🔄 질문 생성 시작 - 총 {}개", questionCount);
-            
-            for (int i = 0; i < questionCount; i++) {
-                Question question = questionGenerator.generateQuestion(
-                        category,
-                        difficultyLevel,
-                        questionType,
-                        session
-                );
+        @PostMapping("/create-with-ai")
+        public ResponseEntity<?> createWithAI(
+                @RequestBody SelfInterviewCreateDTO dto,
+                Authentication auth) {
                 
-                question.setQuestioner(user);
-                question.setOrderNo(i + 1);
-                session.getQuestions().add(question);
+                try {
+                log.info("📥 AI 셀프면접 생성 요청 - 제목: {}, 카테고리: {}, 난이도: {}, 질문수: {}", 
+                        dto.getTitle(), dto.getCategory(), dto.getDifficulty(), dto.getQuestionCount());
                 
-                log.info("✅ 질문 {}/{} 생성 완료", i + 1, questionCount);
-            }
+                User user = userRepository.findByUsername(auth.getName())
+                        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-            sessionRepository.save(session);
-            
-            log.info("🎉 AI 셀프면접 생성 완료 - sessionId: {}, 질문수: {}", 
-                    session.getId(), session.getQuestions().size());
+                Category category = categoryRepository.findByCode(dto.getCategory())
+                        .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("sessionId", session.getId());
-            response.put("questionCount", session.getQuestions().size());
-            response.put("message", "AI 면접이 생성되었습니다!");
+                Session session = Session.builder()
+                        .host(user)
+                        .title(dto.getTitle())
+                        .sessionType(dto.getSessionType() != null ? dto.getSessionType() : "TEXT")
+                        .difficulty(dto.getDifficulty() != null ? dto.getDifficulty() : "MEDIUM")
+                        .category(dto.getCategory())
+                        .isSelfInterview("Y")
+                        .isReviewable("Y")
+                        .aiEnabled(true)
+                        .aiMode("FULL")
+                        .sessionStatus(Session.SessionStatus.PLANNED)
+                        .createdAt(LocalDateTime.now())
+                        .lastActivity(LocalDateTime.now())
+                        .build();
 
-            return ResponseEntity.ok(response);
+                session = sessionRepository.save(session);
+                log.info("✅ 세션 생성 완료 - sessionId: {}", session.getId());
 
-        } catch (Exception e) {
-            log.error("❌ AI 면접 생성 실패", e);
-            return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "면접 생성에 실패했습니다: " + e.getMessage()
-            ));
+                int questionCount = dto.getQuestionCount() != null ? dto.getQuestionCount() : 5;
+                String questionType = dto.getQuestionType() != null ? dto.getQuestionType() : "TECHNICAL";
+                int difficultyLevel = dto.getDifficultyLevel() != null ? dto.getDifficultyLevel() : 2;
+
+                log.info("🔄 질문 생성 시작 - 총 {}개", questionCount);
+                
+                for (int i = 0; i < questionCount; i++) {
+                        Question question = questionGenerator.generateQuestion(
+                                category,
+                                difficultyLevel,
+                                questionType,
+                                session
+                        );
+                        
+                        question.setQuestioner(user);
+                        question.setOrderNo(i + 1);
+                        session.getQuestions().add(question);
+                        
+                        log.info("✅ 질문 {}/{} 생성 완료", i + 1, questionCount);
+                }
+
+                sessionRepository.save(session);
+                
+                log.info("🎉 AI 셀프면접 생성 완료 - sessionId: {}, 질문수: {}", 
+                        session.getId(), session.getQuestions().size());
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("sessionId", session.getId());
+                response.put("questionCount", session.getQuestions().size());
+                response.put("message", "AI 면접이 생성되었습니다!");
+
+                return ResponseEntity.ok(response);
+
+                } catch (Exception e) {
+                log.error("❌ AI 면접 생성 실패", e);
+                return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "면접 생성에 실패했습니다: " + e.getMessage()
+                ));
+                }
         }
-    }
 
-    @PostMapping("/{sessionId}/complete")
-    public ResponseEntity<?> completeSelfInterview(
-            @PathVariable Long sessionId,
-            @AuthenticationPrincipal User user
-    ) {
-        try {
-            Session session = sessionRepository.findById(sessionId)
-                    .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+        @PostMapping("/{sessionId}/complete")
+        public ResponseEntity<?> completeSelfInterview(
+                @PathVariable Long sessionId,
+                Authentication auth
+        ) {
+                try {
+                log.info("🔍 셀프 면접 완료 요청: sessionId={}, user={}", sessionId, auth.getName());
+                
+                Session session = sessionRepository.findById(sessionId)
+                        .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
 
-            if (!session.getHost().getId().equals(user.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "권한이 없습니다"));
-            }
+                User user = userRepository.findByUsername(auth.getName())
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
 
-            session.setStatus(Session.SessionStatus.ENDED);
-            sessionRepository.save(session);
+                if (!session.getHost().getId().equals(user.getId())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(Map.of("error", "권한이 없습니다"));
+                }
 
-            log.info("✅ 셀프 면접 완료: sessionId={}", sessionId);
+                session.setStatus(Session.SessionStatus.ENDED);
+                session.setEndTime(LocalDateTime.now());
+                sessionRepository.save(session);
 
-            sessionEndHandler.handleSessionEnd(sessionId);
+                log.info("✅ 셀프 면접 완료: sessionId={}, userId={}", sessionId, user.getId());
 
-            return ResponseEntity.ok(Map.of(
-                    "message", "셀프 면접이 완료되었습니다",
-                    "sessionId", sessionId,
-                    "status", "ENDED"
-            ));
-        } catch (Exception e) {
-            log.error("셀프 면접 완료 실패: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+                sessionEndHandler.handleSessionEnd(sessionId);
+
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "message", "셀프 면접이 완료되었습니다",
+                        "sessionId", sessionId,
+                        "status", "ENDED"
+                ));
+                } catch (Exception e) {
+                log.error("❌ 셀프 면접 완료 실패: sessionId={}, error={}", sessionId, e.getMessage(), e);
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+                }
         }
-    }
 
-    @GetMapping("/{sessionId}")
-    public ResponseEntity<?> getSession(
-            @PathVariable Long sessionId,
-            Authentication auth) {
-        try {
-            Session session = sessionRepository.findById(sessionId)
-                    .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+        @GetMapping("/{sessionId}")
+        public ResponseEntity<?> getSession(
+                @PathVariable Long sessionId,
+                Authentication auth) {
+                try {
+                Session session = sessionRepository.findById(sessionId)
+                        .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
 
-            User user = userRepository.findByUsername(auth.getName())
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+                User user = userRepository.findByUsername(auth.getName())
+                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
 
-            if (!session.getHost().getId().equals(user.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "권한이 없습니다"));
-            }
+                if (!session.getHost().getId().equals(user.getId())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(Map.of("error", "권한이 없습니다"));
+                }
 
-            List<Map<String, Object>> questionsList = session.getQuestions().stream()
-                    .map(q -> {
-                        Map<String, Object> qMap = new HashMap<>();
-                        qMap.put("id", q.getId());
-                        qMap.put("questionText", q.getText());
-                        qMap.put("orderNo", q.getOrderNo());
-                        qMap.put("difficultyLevel", q.getDifficultyLevel());
-                        qMap.put("questionType", q.getQuestionType());
-                        return qMap;
-                    })
-                    .collect(Collectors.toList());
+                List<Map<String, Object>> questionsList = session.getQuestions().stream()
+                        .map(q -> {
+                                Map<String, Object> qMap = new HashMap<>();
+                                qMap.put("id", q.getId());
+                                qMap.put("questionText", q.getText());
+                                qMap.put("orderNo", q.getOrderNo());
+                                qMap.put("difficultyLevel", q.getDifficultyLevel());
+                                qMap.put("questionType", q.getQuestionType());
+                                return qMap;
+                        })
+                        .collect(Collectors.toList());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("sessionId", session.getId());
-            response.put("title", session.getTitle());
-            response.put("status", session.getStatus().toString());
-            response.put("difficulty", session.getDifficulty());
-            response.put("category", session.getCategory());
-            response.put("questions", questionsList);
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("sessionId", session.getId());
+                response.put("title", session.getTitle());
+                response.put("status", session.getStatus().toString());
+                response.put("difficulty", session.getDifficulty());
+                response.put("category", session.getCategory());
+                response.put("questions", questionsList);
 
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("세션 조회 실패: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+                return ResponseEntity.ok(response);
+                } catch (Exception e) {
+                log.error("세션 조회 실패: {}", e.getMessage());
+                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+                }
         }
-    }
 }

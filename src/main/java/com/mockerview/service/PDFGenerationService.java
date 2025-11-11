@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
@@ -46,8 +45,6 @@ public class PDFGenerationService {
             <head>
                 <meta charset="UTF-8"/>
                 <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-                    
                     * {
                         margin: 0;
                         padding: 0;
@@ -55,7 +52,7 @@ public class PDFGenerationService {
                     }
                     
                     body {
-                        font-family: 'Noto Sans KR', sans-serif;
+                        font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
                         color: #333;
                         padding: 40px;
                         background: #ffffff;
@@ -144,17 +141,6 @@ public class PDFGenerationService {
                         font-size: 14px;
                     }
                     
-                    .badge {
-                        display: inline-block;
-                        background: #4A90E2;
-                        color: white;
-                        padding: 5px 15px;
-                        border-radius: 20px;
-                        font-size: 12px;
-                        margin-right: 10px;
-                        margin-bottom: 10px;
-                    }
-                    
                     .footer {
                         margin-top: 50px;
                         text-align: center;
@@ -195,27 +181,27 @@ public class PDFGenerationService {
                 </div>
                 
                 <div class="section">
-                    <div class="section-title">📊 전체 평가</div>
+                    <div class="section-title">전체 평가</div>
                     <div class="content-box">%s</div>
                 </div>
                 
                 <div class="section">
-                    <div class="section-title">💪 주요 강점</div>
+                    <div class="section-title">주요 강점</div>
                     <div class="content-box">%s</div>
                 </div>
                 
                 <div class="section">
-                    <div class="section-title">🎯 개선할 점</div>
+                    <div class="section-title">개선할 점</div>
                     <div class="content-box">%s</div>
                 </div>
                 
                 <div class="section">
-                    <div class="section-title">📝 추천 사항</div>
+                    <div class="section-title">추천 사항</div>
                     <div class="content-box">%s</div>
                 </div>
                 
                 <div class="section">
-                    <div class="section-title">📈 상세 분석</div>
+                    <div class="section-title">상세 분석</div>
                     <div class="content-box">%s</div>
                 </div>
                 
