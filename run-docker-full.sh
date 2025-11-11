@@ -19,7 +19,7 @@ if [ $? -ne 0 ]; then
     echo "❌ Docker 컨테이너 시작 실패"
     exit 1
 fi
-
+ 
 echo ""
 echo "[3/3] 애플리케이션 시작 대기 중 (30초)..."
 sleep 30
