@@ -6,17 +6,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class RefreshTokenService {
     
     private final RefreshTokenRepository refreshTokenRepository;
-    private static final long REFRESH_TOKEN_VALIDITY = 30L * 24 * 60 * 60 * 1000;
     
     @Transactional
     public String createRefreshToken(String username) {
@@ -27,7 +27,7 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
             .token(token)
             .username(username)
-            .expiryDate(LocalDateTime.now().plusDays(30))
+            .expiresAt(LocalDateTime.now().plusDays(30))
             .createdAt(LocalDateTime.now())
             .lastUsedAt(LocalDateTime.now())
             .build();
@@ -60,14 +60,14 @@ public class RefreshTokenService {
     }
     
     @Transactional
-    public void deleteRefreshToken(String username) {
-        refreshTokenRepository.deleteByUsername(username);
-        log.info("🗑️ Refresh token deleted for user: {}", username);
+    public void deleteRefreshToken(String token) {
+        refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
+        log.info("✅ Refresh token deleted");
     }
     
     @Transactional
-    public void cleanupExpiredTokens() {
-        refreshTokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
-        log.info("🧹 Expired refresh tokens cleaned up");
+    public void deleteAllUserTokens(String username) {
+        refreshTokenRepository.deleteByUsername(username);
+        log.info("✅ All refresh tokens deleted for user: {}", username);
     }
 }
