@@ -78,7 +78,7 @@ function loadQuestion(index) {
     const question = questions[index];
 
     document.getElementById('question-number').textContent = `Q${index + 1}`;
-    document.getElementById('current-question-text').textContent = question.questionText;
+    document.getElementById('current-question-text').textContent = question.text;
     
     const answerTextArea = document.getElementById('answerText');
     if (answerTextArea) {
@@ -109,7 +109,7 @@ function renderQuestionList() {
     questions.forEach((q, index) => {
         const li = document.createElement('li');
         li.className = 'question-nav-item';
-        li.innerHTML = `<strong>Q${index + 1}</strong> ${q.questionText.substring(0, 30)}...`;
+        li.innerHTML = `<strong>Q${index + 1}</strong> ${q.text.substring(0, 30)}...`;
         li.onclick = () => loadQuestion(index);
         questionList.appendChild(li);
     });
@@ -135,7 +135,7 @@ window.submitTextAnswer = async function() {
         return;
     }
 
-    if (!SESSION_DATA || !SESSION_DATA.sessionId) {
+    if (!SESSION_DATA || !SESSION_DATA.id) {
         alert('세션 정보를 불러올 수 없습니다.');
         console.error('SESSION_DATA:', SESSION_DATA);
         return;
@@ -148,13 +148,13 @@ window.submitTextAnswer = async function() {
     };
 
     console.log('Submitting answer:', answerData);
-    console.log('To endpoint:', `/api/selfinterview/${SESSION_DATA.sessionId}/answer`);
+    console.log('To endpoint:', `/api/selfinterview/${SESSION_DATA.id}/answer`);
 
     try {
         document.getElementById('ai-status').textContent = '분석중...';
         document.getElementById('ai-status').style.color = '#f59e0b';
 
-        const response = await authFetch(`/api/selfinterview/${SESSION_DATA.sessionId}/answer`, {
+        const response = await authFetch(`/api/selfinterview/${SESSION_DATA.id}/answer`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(answerData)
@@ -167,11 +167,6 @@ window.submitTextAnswer = async function() {
 
         const result = await response.json();
         console.log('Answer result:', result);
-        console.log('Current question:', question);
-        
-        if (!result.answer || !result.feedback) {
-            throw new Error('Invalid response structure');
-        }
         
         answers.push(result.answer);
         feedbacks.push(result.feedback);
@@ -195,7 +190,7 @@ window.submitTextAnswer = async function() {
 };
 
 window.submitVoiceAnswerSelf = async function(audioBlob) {
-    if (!SESSION_DATA || !SESSION_DATA.sessionId) {
+    if (!SESSION_DATA || !SESSION_DATA.id) {
         alert('세션 정보를 불러올 수 없습니다.');
         return;
     }
@@ -212,7 +207,7 @@ window.submitVoiceAnswerSelf = async function(audioBlob) {
         const token = document.cookie.split(';').find(c => c.trim().startsWith('Authorization='));
         const authToken = token ? token.split('=')[1] : '';
         
-        const response = await fetch(`/api/session/${SESSION_DATA.sessionId}/voice-answer`, {
+        const response = await fetch(`/api/session/${SESSION_DATA.id}/voice-answer`, {
             method: 'POST',
             headers: {
                 'Authorization': authToken
@@ -277,7 +272,7 @@ function displayFeedback(feedback, question, questionNumber) {
     feedbackCard.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <div style="font-weight: 600; color: #374151; font-size: 0.875rem;">
-                Q${questionNumber}: ${question.questionText.substring(0, 40)}...
+                Q${questionNumber}: ${question.text.substring(0, 40)}...
             </div>
             <div style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.875rem; font-weight: 600;">
                 ${feedback.score}점
@@ -333,7 +328,7 @@ function toggleResultView() {
 }
 
 function viewDetailedResults() {
-    if (SESSION_DATA && SESSION_DATA.sessionId) {
-        window.location.href = `/session/detail/${SESSION_DATA.sessionId}`;
+    if (SESSION_DATA && SESSION_DATA.id) {
+        window.location.href = `/session/detail/${SESSION_DATA.id}`;
     }
 }

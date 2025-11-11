@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -63,9 +64,9 @@ public class InterviewReportService {
                 .user(session.getHost())
                 .overallScore((Integer) insights.getOrDefault("overallScore", 75))
                 .overallInsights((String) insights.get("overallInsights"))
-                .strengths((String) insights.get("strengths"))
-                .weaknesses((String) insights.get("weaknesses"))
-                .recommendations((String) insights.get("recommendations"))
+                .strengths(convertToString(insights.get("strengths")))
+                .weaknesses(convertToString(insights.get("weaknesses")))
+                .recommendations(convertToString(insights.get("recommendations")))
                 .detailedAnalysis((String) insights.get("detailedAnalysis"))
                 .totalQuestions(session.getQuestions().size())
                 .avgAnswerTime(0.0)
@@ -77,13 +78,37 @@ public class InterviewReportService {
 
         report = reportRepository.save(report);
 
-        String pdfUrl = pdfGenerationService.generatePDF(report);
-        report.setPdfUrl(pdfUrl);
-        report.setPdfGenerated(true);
+        try {
+            String pdfUrl = pdfGenerationService.generatePDF(report);
+            report.setPdfUrl(pdfUrl);
+            report.setPdfGenerated(true);
+            log.info("✅ PDF 생성 완료: {}", pdfUrl);
+        } catch (Exception e) {
+            log.warn("⚠️ PDF 생성 실패, 리포트는 정상 저장: {}", e.getMessage());
+            report.setPdfUrl(null);
+            report.setPdfGenerated(false);
+        }
+        
         reportRepository.save(report);
 
         log.info("✅ 리포트 저장 완료: ID {}", report.getId());
         return report;
+    }
+
+    private String convertToString(Object value) {
+        if (value == null) {
+            return "정보 없음";
+        }
+        if (value instanceof String) {
+            return (String) value;
+        }
+        if (value instanceof List) {
+            List<?> list = (List<?>) value;
+            return list.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", "));
+        }
+        return value.toString();
     }
 
     private String generateAIInsights(Session session) {
@@ -101,13 +126,13 @@ public class InterviewReportService {
               "technicalScore": 0-100 사이 점수,
               "confidenceScore": 0-100 사이 점수,
               "overallInsights": "전체적인 면접 평가 (200자 이내)",
-              "strengths": "주요 강점 3가지 (각 50자 이내)",
-              "weaknesses": "개선할 점 3가지 (각 50자 이내)",
-              "recommendations": "구체적인 개선 방안 5가지 (각 100자 이내)",
+              "strengths": "주요 강점 3가지를 쉼표로 구분 (예: 강점1, 강점2, 강점3)",
+              "weaknesses": "개선할 점 3가지를 쉼표로 구분 (예: 약점1, 약점2, 약점3)",
+              "recommendations": "구체적인 개선 방안 5가지를 쉼표로 구분 (예: 방안1, 방안2, 방안3, 방안4, 방안5)",
               "detailedAnalysis": "상세 분석 (500자 이내)"
             }
             
-            반드시 유효한 JSON만 반환하세요.
+            반드시 유효한 JSON만 반환하세요. strengths, weaknesses, recommendations는 문자열로 반환하세요.
             """,
                 session.getQuestions().size(),
                 session.getTitle()
@@ -187,7 +212,7 @@ public class InterviewReportService {
         insights.put("overallInsights", "전반적으로 안정적인 면접 수행을 보여주셨습니다.");
         insights.put("strengths", "명확한 의사소통, 논리적인 답변 구조, 적절한 답변 길이");
         insights.put("weaknesses", "구체적인 사례 부족, 답변 속도 개선 필요, 자신감 표현 부족");
-        insights.put("recommendations", "실제 경험 사례를 더 많이 준비하세요");
+        insights.put("recommendations", "실제 경험 사례를 더 많이 준비하세요, STAR 기법을 활용하세요, 모의 면접을 반복 연습하세요");
         insights.put("detailedAnalysis", "면접자는 전체적으로 준비된 모습을 보여주었습니다.");
         return insights;
     }

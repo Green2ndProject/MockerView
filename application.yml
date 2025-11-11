@@ -115,10 +115,10 @@ agora:
 
 vapid:
   public:
-    key: ${VAPID_PUBLIC_KEY:dummy}
+    key: ${VAPID_PUBLIC_KEY:BDKUoBp4vhLTJQxcwv6OOUGf9_arWZJqYn56uvIr8Vt-IAjTfAEP3xGlQe0WJcM4IUHJe3KEQRS_iyG6ZTZMjsU}
   private:
-    key: ${VAPID_PRIVATE_KEY:dummy}
-  subject: ${VAPID_SUBJECT:mailto:test@example.com}
+    key: ${VAPID_PRIVATE_KEY:qrvF9SWPkSBL3yT0NnXGqJvGzOLaBqGGU7wI2wRabUo}
+  subject: ${VAPID_SUBJECT:mailto:admin@mockerview.com}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:dummy}
@@ -143,9 +143,9 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/mockerview_pro
-    username: mockerview_pro_user
-    password: mockerview_pro_pass
+    url: jdbc:postgresql://localhost:5434/mockerview_dev
+    username: mockerview_dev_user
+    password: mockerview_dev_pass
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10

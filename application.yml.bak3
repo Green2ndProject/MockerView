@@ -143,9 +143,9 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/mockerview_pro
-    username: mockerview_pro_user
-    password: mockerview_pro_pass
+    url: jdbc:postgresql://localhost:5432/mockerview_dev
+    username: mockerview_dev_user
+    password: mockerview_dev_pass
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
