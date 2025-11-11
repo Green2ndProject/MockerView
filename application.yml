@@ -1,7 +1,7 @@
 spring:
   application:
     name: mockerview
-  
+
   main:
     allow-bean-definition-overriding: true
 
@@ -18,7 +18,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -32,7 +32,7 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
-  
+
   cache:
     type: redis
     redis:
@@ -161,7 +161,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -217,7 +217,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: false
     properties:
       hibernate:
