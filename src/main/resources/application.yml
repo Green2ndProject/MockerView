@@ -244,3 +244,6 @@ logging:
     org.springframework.web.socket: INFO
     org.springframework.messaging: INFO
     root: INFO
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
