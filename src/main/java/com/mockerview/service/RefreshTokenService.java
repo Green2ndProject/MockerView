@@ -27,9 +27,8 @@ public class RefreshTokenService {
         refreshTokenRepository.deleteByUsername(username);
         
         String token = UUID.randomUUID().toString();
-        Optional<User> user = userRepository.findByUsername(username);
-
-        User foundUser = user.get();
+        
+        User user = userRepository.findByUsername(username).orElse(null);
 
         RefreshToken refreshToken = RefreshToken.builder()
             .token(token)
@@ -37,6 +36,7 @@ public class RefreshTokenService {
             .expiryDate(LocalDateTime.now().plusDays(30))
             .createdAt(LocalDateTime.now())
             .lastUsedAt(LocalDateTime.now())
+            .user(user)
             .build();
 
         refreshTokenRepository.save(refreshToken);

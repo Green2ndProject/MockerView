@@ -291,9 +291,8 @@ CREATE TABLE IF NOT EXISTS payments (
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     id BIGSERIAL PRIMARY KEY,
-    -- user_id BIGINT REFERENCES users(id) NOT NULL,
+    user_id BIGINT REFERENCES users(id) NOT NULL,
     token VARCHAR(512) UNIQUE NOT NULL,
-    -- expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

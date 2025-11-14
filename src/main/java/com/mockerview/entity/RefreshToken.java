@@ -28,7 +28,11 @@ public class RefreshToken {
     
     @Column(nullable = false)
     private LocalDateTime createdAt;
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     @Column
     private LocalDateTime lastUsedAt;
     public boolean isExpired() {
