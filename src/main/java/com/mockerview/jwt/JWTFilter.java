@@ -40,7 +40,7 @@ public class JWTFilter extends OncePerRequestFilter{
             return;
         }
 
-        log.error("[JWTFilter] doFilterInternal started! This means shouldNotFilter was FALSE for URI: {}", request.getRequestURI());
+        log.info("[JWTFilter] Processing: {}", request.getRequestURI());
 
         String token = null;
         String authorizationHeader = request.getHeader("Authorization");
@@ -117,6 +117,11 @@ public class JWTFilter extends OncePerRequestFilter{
     }
 
     if (uri.equals("/auth/reset-password")) {
+        return true;
+    }
+
+    if (uri.startsWith("/api/questions/categories")) {
+        log.info("[JWTFilter] Bypass! Category API skipping JWT validation: {}", uri);
         return true;
     }
 

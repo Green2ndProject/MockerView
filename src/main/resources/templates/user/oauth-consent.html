@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개인정보 동의 - MockerView</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .consent-container {
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .consent-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+        
+        .consent-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .consent-header h1 {
+            font-size: 1.625rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .consent-header p {
+            font-size: 0.9375rem;
+            color: #6b7280;
+        }
+        
+        .privacy-section {
+            margin-bottom: 24px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .privacy-header {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .consent-item {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .consent-item.all-consent {
+            background: #667eea;
+            border-color: #667eea;
+            margin-bottom: 16px;
+        }
+        
+        .consent-item.all-consent .consent-checkbox-label {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .consent-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .consent-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .consent-item.all-consent input[type="checkbox"] {
+            accent-color: white;
+        }
+        
+        .consent-checkbox-label {
+            flex: 1;
+            font-size: 0.875rem;
+            color: #1a1a1a;
+            user-select: none;
+        }
+        
+        .consent-required {
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.8125rem;
+        }
+        
+        .consent-optional {
+            color: #6b7280;
+            font-size: 0.8125rem;
+        }
+        
+        .consent-detail-btn {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            color: #667eea;
+            background: white;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .consent-detail-btn:hover {
+            background: #f0f4ff;
+        }
+        
+        .sub-consent {
+            margin-left: 30px;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        
+        .sub-consent-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        
+        .sub-consent-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .sub-consent-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .sub-consent-item label {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+        
+        .btn-submit:hover {
+            background: #5568d3;
+        }
+        
+        .btn-submit:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+        
+        .notice {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+        
+        .modal.active {
+            display: block;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1a1a1a;
+        }
+        
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .privacy-content {
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        
+        .privacy-content h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .privacy-content h3:first-child {
+            margin-top: 0;
+        }
+        
+        .privacy-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .privacy-content li {
+            margin-bottom: 6px;
+        }
+        
+        .privacy-content strong {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        
+        .privacy-content table {
+            width: 100%;
+            margin: 12px 0;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+        
+        .privacy-content table th,
+        .privacy-content table td {
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+        }
+        
+        .privacy-content table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .privacy-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        
+        .privacy-footer button {
+            padding: 10px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .privacy-footer button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="consent-container">
+        <div class="consent-card">
+            <div class="consent-header">
+                <h1>개인정보 수집 및 이용 동의</h1>
+                <p>서비스 이용을 위해 개인정보 동의가 필요합니다</p>
+            </div>
+            
+            <form id="consentForm">
+                <div class="privacy-section">
+                    <div class="privacy-header">
+                        <span>🔒</span>
+                        개인정보 수집 및 이용 동의
+                    </div>
+                    
+                    <div class="consent-item all-consent">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" id="agreeAll">
+                            <span class="consent-checkbox-label">전체 동의</span>
+                        </label>
+                    </div>
+                    
+                    <div class="consent-item">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" class="consent-required-check" id="agreePersonalInfo" required>
+                            <span class="consent-checkbox-label">
+                                개인정보 수집 및 이용 동의 <span class="consent-required">(필수)</span>
+                            </span>
+                            <button type="button" class="consent-detail-btn" onclick="openModal('personalInfoModal')">
+                                상세보기
+                            </button>
+                        </label>
+                    </div>
+                    
+                    <div class="consent-item">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" class="consent-required-check" id="agreeThirdParty" required>
+                            <span class="consent-checkbox-label">
+                                개인정보 제3자 제공 동의 <span class="consent-required">(필수)</span>
+                            </span>
+                            <button type="button" class="consent-detail-btn" onclick="openModal('thirdPartyModal')">
+                                상세보기
+                            </button>
+                        </label>
+                    </div>
+                    
+                    <div class="consent-item">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" id="agreeMarketing">
+                            <span class="consent-checkbox-label">
+                                마케팅 정보 수신 동의 <span class="consent-optional">(선택)</span>
+                            </span>
+                            <button type="button" class="consent-detail-btn" onclick="openModal('marketingModal')">
+                                상세보기
+                            </button>
+                        </label>
+                        <div class="sub-consent" id="marketingSubConsent" style="display: none;">
+                            <div class="sub-consent-item">
+                                <input type="checkbox" id="agreeMarketingEmail">
+                                <label for="agreeMarketingEmail">이메일 수신</label>
+                            </div>
+                            <div class="sub-consent-item">
+                                <input type="checkbox" id="agreeMarketingPush">
+                                <label for="agreeMarketingPush">웹 푸시 알림 수신</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-submit" id="submitBtn" disabled>동의하고 계속하기</button>
+                
+                <div class="notice">
+                    필수 항목에 동의하지 않으면 서비스를 이용할 수 없습니다.
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="personalInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">개인정보 수집 및 이용 동의</h3>
+                <button class="modal-close" onclick="closeModal('personalInfoModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-content">
+                    <p>MockerView는 「개인정보보호법」 제15조, 제22조, 제24조에 따라 이용자의 개인정보를 다음과 같이 수집·이용합니다.</p>
+                    
+                    <h3>1. 수집 항목</h3>
+                    <p><strong>[필수항목]</strong></p>
+                    <ul>
+                        <li>회원정보: 이름, 이메일(또는 사용자ID), 비밀번호, 회원유형(면접자/면접관/관리자)</li>
+                        <li>자동 수집: 가입일시, 최종 로그인 일시, IP주소, 접속 로그</li>
+                    </ul>
+                    
+                    <h3>2. 수집 목적</h3>
+                    <ul>
+                        <li>서비스 회원가입, 본인 확인 및 로그인 인증</li>
+                        <li>모의면접 진행 및 결과 저장, AI 피드백 생성</li>
+                        <li>영상/음성 녹화 및 분석 서비스 제공</li>
+                    </ul>
+                    
+                    <h3>3. 보유 및 이용기간</h3>
+                    <ul>
+                        <li>회원 탈퇴 요청 시까지 보관</li>
+                        <li>탈퇴 후 30일간 데이터 복구 가능 상태로 보관 → 이후 영구 삭제</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="privacy-footer">
+                <button onclick="closeModal('personalInfoModal')">확인</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="thirdPartyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">개인정보 제3자 제공 동의</h3>
+                <button class="modal-close" onclick="closeModal('thirdPartyModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-content">
+                    <p>MockerView는 서비스 제공을 위해 아래 제3자에게 개인정보를 제공합니다:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>제공받는 자</th>
+                                <th>제공 항목</th>
+                                <th>제공 목적</th>
+                                <th>보유기간</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>OpenAI (미국)</td>
+                                <td>답변 텍스트, 음성 파일</td>
+                                <td>AI 피드백 생성, 음성 인식</td>
+                                <td>처리 즉시 삭제</td>
+                            </tr>
+                            <tr>
+                                <td>Cloudinary (미국)</td>
+                                <td>면접 영상/음성 파일</td>
+                                <td>영상 저장 및 스트리밍</td>
+                                <td>답변 삭제 시까지</td>
+                            </tr>
+                            <tr>
+                                <td>Agora (싱가포르)</td>
+                                <td>사용자ID, 세션ID</td>
+                                <td>실시간 화상/음성 통신</td>
+                                <td>세션 종료 후 즉시 삭제</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <p style="margin-top: 12px;">※ 위 제공에 동의하지 않을 경우 서비스 이용이 제한될 수 있습니다.</p>
+                </div>
+            </div>
+            <div class="privacy-footer">
+                <button onclick="closeModal('thirdPartyModal')">확인</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="marketingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">마케팅 정보 수신 동의</h3>
+                <button class="modal-close" onclick="closeModal('marketingModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-content">
+                    <p>MockerView의 신규 서비스, 이벤트 정보 등을 수신하는 것에 동의합니다.</p>
+                    
+                    <h3>수신 방법</h3>
+                    <ul>
+                        <li>이메일</li>
+                        <li>웹 푸시 알림</li>
+                    </ul>
+                    
+                    <p style="margin-top: 12px;"><strong>※ 마케팅 정보 수신 동의를 거부하셔도 서비스 이용에는 제한이 없습니다.</strong></p>
+                </div>
+            </div>
+            <div class="privacy-footer">
+                <button onclick="closeModal('marketingModal')">확인</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const agreeAllCheckbox = document.getElementById('agreeAll');
+        const agreePersonalInfoCheckbox = document.getElementById('agreePersonalInfo');
+        const agreeThirdPartyCheckbox = document.getElementById('agreeThirdParty');
+        const agreeMarketingCheckbox = document.getElementById('agreeMarketing');
+        const marketingSubConsent = document.getElementById('marketingSubConsent');
+        const agreeMarketingEmailCheckbox = document.getElementById('agreeMarketingEmail');
+        const agreeMarketingPushCheckbox = document.getElementById('agreeMarketingPush');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        agreeAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            agreePersonalInfoCheckbox.checked = isChecked;
+            agreeThirdPartyCheckbox.checked = isChecked;
+            agreeMarketingCheckbox.checked = isChecked;
+            agreeMarketingEmailCheckbox.checked = isChecked;
+            agreeMarketingPushCheckbox.checked = isChecked;
+            marketingSubConsent.style.display = isChecked ? 'block' : 'none';
+            updateSubmitButton();
+        });
+        
+        [agreePersonalInfoCheckbox, agreeThirdPartyCheckbox, agreeMarketingCheckbox].forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allRequired = agreePersonalInfoCheckbox.checked && agreeThirdPartyCheckbox.checked;
+                const allOptional = agreeMarketingCheckbox.checked;
+                agreeAllCheckbox.checked = allRequired && allOptional;
+                updateSubmitButton();
+            });
+        });
+        
+        agreeMarketingCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                marketingSubConsent.style.display = 'block';
+            } else {
+                marketingSubConsent.style.display = 'none';
+                agreeMarketingEmailCheckbox.checked = false;
+                agreeMarketingPushCheckbox.checked = false;
+            }
+        });
+        
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        };
+        
+        function updateSubmitButton() {
+            const requiredConsents = agreePersonalInfoCheckbox.checked && agreeThirdPartyCheckbox.checked;
+            submitBtn.disabled = !requiredConsents;
+        }
+        
+        document.getElementById('consentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!agreePersonalInfoCheckbox.checked || !agreeThirdPartyCheckbox.checked) {
+                alert('필수 약관에 동의해주세요.');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '처리 중...';
+            
+            try {
+                const response = await fetch('/auth/oauth-consent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        agreePersonalInfo: agreePersonalInfoCheckbox.checked,
+                        agreeThirdParty: agreeThirdPartyCheckbox.checked,
+                        agreeMarketing: agreeMarketingCheckbox.checked,
+                        agreeMarketingEmail: agreeMarketingEmailCheckbox.checked,
+                        agreeMarketingPush: agreeMarketingPushCheckbox.checked
+                    })
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    alert('동의 처리 중 오류가 발생했습니다.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '동의하고 계속하기';
+                }
+            } catch (error) {
+                console.error('Consent error:', error);
+                alert('동의 처리 중 오류가 발생했습니다.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '동의하고 계속하기';
+            }
+        });
+    </script>
+</body>
+</html>

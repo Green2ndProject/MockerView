@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('면접관 활동 통계')}"></head>
-<style th:replace="~{fragments/styles :: navbar-styles}"></style>
+<head>
+    <div th:replace="~{fragments/head :: head}"></div>
+    <title>면접관 활동 통계 - MockerView</title>
+    <div th:replace="~{fragments/styles :: styles}"></div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
     body {

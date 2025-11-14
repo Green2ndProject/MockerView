@@ -5,6 +5,7 @@ import com.mockerview.dto.FindUsernameRequest;
 import com.mockerview.dto.RegisterDTO;
 import com.mockerview.dto.ResetPasswordRequest;
 import com.mockerview.entity.User;
+import com.mockerview.jwt.JWTUtil;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.EmailVerificationService;
 import com.mockerview.service.RecaptchaService;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Controller
@@ -41,6 +43,9 @@ public class UserController {
     
     @Autowired
     private RecaptchaService recaptchaService;
+    
+    @Autowired
+    private JWTUtil jwtUtil;
 
     @GetMapping("/login")
     public String loginForm() {
@@ -166,6 +171,16 @@ public class UserController {
             return ResponseEntity.badRequest()
                 .body(Map.of("message", "이메일 인증을 완료해주세요."));
         }
+        
+        if (registerDTO.getAgreePersonalInfo() == null || !registerDTO.getAgreePersonalInfo()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("message", "개인정보 수집 및 이용에 동의해주세요."));
+        }
+        
+        if (registerDTO.getAgreeThirdParty() == null || !registerDTO.getAgreeThirdParty()) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("message", "개인정보 제3자 제공에 동의해주세요."));
+        }
 
         Optional<User> deletedUserByUsername = userRepository.findByUsername(username)
             .filter(User::isDeleted);
@@ -187,6 +202,12 @@ public class UserController {
             deletedUser.setPassword(passwordEncoder.encode(password));
             deletedUser.setRole(User.UserRole.valueOf(role));
             deletedUser.setWithdrawalReason(null);
+            deletedUser.setAgreePersonalInfo(registerDTO.getAgreePersonalInfo() != null ? registerDTO.getAgreePersonalInfo() : false);
+            deletedUser.setAgreeThirdParty(registerDTO.getAgreeThirdParty() != null ? registerDTO.getAgreeThirdParty() : false);
+            deletedUser.setAgreeMarketing(registerDTO.getAgreeMarketing() != null ? registerDTO.getAgreeMarketing() : false);
+            deletedUser.setAgreeMarketingEmail(registerDTO.getAgreeMarketingEmail() != null ? registerDTO.getAgreeMarketingEmail() : false);
+            deletedUser.setAgreeMarketingPush(registerDTO.getAgreeMarketingPush() != null ? registerDTO.getAgreeMarketingPush() : false);
+            deletedUser.setPrivacyConsentDate(LocalDateTime.now());
             
             User reactivatedUser = userRepository.save(deletedUser);
             log.info("✅ 회원 재활성화 완료 - userId: {}", reactivatedUser.getId());
@@ -217,10 +238,20 @@ public class UserController {
                             .name(name)
                             .email(email)
                             .role(User.UserRole.valueOf(role))
+                            .agreePersonalInfo(registerDTO.getAgreePersonalInfo() != null ? registerDTO.getAgreePersonalInfo() : false)
+                            .agreeThirdParty(registerDTO.getAgreeThirdParty() != null ? registerDTO.getAgreeThirdParty() : false)
+                            .agreeMarketing(registerDTO.getAgreeMarketing() != null ? registerDTO.getAgreeMarketing() : false)
+                            .agreeMarketingEmail(registerDTO.getAgreeMarketingEmail() != null ? registerDTO.getAgreeMarketingEmail() : false)
+                            .agreeMarketingPush(registerDTO.getAgreeMarketingPush() != null ? registerDTO.getAgreeMarketingPush() : false)
+                            .privacyConsentDate(LocalDateTime.now())
                             .build();
             
             User savedUser = userRepository.save(user);
-            log.info("회원가입 성공: {}", username);
+            log.info("회원가입 성공: {} (동의: 개인정보={}, 제3자={}, 마케팅={})", 
+                username, 
+                registerDTO.getAgreePersonalInfo(), 
+                registerDTO.getAgreeThirdParty(), 
+                registerDTO.getAgreeMarketing());
             
             subscriptionService.createFreeSubscription(savedUser);
             log.info("FREE 구독 생성 완료: userId={}", savedUser.getId());
@@ -275,5 +306,56 @@ public class UserController {
     @GetMapping("/withdraw")
     public String withdrawPage() {
         return "user/withdraw";
+    }
+
+    @GetMapping("/oauth-consent")
+    public String oauthConsentPage() {
+        return "user/oauth-consent";
+    }
+
+    @PostMapping("/oauth-consent")
+    @ResponseBody
+    public ResponseEntity<?> processOAuthConsent(@RequestBody Map<String, Boolean> consents,
+                                                  @CookieValue(value = "TempAuthorization", required = false) String tempToken) {
+        if (tempToken == null) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("message", "인증 정보가 없습니다."));
+        }
+        
+        try {
+            String username = jwtUtil.getUsername(tempToken);
+            
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            if (!consents.getOrDefault("agreePersonalInfo", false) || 
+                !consents.getOrDefault("agreeThirdParty", false)) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("message", "필수 동의 항목에 동의해주세요."));
+            }
+            
+            user.setAgreePersonalInfo(consents.getOrDefault("agreePersonalInfo", false));
+            user.setAgreeThirdParty(consents.getOrDefault("agreeThirdParty", false));
+            user.setAgreeMarketing(consents.getOrDefault("agreeMarketing", false));
+            user.setAgreeMarketingEmail(consents.getOrDefault("agreeMarketingEmail", false));
+            user.setAgreeMarketingPush(consents.getOrDefault("agreeMarketingPush", false));
+            user.setPrivacyConsentDate(LocalDateTime.now());
+            user.setLastLoginDate(LocalDateTime.now());
+            
+            userRepository.save(user);
+            
+            log.info("✅ OAuth2 동의 완료: {} (개인정보={}, 제3자={}, 마케팅={})", 
+                username, 
+                consents.get("agreePersonalInfo"), 
+                consents.get("agreeThirdParty"), 
+                consents.get("agreeMarketing"));
+            
+            return ResponseEntity.ok()
+                .body(Map.of("message", "동의 처리가 완료되었습니다."));
+        } catch (Exception e) {
+            log.error("OAuth2 동의 처리 실패", e);
+            return ResponseEntity.badRequest()
+                .body(Map.of("message", "동의 처리 중 오류가 발생했습니다."));
+        }
     }
 }

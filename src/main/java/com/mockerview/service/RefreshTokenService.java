@@ -1,37 +1,44 @@
 package com.mockerview.service;
 
 import com.mockerview.entity.RefreshToken;
+import com.mockerview.entity.User;
 import com.mockerview.repository.RefreshTokenRepository;
+import com.mockerview.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RefreshTokenService {
     
     private final RefreshTokenRepository refreshTokenRepository;
-    
+    private static final long REFRESH_TOKEN_VALIDITY = 30L * 24 * 60 * 60 * 1000;
+    private final UserRepository userRepository;
+
     @Transactional
     public String createRefreshToken(String username) {
         refreshTokenRepository.deleteByUsername(username);
         
         String token = UUID.randomUUID().toString();
         
+        User user = userRepository.findByUsername(username).orElse(null);
+
         RefreshToken refreshToken = RefreshToken.builder()
             .token(token)
             .username(username)
-            .expiresAt(LocalDateTime.now().plusDays(30))
+            .expiryDate(LocalDateTime.now().plusDays(30))
             .createdAt(LocalDateTime.now())
             .lastUsedAt(LocalDateTime.now())
+            .user(user)
             .build();
-        
+
         refreshTokenRepository.save(refreshToken);
         log.info("✅ Refresh token created for user: {}", username);
         
@@ -60,14 +67,14 @@ public class RefreshTokenService {
     }
     
     @Transactional
-    public void deleteRefreshToken(String token) {
-        refreshTokenRepository.findByToken(token).ifPresent(refreshTokenRepository::delete);
-        log.info("✅ Refresh token deleted");
+    public void deleteRefreshToken(String username) {
+        refreshTokenRepository.deleteByUsername(username);
+        log.info("🗑️ Refresh token deleted for user: {}", username);
     }
     
     @Transactional
-    public void deleteAllUserTokens(String username) {
-        refreshTokenRepository.deleteByUsername(username);
-        log.info("✅ All refresh tokens deleted for user: {}", username);
+    public void cleanupExpiredTokens() {
+        refreshTokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
+        log.info("🧹 Expired refresh tokens cleaned up");
     }
 }

@@ -32,4 +32,5 @@ public class HomeController {
     public String offline() {
         return "offline";
     }
+
 }

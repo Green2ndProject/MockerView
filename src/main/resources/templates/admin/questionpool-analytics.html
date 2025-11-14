@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuestionPool 학습 분석 - MockerView Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .header {
+            background: #667eea;
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .stat-number {
+            font-size: 42px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+            min-height: 60px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .proof-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .mechanism-step {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .btn-force-learning {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-force-learning:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102,126,234,0.3);
+        }
+        .badge-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .status-optimal { background: #d4edda; color: #155724; }
+        .status-advanced { background: #d1ecf1; color: #0c5460; }
+        .status-learning { background: #fff3cd; color: #856404; }
+        .status-initial { background: #f8d7da; color: #721c24; }
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 15px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1 class="mb-0">🤖 QuestionPool 학습 분석 대시보드</h1>
+            <p class="mb-0 mt-2">Continuous Feedback Learning System</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="proof-section">
+                    <h2 class="mb-4">💡 시스템 효율화 증명</h2>
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">핵심 명제</h5>
+                        <p class="mb-0"><strong>"AI가 똑똑해지는 게 아니라 시스템이 효율화된다"</strong></p>
+                    </div>
+                    
+                    <h5 class="mt-4 mb-3">작동 메커니즘</h5>
+                    <div class="mechanism-step">
+                        <strong>1단계:</strong> 사용자 답변 누적 → 데이터 수집
+                    </div>
+                    <div class="mechanism-step">
+                        <strong>2단계:</strong> 답변 5개 이상 + 평균 70점 이상 → 검증
+                    </div>
+                    <div class="mechanism-step">
+                        <strong>3단계:</strong> 검증된 질문 → QuestionPool 저장
+                    </div>
+                    <div class="mechanism-step">
+                        <strong>4단계:</strong> 새 질문 요청 시 QuestionPool 우선 사용
+                    </div>
+                    <div class="mechanism-step">
+                        <strong>5단계:</strong> AI API 호출 감소 → 비용 절감 및 속도 향상
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button class="btn-force-learning" onclick="forceLearning()">
+                            🚀 즉시 학습 실행
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">QuestionPool 크기</div>
+                    <div class="stat-number" id="poolSize">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <small class="text-muted">검증된 질문</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">AI 사용률</div>
+                    <div class="stat-number" id="aiUsageRate">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <small class="text-muted">API 호출 비율</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">캐시 히트율</div>
+                    <div class="stat-number" id="cacheHitRate">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <small class="text-muted">Pool 재사용율</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">월간 비용 절감</div>
+                    <div class="stat-number" id="costSavings">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <small class="text-muted">USD</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="stat-card">
+                    <div class="stat-label">시스템 성숙도</div>
+                    <div class="mt-3">
+                        <span class="badge-status" id="maturityBadge">
+                            <div class="loading-spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>
+                        </span>
+                    </div>
+                    <p class="mt-3 mb-0" id="statusMessage">데이터를 불러오는 중입니다...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5 class="mb-4">학습 곡선 (Learning Curve)</h5>
+                    <canvas id="learningCurveChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5 class="mb-4">효율성 분포</h5>
+                    <canvas id="efficiencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chart-container">
+                    <h5 class="mb-4">성능 향상 지표</h5>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let learningCurveChart, efficiencyChart, performanceChart;
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/analytics/questionpool/stats');
+                const stats = await response.json();
+                
+                document.getElementById('poolSize').textContent = stats.poolQuestions.toLocaleString();
+                document.getElementById('aiUsageRate').textContent = stats.aiUsageRate.toFixed(1) + '%';
+                document.getElementById('cacheHitRate').textContent = stats.cacheHitRate.toFixed(1) + '%';
+                document.getElementById('costSavings').textContent = '$' + stats.costSavings.monthlySavings.toFixed(2);
+                
+                const badge = document.getElementById('maturityBadge');
+                badge.textContent = stats.maturityLevel;
+                badge.className = 'badge-status ' + getStatusClass(stats.maturityLevel);
+                
+                document.getElementById('statusMessage').textContent = stats.message;
+                
+                updateCharts(stats);
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+                document.getElementById('poolSize').textContent = '오류';
+                document.getElementById('aiUsageRate').textContent = '오류';
+                document.getElementById('cacheHitRate').textContent = '오류';
+                document.getElementById('costSavings').textContent = '오류';
+                document.getElementById('maturityBadge').textContent = '데이터 로드 실패';
+                document.getElementById('statusMessage').textContent = '데이터를 불러올 수 없습니다. 새로고침해주세요.';
+            }
+        }
+
+        async function loadLearningCurve() {
+            try {
+                const response = await fetch('/api/analytics/questionpool/learning-curve');
+                const data = await response.json();
+                return data.projectedCurve;
+            } catch (error) {
+                console.error('학습 곡선 로드 실패:', error);
+                return [];
+            }
+        }
+
+        async function updateCharts(stats) {
+            const curveData = await loadLearningCurve();
+            
+            if (learningCurveChart) learningCurveChart.destroy();
+            if (efficiencyChart) efficiencyChart.destroy();
+            if (performanceChart) performanceChart.destroy();
+            
+            const ctx1 = document.getElementById('learningCurveChart').getContext('2d');
+            learningCurveChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: curveData.map(d => d.phase),
+                    datasets: [{
+                        label: 'AI 사용률 (%)',
+                        data: curveData.map(d => d.aiUsageRate),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: value => value + '%' }
+                        }
+                    }
+                }
+            });
+            
+            const ctx2 = document.getElementById('efficiencyChart').getContext('2d');
+            efficiencyChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['캐시 히트 (Pool 사용)', 'AI 호출'],
+                    datasets: [{
+                        data: [stats.cacheHitRate, stats.aiUsageRate],
+                        backgroundColor: ['#667eea', '#f8d7da']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+            
+            const ctx3 = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['캐시 응답', 'AI 응답', '평균 응답'],
+                    datasets: [{
+                        label: '응답 시간 (ms)',
+                        data: [
+                            stats.performanceMetrics.cacheResponseTime,
+                            stats.performanceMetrics.aiResponseTime,
+                            stats.performanceMetrics.avgResponseTime
+                        ],
+                        backgroundColor: ['#667eea', '#f8d7da', '#fff3cd']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: value => value + 'ms' }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function forceLearning() {
+            if (!confirm('QuestionPool 학습을 즉시 실행하시겠습니까?')) return;
+            
+            try {
+                const response = await fetch('/api/analytics/questionpool/force-learning', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                alert(`학습 완료!\n\n` +
+                        `새로 추가된 질문: ${result.improvement.newQuestions}개\n` +
+                        `AI 사용률 감소: ${result.improvement.aiRateReduction.toFixed(2)}%\n` +
+                        `예상 비용 절감: $${result.improvement.costSavings.toFixed(2)}/월`);
+                
+                loadStats();
+            } catch (error) {
+                alert('학습 실행 실패: ' + error.message);
+            }
+        }
+
+        function getStatusClass(maturity) {
+            if (maturity.includes('완전')) return 'status-optimal';
+            if (maturity.includes('고도화')) return 'status-advanced';
+            if (maturity.includes('성장')) return 'status-learning';
+            return 'status-initial';
+        }
+
+        loadStats();
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

@@ -35,10 +35,17 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) 
-            throws AuthenticationException {
-        
-        try {
+public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) 
+        throws AuthenticationException {
+    
+    String username = null;
+    String password = null;
+    
+    String contentType = request.getContentType();
+    log.info("📝 Content-Type: {}", contentType);
+    
+    try {
+        if (contentType != null && contentType.contains("application/json")) {
             String body = request.getReader().lines()
                     .reduce("", (accumulator, actual) -> accumulator + actual);
             
@@ -47,25 +54,36 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
             ObjectMapper mapper = new ObjectMapper();
             Map<String, String> credentials = mapper.readValue(body, Map.class);
             
-            String username = credentials.get("username");
-            String password = credentials.get("password");
+            username = credentials.get("username");
+            password = credentials.get("password");
             
-            log.info("Json 파싱성공 username : {}", username);
+            log.info("✅ JSON 파싱 성공 - username: {}", username);
             
-            UsernamePasswordAuthenticationToken authToken = 
-                new UsernamePasswordAuthenticationToken(username, password, null);
+        } else {
+            username = request.getParameter("username");
+            password = request.getParameter("password");
             
-            return authenticationManager.authenticate(authToken);
-            
-        } catch (IOException e) {
-            log.error("❌ JSON 파싱 실패", e);
-            throw new RuntimeException(e);
+            log.info("✅ Form 파싱 성공 - username: {}", username);
         }
+        
+        if (username == null || password == null) {
+            throw new RuntimeException("Username or password is missing");
+        }
+        
+        UsernamePasswordAuthenticationToken authToken = 
+            new UsernamePasswordAuthenticationToken(username, password, null);
+        
+        return authenticationManager.authenticate(authToken);
+        
+    } catch (IOException e) {
+        log.error("❌ 파싱 실패", e);
+        throw new RuntimeException(e);
     }
+}
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, 
-                                          FilterChain chain, Authentication authentication) 
+                                            FilterChain chain, Authentication authentication) 
             throws IOException {
         
         String username = authentication.getName();
@@ -99,7 +117,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, 
-                                             AuthenticationException failed) 
+                                            AuthenticationException failed) 
             throws IOException {
         
         response.setStatus(401);

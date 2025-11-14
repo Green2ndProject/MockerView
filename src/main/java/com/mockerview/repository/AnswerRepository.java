@@ -2,7 +2,8 @@ package com.mockerview.repository;
 
 import com.mockerview.entity.Answer;
 import com.mockerview.entity.Question;
-
+import com.mockerview.entity.Session;
+import com.mockerview.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,70 +13,39 @@ import java.util.List;
 
 @Repository
 public interface AnswerRepository extends JpaRepository<Answer, Long> {
-    
-    @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId ORDER BY a.createdAt ASC")
-    List<Answer> findBySessionIdOrderByCreatedAtAsc(@Param("sessionId") Long sessionId);
-    
-    @Query("SELECT a FROM Answer a JOIN a.question q WHERE q.session.id = :sessionId ORDER BY a.createdAt")
-    List<Answer> findBySessionIdOrderByCreatedAt(@Param("sessionId") Long sessionId);
-    
-    @Query("SELECT a FROM Answer a WHERE a.question.id = :questionId ORDER BY a.createdAt ASC")
-    List<Answer> findByQuestionIdOrderByCreatedAtAsc(@Param("questionId") Long questionId);
-    
-    @Query("SELECT DISTINCT a.user.name FROM Answer a WHERE a.question.session.id = :sessionId")
-    List<String> findDistinctUserNamesBySessionId(@Param("sessionId") Long sessionId);
-    
-    @Query("SELECT COUNT(a) FROM Answer a WHERE a.question.session.id = :sessionId")
-    Long countBySessionId(@Param("sessionId") Long sessionId);
-    
-    @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId ORDER BY a.createdAt ASC")
-    List<Answer> findByQuestionSessionIdOrderByCreatedAt(@Param("sessionId") Long sessionId);
 
-    @Query("SELECT a FROM Answer a WHERE a.user.id = :userId ORDER BY a.createdAt DESC")
-    List<Answer> findByUserId(@Param("userId") Long userId);
-    
-    @Query("SELECT DISTINCT a FROM Answer a " +
-            "LEFT JOIN FETCH a.feedbacks f " +
-            "LEFT JOIN FETCH a.question q " +
-            "LEFT JOIN FETCH q.session s " +
-            "WHERE a.user.id = :userId " +
-            "ORDER BY a.createdAt DESC")
+    List<Answer> findByQuestionId(Long questionId);
+
+    @Query("SELECT a FROM Answer a WHERE a.question.session = :session AND a.user = :answerer")
+    List<Answer> findBySessionAndAnswerer(@Param("session") Session session, @Param("answerer") User answerer);
+
+    @Query("SELECT a FROM Answer a JOIN FETCH a.feedbacks WHERE a.user.id = :userId")
     List<Answer> findByUserIdWithFeedbacks(@Param("userId") Long userId);
-    
+
+    List<Answer> findByQuestionIdOrderByCreatedAtAsc(Long questionId);
+
     List<Answer> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-    List<Answer> findByQuestionSessionIdAndUserId(Long sessionId, Long userId);
+    @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId ORDER BY a.createdAt")
+    List<Answer> findBySessionIdOrderByCreatedAt(@Param("sessionId") Long sessionId);
 
-    @Query("SELECT DISTINCT a FROM Answer a " +
-        "LEFT JOIN FETCH a.feedbacks f " +
-        "LEFT JOIN FETCH a.question q " +
-        "WHERE q.session.id = :sessionId AND a.user.id = :userId " +
-        "ORDER BY q.orderNo, a.createdAt")
-    List<Answer> findByQuestionSessionIdAndUserIdWithFeedbacks(@Param("sessionId") Long sessionId, @Param("userId") Long userId);
+    @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId ORDER BY a.createdAt")
+    List<Answer> findByQuestionSessionIdOrderByCreatedAt(@Param("sessionId") Long sessionId);
 
-    @Query("SELECT DISTINCT a FROM Answer a " +
-        "LEFT JOIN FETCH a.feedbacks " +
-        "LEFT JOIN FETCH a.question q " +
-        "LEFT JOIN FETCH a.user " +
-        "WHERE q.session.id = :sessionId " +
-        "ORDER BY q.orderNo, a.createdAt")
-    List<Answer> findAllBySessionIdWithFeedbacks(@Param("sessionId") Long sessionId);
-    
-    @Query("SELECT u.id, u.name, AVG(CAST(f.score AS double)), COUNT(DISTINCT a.id) " +
-            "FROM Answer a " +
-            "JOIN a.user u " +
-            "LEFT JOIN a.feedbacks f " +
-            "WHERE f.score IS NOT NULL " +
-            "GROUP BY u.id, u.name " +
-            "ORDER BY AVG(CAST(f.score AS double)) DESC")
-    List<Object[]> findAllUserAverageScores();
+    @Query("SELECT a FROM Answer a WHERE a.question.session.id = :sessionId AND a.user.id = :userId")
+    List<Answer> findByQuestionSessionIdAndUserId(@Param("sessionId") Long sessionId, @Param("userId") Long userId);
 
-    @Query("SELECT a FROM Answer a WHERE a.question IN :questions")
-    List<Answer> findByQuestionIn(@Param("questions") List<Question> questions);
-    
-    @Query("SELECT a FROM Answer a WHERE a.question.session = :session AND a.user = :user ORDER BY a.createdAt ASC")
-    List<Answer> findBySessionAndAnswerer(@Param("session") com.mockerview.entity.Session session, @Param("user") com.mockerview.entity.User user);
+    long countByUserId(Long userId);
 
-    @Query("SELECT COUNT(a) FROM Answer a WHERE a.user.id = :userId")
-    long countByUserId(@Param("userId") Long userId);
+    @Query("SELECT DISTINCT a.question FROM Answer a " +
+           "GROUP BY a.question " +
+           "HAVING COUNT(a) >= :minCount")
+    List<Question> findQuestionsWithMinAnswers(@Param("minCount") int minCount);
+
+    @Query("SELECT COUNT(DISTINCT a.question) FROM Answer a")
+    long countDistinctQuestions();
+
+    @Query("SELECT COUNT(DISTINCT a.question) FROM Answer a " +
+           "WHERE a.question.isAiGenerated = true")
+    long countAiGeneratedQuestions();
 }

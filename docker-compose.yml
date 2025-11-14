@@ -1,48 +1,26 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15
-    container_name: mockerview_postgres_dev
+    container_name: mockerview-postgres
     environment:
-      POSTGRES_DB: mockerview_dev
-      POSTGRES_USER: mockerview_dev_user
-      POSTGRES_PASSWORD: mockerview_dev_pass
+      POSTGRES_DB: mockerview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mockerview
     ports:
-      - "5434:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-dev.sql:/docker-entrypoint-initdb.d/init-dev.sql
-    networks:
-      - mockerview_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mockerview_dev_user -d mockerview_dev"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - mockerview-pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
-    image: redis:7
-    container_name: mockerview_redis_dev
+    image: redis:latest
+    container_name: mockerview-redis
     ports:
-      - "6380:6379"
+      - "6379:6379"
     volumes:
-      - redis_data:/data
-    networks:
-      - mockerview_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
+      - mockerview-redis-data:/data
+    command: redis-server --appendonly yes
 
 volumes:
-  postgres_data:
-    name: mockerview_postgres_dev_data
-  redis_data:
-    name: mockerview_redis_dev_data
-
-networks:
-  mockerview_network:
-    name: mockerview_dev_network
-    driver: bridge
+  mockerview-pgdata:
+  mockerview-redis-data:
