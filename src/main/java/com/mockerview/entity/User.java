@@ -40,7 +40,7 @@ public class User {
     private String email;
 
     public enum UserRole {
-        STUDENT, HOST, REVIEWER, ADMIN
+        STUDENT, HOST, ADMIN
     }
 
     @Column(name = "IS_DELETED", nullable = false)
@@ -56,6 +56,34 @@ public class User {
     
     @Column(name = "LAST_LOGIN_DATE")
     private LocalDateTime lastLoginDate;
+    
+    @Column(name = "AGREE_PERSONAL_INFO")
+    @ColumnDefault("false")
+    @Builder.Default
+    private Boolean agreePersonalInfo = false;
+    
+    @Column(name = "AGREE_THIRD_PARTY")
+    @ColumnDefault("false")
+    @Builder.Default
+    private Boolean agreeThirdParty = false;
+    
+    @Column(name = "AGREE_MARKETING")
+    @ColumnDefault("false")
+    @Builder.Default
+    private Boolean agreeMarketing = false;
+    
+    @Column(name = "AGREE_MARKETING_EMAIL")
+    @ColumnDefault("false")
+    @Builder.Default
+    private Boolean agreeMarketingEmail = false;
+    
+    @Column(name = "AGREE_MARKETING_PUSH")
+    @ColumnDefault("false")
+    @Builder.Default
+    private Boolean agreeMarketingPush = false;
+    
+    @Column(name = "PRIVACY_CONSENT_DATE")
+    private LocalDateTime privacyConsentDate;
     
     public boolean isDeleted() {
         return this.isDeleted != null && this.isDeleted == 1;

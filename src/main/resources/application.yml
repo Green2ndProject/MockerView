@@ -87,7 +87,7 @@ spring:
       fail-on-unknown-properties: false
 
 server:
-  port: 8082
+  port: 8080
   address: 0.0.0.0
   connection-timeout: 300000
   tomcat:
@@ -115,10 +115,10 @@ agora:
 
 vapid:
   public:
-    key: ${VAPID_PUBLIC_KEY:BDKUoBp4vhLTJQxcwv6OOUGf9_arWZJqYn56uvIr8Vt-IAjTfAEP3xGlQe0WJcM4IUHJe3KEQRS_iyG6ZTZMjsU}
+    key: ${VAPID_PUBLIC_KEY:dummy}
   private:
-    key: ${VAPID_PRIVATE_KEY:qrvF9SWPkSBL3yT0NnXGqJvGzOLaBqGGU7wI2wRabUo}
-  subject: ${VAPID_SUBJECT:mailto:admin@mockerview.com}
+    key: ${VAPID_PRIVATE_KEY:dummy}
+  subject: ${VAPID_SUBJECT:mailto:test@example.com}
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:dummy}
@@ -143,9 +143,9 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/mockerview_pro
-    username: mockerview_pro_user
-    password: mockerview_pro_pass
+    url: jdbc:postgresql://localhost:5433/mockerview_local
+    username: postgres
+    password: local1234
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -157,7 +157,7 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6380
+      port: 6379
 
   jpa:
     hibernate:
@@ -230,7 +230,7 @@ spring:
     cache: true
 
 server:
-  port: ${PORT:8082}
+  port: ${PORT:8080}
   servlet:
     session:
       cookie:

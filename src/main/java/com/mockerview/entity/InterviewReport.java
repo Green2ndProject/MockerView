@@ -2,7 +2,6 @@ package com.mockerview.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -12,9 +11,8 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class InterviewReport {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,49 +22,58 @@ public class InterviewReport {
     private Session session;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "generated_by", nullable = false)
+    private User generatedBy;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Integer overallScore;
+    @Builder.Default
+    private ReportStatus status = ReportStatus.GENERATING;
 
     @Column(columnDefinition = "TEXT")
-    private String overallInsights;
+    private String reportContent;
 
-    @Column(columnDefinition = "TEXT")
-    private String strengths;
+    @Column(name = "summary", length = 500)
+    private String summary;
 
-    @Column(columnDefinition = "TEXT")
-    private String weaknesses;
-
-    @Column(columnDefinition = "TEXT")
-    private String recommendations;
-
-    @Column(columnDefinition = "TEXT")
-    private String detailedAnalysis;
+    @Column(name = "total_participants")
+    private Integer totalParticipants;
 
     @Column(name = "total_questions")
     private Integer totalQuestions;
 
-    @Column(name = "avg_answer_time")
-    private Double avgAnswerTime;
+    @Column(name = "total_answers")
+    private Integer totalAnswers;
 
-    @Column(name = "communication_score")
-    private Integer communicationScore;
+    @Column(name = "average_score")
+    private Double averageScore;
 
-    @Column(name = "technical_score")
-    private Integer technicalScore;
+    @Column(name = "highest_score")
+    private Integer highestScore;
 
-    @Column(name = "confidence_score")
-    private Integer confidenceScore;
+    @Column(name = "lowest_score")
+    private Integer lowestScore;
 
-    @Column(name = "pdf_url", columnDefinition = "TEXT")
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
+    @Column(name = "pdf_url", length = 500)
     private String pdfUrl;
 
-    @Column(name = "pdf_generated")
-    private Boolean pdfGenerated;
+    @Column(name = "error_message", length = 1000)
+    private String errorMessage;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    public enum ReportStatus {
+        GENERATING,
+        COMPLETED,
+        FAILED
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

@@ -2,778 +2,1711 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI 셀프 면접 - MockerView</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>셀프 면접 연습 - MockerView</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --primary-color: #667eea;
-            --primary-hover: #5568d3;
-            --text-dark: #212529;
-            --text-muted: #6c757d;
-            --border-color: #e0e0e0;
-            --bg-light: #f8f9fa;
-            --bg-white: #ffffff;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: var(--bg-light);
-            color: var(--text-dark);
-            line-height: 1.6;
+            font-family: 'Pretendard', sans-serif;
+            background: #f8f9fa;
+            padding-top: 80px;
         }
-        
+
         .navbar {
-            background: var(--bg-white);
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .navbar-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
+            height: 70px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            height: 64px;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 1000;
         }
-        
+
         .navbar-brand {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--primary-color);
+            color: #667eea;
             text-decoration: none;
         }
-        
-        .navbar-nav {
+
+        .navbar-menu {
             display: flex;
             gap: 2rem;
-            align-items: center;
+            list-style: none;
         }
-        
-        .nav-link {
-            color: var(--text-dark);
+
+        .navbar-menu a {
+            color: #4b5563;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.2s;
         }
-        
-        .nav-link:hover { color: var(--primary-color); }
-        
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px;
-            z-index: 1001;
+
+        .navbar-menu a:hover {
+            color: #667eea;
         }
-        
-        .hamburger span {
-            width: 24px;
-            height: 2px;
-            background: var(--primary-color);
-            transition: all 0.3s ease;
-            border-radius: 2px;
+
+        .container-main {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
         }
-        
-        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(6px, 6px); }
-        .hamburger.active span:nth-child(2) { opacity: 0; transform: translateX(-10px); }
-        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
-        
+
         .page-header {
-            margin-top: 64px;
-            padding: 3rem 0;
-            background: var(--primary-color);
-            color: white;
-            text-align: center;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
         }
-        
-        .page-header h1 {
+
+        .page-title {
             font-size: 2rem;
             font-weight: 700;
+            color: #0a0a0a;
             margin-bottom: 0.5rem;
         }
-        
-        .page-header p { font-size: 1.1rem; opacity: 0.95; }
-        
-        .ai-badge {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            font-weight: 600;
+
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 1rem;
         }
-        
-        .container {
-            max-width: 1000px;
-            margin: 2rem auto 3rem;
-            padding: 0 1rem;
-        }
-        
-        .step-indicator {
-            background: var(--bg-white);
-            padding: 1.5rem;
+
+        .setup-card {
+            background: white;
             border-radius: 12px;
+            padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
+            border: 1px solid #e5e7eb;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease-out;
         }
-        
-        .step {
+
+        .setup-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .setup-card.hidden {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0a0a0a;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        
-        .step-number {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--border-color);
-            color: #666;
-            display: flex;
+
+        .step-badge {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
             font-weight: 700;
-            transition: all 0.3s;
+            font-size: 0.875rem;
         }
-        
-        .step.active .step-number { background: var(--primary-color); color: white; }
-        .step.completed .step-number { background: #28a745; color: white; }
-        
-        .section {
-            background: var(--bg-white);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--text-dark);
-        }
-        
-        .section-subtitle {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
-        
+
         .category-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 1rem;
         }
-        
+
         .category-card {
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+            background: #fafbfc;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1.25rem;
             cursor: pointer;
-            transition: all 0.3s;
-            background: var(--bg-white);
+            transition: all 0.2s;
             text-align: center;
         }
-        
+
         .category-card:hover {
-            border-color: var(--primary-color);
+            border-color: #667eea;
+            background: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
         }
-        
-        .category-card.active {
-            border-color: var(--primary-color);
-            background: #f0f3ff;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+        .category-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
         }
-        
+
         .category-icon {
             font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            display: block;
+            margin-bottom: 0.75rem;
         }
-        
+
         .category-name {
             font-weight: 600;
-            color: var(--text-dark);
+            color: #0a0a0a;
             margin-bottom: 0.25rem;
         }
-        
+
         .category-desc {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 0.8125rem;
+            color: #6b7280;
         }
-        
-        .sub-categories {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        .sub-category-badge {
-            padding: 0.5rem 1rem;
-            border: 2px solid var(--border-color);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: var(--bg-white);
-            font-size: 0.9rem;
-        }
-        
-        .sub-category-badge:hover {
-            border-color: var(--primary-color);
-            background: #f8f9ff;
-        }
-        
-        .sub-category-badge.active {
-            border-color: var(--primary-color);
-            background: var(--primary-color);
-            color: white;
-            font-weight: 600;
-        }
-        
-        .difficulty-grid {
+
+        .question-type-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
         }
-        
-        .difficulty-card {
-            padding: 1.25rem 0.5rem;
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
+
+        .type-card {
+            background: #fafbfc;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1.5rem;
             text-align: center;
-            background: var(--bg-white);
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        
-        .difficulty-card:hover {
-            border-color: var(--primary-color);
+
+        .type-card:hover {
+            border-color: #667eea;
+            background: white;
             transform: translateY(-2px);
         }
-        
-        .difficulty-card.active {
-            border-color: var(--primary-color);
-            background: #f0f3ff;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+
+        .type-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
         }
-        
-        .difficulty-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            display: block;
+
+        .type-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
         }
-        
-        .difficulty-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-        
-        .difficulty-desc {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-        }
-        
-        .question-types {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-        }
-        
-        .question-type-card {
-            padding: 1rem;
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: var(--bg-white);
-        }
-        
-        .question-type-card:hover { border-color: var(--primary-color); }
-        .question-type-card.active { border-color: var(--primary-color); background: #f0f3ff; }
-        
+
         .type-name {
             font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-        
-        .type-desc {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-        
-        .form-group { margin-bottom: 1.5rem; }
-        
-        .form-label {
-            display: block;
-            font-weight: 600;
+            color: #0a0a0a;
             margin-bottom: 0.5rem;
-            color: var(--text-dark);
         }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
+
+        .type-desc {
+            font-size: 0.8125rem;
+            color: #6b7280;
+        }
+
+        .difficulty-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .difficulty-card {
+            background: #fafbfc;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
             transition: all 0.2s;
         }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+
+        .difficulty-card:hover {
+            border-color: #667eea;
+            background: white;
         }
-        
-        .btn-group {
+
+        .difficulty-card.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .count-selector {
             display: flex;
+            align-items: center;
             gap: 1rem;
-            margin-top: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
         }
-        
-        .btn {
-            padding: 0.875rem 1.5rem;
+
+        .count-btn {
+            width: 48px;
+            height: 48px;
+            border: 2px solid #d1d5db;
+            border-radius: 50%;
+            background: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .count-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .count-display {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #667eea;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .btn-generate {
+            background: #667eea;
+            color: white;
             border: none;
-            border-radius: 8px;
+            padding: 1rem 3rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.125rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .btn-generate:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-generate:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .questions-section {
+            display: none;
+        }
+
+        .questions-section.active {
+            display: block;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #0a0a0a;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            background: #000;
+            border-radius: 10px;
+            margin: 0 auto 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .recording-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        .answer-input {
+            width: 100%;
+            min-height: 200px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1rem;
             font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+            font-family: 'Pretendard', sans-serif;
+            margin-bottom: 1rem;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .record-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-record {
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            text-decoration: none;
+        }
+
+        .btn-record:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-record.recording {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-record.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-feedback {
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .btn-feedback.text {
+            background: #10b981;
+        }
+
+        .btn-feedback.audio {
+            background: #f59e0b;
+        }
+
+        .btn-feedback.video {
+            background: #8b5cf6;
+        }
+
+        .btn-feedback:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .btn-feedback:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback-section {
+            background: #fafbfc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .feedback-section.active {
+            display: block;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            color: #0a0a0a;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feedback-content {
+            line-height: 1.8;
+            color: #0a0a0a;
+        }
+
+        .score-badge {
             display: inline-flex;
             align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .score-high {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .score-medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .score-low {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .final-report {
+            background: #667eea;
+            border-radius: 12px;
+            padding: 3rem;
+            margin-top: 3rem;
+            color: white;
+            display: none;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+        }
+
+        .final-report.active {
+            display: block;
+        }
+
+        .report-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .report-subtitle {
+            text-align: center;
+            font-size: 1.125rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+
+        .report-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .report-summary {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .btn-actions {
+            display: flex;
+            gap: 1rem;
             justify-content: center;
         }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-            flex: 1;
+
+        .btn-action {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        
-        .btn-primary:hover:not(:disabled) {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #4b5563;
+        }
+
+        .modal-title-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+
+        .modal-title-row h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0a0a0a;
+            margin: 0;
+        }
+
+        .limit-info-box {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .info-value {
+            font-weight: 700;
+            color: #0a0a0a;
+        }
+
+        .error-badge {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .error-text {
+            color: #ef4444;
+        }
+
+        .modal-message {
+            text-align: center;
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .features-box {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            color: #0a0a0a;
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 0.875rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            color: #4b5563;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .btn-upgrade {
+            flex: 2;
+            padding: 0.875rem;
+            background: #667eea;
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: block;
+        }
+
+        .btn-upgrade:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
-        
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        @media (max-width: 768px) {
-            .navbar-nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: var(--bg-white);
-                flex-direction: column;
-                gap: 0;
-                padding: 1rem 0;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                pointer-events: none;
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
             }
-            
-            .navbar-nav.active {
-                transform: translateY(0);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
                 opacity: 1;
-                pointer-events: all;
             }
-            
-            .nav-link {
-                padding: 0.75rem 1rem;
-                width: 100%;
-                text-align: center;
+            50% {
+                opacity: 0.7;
             }
-            
-            .hamburger { display: flex; }
-            
-            .page-header h1 { font-size: 1.5rem; }
-            .page-header p { font-size: 0.95rem; }
-            .category-grid { grid-template-columns: repeat(2, 1fr); }
-            .difficulty-grid { grid-template-columns: repeat(2, 1fr); }
-            .question-types { grid-template-columns: 1fr; }
-            .step-indicator { gap: 0.5rem; }
-            .step span { font-size: 0.85rem; }
-            .section { padding: 1.5rem; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 1024px) {
+            .question-type-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .report-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .question-type-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .difficulty-options {
+                grid-template-columns: 1fr;
+            }
+
+            .record-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .feedback-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .report-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-actions {
+                flex-direction: column;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
         }
     </style>
-    <link rel="stylesheet" href="/css/session-limit-modal.css">
 </head>
 <body>
     <nav class="navbar">
-        <div class="navbar-content">
-            <a class="navbar-brand" href="/">MockerView</a>
-            <div class="hamburger" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <div class="navbar-nav">
-                <a class="nav-link" href="/session/list">세션 관리</a>
-                <a class="nav-link" href="/selfinterview/list">셀프면접</a>
-                <a class="nav-link" href="/auth/mypage">마이페이지</a>
-                <a class="nav-link" href="/auth/logout">로그아웃</a>
-            </div>
-        </div>
+        <a href="/" class="navbar-brand">MockerView</a>
+        <ul class="navbar-menu">
+            <li><a href="/selfinterview/create">면접 세션</a></li>
+            <li><a href="/selfinterview/create-ai">셀프 면접</a></li>
+            <li><a href="/reviews">리뷰</a></li>
+            <li><a href="/auth/mypage">마이페이지</a></li>
+            <li><a href="/logout">로그아웃</a></li>
+        </ul>
     </nav>
 
-    <div class="page-header">
-        <h1><span class="ai-badge">🤖 AI</span> 셀프 면접 생성</h1>
-        <p>직무와 난이도를 선택하면 AI가 맞춤 질문을 자동으로 생성합니다</p>
-    </div>
-
-    <div class="container">
-        <div class="step-indicator">
-            <div class="step active" id="step1">
-                <div class="step-number">1</div>
-                <span>직무 선택</span>
-            </div>
-            <div class="step" id="step2">
-                <div class="step-number">2</div>
-                <span>세부 분야</span>
-            </div>
-            <div class="step" id="step3">
-                <div class="step-number">3</div>
-                <span>난이도</span>
-            </div>
-            <div class="step" id="step4">
-                <div class="step-number">4</div>
-                <span>설정</span>
-            </div>
+    <div class="container-main">
+        <div class="page-header">
+            <h1 class="page-title">🎯 셀프 면접 연습</h1>
+            <p class="page-subtitle">AI가 생성한 맞춤형 질문으로 혼자서도 면접을 준비하세요.</p>
         </div>
 
-        <div class="section" id="section-main-category">
-            <h2 class="section-title">1️⃣ 직무 분야를 선택하세요</h2>
-            <div class="category-grid" id="mainCategoryList"></div>
-        </div>
-
-        <div class="section" id="section-sub-category" style="display: none;">
-            <h2 class="section-title">2️⃣ 세부 분야를 선택하세요 (선택사항)</h2>
-            <p class="section-subtitle">선택하지 않으면 전체 분야에서 질문이 생성됩니다</p>
-            <div class="sub-categories" id="subCategoryList"></div>
-            <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="skipSubCategory()">건너뛰기</button>
-        </div>
-
-        <div class="section" id="section-difficulty" style="display: none;">
-            <h2 class="section-title">3️⃣ 시작 난이도를 선택하세요</h2>
-            <p class="section-subtitle">답변에 따라 AI가 자동으로 난이도를 조절합니다</p>
-            <div class="difficulty-grid">
-                <div class="difficulty-card" onclick="selectDifficulty(1)">
-                    <span class="difficulty-icon">⭐</span>
-                    <div class="difficulty-name">초급</div>
-                    <div class="difficulty-desc">기본 개념</div>
-                </div>
-                <div class="difficulty-card active" onclick="selectDifficulty(2)">
-                    <span class="difficulty-icon">⭐⭐</span>
-                    <div class="difficulty-name">초중급</div>
-                    <div class="difficulty-desc">실무 기초</div>
-                </div>
-                <div class="difficulty-card" onclick="selectDifficulty(3)">
-                    <span class="difficulty-icon">⭐⭐⭐</span>
-                    <div class="difficulty-name">중급</div>
-                    <div class="difficulty-desc">실무 경험</div>
-                </div>
-                <div class="difficulty-card" onclick="selectDifficulty(4)">
-                    <span class="difficulty-icon">⭐⭐⭐⭐</span>
-                    <div class="difficulty-name">중고급</div>
-                    <div class="difficulty-desc">전략적 사고</div>
-                </div>
-                <div class="difficulty-card" onclick="selectDifficulty(5)">
-                    <span class="difficulty-icon">⭐⭐⭐⭐⭐</span>
-                    <div class="difficulty-name">고급</div>
-                    <div class="difficulty-desc">전문가 수준</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section" id="section-settings" style="display: none;">
-            <h2 class="section-title">4️⃣ 면접 설정을 완료하세요</h2>
-            
-            <div class="form-group">
-                <label class="form-label">면접 제목</label>
-                <input type="text" id="interviewTitle" class="form-control" placeholder="예: 백엔드 개발자 기술면접" required>
+        <div id="setupSection">
+            <div class="setup-card visible" id="step1">
+                <h3 class="section-title">
+                    <span class="step-badge">1</span>
+                    직무 대분류를 선택해주세요
+                </h3>
+                <div class="category-grid" id="mainCategoryGrid"></div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">질문 개수</label>
-                <select id="questionCount" class="form-control">
-                    <option value="3">3개</option>
-                    <option value="5" selected>5개</option>
-                    <option value="7">7개</option>
-                    <option value="10">10개</option>
-                </select>
+            <div class="setup-card hidden" id="step2">
+                <h3 class="section-title">
+                    <span class="step-badge">2</span>
+                    세부 직무를 선택해주세요
+                </h3>
+                <div class="category-grid" id="subCategoryGrid"></div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">질문 유형</label>
-                <div class="question-types">
-                    <div class="question-type-card active" onclick="selectQuestionType('TECHNICAL')">
-                        <div class="type-name">🔧 기술/전문 지식</div>
-                        <div class="type-desc">전문 지식과 기술 역량 평가</div>
+            <div class="setup-card hidden" id="step3">
+                <h3 class="section-title">
+                    <span class="step-badge">3</span>
+                    질문 유형을 선택해주세요
+                </h3>
+                <div class="question-type-grid">
+                    <div class="type-card" data-type="TECHNICAL">
+                        <div class="type-icon">💡</div>
+                        <div class="type-name">기술 질문</div>
+                        <div class="type-desc">전문 지식 평가</div>
                     </div>
-                    <div class="question-type-card" onclick="selectQuestionType('BEHAVIORAL')">
-                        <div class="type-name">💼 경험 기반 (STAR)</div>
-                        <div class="type-desc">과거 경험과 행동 패턴 평가</div>
+                    <div class="type-card" data-type="PERSONALITY">
+                        <div class="type-icon">❤️</div>
+                        <div class="type-name">인성 질문</div>
+                        <div class="type-desc">가치관 파악</div>
                     </div>
-                    <div class="question-type-card" onclick="selectQuestionType('SITUATIONAL')">
-                        <div class="type-name">🎯 상황 대처</div>
-                        <div class="type-desc">가상 상황에서의 대처 능력 평가</div>
+                    <div class="type-card" data-type="EXPERIENCE">
+                        <div class="type-icon">📚</div>
+                        <div class="type-name">경험 질문</div>
+                        <div class="type-desc">과거 경험</div>
                     </div>
-                    <div class="question-type-card" onclick="selectQuestionType('PERSONALITY')">
-                        <div class="type-name">😊 인성/가치관</div>
-                        <div class="type-desc">인성과 조직 적합성 평가</div>
+                    <div class="type-card" data-type="SITUATION">
+                        <div class="type-icon">🎭</div>
+                        <div class="type-name">상황 질문</div>
+                        <div class="type-desc">가상 상황</div>
                     </div>
                 </div>
             </div>
 
-            <div class="btn-group">
-                <button class="btn btn-primary" id="createBtn" onclick="createInterview()">
-                    🚀 AI 면접 시작하기
-                </button>
-                <a href="/selfinterview/list" class="btn btn-secondary">취소</a>
+            <div class="setup-card hidden" id="step4">
+                <h3 class="section-title">
+                    <span class="step-badge">4</span>
+                    난이도를 선택해주세요
+                </h3>
+                <div class="difficulty-options">
+                    <div class="difficulty-card" data-difficulty="1">
+                        <div class="type-icon">🌱</div>
+                        <div class="type-name">초급</div>
+                        <div class="type-desc">기본 개념</div>
+                    </div>
+                    <div class="difficulty-card" data-difficulty="2">
+                        <div class="type-icon">🌿</div>
+                        <div class="type-name">중급</div>
+                        <div class="type-desc">실무 경험</div>
+                    </div>
+                    <div class="difficulty-card" data-difficulty="3">
+                        <div class="type-icon">🌳</div>
+                        <div class="type-name">고급</div>
+                        <div class="type-desc">심화 문제</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setup-card hidden" id="step5">
+                <h3 class="section-title">
+                    <span class="step-badge">5</span>
+                    질문 개수를 선택해주세요
+                </h3>
+                <div class="count-selector">
+                    <button class="count-btn" id="decreaseBtn">−</button>
+                    <div class="count-display" id="questionCount">5</div>
+                    <button class="count-btn" id="increaseBtn">+</button>
+                </div>
+            </div>
+
+            <div class="setup-card hidden" id="step6">
+                <button class="btn-generate" id="generateBtn">✨ 질문 생성하기</button>
+            </div>
+        </div>
+
+        <div id="questionsSection" class="questions-section">
+            <div class="setup-card visible">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div id="questionsContainer"></div>
+            </div>
+
+            <div class="final-report" id="finalReport">
+                <h2 class="report-title">🎉 면접 완료!</h2>
+                <p class="report-subtitle">AI 기반 종합 평가 리포트</p>
+                <div class="report-stats" id="reportStats"></div>
+                <div class="report-summary" id="reportSummary"></div>
+                <div class="btn-actions">
+                    <button onclick="location.href='/mypage'" class="btn-action">📊 마이페이지에서 보기</button>
+                    <button onclick="location.reload()" class="btn-action">🔄 새 면접 시작</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="/js/authFetch.js"></script>
+    <div id="sessionLimitModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+
+            <div class="modal-title-row">
+                <div class="modal-icon">🎯</div>
+                <h2>세션 생성 한도 도달</h2>
+            </div>
+
+            <div class="limit-info-box">
+                <div class="info-row">
+                    <span class="info-label">현재 플랜</span>
+                    <span class="error-badge" id="currentPlan">FREE</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">세션 생성</span>
+                    <span class="info-value">
+                        <span class="error-text" id="usedSessions">0</span> / <span id="sessionLimit">0</span>
+                    </span>
+                </div>
+            </div>
+
+            <p class="modal-message">더 많은 세션을 생성하려면 플랜을 업그레이드하세요</p>
+
+            <div class="features-box">
+                <div class="feature-item">
+                    <span class="check-icon">✓</span>
+                    <span>무제한 세션 생성</span>
+                </div>
+                <div class="feature-item">
+                    <span class="check-icon">✓</span>
+                    <span>무제한 리뷰 읽기</span>
+                </div>
+                <div class="feature-item">
+                    <span class="check-icon">✓</span>
+                    <span>고급 AI 피드백</span>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button onclick="closeModal()" class="btn-cancel">취소</button>
+                <a href="/payment/plans" class="btn-upgrade">플랜 업그레이드 →</a>
+            </div>
+        </div>
+    </div>
+
     <script>
         let selectedMainCategory = null;
+        let selectedMainCategoryName = null;
         let selectedSubCategory = null;
-        let selectedDifficulty = 2;
-        let selectedQuestionType = 'TECHNICAL';
+        let selectedSubCategoryName = null;
+        let selectedQuestionType = null;
+        let selectedDifficulty = null;
+        let questionCount = 5;
+        let generatedQuestions = [];
+        let currentAnswers = {};
+        let videoStreams = {};
+        let videoRecorders = {};
+        let videoBlobs = {};
+        let audioRecorders = {};
+        let audioBlobs = {};
+        let recordingChunks = {};
+        let feedbackResults = {};
+        let canCreateSession = true;
 
-        function toggleMenu() {
-            const hamburger = document.querySelector('.hamburger');
-            const navbarNav = document.querySelector('.navbar-nav');
-            hamburger.classList.toggle('active');
-            navbarNav.classList.toggle('active');
+        $(document).ready(function() {
+            checkSessionLimit();
+            loadMainCategories();
+
+            $('#decreaseBtn').click(function() {
+                if (questionCount > 1) {
+                    questionCount--;
+                    $('#questionCount').text(questionCount);
+                    showGenerateButton();
+                }
+            });
+
+            $('#increaseBtn').click(function() {
+                if (questionCount < 20) {
+                    questionCount++;
+                    $('#questionCount').text(questionCount);
+                    showGenerateButton();
+                }
+            });
+
+            $('#generateBtn').click(function() {
+                if (!canCreateSession) {
+                    openModal();
+                    return;
+                }
+                generateQuestions();
+            });
+        });
+
+        function checkSessionLimit() {
+            $.ajax({
+                url: '/api/session-limit/check',
+                method: 'GET',
+                success: function(response) {
+                    canCreateSession = response.canCreate;
+
+                    if (response.limitReached) {
+                        console.log('세션 제한 도달:', response);
+                        $('#currentPlan').text(response.currentPlan);
+                        $('#usedSessions').text(response.usedSessions);
+                        $('#sessionLimit').text(response.sessionLimit);
+                    }
+                },
+                error: function() {
+                    console.error('세션 제한 체크 실패');
+                    canCreateSession = false;
+                }
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            loadMainCategories();
+        function openModal() {
+            $('#sessionLimitModal').addClass('active');
+        }
+
+        function closeModal() {
+            $('#sessionLimitModal').removeClass('active');
+        }
+
+        $(document).on('click', '.category-card:not(.sub-category)', function() {
+            $('.category-card:not(.sub-category)').removeClass('selected');
+            $(this).addClass('selected');
+            selectedMainCategory = $(this).data('code');
+            selectedMainCategoryName = $(this).find('.category-name').text();
+            loadSubCategories(selectedMainCategory);
+        });
+
+        $(document).on('click', '.sub-category', function() {
+            $('.sub-category').removeClass('selected');
+            $(this).addClass('selected');
+            selectedSubCategory = $(this).data('code');
+            selectedSubCategoryName = $(this).find('.category-name').text();
+            showStep('#step3');
+        });
+
+        $(document).on('click', '.type-card', function() {
+            $('.type-card').removeClass('selected');
+            $(this).addClass('selected');
+            selectedQuestionType = $(this).data('type');
+            showStep('#step4');
+        });
+
+        $(document).on('click', '.difficulty-card', function() {
+            $('.difficulty-card').removeClass('selected');
+            $(this).addClass('selected');
+            selectedDifficulty = $(this).data('difficulty');
+            showStep('#step5');
         });
 
         function loadMainCategories() {
-            fetch('/api/questions/categories/main')
-                .then(response => response.json())
-                .then(categories => {
-                    const container = document.getElementById('mainCategoryList');
-                    container.innerHTML = '';
-                    
-                    categories.forEach(cat => {
-                        const card = document.createElement('div');
-                        card.className = 'category-card';
-                        card.onclick = () => selectMainCategory(cat);
-                        card.innerHTML = `
-                            <span class="category-icon">${cat.icon || '📁'}</span>
-                            <div class="category-name">${cat.name}</div>
-                            <div class="category-desc">${cat.description || ''}</div>
-                        `;
-                        container.appendChild(card);
-                    });
-                })
-                .catch(error => {
-                    console.error('카테고리 로드 실패:', error);
-                    alert('카테고리를 불러올 수 없습니다.');
-                });
+            $.ajax({
+                url: '/api/questions/categories/main',
+                method: 'GET',
+                success: function(categories) {
+                    displayMainCategories(categories);
+                }
+            });
         }
 
-        function selectMainCategory(category) {
-            selectedMainCategory = category;
-            
-            document.querySelectorAll('.category-card').forEach(card => card.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            
-            document.getElementById('step1').classList.add('completed');
-            document.getElementById('step2').classList.add('active');
-            
-            loadSubCategories(category.code);
-            
-            document.getElementById('section-sub-category').style.display = 'block';
-            document.getElementById('section-sub-category').scrollIntoView({ behavior: 'smooth' });
+        function displayMainCategories(categories) {
+            const $grid = $('#mainCategoryGrid');
+            $grid.empty();
+            categories.forEach(cat => {
+                $grid.append(`
+                    <div class="category-card" data-code="${cat.code}">
+                        <div class="category-icon">${cat.icon || '📁'}</div>
+                        <div class="category-name">${cat.name}</div>
+                        <div class="category-desc">${cat.description || ''}</div>
+                    </div>
+                `);
+            });
         }
 
         function loadSubCategories(parentCode) {
-            fetch(`/api/questions/categories/${parentCode}/sub`)
-                .then(response => response.json())
-                .then(subs => {
-                    const container = document.getElementById('subCategoryList');
-                    container.innerHTML = '';
-                    
-                    if (subs.length === 0) {
-                        skipSubCategory();
-                        return;
-                    }
-                    
-                    subs.forEach(sub => {
-                        const badge = document.createElement('div');
-                        badge.className = 'sub-category-badge';
-                        badge.textContent = sub.name;
-                        badge.onclick = () => selectSubCategory(sub, badge);
-                        container.appendChild(badge);
-                    });
-                })
-                .catch(error => {
-                    console.error('소분류 로드 실패:', error);
-                    skipSubCategory();
-                });
+            $.ajax({
+                url: `/api/questions/categories/${parentCode}/sub`,
+                method: 'GET',
+                success: function(categories) {
+                    displaySubCategories(categories);
+                    showStep('#step2');
+                }
+            });
         }
 
-        function selectSubCategory(category, element) {
-            selectedSubCategory = category;
-            
-            document.querySelectorAll('.sub-category-badge').forEach(badge => badge.classList.remove('active'));
-            element.classList.add('active');
-            
-            document.getElementById('step2').classList.add('completed');
-            document.getElementById('step3').classList.add('active');
-            
-            document.getElementById('section-difficulty').style.display = 'block';
-            document.getElementById('section-difficulty').scrollIntoView({ behavior: 'smooth' });
+        function displaySubCategories(categories) {
+            const $grid = $('#subCategoryGrid');
+            $grid.empty();
+            categories.forEach(cat => {
+                $grid.append(`
+                    <div class="category-card sub-category" data-code="${cat.code}">
+                        <div class="category-icon">${cat.icon || '📋'}</div>
+                        <div class="category-name">${cat.name}</div>
+                        <div class="category-desc">${cat.description || ''}</div>
+                    </div>
+                `);
+            });
         }
 
-        function skipSubCategory() {
-            selectedSubCategory = null;
-            
-            document.getElementById('step2').classList.add('completed');
-            document.getElementById('step3').classList.add('active');
-            
-            document.getElementById('section-difficulty').style.display = 'block';
-            document.getElementById('section-difficulty').scrollIntoView({ behavior: 'smooth' });
+        function showStep(stepId) {
+            setTimeout(() => {
+                $(stepId).removeClass('hidden').addClass('visible');
+                $('html, body').animate({
+                    scrollTop: $(stepId).offset().top - 100
+                }, 500);
+            }, 300);
         }
 
-        function selectDifficulty(level) {
-            selectedDifficulty = level;
-            
-            document.querySelectorAll('.difficulty-card').forEach(card => card.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            
-            document.getElementById('step3').classList.add('completed');
-            document.getElementById('step4').classList.add('active');
-            
-            document.getElementById('section-settings').style.display = 'block';
-            document.getElementById('section-settings').scrollIntoView({ behavior: 'smooth' });
+        function showGenerateButton() {
+            if (!$('#step6').hasClass('visible')) showStep('#step6');
         }
 
-        function selectQuestionType(type) {
-            selectedQuestionType = type;
-            
-            document.querySelectorAll('.question-type-card').forEach(card => card.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-        }
+        function generateQuestions() {
+            const $btn = $('#generateBtn');
+            $btn.prop('disabled', true).html('<span class="loading-spinner"></span> 질문 생성 중...');
 
-        function mapDifficultyToString(level) {
-            return level <= 2 ? 'EASY' : level === 3 ? 'MEDIUM' : 'HARD';
-        }
-
-        async function createInterview() {
-            console.log('🔍 AI 면접 생성 버튼 클릭 - 제한 체크 시작');
-            
-            const title = document.getElementById('interviewTitle').value.trim();
-            
-            if (!title) {
-                alert('면접 제목을 입력하세요.');
-                return;
-            }
-            
-            if (!selectedMainCategory) {
-                alert('직무를 선택하세요.');
-                return;
-            }
-            
-            if (typeof checkSessionLimitForSelfInterview === 'function') {
-                console.log('✅ checkSessionLimitForSelfInterview 함수 발견 - 제한 체크 실행');
-                checkSessionLimitForSelfInterview();
-            } else {
-                console.log('⚠️ checkSessionLimitForSelfInterview 함수 없음 - 바로 생성 시도');
-                proceedWithAICreation();
-            }
-        }
-        
-        window.proceedWithAICreation = async function() {
-            const title = document.getElementById('interviewTitle').value.trim();
-            const questionCount = parseInt(document.getElementById('questionCount').value);
-            
-            const btn = document.getElementById('createBtn');
-            btn.disabled = true;
-            btn.textContent = '🔄 생성 중...';
-            
-            try {
-                const categoryCode = selectedSubCategory ? selectedSubCategory.code : selectedMainCategory.code;
-                
-                const sessionData = {
-                    title: title,
-                    difficultyLevel: selectedDifficulty,
-                    difficulty: mapDifficultyToString(selectedDifficulty),
-                    category: categoryCode,
-                    questionCount: questionCount,
+            $.ajax({
+                url: '/api/questions/generate-multiple',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    categoryCode: selectedSubCategory,
                     questionType: selectedQuestionType,
-                    sessionType: 'TEXT',
-                    aiEnabled: true
-                };
-                
-                const response = await authFetch('/api/selfinterview/create-with-ai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(sessionData)
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    alert('✨ AI 면접이 생성되었습니다!');
-                    window.location.href = `/selfinterview/room/${data.sessionId}`;
-                } else {
-                    const errorData = await response.json();
-                    if (errorData.error === 'SESSION_LIMIT_EXCEEDED' && errorData.limitInfo) {
-                        if (typeof showSelfInterviewUpgradeModal === 'function') {
-                            showSelfInterviewUpgradeModal(errorData.limitInfo);
-                        }
+                    difficulty: selectedDifficulty,
+                    count: questionCount
+                }),
+                success: function(response) {
+                    generatedQuestions = response;
+                    displayQuestions();
+                    $('#setupSection').hide();
+                    $('#questionsSection').addClass('active');
+                    window.scrollTo(0, 0);
+                },
+                error: function(xhr) {
+                    if (xhr.status === 403) {
+                        openModal();
                     } else {
-                        throw new Error('면접 생성 실패');
+                        alert('질문 생성에 실패했습니다');
+                    }
+                    $btn.prop('disabled', false).html('✨ 질문 생성하기');
+                }
+            });
+        }
+
+        function displayQuestions() {
+            const $container = $('#questionsContainer');
+            $container.empty();
+
+            generatedQuestions.forEach((question, index) => {
+                $container.append(`
+                    <div class="question-card">
+                        <div class="question-header">
+                            <div class="question-number">${index + 1}</div>
+                            <span style="color: #6b7280; font-size: 0.875rem;">
+                                ${selectedQuestionType} · 난이도 ${selectedDifficulty}
+                            </span>
+                        </div>
+                        <div class="question-text">${question}</div>
+                        <div class="video-container" id="video-${index}" style="display:none;">
+                            <video id="local-video-${index}" autoplay muted></video>
+                            <div class="recording-indicator" id="rec-indicator-${index}" style="display:none;">🔴 REC</div>
+                        </div>
+                        <textarea class="answer-input" id="answer-${index}"
+                                  placeholder="STAR 기법으로 답변해보세요.&#10;&#10;📌 S (Situation): 어떤 상황이었나요?&#10;📌 T (Task): 무슨 과제나 목표가 있었나요?&#10;📌 A (Action): 어떤 행동을 하셨나요?&#10;📌 R (Result): 어떤 결과가 나왔나요?"></textarea>
+                        <div class="record-controls">
+                            <button class="btn-record" onclick="toggleVideo(${index})" id="video-btn-${index}">🎥 화상 켜기</button>
+                            <button class="btn-record" onclick="toggleAudioRecording(${index})" id="audio-btn-${index}">🎤 음성 녹음</button>
+                        </div>
+                        <div class="feedback-grid">
+                            <button class="btn-feedback text" onclick="getTextFeedback(${index})" id="text-feedback-btn-${index}">
+                                📝 텍스트 평가
+                            </button>
+                            <button class="btn-feedback audio" onclick="getAudioFeedback(${index})" disabled id="audio-feedback-btn-${index}">
+                                🎤 음성 평가
+                            </button>
+                            <button class="btn-feedback video" onclick="getVideoFeedback(${index})" disabled id="video-feedback-btn-${index}">
+                                📹 영상 평가
+                            </button>
+                        </div>
+                        <div class="feedback-section" id="feedback-${index}"></div>
+                    </div>
+                `);
+
+                $(`#answer-${index}`).on('input', function() {
+                    currentAnswers[index] = $(this).val();
+                });
+            });
+        }
+
+        async function toggleVideo(index) {
+            const $container = $(`#video-${index}`);
+            const $btn = $(`#video-btn-${index}`);
+            const $indicator = $(`#rec-indicator-${index}`);
+
+            if ($container.is(':visible')) {
+                if (videoRecorders[index]) {
+                    videoRecorders[index].stop();
+                    delete videoRecorders[index];
+                    $indicator.hide();
+                }
+                if (videoStreams[index]) {
+                    videoStreams[index].getTracks().forEach(track => track.stop());
+                    delete videoStreams[index];
+                }
+                $container.hide();
+                $btn.html('🎥 화상 켜기').removeClass('active');
+            } else {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: 640,
+                            height: 360
+                        },
+                        audio: true
+                    });
+
+                    videoStreams[index] = stream;
+                    document.getElementById(`local-video-${index}`).srcObject = stream;
+                    $container.show();
+
+                    const mediaRecorder = new MediaRecorder(stream);
+                    recordingChunks[index] = [];
+
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) recordingChunks[index].push(e.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordingChunks[index], {
+                            type: 'video/webm'
+                        });
+                        videoBlobs[index] = blob;
+                        $(`#video-feedback-btn-${index}`).prop('disabled', false);
+                        delete recordingChunks[index];
+                    };
+
+                    mediaRecorder.start();
+                    videoRecorders[index] = mediaRecorder;
+
+                    $indicator.show();
+                    $btn.html('📹 화상 답변 완료').addClass('active');
+                } catch (error) {
+                    alert('카메라 접근에 실패했습니다');
+                }
+            }
+        }
+
+        function toggleAudioRecording(index) {
+            if (audioRecorders[index]) {
+                stopAudioRecording(index);
+            } else {
+                startAudioRecording(index);
+            }
+        }
+
+        function startAudioRecording(index) {
+            navigator.mediaDevices.getUserMedia({
+                    audio: true
+                })
+                .then(stream => {
+                    const mediaRecorder = new MediaRecorder(stream);
+                    recordingChunks[index] = [];
+
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) recordingChunks[index].push(e.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordingChunks[index], {
+                            type: 'audio/webm'
+                        });
+                        if (blob.size >= 1024) {
+                            audioBlobs[index] = blob;
+                            $(`#audio-feedback-btn-${index}`).prop('disabled', false);
+                            transcribeAudio(blob, index);
+                        }
+                        stream.getTracks().forEach(track => track.stop());
+                        delete recordingChunks[index];
+                    };
+
+                    mediaRecorder.start();
+                    audioRecorders[index] = mediaRecorder;
+                    $(`#audio-btn-${index}`).addClass('recording').html('⏹️ 녹음 중지');
+                });
+        }
+
+        function stopAudioRecording(index) {
+            if (audioRecorders[index]) {
+                audioRecorders[index].stop();
+                delete audioRecorders[index];
+                $(`#audio-btn-${index}`).removeClass('recording').html('🎤 음성 녹음');
+            }
+        }
+
+        function transcribeAudio(blob, index) {
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.webm');
+
+            $.ajax({
+                url: '/api/whisper/transcribe',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success && response.text) {
+                        const $textarea = $(`#answer-${index}`);
+                        const currentText = $textarea.val();
+                        $textarea.val(currentText + (currentText ? '\n\n' : '') + response.text);
+                        $textarea.trigger('input');
                     }
                 }
-            } catch (error) {
-                console.error('생성 실패:', error);
-                alert('면접 생성에 실패했습니다. 다시 시도해주세요.');
-                btn.disabled = false;
-                btn.textContent = '🚀 AI 면접 시작하기';
+            });
+        }
+
+        function getTextFeedback(index) {
+            const answer = currentAnswers[index] || $(`#answer-${index}`).val().trim();
+            if (!answer) {
+                alert('텍스트 답변을 입력해주세요.');
+                return;
+            }
+
+            const $btn = $(`#text-feedback-btn-${index}`);
+            $btn.prop('disabled', true).html('<span class="loading-spinner"></span>');
+
+            $.ajax({
+                url: '/api/feedback/structured',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    questionText: generatedQuestions[index],
+                    answerText: answer,
+                    categoryCode: selectedSubCategory
+                }),
+                success: function(response) {
+                    feedbackResults[index] = feedbackResults[index] || {};
+                    feedbackResults[index].text = response;
+                    displayFeedback(index, response, '📝 텍스트');
+                    $btn.prop('disabled', false).html('📝 텍스트 평가');
+                    checkCompletion();
+                },
+                error: function() {
+                    alert('피드백 생성 실패');
+                    $btn.prop('disabled', false).html('📝 텍스트 평가');
+                }
+            });
+        }
+
+        function getAudioFeedback(index) {
+            if (!audioBlobs[index]) {
+                alert('먼저 음성을 녹음해주세요.');
+                return;
+            }
+
+            const $btn = $(`#audio-feedback-btn-${index}`);
+            $btn.prop('disabled', true).html('<span class="loading-spinner"></span>');
+
+            const formData = new FormData();
+            formData.append('audio', audioBlobs[index], 'audio.webm');
+            formData.append('questionText', generatedQuestions[index]);
+
+            $.ajax({
+                url: '/api/feedback/audio',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    feedbackResults[index] = feedbackResults[index] || {};
+                    feedbackResults[index].audio = response;
+                    displayAudioFeedback(index, response);
+                    $btn.prop('disabled', false).html('🎤 음성 평가');
+                    checkCompletion();
+                }
+            });
+        }
+
+        function getVideoFeedback(index) {
+            if (!videoBlobs[index]) {
+                alert('먼저 영상을 녹화해주세요.');
+                return;
+            }
+
+            const $btn = $(`#video-feedback-btn-${index}`);
+            $btn.prop('disabled', true).html('<span class="loading-spinner"></span>');
+
+            const formData = new FormData();
+            formData.append('video', videoBlobs[index], 'video.webm');
+            formData.append('questionText', generatedQuestions[index]);
+
+            $.ajax({
+                url: '/api/feedback/video',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    feedbackResults[index] = feedbackResults[index] || {};
+                    feedbackResults[index].video = response;
+                    displayVideoFeedback(index, response);
+                    $btn.prop('disabled', false).html('📹 영상 평가');
+                    checkCompletion();
+                }
+            });
+        }
+
+        function displayFeedback(index, feedback, type) {
+            const score = parseInt(feedback.score) || 0;
+            const scoreClass = score >= 4 ? 'score-high' : score >= 3 ? 'score-medium' : 'score-low';
+
+            const html = `
+                <div class="feedback-title">
+                    ${type} AI 피드백
+                    <span class="score-badge ${scoreClass}">⭐ ${score}/5</span>
+                </div>
+                <div class="feedback-content">
+                    <p><strong>📊 요약:</strong><br>${feedback.summary || '-'}</p>
+                    <p><strong>✅ 강점:</strong><br>${feedback.strengths || '-'}</p>
+                    <p><strong>⚠️ 개선점:</strong><br>${feedback.weaknesses || '-'}</p>
+                    <p><strong>💡 개선 제안:</strong><br>${feedback.improvements || '-'}</p>
+                </div>
+            `;
+
+            $(`#feedback-${index}`).html(html).addClass('active');
+        }
+
+        function displayAudioFeedback(index, feedback) {
+            const score = parseInt(feedback.score) || 0;
+            const scoreClass = score >= 4 ? 'score-high' : score >= 3 ? 'score-medium' : 'score-low';
+
+            const html = `
+                <div class="feedback-title">
+                    🎤 음성 AI 피드백
+                    <span class="score-badge ${scoreClass}">⭐ ${score}/5</span>
+                </div>
+                <div class="feedback-content">
+                    <p><strong>📊 요약:</strong><br>${feedback.summary || '-'}</p>
+                    <p><strong>✅ 강점:</strong><br>${feedback.strengths || '-'}</p>
+                    <p><strong>⚠️ 개선점:</strong><br>${feedback.weaknesses || '-'}</p>
+                    <p><strong>💡 개선 제안:</strong><br>${feedback.improvements || '-'}</p>
+                </div>
+            `;
+
+            $(`#feedback-${index}`).html(html).addClass('active');
+        }
+
+        function displayVideoFeedback(index, feedback) {
+            const score = parseInt(feedback.score) || 0;
+            const scoreClass = score >= 4 ? 'score-high' : score >= 3 ? 'score-medium' : 'score-low';
+
+            const html = `
+                <div class="feedback-title">
+                    📹 영상 AI 피드백
+                    <span class="score-badge ${scoreClass}">⭐ ${score}/5</span>
+                </div>
+                <div class="feedback-content">
+                    <p><strong>📊 요약:</strong><br>${feedback.summary || '-'}</p>
+                    <p><strong>✅ 강점:</strong><br>${feedback.strengths || '-'}</p>
+                    <p><strong>⚠️ 개선점:</strong><br>${feedback.weaknesses || '-'}</p>
+                    <p><strong>💡 개선 제안:</strong><br>${feedback.improvements || '-'}</p>
+                </div>
+            `;
+
+            $(`#feedback-${index}`).html(html).addClass('active');
+        }
+
+        function checkCompletion() {
+            const totalQuestions = generatedQuestions.length;
+            let completedCount = 0;
+
+            for (let i = 0; i < totalQuestions; i++) {
+                if (feedbackResults[i] && (feedbackResults[i].text || feedbackResults[i].audio || feedbackResults[i].video)) {
+                    completedCount++;
+                }
+            }
+
+            if (completedCount >= totalQuestions) {
+                setTimeout(() => {
+                    showFinalReport();
+                }, 1000);
             }
         }
+
+        function showFinalReport() {
+            let totalText = 0,
+                totalAudio = 0,
+                totalVideo = 0;
+            let countText = 0,
+                countAudio = 0,
+                countVideo = 0;
+
+            Object.values(feedbackResults).forEach(result => {
+                if (result.text) {
+                    totalText += parseInt(result.text.score) || 0;
+                    countText++;
+                }
+                if (result.audio) {
+                    totalAudio += parseInt(result.audio.score) || 0;
+                    countAudio++;
+                }
+                if (result.video) {
+                    totalVideo += parseInt(result.video.score) || 0;
+                    countVideo++;
+                }
+            });
+
+            const avgText = countText > 0 ? (totalText / countText).toFixed(1) : '-';
+            const avgAudio = countAudio > 0 ? (totalAudio / countAudio).toFixed(1) : '-';
+            const avgVideo = countVideo > 0 ? (totalVideo / countVideo).toFixed(1) : '-';
+
+            let sum = 0,
+                count = 0;
+            if (countText > 0) {
+                sum += parseFloat(avgText);
+                count++;
+            }
+            if (countAudio > 0) {
+                sum += parseFloat(avgAudio);
+                count++;
+            }
+            if (countVideo > 0) {
+                sum += parseFloat(avgVideo);
+                count++;
+            }
+
+            const overallAvg = count > 0 ? (sum / count).toFixed(1) : '-';
+
+            $('#reportStats').html(`
+                <div class="stat-card">
+                    <div class="stat-value">${overallAvg}</div>
+                    <div class="stat-label">종합 평균</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${avgText}</div>
+                    <div class="stat-label">텍스트</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${avgAudio}</div>
+                    <div class="stat-label">음성</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${avgVideo}</div>
+                    <div class="stat-label">영상</div>
+                </div>
+            `);
+
+            let summary = `총 ${generatedQuestions.length}개의 질문에 대한 면접을 완료하셨습니다. `;
+            if (parseFloat(overallAvg) >= 4) {
+                summary += '전반적으로 매우 우수한 답변을 보여주셨습니다!';
+            } else if (parseFloat(overallAvg) >= 3) {
+                summary += '전반적으로 양호한 답변이었습니다.';
+            } else {
+                summary += 'AI 피드백을 참고하여 더 많은 연습을 해보세요.';
+            }
+
+            $('#reportSummary').html(`<p style="font-size: 1.125rem; line-height: 1.8;">${summary}</p>`);
+
+            saveReport(overallAvg, avgText, avgAudio, avgVideo);
+
+            $('#finalReport').addClass('active');
+            $('html, body').animate({
+                scrollTop: $('#finalReport').offset().top - 100
+            }, 1000);
+        }
+
+        function saveReport(overallAvg, avgText, avgAudio, avgVideo) {
+            $.ajax({
+                url: '/api/self-interview/save-report',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    categoryCode: selectedSubCategory,
+                    categoryName: selectedSubCategoryName,
+                    questionType: selectedQuestionType,
+                    difficulty: selectedDifficulty,
+                    totalQuestions: generatedQuestions.length,
+                    overallAvg: overallAvg,
+                    textAvg: avgText,
+                    audioAvg: avgAudio,
+                    videoAvg: avgVideo,
+                    questions: generatedQuestions,
+                    feedbacks: feedbackResults
+                }),
+                success: function(response) {
+                    console.log('리포트 저장 완료:', response.reportId);
+                },
+                error: function() {
+                    console.error('리포트 저장 실패');
+                }
+            });
+        }
     </script>
-    <script src="/js/self-interview-limit-check.js"></script>
-    <script src="/js/push-init.js"></script>
-    <script src="/js/push-notifications.js"></script>
 </body>
 </html>

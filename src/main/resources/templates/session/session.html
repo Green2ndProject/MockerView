@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('면접 대기실')}"></head>
-<style th:replace="~{fragments/styles :: navbar-styles}"></style>
+<head>
+    <div th:replace="~{fragments/head :: head}"></div>
+    <title>면접 대기실 - MockerView</title>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+</head>
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <style>

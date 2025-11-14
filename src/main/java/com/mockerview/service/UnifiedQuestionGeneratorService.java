@@ -27,6 +27,7 @@ public class UnifiedQuestionGeneratorService {
 
     private final QuestionPoolRepository questionPoolRepository;
     private final QuestionRepository questionRepository;
+    private final QuestionPoolLearningService questionPoolLearningService;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
@@ -50,18 +51,21 @@ public class UnifiedQuestionGeneratorService {
     );
 
     public Question generateQuestion(Category category, Integer difficultyLevel, String questionType, Session session) {
-        log.info("🎯 질문 생성 시작 - 카테고리: {}, 난이도: {}, 타입: {}", 
-                category.getName(), difficultyLevel, questionType);
+        long poolSize = questionPoolLearningService.getQuestionPoolSize();
+        double aiUsageRate = questionPoolLearningService.getAiUsageRate();
         
-        Question question = tryGenerateWithAI(category, difficultyLevel, questionType, session);
+        log.info("🎯 질문 생성 시작 - 카테고리: {}, 난이도: {}, Pool 크기: {}개, AI 사용률: {}%", 
+                category.getName(), difficultyLevel, poolSize, String.format("%.1f", aiUsageRate));
+        
+        Question question = tryGenerateFromPool(category, difficultyLevel, questionType, session);
         if (question != null) {
-            log.info("✅ AI 질문 생성 성공: {}", question.getText());
+            log.info("✅ QuestionPool 질문 사용 (비용 절감!) - Pool 크기: {}개", poolSize);
             return question;
         }
         
-        question = tryGenerateFromPool(category, difficultyLevel, questionType, session);
+        question = tryGenerateWithAI(category, difficultyLevel, questionType, session);
         if (question != null) {
-            log.info("✅ QuestionPool 질문 사용: {}", question.getText());
+            log.info("✅ AI 질문 생성 성공 (비용 발생) - AI 사용률: {}%", String.format("%.1f", aiUsageRate));
             return question;
         }
         
@@ -70,40 +74,12 @@ public class UnifiedQuestionGeneratorService {
         return question;
     }
 
-    private Question tryGenerateWithAI(Category category, Integer difficultyLevel, String questionType, Session session) {
-        if (!isAIAvailable()) {
-            log.warn("⚠️ OpenAI API Key 없음 - AI 건너뜀");
-            return null;
-        }
-
-        try {
-            String prompt = buildPrompt(category, difficultyLevel, questionType);
-            String questionText = callOpenAI(prompt);
-            
-            Question question = Question.builder()
-                    .text(questionText)
-                    .category(category)
-                    .difficultyLevel(difficultyLevel)
-                    .questionType(questionType)
-                    .session(session)
-                    .isAiGenerated(true)
-                    .timer(120)
-                    .build();
-            
-            return questionRepository.save(question);
-            
-        } catch (Exception e) {
-            log.error("❌ AI 질문 생성 실패: {}", e.getMessage());
-            return null;
-        }
-    }
-
     private Question tryGenerateFromPool(Category category, Integer difficultyLevel, String questionType, Session session) {
         try {
             List<QuestionPool> poolQuestions = questionPoolRepository.findAll();
             
             if (poolQuestions.isEmpty()) {
-                log.warn("⚠️ QuestionPool 비어있음");
+                log.warn("⚠️ QuestionPool 비어있음 - AI 생성 필요");
                 return null;
             }
             
@@ -136,6 +112,38 @@ public class UnifiedQuestionGeneratorService {
         }
     }
 
+    private Question tryGenerateWithAI(Category category, Integer difficultyLevel, String questionType, Session session) {
+        if (!isAIAvailable()) {
+            log.warn("⚠️ OpenAI API Key 없음 - AI 건너뜀");
+            return null;
+        }
+
+        try {
+            String prompt = buildPrompt(category, difficultyLevel, questionType);
+            String questionText = callOpenAI(prompt);
+            
+            Question question = Question.builder()
+                    .text(questionText)
+                    .category(category)
+                    .difficultyLevel(difficultyLevel)
+                    .questionType(questionType)
+                    .session(session)
+                    .isAiGenerated(true)
+                    .timer(120)
+                    .build();
+            
+            question = questionRepository.save(question);
+            
+            log.info("🧠 AI 생성 질문 → 자동 학습 대기열 추가: {}", question.getId());
+            
+            return question;
+            
+        } catch (Exception e) {
+            log.error("❌ AI 질문 생성 실패: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private Question generateDefaultQuestion(Category category, Integer difficultyLevel, String questionType, Session session) {
         int existingCount = session.getQuestions() != null ? session.getQuestions().size() : 0;
         String questionText = DEFAULT_QUESTIONS.get(existingCount % DEFAULT_QUESTIONS.size());
@@ -154,79 +162,51 @@ public class UnifiedQuestionGeneratorService {
     }
 
     private boolean isAIAvailable() {
-        return openaiApiKey != null 
-                && !openaiApiKey.isEmpty() 
-                && !openaiApiKey.equals("${OPENAI_API_KEY}");
+        return openaiApiKey != null && !openaiApiKey.trim().isEmpty();
     }
 
     private String buildPrompt(Category category, Integer difficultyLevel, String questionType) {
-        String difficultyDesc = getDifficultyDescription(difficultyLevel);
-        String typeDesc = getQuestionTypeDescription(questionType);
-        
-        return String.format(
-            "당신은 전문 면접관입니다. 다음 조건에 맞는 면접 질문을 1개만 생성하세요.\n\n" +
-            "직무 분야: %s (%s)\n" +
-            "난이도: %s\n" +
-            "질문 유형: %s\n\n" +
-            "요구사항:\n" +
-            "1. 질문만 출력하세요 (설명이나 부가 텍스트 없이)\n" +
-            "2. 명확하고 구체적인 질문\n" +
-            "3. 실제 면접에서 나올 법한 현실적인 질문\n" +
-            "4. 100자 이내로 간결하게",
-            category.getName(), 
-            category.getDescription() != null ? category.getDescription() : "",
-            difficultyDesc, 
-            typeDesc
-        );
+        String difficultyDesc = switch (difficultyLevel) {
+            case 1 -> "초급 (기본 개념 위주)";
+            case 2 -> "초중급 (실무 기초)";
+            case 3 -> "중급 (실무 경험 필요)";
+            case 4 -> "중고급 (전략적 사고)";
+            case 5 -> "고급 (전문가 수준)";
+            default -> "중급";
+        };
+
+        return String.format("""
+            면접 질문을 1개만 생성해주세요.
+            
+            - 카테고리: %s
+            - 난이도: %s
+            - 질문 타입: %s
+            - STAR 기법으로 답변 가능한 행동 기반 질문
+            - 번호나 특수문자 없이 질문만 작성
+            
+            형식: 질문 하나만 반환
+            """, category.getName(), difficultyDesc, questionType);
     }
 
     private String callOpenAI(String prompt) throws Exception {
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", "gpt-4o-mini");
-        requestBody.put("messages", Arrays.asList(
-            Map.of("role", "system", "content", "당신은 전문 면접관입니다. 질문만 간결하게 생성하세요."),
-            Map.of("role", "user", "content", prompt)
-        ));
-        requestBody.put("temperature", 0.8);
-        requestBody.put("max_tokens", 200);
-
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + openaiApiKey);
         headers.set("Content-Type", "application/json");
 
+        Map<String, Object> requestBody = Map.of(
+            "model", "gpt-4o-mini",
+            "messages", List.of(
+                Map.of("role", "system", "content", "당신은 전문 면접관입니다."),
+                Map.of("role", "user", "content", prompt)
+            ),
+            "temperature", 0.7,
+            "max_tokens", 200
+        );
+
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-        
-        log.info("🔄 OpenAI 호출 중...");
         ResponseEntity<String> response = restTemplate.postForEntity(openaiApiUrl, request, String.class);
 
-        JsonNode root = objectMapper.readTree(response.getBody());
-        String content = root.path("choices").get(0).path("message").path("content").asText().trim();
-        
-        if (content.isEmpty()) {
-            throw new IllegalStateException("AI 응답이 비어있음");
-        }
-        
-        return content;
-    }
-
-    private String getDifficultyDescription(Integer level) {
-        return switch (level) {
-            case 1 -> "초급: 기본 개념, 용어 정의, 간단한 경험 질문";
-            case 2 -> "초중급: 실무 기초, 간단한 상황 대처, 기본 프로세스";
-            case 3 -> "중급: 실무 경험, 문제 해결, 프로젝트 사례";
-            case 4 -> "중고급: 복잡한 상황 대처, 전략적 사고, 깊이 있는 분석";
-            case 5 -> "고급: 고난도 기술, 리더십, 혁신적 솔루션, 전문가 수준";
-            default -> "중급";
-        };
-    }
-
-    private String getQuestionTypeDescription(String type) {
-        return switch (type) {
-            case "TECHNICAL" -> "기술/전문 지식 질문";
-            case "BEHAVIORAL" -> "경험 기반 행동 질문 (STAR 기법)";
-            case "SITUATIONAL" -> "가상 상황 대처 질문";
-            case "PERSONALITY" -> "인성/가치관 질문";
-            default -> "기술 질문";
-        };
+        JsonNode jsonNode = objectMapper.readTree(response.getBody());
+        return jsonNode.path("choices").get(0).path("message").path("content").asText().trim();
     }
 }

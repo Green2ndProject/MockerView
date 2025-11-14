@@ -38,7 +38,6 @@ public class SessionWebSocketController {
         private final AnswerRepository answerRepository;
         private final SessionParticipantRepository participantRepository;
         private final UserRepository userRepository;
-        private final SessionEndHandler sessionEndHandler;
 
         private final Map<Long, Set<String>> sessionParticipants = new ConcurrentHashMap<>();
 
@@ -214,25 +213,10 @@ public class SessionWebSocketController {
 
         @MessageMapping("/session/{sessionId}/end")
         public void handleEndSession(@DestinationVariable Long sessionId) {
-                try {
-                Session session = sessionRepository.findById(sessionId)
-                        .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
-
-                session.setStatus(Session.SessionStatus.ENDED);
-                sessionRepository.save(session);
-
+                log.info("세션 종료: sessionId={}", sessionId);
                 messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/control", 
-                        Map.of("action", "END", "message", "면접이 종료되었습니다"));
-
+                Map.of("action", "END"));
                 sessionParticipants.remove(sessionId);
-
-                log.info("✅ 세션 종료: {}", sessionId);
-
-                sessionEndHandler.handleSessionEnd(sessionId);
-
-                } catch (Exception e) {
-                log.error("❌ 세션 종료 실패: {}", e.getMessage());
-                }
         }
 
         @MessageMapping("/session/{sessionId}/control")
@@ -270,7 +254,7 @@ public class SessionWebSocketController {
                                         .orElseThrow(() -> new RuntimeException("참가자 정보를 찾을 수 없습니다"));
 
                                 if (participant.getRole() == User.UserRole.HOST || 
-                                        participant.getRole() == User.UserRole.REVIEWER) {
+                                        false /* REVIEWER role not defined */) {
                                         long questionCount = questionRepository.countBySessionId(sessionId);
                                         
                                         com.mockerview.entity.Question question = com.mockerview.entity.Question.builder()
@@ -314,4 +298,5 @@ public class SessionWebSocketController {
                 
                 messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/subtitle", message);
         }
+
 }
