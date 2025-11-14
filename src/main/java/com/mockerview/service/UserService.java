@@ -1,13 +1,16 @@
 package com.mockerview.service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mockerview.dto.UserSearchResponse;
 import com.mockerview.entity.User;
 import com.mockerview.exception.AlreadyDeletedException;
 import com.mockerview.repository.UserRepository;
@@ -107,5 +110,17 @@ public class UserService {
         
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    public List<UserSearchResponse> searchUsers(String keyword){
+
+        if(keyword == null || keyword.trim().isEmpty()){
+            return Collections.emptyList();
+        }
+
+        List<User> users = 
+            userRepository.findByNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(keyword, keyword);
+
+        return users.stream().map(UserSearchResponse::from).collect(Collectors.toList());
     }
 }

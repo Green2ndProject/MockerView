@@ -1,8 +1,7 @@
-
 .chat-toggle-btn{
     position         : fixed;
-    bottom           : 100px;
-    right            : 100px;
+    bottom           : 20px;
+    right            : 20px;
     width            : 60px;
     height           : 60px;
     border-radius    : 50%;
@@ -12,7 +11,14 @@
     border           : none;
     box-shadow       : 0 4px 12px rgba(0,0,0,0.2);
     cursor           : pointer;
-    z-index          : 1002;
+    z-index          : 1001;
+    transition : opacity 0.3s ease-in-out;
+}
+
+.chat-toggle-btn.hidden-by-widget {
+    opacity: 0;
+    visibility: hidden;
+    z-index: 0;
 }
 
 .unread-badge {
@@ -36,28 +42,40 @@
 
 .chat-widget-container {
     position   : fixed;
-    top        : 0;
-    right      : 0;
-    width      : 750px;
-    height     : 100vh;
+    bottom : 20px;
+    right : 20px;
+    width : 60px;
+    height : 60px;
+    box-shadow : none;
+    border-radius : 50%;
+    --open-width: 400px;
+    --open-height: 550px;
+    visibility: hidden;
+    opacity: 0;
+    transform : scale(0.95);
+    transform-origin : bottom right;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     background : white;
     z-index    : 1000;
     display    : flex;
-    box-shadow : -4px 0 10px rgba(0, 0, 0, 0.1);
-    transform  : translateX(100%);
-    transition : transform 0.3s ease-in-out;
+
 }
 
-.chat-widget-container.is-open {
-    transform : translateX(0);
+.chat-widget-container.active {
+    bottom: 20px;
+    right: 20px;
+    width:var(--open-width);
+    height:var(--open-height);
+    border-radius: 10px;
+    visibility: visible;
+    opacity: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .chat-sidebar {
     width : 35%;
+    min-width : 140px;
     border-right : 1px solid #eee;
-    padding : 15px;
-    display : flex;
-    flex-direction: column;
 }
 
 .chat-main {
@@ -72,5 +90,9 @@
     align-items : center;
     padding : 15px;
     border-bottom: 1px solid #eee;
+}
+
+#message-history {
+    overflow : scroll;
 }
 

@@ -18,7 +18,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
@@ -143,7 +143,7 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/mockerview_pro
+    url: jdbc:postgresql://localhost:5434/mockerview_pro
     username: mockerview_pro_user
     password: mockerview_pro_pass
     driver-class-name: org.postgresql.Driver

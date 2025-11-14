@@ -1,6 +1,7 @@
 package com.mockerview.controller.api;
 
 import com.mockerview.dto.CustomUserDetails;
+import com.mockerview.dto.UserSearchResponse;
 import com.mockerview.entity.User;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.UserService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -151,4 +153,14 @@ public class UserApiController {
                         )))
                         .orElse(ResponseEntity.notFound().build());
         }
+
+
+        @GetMapping("/search")
+        public ResponseEntity<List<UserSearchResponse>> searchUsers(@RequestParam("q") String keyword) {
+
+                List<UserSearchResponse> result = userService.searchUsers(keyword);
+
+                return ResponseEntity.ok(result);
+        }   
+    
 }

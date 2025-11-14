@@ -1,7 +1,113 @@
+<!-- <style>
+
+.chat-toggle-btn{
+    position         : fixed;
+    bottom           : 20px;
+    right            : 20px;
+    width            : 60px;
+    height           : 60px;
+    border-radius    : 50%;
+    background-color : #3f51b5;
+    color            : white;
+    font-size        : 2rem;
+    border           : none;
+    box-shadow       : 0 4px 12px rgba(0,0,0,0.2);
+    cursor           : pointer;
+    z-index          : 1001;
+    transition : opacity 0.3s ease-in-out;
+}
+
+.chat-toggle-btn.hidden-by-widget {
+    opacity: 0;
+    visibility: hidden;
+    z-index: 0;
+}
+
+.unread-badge {
+    position         : absolute;
+    top              : -5px;
+    right            : -5px;
+    background-color : #f44336;
+    color            : white;
+    border-radius    : 50%;
+    padding          : 3px 6px;
+    font-size        : 12px;
+    font-weight      : bold;
+    display          : flex;
+    align-items      : center;
+    justify-content  : center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.chat-widget-container {
+    position   : fixed;
+    bottom : 20px;
+    right : 20px;
+    width : 60px;
+    height : 60px;
+    box-shadow : none;
+    border-radius : 50%;
+    --open-width: 400px;
+    --open-height: 550px;
+    visibility: hidden;
+    opacity: 0;
+    transform : scale(0.95);
+    transform-origin : bottom right;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    background : white;
+    z-index    : 1000;
+    display    : flex;
+
+}
+
+.chat-widget-container.active {
+    bottom: 20px;
+    right: 20px;
+    width:var(--open-width);
+    height:var(--open-height);
+    border-radius: 10px;
+    visibility: visible;
+    opacity: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.chat-sidebar {
+    width : 35%;
+    min-width : 140px;
+    border-right : 1px solid #eee;
+}
+
+.chat-main {
+    width : 65%;
+    display : flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    display : flex;
+    justify-content : space-between;
+    align-items : center;
+    padding : 15px;
+    border-bottom: 1px solid #eee;
+}
+
+
+
+</style> -->
+
+
 <button th:fragment="messageWidgetBtn" id="chat-toggle-btn" class="chat-toggle-btn">
     <span id="unread-badge" class="unread-badge hidden">
         0
     </span>
+
+    <input type="hidden" 
+       id="current-user-username-data" 
+       th:attr="data-username=${#authentication.name}"  
+       sec:athorize="isAuthenticated()"  />
 </button>
 
 <div th:fragment="messageWidget" id="chat-widget-container" class="chat-widget-container"> 
@@ -21,7 +127,7 @@
     <div class="chat-main">
         <div class="chat-header" id="chat-header">
             <h4>[대화 상대를 선택하세요]</h4>
-            <button id="chat-close-btn" class="close-btn"></button>
+            <button id="chat-close-x-btn" class="close-x-btn">✖️</button>
         </div>
 
         <div id="message-history" class="message-history">
@@ -34,3 +140,365 @@
     </div>
 </div>
 
+
+
+
+<!-- <script>
+
+    class PrivateMessageWebsocket {
+
+    constructor(currentUserName, onMessageReceived){
+        this.currentUserName = currentUserName,
+        this.onMessageReceived = onMessageReceived,
+        this.stompClient = null;
+        this.connected = false;
+    }
+
+    
+
+    getTokenFromCookie(){
+        const cookies = document.cookie.split(';');
+        for(let cookie of cookies){
+            const [name, value] = cookie.trim().split('=');
+            if(name === 'Authorization') return value;
+        }
+
+        return null;
+    }
+
+    connect(){
+
+        const token = this.getTokenFromCookie();
+        if(!token){
+            console.error('❌ 토큰 없음. 1:1 채팅 연결 실패.');
+            return;
+        }
+
+        const socket = new SockJS("/ws");
+        this.stompClient = Stomp.over(socket);
+        this.stompClient.debug = null;
+
+        this.stompClient.connect({}, (frame)=> {
+            console.log("✅ [PrivateMessage] STOMP 연결 성공");
+            this.connected = true;
+            this.subscribePrivateQueue();
+        }, (error)=> {
+            console.error("❌ [PrivateMessage] WebSocket 연결 실패:", error);
+            this.connect = false;
+        });
+    }
+
+    subscribePrivateQueue(){
+
+        this.stompClient.subscribe('/user/queue/messages', (message) => {
+            console.log('✉️ [PrivateChat] 개인 메시지 수신');
+            const privateMessage = JSON.parse(message.body);
+            if(typeof this.onMessageReceived === 'function'){
+                this.onMessageReceived(privateMessage);
+            }
+        });
+
+        console.log('✅ [PrivateMessage] 개인 큐 구독 완료: /user/queue/messages');
+    }
+
+    sendPrivateMessage(receiverUsername, content){
+        if(!this.connected){
+            console.error('❌ [PrivateMessage] 연결 안 됨. 메시지 전송 불가.')
+            return;
+        };
+
+        const messagePayload = JSON.stringify({
+            receiverUsername: receiverUsername,
+            content: content
+        });
+
+        this.stompClient.send("/app/private/message", {}, messagePayload);
+    }
+}
+
+const myUsername = 'Username'; // 받아와야함
+
+window.privateMessageWsClient = new PrivateMessageWebsocket(myUsername, handleNewPrivateMessage);
+
+function handleNewPrivateMessage(message){
+    console.log(`[채팅 위젯] 새 메시지: ${message.senderUsername} -> ${message.content}`);
+
+    //displayMessageInWidget(message.senderUsername, message.content, message.sentAt);
+
+}
+
+
+
+async function fetchMessageHistory(targetUsername){
+
+    const API_BASE_URL = 'http://localhost:8080';
+    const API_URL      = `${API_BASE_URL}/api/private/messages/${targetUsername}`;
+
+    const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
+
+    if(!token){
+        console.error('❌ 토큰이 없어 메시지 내역을 불러올 수 없습니다.');
+        return;
+    }
+
+    try {
+        const response = await fetch(API_URL, {
+
+            method : 'GET',
+            headers : {
+                'Content-Type' : 'application/json'
+            }
+        });
+
+        if(!response.ok){
+            console.error(`❌ 메시지 내역 조회 실패: HTTP ${response.status}`)
+            return [];
+        }
+
+        const history = await response.json();
+        console.log(`✅ ${targetUsername}과의 메시지 내역 ${history.length}개 조회`);
+        return history;        
+        
+    }catch(error){
+        console.error('❌ 메시지 내역 조회 중 네트워크 오류 발생:', error);
+        return [];
+    }
+}
+
+async function openMessageWindow(targetUsername){
+
+    const messageHistory = await fetchMessageHistory(targetUsername);
+
+    clearMessageDisplay();
+
+    messageHistory.forEach(msg => {
+        // ui에 메시지 표시하는 실제 로직
+        displayMessageInWidget(msg.senderUsername, msg.content, msg.sentAt);
+    });
+
+    if(!window.privateMessageWsClient.connected){
+        window.privateMessageWsClient.connect();
+    }
+
+    window.currentChatPartner = targetUsername;
+}
+
+function setupMessageEvents(){
+    const sendButton = document.getElementById('send-btn');
+    const chatInput  = document.getElementById('message-input');
+
+    if(sendButton && chatInput){
+        sendButton.addEventListener('click',()=> {
+            const content = chatInput.value.trim();
+            const receiverName = '현재상대' // 채팅 위젯이 열렸을때 결정
+
+            if(content && window.privateMessageWsClient){
+                window.privateMessageWsClient.sendPrivateMessage(receiverName, content);
+            }
+        })
+    }
+}
+
+function searchAndDisplayUsers(keyword){
+
+    if(keyword.length < 2){
+        document.getElementById('search-results').innerHTML = '';
+        return;
+    }
+
+    fetch(`/api/users/search?q=${encodeURIComponent(keyword)}`)
+        .then(response => response.json())
+        .then(users => {
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '';
+
+            users.forEach(user => {
+                
+                const userItem = document.createElement('div');
+                userItem.className = 'user-search-item';
+                userItem.innerText = `${user.name} (${user.username})`; 
+
+                userItem.onclick = () => startPrivateChat(user.name, user.username);
+
+                resultsContainer.appendChild(userItem);
+            });
+        })
+        .catch(error => console.error('유저 검색 실패:', error));
+}
+
+function debounce(func, delay){
+    let timeout;
+    return function(...args){
+        clearTimeout(timeout);
+        timeout = setTimeout(()=> func.apply(this, args), delay);
+    }
+}
+
+function setupSearchHandler(){
+    const searchInput = document.getElementById('candidate-search');
+
+    searchInput.addEventListener('input', debounce(handleSearchInput, 300));
+}
+
+function handleSearchInput(event){
+    const query = event.target.value.trim();
+    if(query.length > 1){
+        fetchSearchUsers(query);
+    }else{
+        const candidateList = document.getElementById('candidate-list');
+        candidateList.innerHTML = '';
+    }
+}
+
+async function fetchSearchUsers(query){
+
+    const API_BASE_URL = 'http://localhost:8080';
+    const API_URL = `${API_BASE_URL}/api/users/search?q=${encodeURIComponent(query)}`;
+    const token = PrivateChatWebSocket.prototype.getTokenFromCookie();
+
+    if(!token){
+        console.error('인증 토큰이 없습니다. 검색 실패');
+        return;
+    }
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'GET',
+            headers: {
+                'Content-Type':'application/json'
+            }
+        });
+
+        if(!response.ok){
+            throw new Error(`HTTP 에러 : ${response.status}`);
+        }
+
+        const users = await response.json();
+
+        handleSearchResults(users);
+
+    }catch(error){
+        console.error('사용자 검색 실패', error);
+    }
+
+}
+
+function handleSearchResults(users){
+    
+    const candidateList = document.getElementById('candidate-list');
+    candidateList.innerHTML = '';
+
+    if(users.length === 0){
+        candidateList.innerHTML = '<li class="no-result">검색 결과가 없습니다.</li>';
+        return;
+    }
+
+    users.forEach(user => {
+        const item = createCandidateItem(user);
+        candidateList.appendChild(item);
+    });
+}
+
+function createCandidateItem(user){
+
+    const listItem = document.createElement('li');
+
+    listItem.className = 'candidate-item';
+    listItem.setAttribute('data-username', user.username);
+
+    listItem.innerHTML = `
+        <span class="name">${user.name} (${user.username})</span>
+        <span class="status online">●</span><span class="badge hidden">0</span>
+    `;
+
+    listItem.addEventListener('click', handleCandidateClick);
+
+    return listItem;
+}
+
+function handleCandidateClick(event){
+
+    const listItem = event.currentTarget;
+
+    const targetUsername = listItem.getAttribute('data-username');
+
+    if(targetUsername){
+
+        console.log(`[클릭] ${targetUsername}와의 채팅방을 엽니다.`);
+
+        window.currentChatPartner = targetUsername;
+    }
+}
+
+
+function startPrivateChat(targetname, targetusername){
+
+    console.log(`💬 ${targetname} (${targetusername})와 대화 시작.`);
+
+    document.getElementById('chat-widget').style.display = 'block';
+
+    window.currentChatPartnerId = targetname;
+    window.currentChatPartnerName = targetusername;
+
+    //    (선택적) 이전에 주고받은 메시지 목록을 서버 REST API로 불러와 표시
+    //    fetch(`/api/messages/${targetUserId}`).then(...)
+}
+
+function setupWidgetToggle(){
+
+    const toggleBtn = document.getElementById('chat-toggle-btn');
+    const container = document.getElementById('chat-widget-container');
+    const closexBtn = document.querySelector('.close-x-btn');
+
+    if(!toggleBtn || !container){
+        console.error("채팅 위젯의 HTML 요소를 찾을 수 없습니다.");
+        return;
+    }
+
+    toggleBtn.addEventListener('click', ()=>{
+
+        const isActive = container.classList.toggle('active');
+
+        if(isActive){
+            toggleBtn.classList.add('hidden-by-widget');
+        }else{
+            toggleBtn.classList.remove('hidden-by-widget');
+        }
+        
+    });
+
+    const chatHeader = document.getElementById('chat-header');
+
+    if(chatHeader){
+        chatHeader.addEventListener('click', ()=>{
+            if(container.classList.contains('active')){
+                container.classList.remove('active');
+                toggleBtn.classList.remove('hidden-by-widget');
+            }
+        });
+    }
+
+
+
+
+    closexBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        container.classList.remove('active');
+        toggleBtn.classList.remove('hidden-by-widget');
+    });
+
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+      
+    window.privateMessageWsClient.connect();
+
+    setupSearchHandler();
+
+    setupWidgetToggle();
+
+    document.getElementById('chat-with-user-B').addEventListener('click', () => {
+        openChatWindow('userB');
+    });
+});
+</script> -->

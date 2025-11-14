@@ -11,10 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PrivateMessage {
+public class PrivateMessageRequest {
 
-    Long senderId;
-    Long receiverId;
+    String receiverUsername;
     String content;
     LocalDateTime timestamp;
 }

@@ -54,4 +54,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @Query("SELECT u FROM User u WHERE u.role = :role AND u.isDeleted = 0")
     List<User> findByRole(@Param("role") User.UserRole role);
+    
+    List<User> findByNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(
+        String nameKeyword,
+        String usernameKeyword
+    );
 }
