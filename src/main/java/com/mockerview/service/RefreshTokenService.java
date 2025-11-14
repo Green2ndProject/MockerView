@@ -1,7 +1,10 @@
 package com.mockerview.service;
 
 import com.mockerview.entity.RefreshToken;
+import com.mockerview.entity.User;
 import com.mockerview.repository.RefreshTokenRepository;
+import com.mockerview.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,13 +20,17 @@ public class RefreshTokenService {
     
     private final RefreshTokenRepository refreshTokenRepository;
     private static final long REFRESH_TOKEN_VALIDITY = 30L * 24 * 60 * 60 * 1000;
-    
+    private final UserRepository userRepository;
+
     @Transactional
     public String createRefreshToken(String username) {
         refreshTokenRepository.deleteByUsername(username);
         
         String token = UUID.randomUUID().toString();
-        
+        Optional<User> user = userRepository.findByUsername(username);
+
+        User foundUser = user.get();
+
         RefreshToken refreshToken = RefreshToken.builder()
             .token(token)
             .username(username)
@@ -31,7 +38,7 @@ public class RefreshTokenService {
             .createdAt(LocalDateTime.now())
             .lastUsedAt(LocalDateTime.now())
             .build();
-        
+
         refreshTokenRepository.save(refreshToken);
         log.info("✅ Refresh token created for user: {}", username);
         

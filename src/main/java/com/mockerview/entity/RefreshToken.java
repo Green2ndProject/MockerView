@@ -31,7 +31,6 @@ public class RefreshToken {
     
     @Column
     private LocalDateTime lastUsedAt;
-    
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiryDate);
     }
