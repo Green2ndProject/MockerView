@@ -95,6 +95,74 @@ public class AIQuestionGeneratorService {
         }
     }
 
+    public List<String> generateMultipleQuestions(Category category, Integer difficulty, String questionType, Integer count) {
+        List<String> questions = new ArrayList<>();
+        
+        try {
+            String prompt = buildMultipleQuestionsPrompt(category, difficulty, questionType, count);
+            String response = callOpenAI(prompt);
+            
+            String[] lines = response.split("\n");
+            for (String line : lines) {
+                String cleaned = line.trim().replaceAll("^\\d+\\.\\s*", "").replaceAll("^-\\s*", "");
+                if (!cleaned.isEmpty() && cleaned.length() > 10) {
+                    questions.add(cleaned);
+                }
+            }
+            
+            if (questions.size() < count) {
+                for (int i = questions.size(); i < count; i++) {
+                    questions.add(createFallbackQuestionText(category, difficulty, i + 1));
+                }
+            }
+            
+            log.info("✨ {}개 질문 생성 완료", questions.size());
+            
+        } catch (Exception e) {
+            log.error("AI 복수 질문 생성 실패, 기본 질문 반환", e);
+            for (int i = 0; i < count; i++) {
+                questions.add(createFallbackQuestionText(category, difficulty, i + 1));
+            }
+        }
+        
+        return questions.subList(0, Math.min(count, questions.size()));
+    }
+
+    private String buildMultipleQuestionsPrompt(Category category, Integer difficulty, String questionType, Integer count) {
+        String categoryContext = category.getDescription() != null ? category.getDescription() : category.getName();
+        String difficultyDesc = DIFFICULTY_DESCRIPTIONS.getOrDefault(difficulty, "중급");
+        String typeDesc = QUESTION_TYPES.getOrDefault(questionType, "기술 질문");
+
+        return String.format(
+            "당신은 전문 면접관입니다. 다음 조건에 맞는 면접 질문을 정확히 %d개 생성하세요.\n\n" +
+            "직무 분야: %s\n" +
+            "난이도: %s\n" +
+            "질문 유형: %s\n\n" +
+            "요구사항:\n" +
+            "1. 각 질문을 새로운 줄에 작성\n" +
+            "2. 번호나 기호 없이 질문만 작성\n" +
+            "3. 명확하고 구체적인 질문\n" +
+            "4. 실제 면접에서 나올 법한 현실적인 질문\n" +
+            "5. 각 질문은 100자 이내로 간결하게\n" +
+            "6. 중복되지 않는 다양한 질문\n\n" +
+            "질문만 작성하세요:",
+            count, categoryContext, difficultyDesc, typeDesc
+        );
+    }
+
+    private String createFallbackQuestionText(Category category, Integer difficulty, int number) {
+        String[] templates = {
+            "%s 분야에서 가장 자신있는 기술이나 경험은 무엇인가요?",
+            "%s 업무를 수행하면서 가장 어려웠던 점과 해결 방법을 설명해주세요.",
+            "%s 관련 프로젝트 경험이 있다면 구체적으로 말씀해주세요.",
+            "%s 직무에 지원한 이유와 본인의 강점을 설명해주세요.",
+            "%s 분야에서 최근 관심있게 본 트렌드나 기술이 있나요?"
+        };
+        
+        int index = (number - 1) % templates.length;
+        return String.format(templates[index], category.getName());
+    }
+
     private String buildPrompt(Category category, Integer difficulty, String questionType, String previousFeedback) {
         String categoryContext = CATEGORY_PROMPTS.getOrDefault(category.getCode(), category.getName());
         String difficultyDesc = DIFFICULTY_DESCRIPTIONS.getOrDefault(difficulty, "중급");
@@ -132,7 +200,7 @@ public class AIQuestionGeneratorService {
             Map.of("role", "user", "content", prompt)
         ));
         requestBody.put("temperature", 0.8);
-        requestBody.put("max_tokens", 200);
+        requestBody.put("max_tokens", 500);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + openaiApiKey);

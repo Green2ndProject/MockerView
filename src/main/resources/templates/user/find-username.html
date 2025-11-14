@@ -1,161 +1,163 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('아이디 찾기')}"></head>
-<style th:replace="~{fragments/styles :: navbar-styles}"></style>
-<style>
-    body.guest-page {
-        background: #f8f9fa;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        padding-top: 0;
-    }
-    
-    body.guest-page .navbar {
-        position: relative;
-        margin-bottom: 0;
-    }
-    
-    .auth-wrapper {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 40px 20px;
-    }
-    
-    .find-container {
-        max-width: 400px;
-        width: 100%;
-        padding: 40px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-    }
-    
-    .find-container h2 {
-        text-align: center;
-        margin-bottom: 10px;
-        color: #1a1a1a;
-        font-size: 1.625rem;
-        font-weight: 700;
-        letter-spacing: -0.5px;
-    }
-    
-    .subtitle {
-        text-align: center;
-        color: #6b7280;
-        font-size: 0.9375rem;
-        margin-bottom: 30px;
-    }
-    
-    .find-container input {
-        width: 100%;
-        padding: 12px 14px;
-        margin: 8px 0;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 8px;
-        box-sizing: border-box;
-        font-size: 0.9375rem;
-    }
-    
-    .find-container input:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-    }
-    
-    .find-container input::placeholder {
-        color: #9ca3af;
-    }
-    
-    .find-container button {
-        width: 100%;
-        padding: 12px;
-        margin: 16px 0;
-        border: none;
-        border-radius: 8px;
-        background: #667eea;
-        color: white;
-        cursor: pointer;
-        font-size: 0.9375rem;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
-    
-    .find-container button:hover {
-        background: #5568d3;
-    }
-    
-    .find-container button:active {
-        transform: scale(0.98);
-    }
-    
-    .result {
-        margin-top: 20px;
-        padding: 14px;
-        border-radius: 8px;
-        text-align: center;
-        display: none;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-    
-    .result.success {
-        background: #f0fdf4;
-        color: #166534;
-        display: block;
-        border: 1px solid #bbf7d0;
-    }
-    
-    .result.error {
-        background: #fef2f2;
-        color: #991b1b;
-        display: block;
-        border: 1px solid #fecaca;
-    }
-    
-    .links {
-        text-align: center;
-        margin-top: 24px;
-        padding-top: 20px;
-        border-top: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: center;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-    
-    .links a {
-        color: #667eea;
-        text-decoration: none;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-    
-    .links a:hover {
-        text-decoration: underline;
-    }
-    
-    @media (max-width: 480px) {
-        body {
-            padding: 16px;
+<head>
+    <div th:replace="~{fragments/head :: head}"></div>
+    <title>아이디 찾기 - MockerView</title>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+    <style>
+        body.guest-page {
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 0;
+        }
+        
+        body.guest-page .navbar {
+            position: relative;
+            margin-bottom: 0;
+        }
+        
+        .auth-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
         }
         
         .find-container {
-            padding: 32px 24px;
+            max-width: 400px;
+            width: 100%;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
         }
         
         .find-container h2 {
-            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            font-size: 1.625rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9375rem;
+            margin-bottom: 30px;
+        }
+        
+        .find-container input {
+            width: 100%;
+            padding: 12px 14px;
+            margin: 8px 0;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 0.9375rem;
+        }
+        
+        .find-container input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .find-container input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .find-container button {
+            width: 100%;
+            padding: 12px;
+            margin: 16px 0;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .find-container button:hover {
+            background: #5568d3;
+        }
+        
+        .find-container button:active {
+            transform: scale(0.98);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .result.success {
+            background: #f0fdf4;
+            color: #166534;
+            display: block;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .result.error {
+            background: #fef2f2;
+            color: #991b1b;
+            display: block;
+            border: 1px solid #fecaca;
         }
         
         .links {
-            flex-direction: column;
-            gap: 12px;
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
         }
-    }
-</style>
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 16px;
+            }
+            
+            .find-container {
+                padding: 32px 24px;
+            }
+            
+            .find-container h2 {
+                font-size: 1.5rem;
+            }
+            
+            .links {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
 </head>
 <body class="guest-page">
     <div th:replace="~{fragments/navbar-guest :: navbar-guest}"></div>
@@ -181,9 +183,7 @@
     </div>
     
     <div th:replace="~{fragments/footer :: footer}"></div>
-    
-    <div th:replace="~{fragments/scripts :: navbar-script}"></div>
-    <div th:replace="~{fragments/scripts :: common-scripts}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
     
     <script>
         document.getElementById('findForm').addEventListener('submit', async (e) => {

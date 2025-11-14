@@ -1,8 +1,6 @@
 package com.mockerview.service;
 
 import com.mockerview.dto.NotificationMessage;
-import com.mockerview.entity.BadgeType;
-import com.mockerview.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -96,24 +94,5 @@ public class NotificationService {
         
         messagingTemplate.convertAndSend("/topic/session/" + sessionId + "/notifications", notification);
         log.info("✅ 세션 시작 알림 전송 - sessionId: {}", sessionId);
-    }
-
-    public void sendBadgeNotification(User user, BadgeType badgeType) {
-        String message = String.format("%s %s 배지를 획득했습니다! %s",
-                badgeType.getEmoji(),
-                badgeType.getDisplayName(),
-                badgeType.getDescription()
-        );
-        
-        NotificationMessage notification = NotificationMessage.builder()
-                .type("BADGE_EARNED")
-                .title("🏆 새로운 배지 획득!")
-                .message(message)
-                .link("/mypage/reports")
-                .timestamp(LocalDateTime.now())
-                .build();
-        
-        messagingTemplate.convertAndSend("/topic/user/" + user.getId() + "/notifications", notification);
-        log.info("🎖️ 배지 획득 알림 전송: {} - {}", user.getUsername(), badgeType.getDisplayName());
     }
 }

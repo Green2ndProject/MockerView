@@ -11,4 +11,9 @@ public class RegisterDTO {
     private String role;
     private String emailVerificationCode;
     private String recaptchaToken;
+    private Boolean agreePersonalInfo;
+    private Boolean agreeThirdParty;
+    private Boolean agreeMarketing;
+    private Boolean agreeMarketingEmail;
+    private Boolean agreeMarketingPush;
 }

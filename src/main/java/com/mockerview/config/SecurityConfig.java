@@ -76,6 +76,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/auth/**", "/api/join", "/api/login", "/api/auth/logout", "/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/questions/categories/**").permitAll()
+                        .requestMatchers("/selfinterview/**").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/analysis/**").permitAll()
@@ -85,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/session/*/join").permitAll()
                         .requestMatchers("/api/users/withdraw").authenticated()
                         .requestMatchers("/api/users/change-password").authenticated()
+                        .requestMatchers("/api/consent/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JWTFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class)

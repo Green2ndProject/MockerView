@@ -3,9 +3,11 @@ package com.mockerview.controller.api;
 import com.mockerview.entity.Category;
 import com.mockerview.entity.Question;
 import com.mockerview.entity.Session;
+import com.mockerview.entity.Subscription;
 import com.mockerview.entity.User;
 import com.mockerview.repository.CategoryRepository;
 import com.mockerview.repository.SessionRepository;
+import com.mockerview.repository.SubscriptionRepository;
 import com.mockerview.repository.UserRepository;
 import com.mockerview.service.AIQuestionGeneratorService;
 import com.mockerview.service.DifficultyAdaptiveService;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +33,7 @@ public class QuestionGenerationController {
     private final CategoryRepository categoryRepository;
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
     @GetMapping("/categories")
     public ResponseEntity<List<Category>> getCategories() {
@@ -118,6 +122,71 @@ public class QuestionGenerationController {
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/generate-multiple")
+    public ResponseEntity<?> generateMultipleQuestions(@RequestBody Map<String, Object> request, Authentication auth) {
+        try {
+            User user = userRepository.findByUsername(auth.getName())
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+            Subscription subscription = subscriptionRepository.findActiveSubscriptionByUserId(user.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("활성 구독을 찾을 수 없습니다."));
+
+            if (subscription.getUsedSessions() >= subscription.getSessionLimit()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "이번 달 세션 생성 횟수를 모두 사용했습니다. (" + 
+                               subscription.getUsedSessions() + "/" + subscription.getSessionLimit() + ")\n" +
+                               "플랜을 업그레이드하거나 다음 달을 기다려주세요."
+                ));
+            }
+
+            String categoryCode = (String) request.get("categoryCode");
+            String questionType = (String) request.get("questionType");
+            Integer difficulty = (Integer) request.get("difficulty");
+            Integer count = (Integer) request.get("count");
+
+            Category category = categoryRepository.findByCode(categoryCode)
+                    .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+
+            Session session = Session.builder()
+                    .title("셀프 면접 - " + category.getName())
+                    .category(category.getCode())
+                    .host(user)
+                    .sessionType("SELF")
+                    .sessionStatus(Session.SessionStatus.RUNNING)
+                    .isSelfInterview("Y")
+                    .expiresAt(LocalDateTime.now().plusHours(24))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            
+            sessionRepository.save(session);
+
+            subscription.setUsedSessions(subscription.getUsedSessions() + 1);
+            subscriptionRepository.save(subscription);
+
+            List<String> questions = aiQuestionGenerator.generateMultipleQuestions(
+                    category, difficulty, questionType, count
+            );
+
+            log.info("✨ 셀프 면접 세션 생성 완료 - 사용자: {}, 세션: {}/{}", 
+                     user.getUsername(), subscription.getUsedSessions(), subscription.getSessionLimit());
+
+            return ResponseEntity.ok(questions);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            log.error("복수 질문 생성 실패", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "질문 생성에 실패했습니다: " + e.getMessage()
             ));
         }
     }

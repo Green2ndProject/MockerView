@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('내 활동 통계')}"></head>
-<style th:replace="~{fragments/styles :: navbar-styles}"></style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<head>
+    <div th:replace="~{fragments/head :: head}"></div>
+    <title>내 활동 통계 - MockerView</title>
+    <div th:replace="~{fragments/styles :: styles}"></div>
 <style>
     body {
         background: #f8f9fa;

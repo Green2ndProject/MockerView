@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="navbar-script">
+<div th:fragment="scripts">
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.getElementById('mobileMenuToggle');
@@ -23,9 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-</div>
-
-<div th:fragment="common-scripts">
 <script src="/js/push-init.js"></script>
 </div>
 </body>

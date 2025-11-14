@@ -1,193 +1,121 @@
 package com.mockerview.controller.api;
 
-import com.mockerview.controller.websocket.SessionEndHandler;
-import com.mockerview.dto.SelfInterviewCreateDTO;
-import com.mockerview.entity.*;
-import com.mockerview.repository.CategoryRepository;
-import com.mockerview.repository.SessionRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mockerview.entity.SelfInterviewReport;
+import com.mockerview.entity.User;
+import com.mockerview.repository.SelfInterviewReportRepository;
 import com.mockerview.repository.UserRepository;
-import com.mockerview.service.UnifiedQuestionGeneratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-@Slf4j
 @RestController
-@RequestMapping("/api/selfinterview")
+@RequestMapping("/api/self-interview")
 @RequiredArgsConstructor
+@Slf4j
 public class SelfInterviewApiController {
 
-        private final SessionRepository sessionRepository;
-        private final UserRepository userRepository;
-        private final CategoryRepository categoryRepository;
-        private final UnifiedQuestionGeneratorService questionGenerator;
-        private final SessionEndHandler sessionEndHandler;
+    private final SelfInterviewReportRepository reportRepository;
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-        @PostMapping("/create-with-ai")
-        public ResponseEntity<?> createWithAI(
-                @RequestBody SelfInterviewCreateDTO dto,
-                Authentication auth) {
-                
-                try {
-                log.info("📥 AI 셀프면접 생성 요청 - 제목: {}, 카테고리: {}, 난이도: {}, 질문수: {}", 
-                        dto.getTitle(), dto.getCategory(), dto.getDifficulty(), dto.getQuestionCount());
-                
-                User user = userRepository.findByUsername(auth.getName())
-                        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    @PostMapping("/save-report")
+    public ResponseEntity<?> saveReport(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Map<String, Object> reportData) {
+        try {
+            User user = userRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-                Category category = categoryRepository.findByCode(dto.getCategory())
-                        .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+            SelfInterviewReport report = SelfInterviewReport.builder()
+                    .user(user)
+                    .categoryCode((String) reportData.get("categoryCode"))
+                    .categoryName((String) reportData.get("categoryName"))
+                    .questionType((String) reportData.get("questionType"))
+                    .difficulty((Integer) reportData.get("difficulty"))
+                    .totalQuestions((Integer) reportData.get("totalQuestions"))
+                    .overallAvg(parseDouble(reportData.get("overallAvg")))
+                    .textAvg(parseDouble(reportData.get("textAvg")))
+                    .audioAvg(parseDouble(reportData.get("audioAvg")))
+                    .videoAvg(parseDouble(reportData.get("videoAvg")))
+                    .questionsData(objectMapper.writeValueAsString(reportData.get("questions")))
+                    .feedbacksData(objectMapper.writeValueAsString(reportData.get("feedbacks")))
+                    .build();
 
-                Session session = Session.builder()
-                        .host(user)
-                        .title(dto.getTitle())
-                        .sessionType(dto.getSessionType() != null ? dto.getSessionType() : "TEXT")
-                        .difficulty(dto.getDifficulty() != null ? dto.getDifficulty() : "MEDIUM")
-                        .category(dto.getCategory())
-                        .isSelfInterview("Y")
-                        .isReviewable("Y")
-                        .aiEnabled(true)
-                        .aiMode("FULL")
-                        .sessionStatus(Session.SessionStatus.PLANNED)
-                        .createdAt(LocalDateTime.now())
-                        .lastActivity(LocalDateTime.now())
-                        .build();
+            reportRepository.save(report);
 
-                session = sessionRepository.save(session);
-                log.info("✅ 세션 생성 완료 - sessionId: {}", session.getId());
+            log.info("셀프 면접 리포트 저장 완료 - userId: {}, reportId: {}", user.getId(), report.getId());
 
-                int questionCount = dto.getQuestionCount() != null ? dto.getQuestionCount() : 5;
-                String questionType = dto.getQuestionType() != null ? dto.getQuestionType() : "TECHNICAL";
-                int difficultyLevel = dto.getDifficultyLevel() != null ? dto.getDifficultyLevel() : 2;
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "reportId", report.getId()
+            ));
 
-                log.info("🔄 질문 생성 시작 - 총 {}개", questionCount);
-                
-                for (int i = 0; i < questionCount; i++) {
-                        Question question = questionGenerator.generateQuestion(
-                                category,
-                                difficultyLevel,
-                                questionType,
-                                session
-                        );
-                        
-                        question.setQuestioner(user);
-                        question.setOrderNo(i + 1);
-                        session.getQuestions().add(question);
-                        
-                        log.info("✅ 질문 {}/{} 생성 완료", i + 1, questionCount);
-                }
-
-                sessionRepository.save(session);
-                
-                log.info("🎉 AI 셀프면접 생성 완료 - sessionId: {}, 질문수: {}", 
-                        session.getId(), session.getQuestions().size());
-
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("sessionId", session.getId());
-                response.put("questionCount", session.getQuestions().size());
-                response.put("message", "AI 면접이 생성되었습니다!");
-
-                return ResponseEntity.ok(response);
-
-                } catch (Exception e) {
-                log.error("❌ AI 면접 생성 실패", e);
-                return ResponseEntity.badRequest().body(Map.of(
-                        "success", false,
-                        "message", "면접 생성에 실패했습니다: " + e.getMessage()
-                ));
-                }
+        } catch (JsonProcessingException e) {
+            log.error("리포트 데이터 직렬화 실패", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "리포트 저장에 실패했습니다."
+            ));
+        } catch (Exception e) {
+            log.error("리포트 저장 실패", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "리포트 저장에 실패했습니다: " + e.getMessage()
+            ));
         }
+    }
 
-        @PostMapping("/{sessionId}/complete")
-        public ResponseEntity<?> completeSelfInterview(
-                @PathVariable Long sessionId,
-                Authentication auth
-        ) {
-                try {
-                log.info("🔍 셀프 면접 완료 요청: sessionId={}, user={}", sessionId, auth.getName());
-                
-                Session session = sessionRepository.findById(sessionId)
-                        .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+    @GetMapping("/reports")
+    public ResponseEntity<?> getReports(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            User user = userRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-                User user = userRepository.findByUsername(auth.getName())
-                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+            List<SelfInterviewReport> reports = reportRepository.findByUserOrderByCreatedAtDesc(user);
 
-                if (!session.getHost().getId().equals(user.getId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body(Map.of("error", "권한이 없습니다"));
-                }
+            return ResponseEntity.ok(reports);
 
-                session.setStatus(Session.SessionStatus.ENDED);
-                session.setEndTime(LocalDateTime.now());
-                sessionRepository.save(session);
-
-                log.info("✅ 셀프 면접 완료: sessionId={}, userId={}", sessionId, user.getId());
-
-                sessionEndHandler.handleSessionEnd(sessionId);
-
-                return ResponseEntity.ok(Map.of(
-                        "success", true,
-                        "message", "셀프 면접이 완료되었습니다",
-                        "sessionId", sessionId,
-                        "status", "ENDED"
-                ));
-                } catch (Exception e) {
-                log.error("❌ 셀프 면접 완료 실패: sessionId={}, error={}", sessionId, e.getMessage(), e);
-                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-                }
+        } catch (Exception e) {
+            log.error("리포트 조회 실패", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "리포트 조회에 실패했습니다."
+            ));
         }
+    }
 
-        @GetMapping("/{sessionId}")
-        public ResponseEntity<?> getSession(
-                @PathVariable Long sessionId,
-                Authentication auth) {
-                try {
-                Session session = sessionRepository.findById(sessionId)
-                        .orElseThrow(() -> new RuntimeException("세션을 찾을 수 없습니다"));
+    @GetMapping("/reports/{reportId}")
+    public ResponseEntity<?> getReportDetail(@PathVariable Long reportId) {
+        try {
+            SelfInterviewReport report = reportRepository.findById(reportId)
+                    .orElseThrow(() -> new RuntimeException("Report not found"));
 
-                User user = userRepository.findByUsername(auth.getName())
-                        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+            return ResponseEntity.ok(report);
 
-                if (!session.getHost().getId().equals(user.getId())) {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body(Map.of("error", "권한이 없습니다"));
-                }
-
-                List<Map<String, Object>> questionsList = session.getQuestions().stream()
-                        .map(q -> {
-                                Map<String, Object> qMap = new HashMap<>();
-                                qMap.put("id", q.getId());
-                                qMap.put("questionText", q.getText());
-                                qMap.put("orderNo", q.getOrderNo());
-                                qMap.put("difficultyLevel", q.getDifficultyLevel());
-                                qMap.put("questionType", q.getQuestionType());
-                                return qMap;
-                        })
-                        .collect(Collectors.toList());
-
-                Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("sessionId", session.getId());
-                response.put("title", session.getTitle());
-                response.put("status", session.getStatus().toString());
-                response.put("difficulty", session.getDifficulty());
-                response.put("category", session.getCategory());
-                response.put("questions", questionsList);
-
-                return ResponseEntity.ok(response);
-                } catch (Exception e) {
-                log.error("세션 조회 실패: {}", e.getMessage());
-                return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-                }
+        } catch (Exception e) {
+            log.error("리포트 상세 조회 실패", e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "리포트 조회에 실패했습니다."
+            ));
         }
+    }
+
+    private Double parseDouble(Object value) {
+        if (value == null || value.equals("-")) return null;
+        if (value instanceof Number) return ((Number) value).doubleValue();
+        try {
+            return Double.parseDouble(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 }

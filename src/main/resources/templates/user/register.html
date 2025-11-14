@@ -255,6 +255,276 @@
             color: #1a1a1a;
         }
         
+        .privacy-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .privacy-header {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .privacy-header-icon {
+            font-size: 1.125rem;
+        }
+        
+        .consent-item {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .consent-item.all-consent {
+            background: #667eea;
+            border-color: #667eea;
+            margin-bottom: 16px;
+        }
+        
+        .consent-item.all-consent .consent-checkbox-label {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .consent-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .consent-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .consent-item.all-consent input[type="checkbox"] {
+            accent-color: white;
+        }
+        
+        .consent-checkbox-label {
+            flex: 1;
+            font-size: 0.875rem;
+            color: #1a1a1a;
+            user-select: none;
+        }
+        
+        .consent-required {
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.8125rem;
+        }
+        
+        .consent-optional {
+            color: #6b7280;
+            font-size: 0.8125rem;
+        }
+        
+        .consent-detail-btn {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            color: #667eea;
+            background: white;
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .consent-detail-btn:hover {
+            background: #f0f4ff;
+        }
+        
+        .sub-consent {
+            margin-left: 30px;
+            margin-top: 8px;
+            padding: 8px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        
+        .sub-consent-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        
+        .sub-consent-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .sub-consent-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .sub-consent-item label {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+        
+        .modal.active {
+            display: block;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .modal-close:hover {
+            background: #f3f4f6;
+            color: #1a1a1a;
+        }
+        
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .privacy-content {
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        
+        .privacy-content h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .privacy-content h3:first-child {
+            margin-top: 0;
+        }
+        
+        .privacy-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .privacy-content li {
+            margin-bottom: 6px;
+        }
+        
+        .privacy-content strong {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        
+        .privacy-content table {
+            width: 100%;
+            margin: 12px 0;
+            border-collapse: collapse;
+            font-size: 0.8125rem;
+        }
+        
+        .privacy-content table th,
+        .privacy-content table td {
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+        }
+        
+        .privacy-content table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .privacy-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        
+        .privacy-footer button {
+            padding: 10px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .privacy-footer button:hover {
+            background: #5568d3;
+        }
+        
         .btn-submit {
             width: 100%;
             padding: 12px;
@@ -398,8 +668,21 @@
             .form-input,
             .btn-submit,
             .btn-oauth {
-                padding: 11px 12px;
                 font-size: 0.875rem;
+                padding: 11px;
+            }
+            
+            .role-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10px auto;
+            }
+            
+            .privacy-section {
+                padding: 16px;
             }
         }
     </style>
@@ -529,6 +812,66 @@
                     </div>
                 </div>
                 
+                <div class="privacy-section">
+                    <div class="privacy-header">
+                        <span class="privacy-header-icon">🔒</span>
+                        개인정보 수집 및 이용 동의
+                    </div>
+                    
+                    <div class="consent-item all-consent">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" id="agreeAll">
+                            <span class="consent-checkbox-label">전체 동의</span>
+                        </label>
+                    </div>
+                    
+                    <div class="consent-item">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" class="consent-required-check" id="agreePersonalInfo" required>
+                            <span class="consent-checkbox-label">
+                                개인정보 수집 및 이용 동의 <span class="consent-required">(필수)</span>
+                            </span>
+                            <button type="button" class="consent-detail-btn" onclick="openModal('personalInfoModal')">
+                                상세보기
+                            </button>
+                        </label>
+                    </div>
+                    
+                    <div class="consent-item">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" class="consent-required-check" id="agreeThirdParty" required>
+                            <span class="consent-checkbox-label">
+                                개인정보 제3자 제공 동의 <span class="consent-required">(필수)</span>
+                            </span>
+                            <button type="button" class="consent-detail-btn" onclick="openModal('thirdPartyModal')">
+                                상세보기
+                            </button>
+                        </label>
+                    </div>
+                    
+                    <div class="consent-item">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" id="agreeMarketing">
+                            <span class="consent-checkbox-label">
+                                마케팅 정보 수신 동의 <span class="consent-optional">(선택)</span>
+                            </span>
+                            <button type="button" class="consent-detail-btn" onclick="openModal('marketingModal')">
+                                상세보기
+                            </button>
+                        </label>
+                        <div class="sub-consent" id="marketingSubConsent" style="display: none;">
+                            <div class="sub-consent-item">
+                                <input type="checkbox" id="agreeMarketingEmail">
+                                <label for="agreeMarketingEmail">이메일 수신</label>
+                            </div>
+                            <div class="sub-consent-item">
+                                <input type="checkbox" id="agreeMarketingPush">
+                                <label for="agreeMarketingPush">웹 푸시 알림 수신</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <button type="submit" class="btn-submit" id="submitBtn" disabled>회원가입</button>
             </form>
             
@@ -549,12 +892,11 @@
                         </svg>
                         Google로 가입하기
                     </a>
-                    
                     <a href="/oauth2/authorization/kakao" class="btn-oauth">
                         <svg class="oauth-icon" viewBox="0 0 24 24">
-                            <path fill="#FEE500" d="M12 3C6.48 3 2 6.58 2 11c0 2.78 1.83 5.23 4.58 6.68-.2.73-.66 2.45-.75 2.83-.12.5.18.49.38.36.15-.1 2.31-1.58 3.19-2.18.53.07 1.07.11 1.6.11 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
+                            <path fill="#FEE500" d="M12 3C6.48 3 2 6.58 2 11c0 2.8 1.85 5.27 4.65 6.67-.2.74-.75 2.78-.85 3.22-.12.52.19.51.4.37.17-.11 2.47-1.67 3.45-2.33.7.1 1.43.15 2.18.15 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
                         </svg>
-                        카카오로 가입하기
+                        Kakao로 가입하기
                     </a>
                 </div>
             </div>
@@ -564,9 +906,191 @@
             </div>
             
             <div class="recaptcha-notice">
-                This site is protected by reCAPTCHA and the Google
-                <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a> and
-                <a href="https://policies.google.com/terms" target="_blank">Terms of Service</a> apply.
+                이 사이트는 reCAPTCHA로 보호되며<br>
+                Google <a href="https://policies.google.com/privacy" target="_blank">개인정보처리방침</a> 및
+                <a href="https://policies.google.com/terms" target="_blank">서비스 약관</a>이 적용됩니다.
+            </div>
+        </div>
+    </div>
+    
+    <div id="personalInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">개인정보 수집 및 이용 동의</h3>
+                <button class="modal-close" onclick="closeModal('personalInfoModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-content">
+                    <p>MockerView는 「개인정보보호법」 제15조, 제22조, 제24조에 따라 이용자의 개인정보를 다음과 같이 수집·이용합니다.</p>
+                    
+                    <h3>1. 수집 항목</h3>
+                    <p><strong>[필수항목]</strong></p>
+                    <ul>
+                        <li>회원정보: 이름, 이메일(또는 사용자ID), 비밀번호, 회원유형(면접자/면접관/관리자)</li>
+                        <li>자동 수집: 가입일시, 최종 로그인 일시, IP주소, 접속 로그</li>
+                    </ul>
+                    
+                    <p><strong>[선택항목]</strong></p>
+                    <ul>
+                        <li>프로필 정보: 프로필 이미지, 직무/직군, 이용 목적</li>
+                        <li>소셜 로그인 이용 시: 소셜 계정 정보 (Google/Kakao 프로필)</li>
+                    </ul>
+                    
+                    <p><strong>[서비스 이용 중 생성되는 정보]</strong></p>
+                    <ul>
+                        <li>면접 관련: 질문, 답변(텍스트/음성/영상), AI 피드백, 면접 점수, 참여 이력</li>
+                        <li>결제 관련: 결제 정보, 구독 플랜, 거래 내역 (B2B 고객)</li>
+                    </ul>
+                    
+                    <h3>2. 수집 목적</h3>
+                    <ul>
+                        <li>서비스 회원가입, 본인 확인 및 로그인 인증</li>
+                        <li>모의면접 진행 및 결과 저장, AI 피드백 생성</li>
+                        <li>영상/음성 녹화 및 분석 서비스 제공</li>
+                        <li>결제 및 구독 관리 (유료 플랜 이용 시)</li>
+                        <li>서비스 이용 통계, 품질 개선 및 고객지원</li>
+                        <li>부정 이용 방지 및 서비스 안정성 유지</li>
+                    </ul>
+                    
+                    <h3>3. 보유 및 이용기간</h3>
+                    <p><strong>[원칙]</strong></p>
+                    <ul>
+                        <li>회원 탈퇴 요청 시까지 보관</li>
+                        <li>탈퇴 후 30일간 데이터 복구 가능 상태로 보관 → 이후 영구 삭제</li>
+                    </ul>
+                    
+                    <p><strong>[예외: 법령에 따른 보관]</strong></p>
+                    <ul>
+                        <li>계약 또는 청약철회에 관한 기록: 5년 (전자상거래법)</li>
+                        <li>대금결제 및 재화 공급 기록: 5년 (전자상거래법)</li>
+                        <li>소비자 불만 또는 분쟁 처리 기록: 3년 (전자상거래법)</li>
+                        <li>로그인 기록: 3개월 (통신비밀보호법)</li>
+                    </ul>
+                    
+                    <p><strong>[특이사항]</strong></p>
+                    <ul>
+                        <li>결제 관련 데이터는 탈퇴 후에도 법적 의무 기간(7년)까지 보관됩니다.</li>
+                    </ul>
+                    
+                    <h3>5. 동의 거부 권리 및 불이익</h3>
+                    <ul>
+                        <li>이용자는 개인정보 수집 및 이용에 동의하지 않을 권리가 있습니다.</li>
+                        <li>다만, 필수항목 미동의 시 회원가입 및 서비스 이용이 불가능합니다.</li>
+                        <li>선택항목 미동의 시에도 기본 서비스 이용은 가능하나, 일부 기능이 제한될 수 있습니다.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="privacy-footer">
+                <button onclick="closeModal('personalInfoModal')">확인</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="thirdPartyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">개인정보 제3자 제공 동의</h3>
+                <button class="modal-close" onclick="closeModal('thirdPartyModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-content">
+                    <p>MockerView는 서비스 제공을 위해 아래 제3자에게 개인정보를 제공합니다:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>제공받는 자</th>
+                                <th>제공 항목</th>
+                                <th>제공 목적</th>
+                                <th>보유기간</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>OpenAI (미국)</td>
+                                <td>답변 텍스트, 음성 파일</td>
+                                <td>AI 피드백 생성, 음성 인식</td>
+                                <td>처리 즉시 삭제</td>
+                            </tr>
+                            <tr>
+                                <td>Cloudinary (미국)</td>
+                                <td>면접 영상/음성 파일</td>
+                                <td>영상 저장 및 스트리밍</td>
+                                <td>답변 삭제 시까지</td>
+                            </tr>
+                            <tr>
+                                <td>Agora (싱가포르)</td>
+                                <td>사용자ID, 세션ID</td>
+                                <td>실시간 화상/음성 통신</td>
+                                <td>세션 종료 후 즉시 삭제</td>
+                            </tr>
+                            <tr>
+                                <td>Toss Payments (한국)</td>
+                                <td>결제자 정보, 결제금액</td>
+                                <td>결제 처리</td>
+                                <td>5년 (전자상거래법)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <p style="margin-top: 12px;">※ 위 제공에 동의하지 않을 경우 서비스 이용이 제한될 수 있습니다.</p>
+                    
+                    <h3>6. 개인정보 처리 위탁</h3>
+                    <p>MockerView는 서비스 제공을 위해 아래와 같이 개인정보 처리를 위탁합니다:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>수탁업체</th>
+                                <th>위탁 업무 내용</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Render</td>
+                                <td>서비스 인프라 운영 및 데이터 저장</td>
+                            </tr>
+                            <tr>
+                                <td>Gmail SMTP</td>
+                                <td>이메일 발송 대행 (회원가입, 비밀번호 재설정 등)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="privacy-footer">
+                <button onclick="closeModal('thirdPartyModal')">확인</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="marketingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">마케팅 정보 수신 동의</h3>
+                <button class="modal-close" onclick="closeModal('marketingModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="privacy-content">
+                    <p>MockerView의 신규 서비스, 이벤트 정보 등을 수신하는 것에 동의합니다.</p>
+                    
+                    <h3>수신 방법</h3>
+                    <ul>
+                        <li>이메일</li>
+                        <li>웹 푸시 알림</li>
+                    </ul>
+                    
+                    <p style="margin-top: 12px;"><strong>※ 마케팅 정보 수신 동의를 거부하셔도 서비스 이용에는 제한이 없습니다.</strong></p>
+                    <p><strong>※ 동의 후에도 언제든지 마이페이지에서 수신 거부할 수 있습니다.</strong></p>
+                    
+                    <h3 style="margin-top: 20px;">문의처</h3>
+                    <p>이메일: admin@mockerview.net<br>
+                    개인정보보호책임자: 악귀멸살<br>
+                    적용일: 2025년 11월 08일로부터</p>
+                </div>
+            </div>
+            <div class="privacy-footer">
+                <button onclick="closeModal('marketingModal')">확인</button>
             </div>
         </div>
     </div>
@@ -574,40 +1098,96 @@
     <script>
         const RECAPTCHA_SITE_KEY = '6Lf6jvUrAAAAAHtI4wWpNTihwCfgDciz0rS6rqs3';
         
-        let usernameChecked = false;
-        let isUsernameValid = false;
-        let emailVerified = false;
-        let verificationCode = '';
-        
         const usernameInput = document.getElementById('username');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirmPassword');
         const verificationCodeInput = document.getElementById('verificationCode');
+        
         const checkUsernameBtn = document.getElementById('checkUsernameBtn');
         const sendCodeBtn = document.getElementById('sendCodeBtn');
         const verifyCodeBtn = document.getElementById('verifyCodeBtn');
         const submitBtn = document.getElementById('submitBtn');
         
+        let usernameChecked = false;
+        let isUsernameValid = false;
+        let emailVerified = false;
+        let verificationCode = null;
+        
+        const agreeAllCheckbox = document.getElementById('agreeAll');
+        const agreePersonalInfoCheckbox = document.getElementById('agreePersonalInfo');
+        const agreeThirdPartyCheckbox = document.getElementById('agreeThirdParty');
+        const agreeMarketingCheckbox = document.getElementById('agreeMarketing');
+        const marketingSubConsent = document.getElementById('marketingSubConsent');
+        const agreeMarketingEmailCheckbox = document.getElementById('agreeMarketingEmail');
+        const agreeMarketingPushCheckbox = document.getElementById('agreeMarketingPush');
+        
+        agreeAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            agreePersonalInfoCheckbox.checked = isChecked;
+            agreeThirdPartyCheckbox.checked = isChecked;
+            agreeMarketingCheckbox.checked = isChecked;
+            agreeMarketingEmailCheckbox.checked = isChecked;
+            agreeMarketingPushCheckbox.checked = isChecked;
+            marketingSubConsent.style.display = isChecked ? 'block' : 'none';
+            updateSubmitButton();
+        });
+        
+        [agreePersonalInfoCheckbox, agreeThirdPartyCheckbox, agreeMarketingCheckbox].forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allRequired = agreePersonalInfoCheckbox.checked && agreeThirdPartyCheckbox.checked;
+                const allOptional = agreeMarketingCheckbox.checked;
+                agreeAllCheckbox.checked = allRequired && allOptional;
+                updateSubmitButton();
+            });
+        });
+        
+        agreeMarketingCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                marketingSubConsent.style.display = 'block';
+            } else {
+                marketingSubConsent.style.display = 'none';
+                agreeMarketingEmailCheckbox.checked = false;
+                agreeMarketingPushCheckbox.checked = false;
+            }
+        });
+        
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        };
+        
         usernameInput.addEventListener('input', () => {
             usernameChecked = false;
             isUsernameValid = false;
-            checkUsernameBtn.disabled = false;
-            document.getElementById('usernameMsg').innerHTML = '';
             usernameInput.classList.remove('valid', 'invalid');
+            showMessage('usernameMsg', '', '');
+            updateSubmitButton();
+        });
+        
+        emailInput.addEventListener('input', () => {
+            emailVerified = false;
+            emailInput.disabled = false;
+            document.getElementById('verificationGroup').style.display = 'none';
+            showMessage('emailMsg', '', '');
             updateSubmitButton();
         });
         
         checkUsernameBtn.addEventListener('click', async () => {
             const username = usernameInput.value.trim();
+            const usernameRegex = /^[a-zA-Z0-9]{4,20}$/;
             
-            if (username.length < 4 || username.length > 20) {
-                showMessage('usernameMsg', '아이디는 4-20자여야 합니다.', 'error');
-                return;
-            }
-            
-            if (!/^[a-zA-Z0-9]+$/.test(username)) {
-                showMessage('usernameMsg', '영문과 숫자만 사용 가능합니다.', 'error');
+            if (!usernameRegex.test(username)) {
+                showMessage('usernameMsg', '영문, 숫자 4-20자로 입력하세요.', 'error');
                 return;
             }
             
@@ -804,7 +1384,8 @@
         }
         
         function updateSubmitButton() {
-            submitBtn.disabled = !usernameChecked || !isUsernameValid || !emailVerified;
+            const requiredConsents = agreePersonalInfoCheckbox.checked && agreeThirdPartyCheckbox.checked;
+            submitBtn.disabled = !usernameChecked || !isUsernameValid || !emailVerified || !requiredConsents;
         }
         
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
@@ -817,6 +1398,11 @@
             
             if (!emailVerified) {
                 alert('이메일 인증을 완료해주세요.');
+                return;
+            }
+            
+            if (!agreePersonalInfoCheckbox.checked || !agreeThirdPartyCheckbox.checked) {
+                alert('필수 약관에 동의해주세요.');
                 return;
             }
             
@@ -847,7 +1433,12 @@
                     email: emailInput.value,
                     role: document.querySelector('input[name="role"]:checked').value,
                     emailVerificationCode: verificationCode,
-                    recaptchaToken: recaptchaToken
+                    recaptchaToken: recaptchaToken,
+                    agreePersonalInfo: agreePersonalInfoCheckbox.checked,
+                    agreeThirdParty: agreeThirdPartyCheckbox.checked,
+                    agreeMarketing: agreeMarketingCheckbox.checked,
+                    agreeMarketingEmail: agreeMarketingEmailCheckbox.checked,
+                    agreeMarketingPush: agreeMarketingPushCheckbox.checked
                 };
                 
                 const response = await fetch('/auth/register', {

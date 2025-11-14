@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리포트 상세 - MockerView</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-900: #111827;
+        }
+
+        body {
+            background: var(--gray-50);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--gray-900);
+        }
+
+        .navbar {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .container-main {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .report-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .report-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0 0 1rem 0;
+        }
+
+        .report-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--gray-600);
+            border: 1px solid var(--gray-300);
+        }
+
+        .btn-outline:hover {
+            background: var(--gray-50);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .icon-primary { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
+        .icon-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .icon-info { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        .icon-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+
+        .report-content {
+            line-height: 1.8;
+            color: var(--gray-900);
+        }
+
+        .report-content h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            color: var(--gray-900);
+        }
+
+        .report-content h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1.5rem 0 1rem 0;
+            color: var(--gray-900);
+        }
+
+        .report-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem 0;
+            color: var(--gray-900);
+        }
+
+        .report-content p {
+            margin-bottom: 1rem;
+        }
+
+        .report-content ul, .report-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .report-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .report-content strong {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .report-content code {
+            background: var(--gray-100);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.875em;
+        }
+
+        .report-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .report-content blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: var(--gray-600);
+        }
+
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .score-high { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .score-medium { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .score-low { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        .participant-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .participant-card {
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .participant-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.75rem;
+        }
+
+        .participant-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .participant-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .participant-stat-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+
+        .participant-stat-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        @media print {
+            .navbar, .report-actions { display: none; }
+            body { background: white; }
+            .content-card { border: none; box-shadow: none; }
+        }
+
+        @media (max-width: 768px) {
+            .report-meta, .report-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container-main">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-video"></i> MockerView
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="report-header">
+            <h1 class="report-title" th:text="${report.session.title}">면접 제목</h1>
+            
+            <div class="report-meta">
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <span>생성자: <strong th:text="${report.generatedBy.name}">이름</strong></span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span th:text="${#temporals.format(report.createdAt, 'yyyy년 MM월 dd일 HH:mm')}">날짜</span>
+                </div>
+                <div class="meta-item" th:if="${report.completedAt != null}">
+                    <i class="fas fa-clock"></i>
+                    <span th:text="'완료: ' + ${#temporals.format(report.completedAt, 'HH:mm:ss')}">완료 시간</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-tag"></i>
+                    <span th:text="${report.session.category}">카테고리</span>
+                </div>
+            </div>
+
+            <div th:if="${report.summary != null}" style="background: var(--gray-50); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                <strong style="color: var(--primary);">📊 요약:</strong>
+                <span th:text="${report.summary}">리포트 요약</span>
+            </div>
+
+            <div class="report-actions">
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print"></i> 인쇄
+                </button>
+                <button class="btn btn-outline" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf"></i> PDF 다운로드
+                </button>
+                <button class="btn btn-outline" onclick="shareReport()">
+                    <i class="fas fa-share"></i> 공유
+                </button>
+                <a th:href="@{/reports}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> 목록으로
+                </a>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">
+                    <i class="fas fa-users"></i>
+                    <span th:text="${report.totalParticipants}">0</span>
+                </div>
+                <div class="stat-label">참가자</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">
+                    <i class="fas fa-question-circle"></i>
+                    <span th:text="${report.totalQuestions}">0</span>
+                </div>
+                <div class="stat-label">질문</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">
+                    <i class="fas fa-comment"></i>
+                    <span th:text="${report.totalAnswers}">0</span>
+                </div>
+                <div class="stat-label">답변</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:classappend="${report.averageScore >= 4} ? 'text-success' : (${report.averageScore >= 3} ? 'text-warning' : 'text-danger')">
+                    <i class="fas fa-star"></i>
+                    <span th:text="${#numbers.formatDecimal(report.averageScore, 1, 1)}">0.0</span>
+                </div>
+                <div class="stat-label">평균 점수</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--success);">
+                    <i class="fas fa-arrow-up"></i>
+                    <span th:text="${report.highestScore}">0</span>
+                </div>
+                <div class="stat-label">최고 점수</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: var(--danger);">
+                    <i class="fas fa-arrow-down"></i>
+                    <span th:text="${report.lowestScore}">0</span>
+                </div>
+                <div class="stat-label">최저 점수</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="content-card">
+                <h2 class="card-title">
+                    <span class="card-icon icon-primary">
+                        <i class="fas fa-file-alt"></i>
+                    </span>
+                    AI 종합 분석 리포트
+                </h2>
+                <div class="report-content" id="reportContent">
+                    <div th:utext="${report.reportContent}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const reportContent = $('#reportContent').html();
+            if (reportContent && reportContent.trim().indexOf('<') !== 0) {
+                const markdownHtml = marked.parse(reportContent);
+                $('#reportContent').html(markdownHtml);
+            }
+        });
+
+        function exportPDF() {
+            const element = document.querySelector('.container-main');
+            const opt = {
+                margin: 10,
+                filename: 'interview-report-' + new Date().getTime() + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function shareReport() {
+            const reportId = [[${report.id}]];
+            const shareUrl = window.location.href;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: '면접 리포트',
+                    text: '면접 리포트를 확인해보세요',
+                    url: shareUrl
+                }).catch(err => console.error('공유 실패:', err));
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert('링크가 클립보드에 복사되었습니다!');
+                });
+            }
+        }
+    </script>
+</body>
+</html>
