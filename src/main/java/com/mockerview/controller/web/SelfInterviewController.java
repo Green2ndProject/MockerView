@@ -216,4 +216,22 @@ public class SelfInterviewController {
             return "selfinterview/history";
         }
     }
+
+    @GetMapping("/videos")
+    public String videos(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        try {
+            User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+            
+            List<Answer> videoAnswers = answerRepository.findByUserIdAndVideoUrlIsNotNull(user.getId());
+            
+            model.addAttribute("user", user);
+            model.addAttribute("videoAnswers", videoAnswers);
+            model.addAttribute("totalVideos", videoAnswers.size());
+            
+            return "selfinterview/videos";
+        } catch (Exception e) {
+            log.error("녹화 영상 목록 로딩 실패: {}", e.getMessage(), e);
+            return "redirect:/auth/mypage";
+        }
+    }
 }

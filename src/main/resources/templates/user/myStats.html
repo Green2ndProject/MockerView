@@ -594,8 +594,8 @@
                 </div>
                 <div class="ranking-list">
                     <div th:each="rank : ${rankings}" 
-                         class="ranking-item" 
-                         th:classappend="${rank.isCurrentUser ? 'current-user' : ''}">
+                        class="ranking-item" 
+                        th:classappend="${rank.isCurrentUser ? 'current-user' : ''}">
                         <span class="rank-number" th:text="${rank.rank}"></span>
                         <div class="rank-info">
                             <div class="rank-name" th:text="${rank.name}"></div>
@@ -612,11 +612,6 @@
             </div>
         </div>
     </div>
-
-    <div th:replace="~{fragments/footer :: footer}"></div>
-    
-    <div th:replace="~{fragments/scripts :: navbar-script}"></div>
-    <div th:replace="~{fragments/scripts :: common-scripts}"></div>
 
     <script th:inline="javascript">
         const performanceData = /*[[${performanceChartData}]]*/ null;

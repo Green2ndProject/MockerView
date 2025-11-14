@@ -48,4 +48,7 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     @Query("SELECT COUNT(DISTINCT a.question) FROM Answer a " +
            "WHERE a.question.isAiGenerated = true")
     long countAiGeneratedQuestions();
+
+    @Query("SELECT a FROM Answer a WHERE a.user.id = :userId AND a.videoUrl IS NOT NULL ORDER BY a.createdAt DESC")
+    List<Answer> findByUserIdAndVideoUrlIsNotNull(@Param("userId") Long userId);
 }
