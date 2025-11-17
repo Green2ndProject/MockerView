@@ -6,10 +6,13 @@ import java.util.stream.Collectors;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.mockerview.dto.MessagePartnerResponse;
 import com.mockerview.dto.PrivateMessageRequest;
 import com.mockerview.dto.PrivateMessageResponse;
 import com.mockerview.entity.PrivateMessage;
+import com.mockerview.entity.PrivateMessageStatus;
 import com.mockerview.repository.PrivateMessageRepository;
+import com.mockerview.repository.PrivateMessageStatusRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +22,8 @@ import lombok.RequiredArgsConstructor;
 public class PrivateMessageService {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final PrivateMessageRepository privateMessageRepository; 
+    private final PrivateMessageRepository privateMessageRepository;
+    private final PrivateMessageStatusRepository messageStatusRepository; 
     
     public void saveAndSend(String senderUsername, PrivateMessageRequest request){
 
@@ -66,6 +70,39 @@ public class PrivateMessageService {
                 
         
                                 
-        }
+    }
+
+    public List<MessagePartnerResponse> getMessagePartnerWithUnreadCount(String currentUsername){
+
+        List<String> partnerUsernames = findMyAllPartners(currentUsername);
+
+        return partnerUsernames.stream()
+                                .map(partnerUsername -> {
+                                    PrivateMessageStatus status = messageStatusRepository
+                                        .findByUserUsernameAndPartnerUsername(currentUsername, partnerUsername)
+                                        .orElseGet(() -> PrivateMessageStatus.builder()
+                                                .userUsername(currentUsername)
+                                                .partnerUsername(partnerUsername)
+                                                .lastReadMessageId(0L)
+                                                .build());
+
+                                long unreadCount = privateMessageRepository.countByReceiverUsernameAndIdGreaterThan(
+                                    currentUsername,
+                                    status.getLastReadMessageId()
+                                );
+                                
+                                return MessagePartnerResponse.builder()
+                                    .partnerUsername(partnerUsername)
+                                    .unreadCount(unreadCount)
+                                    .build();
+                                })
+                                .collect(Collectors.toList());
+    }
+
+    // private List<String> findMyAllPartners(String currentUsername) {
+        
+    //     return privateMessageRepository.findByAllPartners(currentUsername)
+    // }
+    
 
 }

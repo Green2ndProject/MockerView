@@ -31,6 +31,10 @@ public class RefreshToken {
     
     @Column
     private LocalDateTime lastUsedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false) // DB의 컬럼 이름과 NOT NULL 제약조건 매핑
+    private User user;
     
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiryDate);

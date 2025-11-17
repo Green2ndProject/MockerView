@@ -93,7 +93,7 @@ function handleReceivedMessage(message){
 
 async function fetchMessageHistory(targetUsername){
 
-    const API_BASE_URL = 'http://localhost:8082';
+    const API_BASE_URL = 'http://localhost:8080';
     const API_URL      = `${API_BASE_URL}/api/private/messages/${encodeURIComponent(targetUsername)}`;
 
     const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
@@ -278,7 +278,7 @@ function handleSearchInput(event){
 
 async function fetchSearchUsers(query){
 
-    const API_BASE_URL = 'http://localhost:8082';
+    const API_BASE_URL = 'http://localhost:8080';
     const API_URL = `${API_BASE_URL}/api/users/search?q=${encodeURIComponent(query)}`;
     const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
 
