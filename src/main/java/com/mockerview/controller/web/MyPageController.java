@@ -1,7 +1,9 @@
 package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
+import com.mockerview.dto.StatisticsDTO;
 import com.mockerview.entity.SelfInterviewReport;
+import com.mockerview.entity.Session;
 import com.mockerview.entity.Subscription;
 import com.mockerview.entity.User;
 import com.mockerview.repository.SelfInterviewReportRepository;
@@ -21,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -98,19 +101,30 @@ public class MyPageController {
                 return "redirect:/auth/mypage/myStatsInterviewer";
             }
             
+            StatisticsDTO stats = userService.getUserStatistics(user.getId());
+            
             model.addAttribute("user", user);
-            model.addAttribute("totalInterviews", 0);
-            model.addAttribute("averageScore", "0.0");
-            model.addAttribute("highestScore", "0");
+            model.addAttribute("totalInterviews", stats.getTotalSessions());
+            model.addAttribute("averageScore", String.format("%.1f", stats.getAverageScore()));
+            model.addAttribute("highestScore", stats.getCategoryScores().stream()
+                .mapToDouble(c -> c.getAverageScore())
+                .max()
+                .orElse(0.0));
+            model.addAttribute("totalAnswers", stats.getTotalAnswers());
+            model.addAttribute("totalFeedbacks", stats.getTotalFeedbacks());
+            model.addAttribute("mbtiType", stats.getMbtiType());
+            model.addAttribute("completedSessions", stats.getCompletedSessions());
+            model.addAttribute("categoryScores", stats.getCategoryScores());
+            model.addAttribute("monthlyProgress", stats.getMonthlyProgress());
             model.addAttribute("streak", "0일");
-            model.addAttribute("categoryAccuracy", new ArrayList<>());
+            model.addAttribute("categoryAccuracy", stats.getCategoryScores());
             model.addAttribute("achievements", new ArrayList<>());
             model.addAttribute("rankings", new ArrayList<>());
-            model.addAttribute("achievementProgress", "0/10");
+            model.addAttribute("achievementProgress", stats.getTotalAnswers() + "/100");
             
             return "user/myStats";
         } catch (Exception e) {
-            log.error("내 통계 페이지 로딩 실패: {}", e.getMessage());
+            log.error("내 통계 페이지 로딩 실패: {}", e.getMessage(), e);
             return "redirect:/auth/mypage";
         }
     }
@@ -125,18 +139,20 @@ public class MyPageController {
                 return "redirect:/auth/mypage/stats";
             }
             
+            Map<String, Object> stats = userService.getInterviewerStatistics(user.getId());
+            
             model.addAttribute("user", user);
-            model.addAttribute("totalHostedSessions", 0);
-            model.addAttribute("endedSessionsCount", 0);
-            model.addAttribute("totalFeedbacksGiven", 0);
+            model.addAttribute("totalHostedSessions", stats.get("totalHostedSessions"));
+            model.addAttribute("endedSessionsCount", stats.get("endedSessionsCount"));
+            model.addAttribute("totalFeedbacksGiven", stats.get("totalFeedbacksGiven"));
             model.addAttribute("avgGivenScore", "0.0");
-            model.addAttribute("sessionsByMonth", new java.util.HashMap<>());
+            model.addAttribute("sessionsByMonth", stats.get("sessionsByMonth"));
             model.addAttribute("hostedSessions", new ArrayList<>());
             model.addAttribute("topInterviewees", new ArrayList<>());
             
             return "user/myStatsInterviewer";
         } catch (Exception e) {
-            log.error("면접관 통계 페이지 로딩 실패: {}", e.getMessage());
+            log.error("면접관 통계 페이지 로딩 실패: {}", e.getMessage(), e);
             return "redirect:/auth/mypage";
         }
     }

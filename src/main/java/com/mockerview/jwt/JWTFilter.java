@@ -40,7 +40,7 @@ public class JWTFilter extends OncePerRequestFilter{
             return;
         }
 
-        log.info("[JWTFilter] Processing: {}", request.getRequestURI());
+        log.debug("[JWTFilter] Processing: {}", requestUri);
 
         String token = null;
         String authorizationHeader = request.getHeader("Authorization");
@@ -55,7 +55,7 @@ public class JWTFilter extends OncePerRequestFilter{
             for(Cookie cookie : cookies){
               if("Authorization".equals(cookie.getName())){
                 token = cookie.getValue();
-                log.info("authorization now. Token extracted from Cookie: {}", token);
+                log.debug("🍪 Token from cookie");
                 break;
               }
             }
@@ -63,14 +63,13 @@ public class JWTFilter extends OncePerRequestFilter{
         }
 
         if(token == null){
+            log.debug("No token - continuing as guest");
             filterChain.doFilter(request, response);
             return;
         }
 
-        log.info("authorization now. Token extracted: {}", token);
-
         if (jwtUtil.isExpired(token)) {
-          System.out.println("토큰 만료");
+          log.info("⏰ Token expired for: {}", requestUri);
           filterChain.doFilter(request, response);
           return;
         }
@@ -80,7 +79,13 @@ public class JWTFilter extends OncePerRequestFilter{
         User user = userRepository.findByUsername(username).orElse(null);
 
         if (user == null) {
-          log.warn("Deleted or not found user tried to access: {}", username);
+          log.warn("⚠️ User not found: {}", username);
+          filterChain.doFilter(request, response);
+          return;
+        }
+
+        if (user.isDeleted()) {
+          log.warn("⚠️ Deleted user access attempt: {}", username);
           filterChain.doFilter(request, response);
           return;
         }
@@ -90,6 +95,8 @@ public class JWTFilter extends OncePerRequestFilter{
         Authentication authToken = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
 
         SecurityContextHolder.getContext().setAuthentication(authToken);
+        
+        log.debug("✅ Auth OK: {}", username);
 
         filterChain.doFilter(request, response);
   }
@@ -98,30 +105,13 @@ public class JWTFilter extends OncePerRequestFilter{
   protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
 
     String uri = request.getRequestURI();
-    String method = request.getMethod();
 
-    if (uri.equals("/") || uri.equals("/index")) {
-        return true;
-    }
-
-    if (uri.equals("/auth/login")) {
-        return true;
-    }
-
-    if (uri.equals("/auth/register")) {
-        return true;
-    }
-
-    if (uri.equals("/auth/find-username")) {
-        return true;
-    }
-
-    if (uri.equals("/auth/reset-password")) {
+    if (uri.equals("/auth/login") || uri.equals("/auth/register") || 
+        uri.equals("/auth/find-username") || uri.equals("/auth/reset-password")) {
         return true;
     }
 
     if (uri.startsWith("/api/questions/categories")) {
-        log.info("[JWTFilter] Bypass! Category API skipping JWT validation: {}", uri);
         return true;
     }
 
@@ -129,7 +119,6 @@ public class JWTFilter extends OncePerRequestFilter{
         uri.equals("/service-worker.js") ||
         uri.equals("/offline.html") ||
         uri.startsWith("/apple-touch-icon")) {
-        log.warn("[JWTFilter] Bypass! PWA file is skipping JWT validation: {}", uri);
         return true;
     }
 
@@ -137,12 +126,9 @@ public class JWTFilter extends OncePerRequestFilter{
         uri.startsWith("/css/") ||
         uri.startsWith("/js/") ||
         uri.equals("/favicon.ico")) {
-            
-        log.warn("[JWTFilter] Bypass! Static resource is skipping JWT validation: {}", uri); 
         return true;
     }
     
-    log.info("[JWTFilter] Checking URI: {}", request.getRequestURI()); 
     return false;
   }
 }
