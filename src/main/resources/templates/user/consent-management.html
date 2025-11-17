@@ -1,368 +1,270 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>개인정보 동의 관리 - MockerView</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            background: #f8f9fa;
-            min-height: 100vh;
-        }
-        
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-        
-        .navbar-brand {
-            font-size: 1.375rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
-        .nav-link {
-            color: #4a5568;
-            font-weight: 500;
-            margin: 0 10px;
-        }
-        
-        .nav-link:hover {
-            color: #667eea;
-        }
-        
-        .consent-container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        
-        .consent-card {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-            margin-bottom: 24px;
-        }
-        
-        .consent-header {
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .consent-header h2 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        
-        .consent-section {
-            margin-bottom: 32px;
-        }
-        
-        .consent-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .consent-badge {
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        
-        .consent-badge.required {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        
-        .consent-badge.optional {
-            background: #e0e7ff;
-            color: #667eea;
-        }
-        
-        .consent-item {
-            padding: 16px;
-            background: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .consent-status {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        
-        .consent-label {
-            font-weight: 600;
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-        
-        .status-badge.agreed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .status-badge.not-agreed {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        
-        .alert-info {
-            background: #dbeafe;
-            border: 1px solid #93c5fd;
-            color: #1e40af;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            margin-top: 12px;
-        }
-        
-        .sub-consents {
-            margin-left: 20px;
-            margin-top: 12px;
-            padding: 12px;
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-        }
-        
-        .sub-consent-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 0;
-        }
-        
-        .sub-consent-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #1a1a1a;
+        padding-top: 80px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .page-header {
+        margin-bottom: 40px;
+      }
+      .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 8px;
+      }
+      .page-header p {
+        font-size: 0.9375rem;
+        color: #6b7280;
+      }
+
+      .consent-card {
+        background: white;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        margin-bottom: 20px;
+      }
+      .consent-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .consent-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1a1a1a;
+      }
+      .consent-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+      .status-agreed {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status-required {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .consent-content {
+        font-size: 0.9375rem;
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 16px;
+      }
+
+      .consent-date {
+        font-size: 0.8125rem;
+        color: #9ca3af;
+        margin-bottom: 16px;
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #cbd5e1;
+        border-radius: 24px;
+        transition: 0.4s;
+      }
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.4s;
+      }
+      input:checked + .toggle-slider {
+        background: #667eea;
+      }
+      input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+      }
+      input:disabled + .toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-outline {
+        background: white;
+        color: #667eea;
+        border: 1.5px solid #667eea;
+      }
+      .btn-outline:hover {
+        background: #f0f4ff;
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <a class="navbar-brand" href="/session/list">MockerView</a>
-                <div>
-                    <a class="nav-link d-inline" href="/session/list">세션 목록</a>
-                    <a class="nav-link d-inline" href="/auth/mypage">마이페이지</a>
-                    <a class="nav-link d-inline" href="/auth/logout">로그아웃</a>
-                </div>
-            </div>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+  </head>
+  <body>
+    <div class="container">
+      <div class="page-header">
+        <h1>🔒 개인정보 동의 관리</h1>
+        <p>개인정보 수집 및 이용 동의 내역을 확인하고 관리할 수 있습니다.</p>
+      </div>
+
+      <div class="consent-card">
+        <div class="consent-header">
+          <div class="consent-title">📋 개인정보 수집 및 이용 (필수)</div>
+          <span class="consent-status status-agreed">동의완료</span>
         </div>
-    </nav>
-    
-    <div class="consent-container">
-        <div class="consent-card">
-            <div class="consent-header">
-                <h2>🔒 개인정보 동의 관리</h2>
-                <p class="text-muted">개인정보 수집 및 이용 동의 현황을 확인하고 관리할 수 있습니다.</p>
-            </div>
-            
-            <div class="consent-section">
-                <div class="consent-title">
-                    필수 동의 항목
-                    <span class="consent-badge required">필수</span>
-                </div>
-                
-                <div class="consent-item">
-                    <div class="consent-status">
-                        <span class="consent-label">개인정보 수집 및 이용</span>
-                        <span class="status-badge" id="personalInfoStatus">확인 중...</span>
-                    </div>
-                    <div class="text-muted small" id="personalInfoDate"></div>
-                    <div class="small mt-2">
-                        회원가입, 서비스 이용, 고객 문의 처리 등을 위해 개인정보를 수집하고 이용합니다.
-                    </div>
-                    <div class="alert-info">
-                        ⓘ 필수 동의 항목은 서비스 이용을 위해 반드시 필요하며, 철회 시 서비스 이용이 제한됩니다.
-                    </div>
-                </div>
-                
-                <div class="consent-item">
-                    <div class="consent-status">
-                        <span class="consent-label">개인정보 제3자 제공</span>
-                        <span class="status-badge" id="thirdPartyStatus">확인 중...</span>
-                    </div>
-                    <div class="text-muted small" id="thirdPartyDate"></div>
-                    <div class="small mt-2">
-                        AI 피드백, 영상 저장, 결제 처리 등을 위해 제3자(OpenAI, Cloudinary, Agora, Toss)에게 개인정보를 제공합니다.
-                    </div>
-                    <div class="alert-info">
-                        ⓘ 필수 동의 항목은 서비스 이용을 위해 반드시 필요하며, 철회 시 서비스 이용이 제한됩니다.
-                    </div>
-                </div>
-            </div>
-            
-            <div class="consent-section">
-                <div class="consent-title">
-                    선택 동의 항목
-                    <span class="consent-badge optional">선택</span>
-                </div>
-                
-                <div class="consent-item">
-                    <div class="consent-status">
-                        <span class="consent-label">마케팅 정보 수신</span>
-                        <span class="status-badge" id="marketingStatus">확인 중...</span>
-                    </div>
-                    <div class="text-muted small" id="marketingDate"></div>
-                    <div class="small mt-2 mb-3">
-                        신규 서비스, 이벤트, 프로모션 등의 마케팅 정보를 받아볼 수 있습니다.
-                    </div>
-                    
-                    <div class="sub-consents" id="marketingSubConsents">
-                        <div class="sub-consent-item">
-                            <input type="checkbox" id="agreeMarketingEmail">
-                            <label for="agreeMarketingEmail" class="mb-0">이메일 수신</label>
-                        </div>
-                        <div class="sub-consent-item">
-                            <input type="checkbox" id="agreeMarketingPush">
-                            <label for="agreeMarketingPush" class="mb-0">웹 푸시 알림 수신</label>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <button class="btn btn-primary" id="saveMarketingBtn">변경사항 저장</button>
-                        <button class="btn btn-danger ms-2" id="withdrawMarketingBtn" style="display: none;">마케팅 동의 철회</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-4">
-                <a href="/auth/mypage" class="btn btn-secondary">마이페이지로 돌아가기</a>
-            </div>
+        <div class="consent-content">
+          서비스 제공을 위한 최소한의 개인정보를 수집하고 이용합니다.
+          <br />수집항목: 이름, 이메일, 면접 기록 <br />보유기간: 회원 탈퇴 시
+          또는 탈퇴 후 30일까지
         </div>
+        <div class="consent-date">
+          동의일시:
+          <span
+            th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd HH:mm')}"
+            >2024-01-01 10:00</span
+          >
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked disabled />
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="margin-left: 12px; font-size: 0.8125rem; color: #6b7280"
+          >필수 항목으로 변경 불가</span
+        >
+      </div>
+
+      <div class="consent-card">
+        <div class="consent-header">
+          <div class="consent-title">📧 마케팅 정보 수신 (선택)</div>
+          <span class="consent-status status-required">미동의</span>
+        </div>
+        <div class="consent-content">
+          이벤트, 프로모션 등 마케팅 정보를 이메일로 수신합니다.
+          <br />수집항목: 이메일 <br />보유기간: 동의 철회 시까지
+        </div>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            id="marketingConsent"
+            onchange="updateMarketingConsent(this.checked)"
+          />
+          <span class="toggle-slider"></span>
+        </label>
+        <span
+          id="marketingStatus"
+          style="margin-left: 12px; font-size: 0.8125rem; color: #6b7280"
+          >수신 거부</span
+        >
+      </div>
+
+      <div class="consent-card">
+        <div class="consent-header">
+          <div class="consent-title">🔔 서비스 알림 (선택)</div>
+          <span class="consent-status status-agreed">동의완료</span>
+        </div>
+        <div class="consent-content">
+          면접 일정, 피드백 도착 등 서비스 관련 알림을 받습니다.
+          <br />수집항목: 푸시 토큰 <br />보유기간: 동의 철회 시까지
+        </div>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            id="notificationConsent"
+            checked
+            onchange="updateNotificationConsent(this.checked)"
+          />
+          <span class="toggle-slider"></span>
+        </label>
+        <span
+          id="notificationStatus"
+          style="margin-left: 12px; font-size: 0.8125rem; color: #6b7280"
+          >수신 중</span
+        >
+      </div>
+
+      <div style="margin-top: 30px; text-align: center">
+        <a href="/auth/mypage" class="btn btn-outline"
+          >← 마이페이지로 돌아가기</a
+        >
+      </div>
     </div>
-    
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
     <script>
-        async function authFetch(url, options = {}) {
-            const response = await fetch(url, {
-                ...options,
-                credentials: 'include'
-            });
-            return response;
-        }
-        
-        async function loadConsents() {
-            try {
-                const response = await authFetch('/api/consent');
-                const data = await response.json();
-                
-                updateConsentStatus('personalInfoStatus', data.agreePersonalInfo);
-                updateConsentStatus('thirdPartyStatus', data.agreeThirdParty);
-                updateConsentStatus('marketingStatus', data.agreeMarketing);
-                
-                if (data.privacyConsentDate) {
-                    const date = new Date(data.privacyConsentDate);
-                    const dateStr = date.toLocaleDateString('ko-KR') + ' ' + date.toLocaleTimeString('ko-KR');
-                    document.getElementById('personalInfoDate').textContent = '동의일시: ' + dateStr;
-                    document.getElementById('thirdPartyDate').textContent = '동의일시: ' + dateStr;
-                    document.getElementById('marketingDate').textContent = data.agreeMarketing ? '동의일시: ' + dateStr : '동의하지 않음';
-                }
-                
-                document.getElementById('agreeMarketingEmail').checked = data.agreeMarketingEmail || false;
-                document.getElementById('agreeMarketingPush').checked = data.agreeMarketingPush || false;
-                
-                if (data.agreeMarketing) {
-                    document.getElementById('withdrawMarketingBtn').style.display = 'inline-block';
-                    document.getElementById('saveMarketingBtn').textContent = '변경사항 저장';
-                } else {
-                    document.getElementById('withdrawMarketingBtn').style.display = 'none';
-                    document.getElementById('saveMarketingBtn').textContent = '마케팅 동의하기';
-                }
-                
-            } catch (error) {
-                console.error('동의 정보 로드 실패:', error);
-                alert('동의 정보를 불러오는데 실패했습니다.');
-            }
-        }
-        
-        function updateConsentStatus(elementId, isAgreed) {
-            const element = document.getElementById(elementId);
-            if (isAgreed) {
-                element.textContent = '동의함';
-                element.className = 'status-badge agreed';
-            } else {
-                element.textContent = '동의하지 않음';
-                element.className = 'status-badge not-agreed';
-            }
-        }
-        
-        document.getElementById('saveMarketingBtn').addEventListener('click', async function() {
-            const emailChecked = document.getElementById('agreeMarketingEmail').checked;
-            const pushChecked = document.getElementById('agreeMarketingPush').checked;
-            
-            if (!emailChecked && !pushChecked) {
-                alert('하나 이상의 수신 방법을 선택해주세요.');
-                return;
-            }
-            
-            try {
-                const response = await authFetch('/api/consent/marketing', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        agreeMarketing: true,
-                        agreeMarketingEmail: emailChecked,
-                        agreeMarketingPush: pushChecked
-                    })
-                });
-                
-                if (response.ok) {
-                    alert('마케팅 동의가 저장되었습니다.');
-                    location.reload();
-                } else {
-                    alert('변경 처리 중 오류가 발생했습니다.');
-                }
-            } catch (error) {
-                console.error('마케팅 동의 변경 실패:', error);
-                alert('변경 처리 중 오류가 발생했습니다.');
-            }
-        });
-        
-        document.getElementById('withdrawMarketingBtn').addEventListener('click', async function() {
-            if (!confirm('마케팅 정보 수신 동의를 철회하시겠습니까?\n이메일 및 푸시 알림 수신이 모두 중단됩니다.')) {
-                return;
-            }
-            
-            try {
-                const response = await authFetch('/api/consent/marketing', {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('마케팅 동의가 철회되었습니다.');
-                    location.reload();
-                } else {
-                    alert('철회 처리 중 오류가 발생했습니다.');
-                }
-            } catch (error) {
-                console.error('마케팅 동의 철회 실패:', error);
-                alert('철회 처리 중 오류가 발생했습니다.');
-            }
-        });
-        
-        loadConsents();
+      function updateMarketingConsent(agreed) {
+        const status = document.getElementById("marketingStatus");
+        status.textContent = agreed ? "수신 중" : "수신 거부";
+        alert(
+          agreed
+            ? "마케팅 정보 수신에 동의하셨습니다."
+            : "마케팅 정보 수신을 거부하셨습니다."
+        );
+      }
+
+      function updateNotificationConsent(agreed) {
+        const status = document.getElementById("notificationStatus");
+        status.textContent = agreed ? "수신 중" : "수신 거부";
+        alert(
+          agreed
+            ? "서비스 알림 수신에 동의하셨습니다."
+            : "서비스 알림 수신을 거부하셨습니다."
+        );
+      }
     </script>
-</body>
+  </body>
 </html>

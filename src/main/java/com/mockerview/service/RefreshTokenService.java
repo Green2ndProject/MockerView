@@ -21,7 +21,7 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private static final long REFRESH_TOKEN_VALIDITY = 30L * 24 * 60 * 60 * 1000;
     private final UserRepository userRepository;
-    
+
     @Transactional
     public String createRefreshToken(String username) {
         refreshTokenRepository.deleteByUsername(username);
@@ -38,7 +38,6 @@ public class RefreshTokenService {
             .lastUsedAt(LocalDateTime.now())
             .user(user)
             .build();
-        
 
         refreshTokenRepository.save(refreshToken);
         log.info("✅ Refresh token created for user: {}", username);

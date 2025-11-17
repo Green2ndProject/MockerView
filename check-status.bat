@@ -1,29 +1,37 @@
 @echo off
+chcp 65001 >nul
 echo ============================================
-echo   MockerView Local Environment Status
+echo   MockerView 로컬 환경 상태
 echo ============================================
 
 echo.
-echo [PostgreSQL Status]
+echo [PostgreSQL 상태]
 docker exec mockerview-postgres-local pg_isready -U postgres 2>nul
 if %errorlevel% == 0 (
-    echo PostgreSQL is running on port 5433
+    echo   상태: 실행 중
+    echo   포트: 5433 (로컬)
 ) else (
-    echo PostgreSQL is NOT running!
+    echo   상태: 실행 중이 아님!
 )
 
 echo.
-echo [Redis Status]
+echo [Redis 상태]
 docker exec mockerview-redis-local redis-cli ping 2>nul
 if %errorlevel% == 0 (
-    echo Redis is running on port 6379
+    echo   상태: 실행 중
+    echo   포트: 6380 (로컬)
 ) else (
-    echo Redis is NOT running!
+    echo   상태: 실행 중이 아님!
 )
 
 echo.
-echo [Docker Containers]
-docker ps --filter "name=mockerview"
+echo [Docker 컨테이너]
+docker ps --filter "name=mockerview" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
+echo.
+echo ============================================
+echo   참고: 로컬 환경만 표시됩니다
+echo   프로덕션 DB는 Render에 있습니다 (별도)
+echo ============================================
 echo.
 pause

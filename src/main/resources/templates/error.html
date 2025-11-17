@@ -1,208 +1,216 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>Error - MockerView</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      .error-container {
+        background: white;
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        animation: fadeInUp 0.5s ease;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
-        
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .error-logo {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 2rem;
+        letter-spacing: -0.5px;
+      }
+
+      .error-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+        background: #fff3cd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .error-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 1rem;
+      }
+
+      .error-message {
+        color: #6c757d;
+        font-size: 1.05rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+      }
+
+      .error-buttons {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 0.875rem 1.75rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-secondary {
+        background: #f8f9fa;
+        color: #495057;
+        border: 2px solid #e0e0e0;
+      }
+
+      .btn-secondary:hover {
+        background: #e9ecef;
+        border-color: #d0d0d0;
+      }
+
+      @media (max-width: 768px) {
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+          padding: 1rem;
         }
-        
+
         .error-container {
-            background: white;
-            border-radius: 16px;
-            padding: 3rem 2rem;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            animation: fadeInUp 0.5s ease;
+          padding: 2rem 1.5rem;
         }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
+
         .error-logo {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 2rem;
-            letter-spacing: -0.5px;
+          font-size: 1.5rem;
         }
-        
+
         .error-icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 1.5rem;
-            background: #fff3cd;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            animation: bounce 2s infinite;
+          width: 80px;
+          height: 80px;
+          font-size: 2.5rem;
         }
-        
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-        
+
         .error-title {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #212529;
-            margin-bottom: 1rem;
+          font-size: 1.5rem;
         }
-        
+
         .error-message {
-            color: #6c757d;
-            font-size: 1.05rem;
-            margin-bottom: 2rem;
-            line-height: 1.6;
+          font-size: 0.95rem;
         }
-        
+
         .error-buttons {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-            flex-wrap: wrap;
+          flex-direction: column;
         }
-        
+
         .btn {
-            padding: 0.875rem 1.75rem;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
+          width: 100%;
         }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
+      }
+
+      @media (max-width: 480px) {
+        .error-container {
+          padding: 1.5rem 1rem;
         }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+
+        .error-logo {
+          font-size: 1.25rem;
         }
-        
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #495057;
-            border: 2px solid #e0e0e0;
+
+        .error-icon {
+          width: 70px;
+          height: 70px;
+          font-size: 2rem;
         }
-        
-        .btn-secondary:hover {
-            background: #e9ecef;
-            border-color: #d0d0d0;
+
+        .error-title {
+          font-size: 1.25rem;
         }
-        
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-            
-            .error-container {
-                padding: 2rem 1.5rem;
-            }
-            
-            .error-logo {
-                font-size: 1.5rem;
-            }
-            
-            .error-icon {
-                width: 80px;
-                height: 80px;
-                font-size: 2.5rem;
-            }
-            
-            .error-title {
-                font-size: 1.5rem;
-            }
-            
-            .error-message {
-                font-size: 0.95rem;
-            }
-            
-            .error-buttons {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
+
+        .error-message {
+          font-size: 0.9rem;
         }
-        
-        @media (max-width: 480px) {
-            .error-container {
-                padding: 1.5rem 1rem;
-            }
-            
-            .error-logo {
-                font-size: 1.25rem;
-            }
-            
-            .error-icon {
-                width: 70px;
-                height: 70px;
-                font-size: 2rem;
-            }
-            
-            .error-title {
-                font-size: 1.25rem;
-            }
-            
-            .error-message {
-                font-size: 0.9rem;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+  </head>
+  <body>
     <div class="error-container">
-        <div class="error-logo">Mockerview</div>
-        <div class="error-icon">⚠️</div>
-        <h1 class="error-title">오류가 발생했습니다</h1>
-        <p class="error-message">
-            요청을 처리하는 중 문제가 발생했습니다.<br>
-            잠시 후 다시 시도해주세요.
-        </p>
-        <div class="error-buttons">
-            <a href="/session/list" class="btn btn-primary">세션 목록으로</a>
-            <button onclick="history.back()" class="btn btn-secondary">이전 페이지</button>
-        </div>
+      <div class="error-logo">Mockerview</div>
+      <div class="error-icon">⚠️</div>
+      <h1 class="error-title">오류가 발생했습니다</h1>
+      <p class="error-message">
+        요청을 처리하는 중 문제가 발생했습니다.<br />
+        잠시 후 다시 시도해주세요.
+      </p>
+      <div class="error-buttons">
+        <a href="/session/list" class="btn btn-primary">세션 목록으로</a>
+        <button onclick="history.back()" class="btn btn-secondary">
+          이전 페이지
+        </button>
+      </div>
     </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>

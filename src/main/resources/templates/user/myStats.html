@@ -1,293 +1,293 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
+  <head>
     <div th:replace="~{fragments/head :: head}"></div>
     <title>내 활동 통계 - MockerView</title>
     <div th:replace="~{fragments/styles :: styles}"></div>
-<style>
-    body {
+    <style>
+      body {
         background: #f8f9fa;
         padding-top: 70px;
-    }
+      }
 
-    .container {
+      .container {
         max-width: 1400px;
         margin: 0 auto;
         padding: 20px;
-    }
+      }
 
-    .stats-header {
+      .stats-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 20px 0;
         border-bottom: 2px solid #e5e7eb;
         margin-bottom: 20px;
-    }
+      }
 
-    .stats-header h1 {
+      .stats-header h1 {
         font-size: 1.5rem;
         font-weight: 700;
         color: #1a1a1a;
-    }
+      }
 
-    .export-buttons {
+      .export-buttons {
         display: flex;
         gap: 8px;
-    }
+      }
 
-    .btn {
+      .btn {
         padding: 6px 12px;
         border-radius: 4px;
         font-weight: 600;
         font-size: 0.75rem;
         cursor: pointer;
         transition: all 0.2s;
-    }
+      }
 
-    .btn-primary {
+      .btn-primary {
         background: #667eea;
         color: white;
         border: none;
-    }
+      }
 
-    .btn-outline {
+      .btn-outline {
         background: white;
         color: #667eea;
         border: 1px solid #667eea;
-    }
+      }
 
-    .analysis-grid {
+      .analysis-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         margin-bottom: 20px;
-    }
+      }
 
-    .analysis-card {
+      .analysis-card {
         background: white;
         padding: 12px;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         text-decoration: none;
         display: flex;
         align-items: center;
         gap: 12px;
         transition: all 0.2s;
-    }
+      }
 
-    .analysis-card:hover {
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+      .analysis-card:hover {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
 
-    .analysis-icon {
+      .analysis-icon {
         font-size: 1.5rem;
-    }
+      }
 
-    .analysis-content {
+      .analysis-content {
         flex: 1;
-    }
+      }
 
-    .analysis-title {
+      .analysis-title {
         font-size: 0.8125rem;
         font-weight: 600;
         color: #374151;
-    }
+      }
 
-    .analysis-subtitle {
+      .analysis-subtitle {
         font-size: 0.6875rem;
         color: #9ca3af;
-    }
+      }
 
-    .stats-grid {
+      .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         margin-bottom: 20px;
-    }
+      }
 
-    .stat-card {
+      .stat-card {
         background: white;
         padding: 16px;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
 
-    .stat-label {
+      .stat-label {
         font-size: 0.75rem;
         color: #6b7280;
         margin-bottom: 4px;
-    }
+      }
 
-    .stat-number {
+      .stat-number {
         font-size: 1.5rem;
         font-weight: 700;
         color: #1a1a1a;
-    }
+      }
 
-    .stat-change {
+      .stat-change {
         font-size: 0.6875rem;
         font-weight: 600;
         margin-top: 2px;
-    }
+      }
 
-    .positive {
+      .positive {
         color: #10b981;
-    }
+      }
 
-    .negative {
+      .negative {
         color: #ef4444;
-    }
+      }
 
-    .main-content {
+      .main-content {
         display: grid;
         grid-template-columns: 2fr 1fr;
         gap: 20px;
         margin-bottom: 20px;
-    }
+      }
 
-    .chart-container {
+      .chart-container {
         background: white;
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
 
-    .chart-header {
+      .chart-header {
         font-size: 0.875rem;
         font-weight: 700;
         color: #1a1a1a;
         margin-bottom: 12px;
-    }
+      }
 
-    canvas {
+      canvas {
         max-height: 200px;
-    }
+      }
 
-    .accuracy-container {
+      .accuracy-container {
         background: white;
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
 
-    .accuracy-item {
+      .accuracy-item {
         display: flex;
         align-items: center;
         margin-bottom: 12px;
-    }
+      }
 
-    .accuracy-label {
+      .accuracy-label {
         width: 80px;
         font-size: 0.75rem;
         color: #374151;
         font-weight: 600;
-    }
+      }
 
-    .accuracy-bar-container {
+      .accuracy-bar-container {
         flex: 1;
         height: 16px;
         background: #f3f4f6;
         border-radius: 8px;
         overflow: hidden;
         margin: 0 8px;
-    }
+      }
 
-    .accuracy-bar {
+      .accuracy-bar {
         height: 100%;
         background: linear-gradient(90deg, #667eea, #764ba2);
         border-radius: 8px;
-    }
+      }
 
-    .accuracy-value {
+      .accuracy-value {
         width: 35px;
         text-align: right;
         font-size: 0.75rem;
         font-weight: 600;
         color: #374151;
-    }
+      }
 
-    .bottom-grid {
+      .bottom-grid {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         gap: 20px;
-    }
+      }
 
-    .achievements-container {
+      .achievements-container {
         background: white;
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
 
-    .achievements-header {
+      .achievements-header {
         font-size: 0.875rem;
         font-weight: 700;
         color: #1a1a1a;
         margin-bottom: 12px;
-    }
+      }
 
-    .achievements-grid {
+      .achievements-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 8px;
-    }
+      }
 
-    .achievement-card {
+      .achievement-card {
         text-align: center;
         padding: 8px;
         border-radius: 6px;
         background: #f9fafb;
         border: 1px solid transparent;
-    }
+      }
 
-    .achievement-card.earned {
+      .achievement-card.earned {
         background: #fef3c7;
         border-color: #f59e0b;
-    }
+      }
 
-    .achievement-icon {
+      .achievement-icon {
         font-size: 1.25rem;
         margin-bottom: 4px;
         filter: grayscale(100%);
-    }
+      }
 
-    .achievement-card.earned .achievement-icon {
+      .achievement-card.earned .achievement-icon {
         filter: none;
-    }
+      }
 
-    .achievement-name {
+      .achievement-name {
         font-size: 0.625rem;
         font-weight: 600;
         color: #374151;
-    }
+      }
 
-    .ranking-container {
+      .ranking-container {
         background: white;
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
 
-    .ranking-header {
+      .ranking-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
-    }
+      }
 
-    .ranking-title {
+      .ranking-title {
         font-size: 0.875rem;
         font-weight: 700;
         color: #1a1a1a;
-    }
+      }
 
-    .ranking-filter {
+      .ranking-filter {
         display: flex;
         gap: 4px;
-    }
+      }
 
-    .filter-btn {
+      .filter-btn {
         padding: 3px 8px;
         font-size: 0.625rem;
         font-weight: 600;
@@ -296,19 +296,19 @@
         background: #f3f4f6;
         color: #6b7280;
         cursor: pointer;
-    }
+      }
 
-    .filter-btn.active {
+      .filter-btn.active {
         background: #667eea;
         color: white;
-    }
+      }
 
-    .ranking-list {
+      .ranking-list {
         max-height: 280px;
         overflow-y: auto;
-    }
+      }
 
-    .ranking-item {
+      .ranking-item {
         display: flex;
         align-items: center;
         padding: 8px;
@@ -316,410 +316,456 @@
         background: #f9fafb;
         border-radius: 6px;
         font-size: 0.75rem;
-    }
+      }
 
-    .ranking-item.current-user {
+      .ranking-item.current-user {
         background: #fef3c7;
-    }
+      }
 
-    .rank-number {
+      .rank-number {
         font-weight: 700;
         color: #667eea;
         width: 24px;
-    }
+      }
 
-    .rank-info {
+      .rank-info {
         flex: 1;
         margin-left: 8px;
-    }
+      }
 
-    .rank-name {
+      .rank-name {
         font-weight: 600;
         color: #374151;
-    }
+      }
 
-    .rank-stats {
+      .rank-stats {
         font-size: 0.625rem;
         color: #6b7280;
-    }
+      }
 
-    .rank-score {
+      .rank-score {
         font-weight: 700;
         color: #10b981;
-    }
+      }
 
-    .activity-chart-container {
+      .activity-chart-container {
         background: white;
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
 
-    @media (max-width: 1200px) {
+      @media (max-width: 1200px) {
         .analysis-grid {
-            grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(2, 1fr);
         }
         .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(2, 1fr);
         }
         .main-content {
-            grid-template-columns: 1fr;
+          grid-template-columns: 1fr;
         }
         .bottom-grid {
-            grid-template-columns: 1fr;
+          grid-template-columns: 1fr;
         }
-    }
+      }
 
-    @media (max-width: 768px) {
+      @media (max-width: 768px) {
         .container {
-            padding: 12px;
+          padding: 12px;
         }
         .stats-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 12px;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
         }
         .stats-header h1 {
-            font-size: 1.25rem;
+          font-size: 1.25rem;
         }
         .analysis-grid {
-            grid-template-columns: 1fr;
-            gap: 8px;
+          grid-template-columns: 1fr;
+          gap: 8px;
         }
         .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 8px;
+          grid-template-columns: 1fr;
+          gap: 8px;
         }
         .stat-card {
-            padding: 12px;
+          padding: 12px;
         }
         .stat-number {
-            font-size: 1.25rem;
+          font-size: 1.25rem;
         }
-        .chart-container, .accuracy-container, .achievements-container, 
-        .ranking-container, .activity-chart-container {
-            padding: 12px;
+        .chart-container,
+        .accuracy-container,
+        .achievements-container,
+        .ranking-container,
+        .activity-chart-container {
+          padding: 12px;
         }
-        .chart-header, .achievements-header, .ranking-title {
-            font-size: 0.8125rem;
+        .chart-header,
+        .achievements-header,
+        .ranking-title {
+          font-size: 0.8125rem;
         }
         .achievements-grid {
-            grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(2, 1fr);
         }
         .accuracy-label {
-            width: 60px;
-            font-size: 0.6875rem;
+          width: 60px;
+          font-size: 0.6875rem;
         }
         .accuracy-bar-container {
-            height: 12px;
+          height: 12px;
         }
         .ranking-filter {
-            gap: 4px;
+          gap: 4px;
         }
         .filter-btn {
-            padding: 4px 8px;
-            font-size: 0.6875rem;
+          padding: 4px 8px;
+          font-size: 0.6875rem;
         }
-    }
+      }
 
-    @media (max-width: 480px) {
+      @media (max-width: 480px) {
         body {
-            padding-top: 60px;
+          padding-top: 60px;
         }
         .container {
-            padding: 8px;
+          padding: 8px;
         }
         .stats-header h1 {
-            font-size: 1.125rem;
+          font-size: 1.125rem;
         }
         .export-buttons {
-            width: 100%;
-            flex-direction: column;
+          width: 100%;
+          flex-direction: column;
         }
         .btn {
-            width: 100%;
+          width: 100%;
         }
         .analysis-card {
-            padding: 10px;
-            gap: 8px;
+          padding: 10px;
+          gap: 8px;
         }
         .analysis-icon {
-            font-size: 1.25rem;
+          font-size: 1.25rem;
         }
         .analysis-title {
-            font-size: 0.75rem;
+          font-size: 0.75rem;
         }
         .analysis-subtitle {
-            font-size: 0.625rem;
+          font-size: 0.625rem;
         }
         .stat-label {
-            font-size: 0.6875rem;
+          font-size: 0.6875rem;
         }
         .stat-number {
-            font-size: 1.125rem;
+          font-size: 1.125rem;
         }
         .stat-change {
-            font-size: 0.625rem;
+          font-size: 0.625rem;
         }
         .achievements-grid {
-            grid-template-columns: 1fr;
+          grid-template-columns: 1fr;
         }
         .achievement-icon {
-            font-size: 1.125rem;
+          font-size: 1.125rem;
         }
         .ranking-item {
-            padding: 8px;
+          padding: 8px;
         }
         .rank-number {
-            font-size: 0.75rem;
+          font-size: 0.75rem;
         }
         .rank-name {
-            font-size: 0.75rem;
+          font-size: 0.75rem;
         }
         .rank-stats {
-            font-size: 0.5625rem;
+          font-size: 0.5625rem;
         }
         .rank-score {
-            font-size: 0.875rem;
+          font-size: 0.875rem;
         }
-    }
-</style>
-</head>
-<body>
+      }
+    </style>
+  </head>
+  <body>
     <div th:replace="~{fragments/navbar :: navbar}"></div>
 
     <div class="container">
-        <div class="stats-header">
-            <h1>내 활동 통계</h1>
-            <div class="export-buttons">
-                <button class="btn btn-primary" onclick="exportToPDF()">PDF 내보내기</button>
-                <button class="btn btn-outline" onclick="exportToCSV()">CSV 내보내기</button>
+      <div class="stats-header">
+        <h1>내 활동 통계</h1>
+        <div class="export-buttons">
+          <button class="btn btn-primary" onclick="exportToPDF()">
+            PDF 내보내기
+          </button>
+          <button class="btn btn-outline" onclick="exportToCSV()">
+            CSV 내보내기
+          </button>
+        </div>
+      </div>
+
+      <div class="analysis-grid">
+        <a href="/analysis/growth-comparison" class="analysis-card">
+          <div class="analysis-icon">📈</div>
+          <div class="analysis-content">
+            <div class="analysis-title">성장 비교</div>
+            <div class="analysis-subtitle">성장 추이</div>
+          </div>
+        </a>
+        <a href="/analysis/mbti-result" class="analysis-card">
+          <div class="analysis-icon">🧠</div>
+          <div class="analysis-content">
+            <div class="analysis-title">면접 MBTI</div>
+            <div class="analysis-subtitle">성향 분석</div>
+          </div>
+        </a>
+        <a href="/analysis/voice-result" class="analysis-card">
+          <div class="analysis-icon">🎙️</div>
+          <div class="analysis-content">
+            <div class="analysis-title">음성 분석</div>
+            <div class="analysis-subtitle">말하기 패턴</div>
+          </div>
+        </a>
+        <a href="/analysis/facial-result" class="analysis-card">
+          <div class="analysis-icon">😊</div>
+          <div class="analysis-content">
+            <div class="analysis-title">표정 분석</div>
+            <div class="analysis-subtitle">비언어 소통</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">총 면접 횟수</div>
+          <div class="stat-number" th:text="${totalInterviews}">0</div>
+          <div
+            class="stat-change"
+            th:classappend="${interviewChange != null and interviewChange.startsWith('+') ? 'positive' : 'negative'}"
+            th:text="${interviewChange}"
+          ></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">평균 점수</div>
+          <div class="stat-number" th:text="${averageScore}">0</div>
+          <div
+            class="stat-change"
+            th:classappend="${scoreChange != null and scoreChange.startsWith('+') ? 'positive' : ''}"
+            th:text="${scoreChange}"
+          ></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">최고 점수</div>
+          <div class="stat-number" th:text="${highestScore}">0</div>
+          <div class="stat-change" th:text="${highestScoreDate}"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">연속 참여</div>
+          <div class="stat-number" th:text="${streak}">0일</div>
+          <div
+            class="stat-change"
+            th:classappend="${streakStatus != null ? 'positive' : ''}"
+            th:text="${streakStatus}"
+          ></div>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="chart-container">
+          <h2 class="chart-header">면접 성과 추이</h2>
+          <canvas id="performanceChart"></canvas>
+        </div>
+        <div class="accuracy-container">
+          <h2 class="chart-header">카테고리별 정확도</h2>
+          <div th:each="category : ${categoryAccuracy}">
+            <div class="accuracy-item">
+              <span class="accuracy-label" th:text="${category.name}"></span>
+              <div class="accuracy-bar-container">
+                <div
+                  class="accuracy-bar"
+                  th:style="'width:' + ${category.accuracy} + '%'"
+                ></div>
+              </div>
+              <span
+                class="accuracy-value"
+                th:text="${category.accuracy} + '%'"
+              ></span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-grid">
+        <div class="achievements-container">
+          <h2 class="achievements-header">
+            획득한 업적
+            <span
+              style="font-weight: 400; font-size: 0.75rem; color: #6b7280"
+              th:text="${achievementProgress}"
+            ></span>
+          </h2>
+          <div class="achievements-grid">
+            <div
+              th:each="achievement : ${achievements}"
+              class="achievement-card"
+              th:classappend="${achievement.earned ? 'earned' : ''}"
+            >
+              <div class="achievement-icon" th:text="${achievement.icon}"></div>
+              <div class="achievement-name" th:text="${achievement.name}"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="analysis-grid">
-            <a href="/analysis/growth-comparison" class="analysis-card">
-                <div class="analysis-icon">📈</div>
-                <div class="analysis-content">
-                    <div class="analysis-title">성장 비교</div>
-                    <div class="analysis-subtitle">성장 추이</div>
-                </div>
-            </a>
-            <a href="/analysis/mbti-result" class="analysis-card">
-                <div class="analysis-icon">🧠</div>
-                <div class="analysis-content">
-                    <div class="analysis-title">면접 MBTI</div>
-                    <div class="analysis-subtitle">성향 분석</div>
-                </div>
-            </a>
-            <a href="/analysis/voice-result" class="analysis-card">
-                <div class="analysis-icon">🎙️</div>
-                <div class="analysis-content">
-                    <div class="analysis-title">음성 분석</div>
-                    <div class="analysis-subtitle">말하기 패턴</div>
-                </div>
-            </a>
-            <a href="/analysis/facial-result" class="analysis-card">
-                <div class="analysis-icon">😊</div>
-                <div class="analysis-content">
-                    <div class="analysis-title">표정 분석</div>
-                    <div class="analysis-subtitle">비언어 소통</div>
-                </div>
-            </a>
+        <div class="ranking-container">
+          <div class="ranking-header">
+            <h2 class="ranking-title">면접자 순위</h2>
+            <div class="ranking-filter">
+              <button class="filter-btn active" onclick="filterRanking('all')">
+                전체
+              </button>
+              <button class="filter-btn" onclick="filterRanking('weekly')">
+                주간
+              </button>
+              <button class="filter-btn" onclick="filterRanking('monthly')">
+                월간
+              </button>
+            </div>
+          </div>
+          <div class="ranking-list">
+            <div
+              th:each="rank : ${rankings}"
+              class="ranking-item"
+              th:classappend="${rank.isCurrentUser ? 'current-user' : ''}"
+            >
+              <span class="rank-number" th:text="${rank.rank}"></span>
+              <div class="rank-info">
+                <div class="rank-name" th:text="${rank.name}"></div>
+                <div class="rank-stats" th:text="${rank.stats}"></div>
+              </div>
+              <span class="rank-score" th:text="${rank.score}"></span>
+            </div>
+          </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">총 면접 횟수</div>
-                <div class="stat-number" th:text="${totalInterviews}">0</div>
-                <div class="stat-change" th:classappend="${interviewChange != null and interviewChange.startsWith('+') ? 'positive' : 'negative'}" th:text="${interviewChange}"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">평균 점수</div>
-                <div class="stat-number" th:text="${averageScore}">0</div>
-                <div class="stat-change" th:classappend="${scoreChange != null and scoreChange.startsWith('+') ? 'positive' : ''}" th:text="${scoreChange}"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">최고 점수</div>
-                <div class="stat-number" th:text="${highestScore}">0</div>
-                <div class="stat-change" th:text="${highestScoreDate}"></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">연속 참여</div>
-                <div class="stat-number" th:text="${streak}">0일</div>
-                <div class="stat-change" th:classappend="${streakStatus != null ? 'positive' : ''}" th:text="${streakStatus}"></div>
-            </div>
+        <div class="activity-chart-container">
+          <h2 class="chart-header">월별 활동 분석</h2>
+          <canvas id="activityChart"></canvas>
         </div>
-
-        <div class="main-content">
-            <div class="chart-container">
-                <h2 class="chart-header">면접 성과 추이</h2>
-                <canvas id="performanceChart"></canvas>
-            </div>
-            <div class="accuracy-container">
-                <h2 class="chart-header">카테고리별 정확도</h2>
-                <div th:each="category : ${categoryAccuracy}">
-                    <div class="accuracy-item">
-                        <span class="accuracy-label" th:text="${category.name}"></span>
-                        <div class="accuracy-bar-container">
-                            <div class="accuracy-bar" th:style="'width:' + ${category.accuracy} + '%'"></div>
-                        </div>
-                        <span class="accuracy-value" th:text="${category.accuracy} + '%'"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bottom-grid">
-            <div class="achievements-container">
-                <h2 class="achievements-header">획득한 업적 <span style="font-weight: 400; font-size: 0.75rem; color: #6b7280;" th:text="${achievementProgress}"></span></h2>
-                <div class="achievements-grid">
-                    <div th:each="achievement : ${achievements}" 
-                        class="achievement-card" 
-                        th:classappend="${achievement.earned ? 'earned' : ''}">
-                        <div class="achievement-icon" th:text="${achievement.icon}"></div>
-                        <div class="achievement-name" th:text="${achievement.name}"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="ranking-container">
-                <div class="ranking-header">
-                    <h2 class="ranking-title">면접자 순위</h2>
-                    <div class="ranking-filter">
-                        <button class="filter-btn active" onclick="filterRanking('all')">전체</button>
-                        <button class="filter-btn" onclick="filterRanking('weekly')">주간</button>
-                        <button class="filter-btn" onclick="filterRanking('monthly')">월간</button>
-                    </div>
-                </div>
-                <div class="ranking-list">
-                    <div th:each="rank : ${rankings}" 
-                         class="ranking-item" 
-                         th:classappend="${rank.isCurrentUser ? 'current-user' : ''}">
-                        <span class="rank-number" th:text="${rank.rank}"></span>
-                        <div class="rank-info">
-                            <div class="rank-name" th:text="${rank.name}"></div>
-                            <div class="rank-stats" th:text="${rank.stats}"></div>
-                        </div>
-                        <span class="rank-score" th:text="${rank.score}"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="activity-chart-container">
-                <h2 class="chart-header">월별 활동 분석</h2>
-                <canvas id="activityChart"></canvas>
-            </div>
-        </div>
+      </div>
     </div>
-
     <div th:replace="~{fragments/footer :: footer}"></div>
-    
-    <div th:replace="~{fragments/scripts :: navbar-script}"></div>
-    <div th:replace="~{fragments/scripts :: common-scripts}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script th:inline="javascript">
-        const performanceData = /*[[${performanceChartData}]]*/ null;
-        const activityData = /*[[${activityChartData}]]*/ null;
+      const performanceData = /*[[${performanceChartData}]]*/ null;
+      const activityData = /*[[${activityChartData}]]*/ null;
 
-        if (performanceData) {
-            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-            new Chart(performanceCtx, {
-                type: 'line',
-                data: performanceData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            min: 60,
-                            max: 100
-                        }
-                    }
-                }
-            });
-        }
+      if (performanceData) {
+        const performanceCtx = document
+          .getElementById("performanceChart")
+          .getContext("2d");
+        new Chart(performanceCtx, {
+          type: "line",
+          data: performanceData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                min: 60,
+                max: 100,
+              },
+            },
+          },
+        });
+      }
 
-        if (activityData) {
-            const activityCtx = document.getElementById('activityChart').getContext('2d');
-            new Chart(activityCtx, {
-                type: 'bar',
-                data: activityData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        }
+      if (activityData) {
+        const activityCtx = document
+          .getElementById("activityChart")
+          .getContext("2d");
+        new Chart(activityCtx, {
+          type: "bar",
+          data: activityData,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+      }
 
-        function filterRanking(period) {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-        }
+      function filterRanking(period) {
+        document.querySelectorAll(".filter-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        event.target.classList.add("active");
+      }
 
-        function exportToPDF() {
-            const element = document.querySelector('.container');
-            html2canvas(element).then(canvas => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jspdf.jsPDF();
-                const imgWidth = 210;
-                const pageHeight = 295;
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-                let heightLeft = imgHeight;
+      function exportToPDF() {
+        const element = document.querySelector(".container");
+        html2canvas(element).then((canvas) => {
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jspdf.jsPDF();
+          const imgWidth = 210;
+          const pageHeight = 295;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          let heightLeft = imgHeight;
 
-                let position = 0;
+          let position = 0;
 
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
+          pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
 
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
+          while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
 
-                pdf.save('my-stats.pdf');
-            });
-        }
+          pdf.save("my-stats.pdf");
+        });
+      }
 
-        function exportToCSV() {
-            const csvData = [];
-            csvData.push(['내 활동 통계']);
-            csvData.push(['']);
-            csvData.push(['항목', '값']);
-            
-            document.querySelectorAll('.stat-card').forEach(card => {
-                const label = card.querySelector('.stat-label').textContent;
-                const value = card.querySelector('.stat-number').textContent;
-                csvData.push([label, value]);
-            });
-            
-            const csvContent = csvData.map(e => e.join(',')).join('\n');
-            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'my-stats.csv';
-            link.click();
-        }
+      function exportToCSV() {
+        const csvData = [];
+        csvData.push(["내 활동 통계"]);
+        csvData.push([""]);
+        csvData.push(["항목", "값"]);
+
+        document.querySelectorAll(".stat-card").forEach((card) => {
+          const label = card.querySelector(".stat-label").textContent;
+          const value = card.querySelector(".stat-number").textContent;
+          csvData.push([label, value]);
+        });
+
+        const csvContent = csvData.map((e) => e.join(",")).join("\n");
+        const blob = new Blob(["\uFEFF" + csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "my-stats.csv";
+        link.click();
+      }
     </script>
-</body>
+  </body>
 </html>

@@ -1,585 +1,622 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>사용자 상세 - MockerView Admin</title>
+    <div th:replace="~{fragments/styles :: styles}"></div>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #1a1a1a;
-        }
-        
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand {
-            font-size: 1.375rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .admin-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.6875rem;
-            font-weight: 700;
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #1a1a1a;
+      }
+
+      .navbar {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .navbar-brand {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .admin-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: #4a5568;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9375rem;
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        color: #667eea;
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
+        padding: 8px;
+      }
+
+      .hamburger span {
+        width: 24px;
+        height: 2px;
+        background: #667eea;
+        border-radius: 2px;
+      }
+
+      .mobile-menu {
+        display: none;
+        position: fixed;
+        top: 57px;
+        left: 0;
+        right: 0;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        z-index: 99;
+      }
+
+      .mobile-menu.active {
+        display: block;
+      }
+
+      .mobile-menu a {
+        display: block;
+        padding: 14px 20px;
+        color: #4a5568;
+        text-decoration: none;
+        font-weight: 500;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .mobile-menu a:hover,
+      .mobile-menu a.active {
+        background: #f8f9ff;
+        color: #667eea;
+      }
+
+      .page-header {
+        padding: 40px 0 28px;
+      }
+
+      .page-title h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        letter-spacing: -0.5px;
+        margin-bottom: 6px;
+      }
+
+      .page-title p {
+        font-size: 0.9375rem;
+        color: #6b7280;
+      }
+
+      .alert {
+        padding: 14px 18px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .alert-success {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+
+      .alert-error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+
+      .info-card {
+        background: white;
+        padding: 32px;
+        border-radius: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        margin-bottom: 24px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .info-card h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 24px;
+        padding-bottom: 14px;
+        border-bottom: 2px solid #f3f4f6;
+        letter-spacing: -0.5px;
+      }
+
+      .info-row {
+        display: flex;
+        padding: 14px 0;
+        border-bottom: 1px solid #f9fafb;
+      }
+
+      .info-row:last-child {
+        border-bottom: none;
+      }
+
+      .info-label {
+        width: 140px;
+        font-weight: 700;
+        color: #6b7280;
+        font-size: 0.8125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .info-value {
+        flex: 1;
+        color: #1a1a1a;
+        font-weight: 500;
+        font-size: 0.9375rem;
+      }
+
+      .role-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+
+      .role-badge.student {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+
+      .role-badge.host {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .role-badge.reviewer {
+        background: #ddd6fe;
+        color: #5b21b6;
+      }
+
+      .role-badge.admin {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .plan-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .plan-badge.free {
+        background: #f3f4f6;
+        color: #4b5563;
+      }
+
+      .plan-badge.basic {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .plan-badge.pro {
+        background: #fce7f3;
+        color: #9f1239;
+      }
+
+      .plan-badge.team {
+        background: #f0fdf4;
+        color: #166534;
+      }
+
+      .plan-badge.enterprise {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .usage-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .usage-fill {
+        height: 100%;
+        background: #667eea;
+        border-radius: 8px;
+        transition: width 0.3s;
+      }
+
+      .plan-change-form {
+        margin-top: 28px;
+        padding-top: 28px;
+        border-top: 2px solid #f3f4f6;
+      }
+
+      .plan-change-form h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 18px;
+      }
+
+      .form-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      select {
+        padding: 11px 14px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex: 1;
+      }
+
+      select:hover {
+        border-color: #667eea;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .btn {
+        padding: 11px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+      }
+
+      .btn-secondary {
+        background: white;
+        color: #667eea;
+        border: 1.5px solid #667eea;
+      }
+
+      .btn-secondary:hover {
+        background: #f8f9ff;
+      }
+
+      .footer-actions {
+        margin-top: 28px;
+        text-align: center;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 36px;
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+
+      @media (max-width: 768px) {
         .navbar-nav {
-            display: flex;
-            gap: 20px;
-            align-items: center;
+          display: none;
         }
-        
-        .nav-link {
-            color: #4a5568;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9375rem;
-            transition: color 0.2s;
-        }
-        
-        .nav-link:hover,
-        .nav-link.active {
-            color: #667eea;
-        }
-        
+
         .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            cursor: pointer;
-            padding: 8px;
+          display: flex;
         }
-        
-        .hamburger span {
-            width: 24px;
-            height: 2px;
-            background: #667eea;
-            border-radius: 2px;
+
+        .container {
+          padding: 0 16px;
         }
-        
-        .mobile-menu {
-            display: none;
-            position: fixed;
-            top: 57px;
-            left: 0;
-            right: 0;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            z-index: 99;
-        }
-        
-        .mobile-menu.active {
-            display: block;
-        }
-        
-        .mobile-menu a {
-            display: block;
-            padding: 14px 20px;
-            color: #4a5568;
-            text-decoration: none;
-            font-weight: 500;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        
-        .mobile-menu a:hover,
-        .mobile-menu a.active {
-            background: #f8f9ff;
-            color: #667eea;
-        }
-        
+
         .page-header {
-            padding: 40px 0 28px;
+          padding: 28px 0 20px;
         }
-        
+
         .page-title h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
+          font-size: 1.625rem;
         }
-        
-        .page-title p {
-            font-size: 0.9375rem;
-            color: #6b7280;
-        }
-        
-        .alert {
-            padding: 14px 18px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        
-        .alert-success {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        
-        .alert-error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        
+
         .info-card {
-            background: white;
-            padding: 32px;
-            border-radius: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            margin-bottom: 24px;
-            border: 1px solid #e5e7eb;
+          padding: 24px;
         }
-        
-        .info-card h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 24px;
-            padding-bottom: 14px;
-            border-bottom: 2px solid #f3f4f6;
-            letter-spacing: -0.5px;
-        }
-        
+
         .info-row {
-            display: flex;
-            padding: 14px 0;
-            border-bottom: 1px solid #f9fafb;
+          flex-direction: column;
+          gap: 6px;
         }
-        
-        .info-row:last-child {
-            border-bottom: none;
-        }
-        
+
         .info-label {
-            width: 140px;
-            font-weight: 700;
-            color: #6b7280;
-            font-size: 0.8125rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+          width: 100%;
         }
-        
-        .info-value {
-            flex: 1;
-            color: #1a1a1a;
-            font-weight: 500;
-            font-size: 0.9375rem;
-        }
-        
-        .role-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 0.8125rem;
-            font-weight: 600;
-        }
-        
-        .role-badge.student {
-            background: #e0f2fe;
-            color: #0369a1;
-        }
-        
-        .role-badge.host {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .role-badge.reviewer {
-            background: #ddd6fe;
-            color: #5b21b6;
-        }
-        
-        .role-badge.admin {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .plan-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 0.8125rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .plan-badge.free {
-            background: #f3f4f6;
-            color: #4b5563;
-        }
-        
-        .plan-badge.basic {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        .plan-badge.pro {
-            background: #fce7f3;
-            color: #9f1239;
-        }
-        
-        .plan-badge.team {
-            background: #f0fdf4;
-            color: #166534;
-        }
-        
-        .plan-badge.enterprise {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .usage-bar {
-            width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-        
-        .usage-fill {
-            height: 100%;
-            background: #667eea;
-            border-radius: 8px;
-            transition: width 0.3s;
-        }
-        
-        .plan-change-form {
-            margin-top: 28px;
-            padding-top: 28px;
-            border-top: 2px solid #f3f4f6;
-        }
-        
-        .plan-change-form h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 18px;
-        }
-        
+
         .form-group {
-            display: flex;
-            gap: 12px;
-            align-items: center;
+          flex-direction: column;
         }
-        
-        select {
-            padding: 11px 14px;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #1a1a1a;
-            background: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex: 1;
-        }
-        
-        select:hover {
-            border-color: #667eea;
-        }
-        
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
+
+        select,
         .btn {
-            padding: 11px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: none;
-            cursor: pointer;
+          width: 100%;
         }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-        
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 1.5px solid #667eea;
-        }
-        
-        .btn-secondary:hover {
-            background: #f8f9ff;
-        }
-        
-        .footer-actions {
-            margin-top: 28px;
-            text-align: center;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 36px;
-            color: #9ca3af;
-            font-size: 0.875rem;
-        }
-        
-        @media (max-width: 768px) {
-            .navbar-nav {
-                display: none;
-            }
-            
-            .hamburger {
-                display: flex;
-            }
-            
-            .container {
-                padding: 0 16px;
-            }
-            
-            .page-header {
-                padding: 28px 0 20px;
-            }
-            
-            .page-title h1 {
-                font-size: 1.625rem;
-            }
-            
-            .info-card {
-                padding: 24px;
-            }
-            
-            .info-row {
-                flex-direction: column;
-                gap: 6px;
-            }
-            
-            .info-label {
-                width: 100%;
-            }
-            
-            .form-group {
-                flex-direction: column;
-            }
-            
-            select, .btn {
-                width: 100%;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/admin/dashboard">
-                    MockerView
-                    <span class="admin-badge">ADMIN</span>
-                </a>
-                <div class="navbar-nav">
-                    <a class="nav-link active" href="/admin/dashboard">대시보드</a>
-                    <a class="nav-link" href="/session/list">세션 목록</a>
-                    <a class="nav-link" href="/auth/mypage">마이페이지</a>
-                    <a class="nav-link" href="/auth/logout">로그아웃</a>
-                </div>
-                <div class="hamburger" onclick="toggleMobileMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
+  </head>
+  <body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <!-- <nav class="navbar">
+      <div class="container">
+        <div class="navbar-content">
+          <a class="navbar-brand" href="/admin/dashboard">
+            MockerView
+            <span class="admin-badge">ADMIN</span>
+          </a>
+          <div class="navbar-nav">
+            <a class="nav-link active" href="/admin/dashboard">대시보드</a>
+            <a class="nav-link" href="/session/list">세션 목록</a>
+            <a class="nav-link" href="/auth/mypage">마이페이지</a>
+            <a class="nav-link" href="/auth/logout">로그아웃</a>
+          </div>
+          <div class="hamburger" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
         </div>
-    </nav>
-    
+      </div>
+    </nav> -->
+
     <div class="mobile-menu" id="mobileMenu">
-        <a class="active" href="/admin/dashboard">대시보드</a>
-        <a href="/session/list">세션 목록</a>
-        <a href="/auth/mypage">마이페이지</a>
-        <a href="/auth/logout">로그아웃</a>
+      <a class="active" href="/admin/dashboard">대시보드</a>
+      <a href="/session/list">세션 목록</a>
+      <a href="/auth/mypage">마이페이지</a>
+      <a href="/auth/logout">로그아웃</a>
     </div>
-    
+
     <div class="page-header">
-        <div class="container">
-            <div class="page-title">
-                <h1>👤 사용자 상세 정보</h1>
-                <p>사용자 정보 조회 및 관리</p>
-            </div>
+      <div class="container">
+        <div class="page-title">
+          <h1>👤 사용자 상세 정보</h1>
+          <p>사용자 정보 조회 및 관리</p>
         </div>
+      </div>
     </div>
-    
+
     <div class="container">
-        <div th:if="${success}" class="alert alert-success">
-            ✓ <span th:text="${success}"></span>
+      <div th:if="${success}" class="alert alert-success">
+        ✓ <span th:text="${success}"></span>
+      </div>
+
+      <div th:if="${error}" class="alert alert-error">
+        ✗ <span th:text="${error}"></span>
+      </div>
+
+      <div class="info-card">
+        <h2>기본 정보</h2>
+
+        <div class="info-row">
+          <div class="info-label">사용자 ID</div>
+          <div class="info-value"><strong th:text="${user.id}"></strong></div>
         </div>
-        
-        <div th:if="${error}" class="alert alert-error">
-            ✗ <span th:text="${error}"></span>
+
+        <div class="info-row">
+          <div class="info-label">이름</div>
+          <div class="info-value" th:text="${user.name}"></div>
         </div>
-        
-        <div class="info-card">
-            <h2>기본 정보</h2>
-            
-            <div class="info-row">
-                <div class="info-label">사용자 ID</div>
-                <div class="info-value"><strong th:text="${user.id}"></strong></div>
-            </div>
-            
-            <div class="info-row">
-                <div class="info-label">이름</div>
-                <div class="info-value" th:text="${user.name}"></div>
-            </div>
-            
-            <div class="info-row">
-                <div class="info-label">아이디</div>
-                <div class="info-value" th:text="${user.username}"></div>
-            </div>
-            
-            <div class="info-row">
-                <div class="info-label">이메일</div>
-                <div class="info-value" th:text="${user.email}"></div>
-            </div>
-            
-            <div class="info-row">
-                <div class="info-label">역할</div>
-                <div class="info-value">
-                    <span class="role-badge student" th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
-                    <span class="role-badge host" th:if="${user.role.name() == 'HOST'}">💼 면접관</span>
-                    <span class="role-badge reviewer" th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
-                    <span class="role-badge admin" th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
-                </div>
-            </div>
-            
-            <div class="info-row">
-                <div class="info-label">가입일</div>
-                <div class="info-value" th:text="${#temporals.format(user.createdAt, 'yyyy년 MM월 dd일 HH:mm')}"></div>
-            </div>
+
+        <div class="info-row">
+          <div class="info-label">아이디</div>
+          <div class="info-value" th:text="${user.username}"></div>
         </div>
-        
-        <div class="info-card">
-            <h2>구독 정보</h2>
-            
-            <div th:if="${subscription != null}">
-                <div class="info-row">
-                    <div class="info-label">현재 플랜</div>
-                    <div class="info-value">
-                        <span class="plan-badge"
-                            th:classappend="${subscription.planType.name().toLowerCase()}"
-                            th:text="${subscription.planType.name()}"></span>
-                    </div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">세션 사용량</div>
-                    <div class="info-value">
-                        <div style="margin-bottom: 8px;">
-                            <strong th:text="${subscription.usedSessions}"></strong> / 
-                            <span th:text="${subscription.sessionLimit}"></span> 세션
-                        </div>
-                        <div class="usage-bar">
-                            <div class="usage-fill" 
-                                 th:style="'width: ' + ${subscription.sessionLimit > 0 ? (subscription.usedSessions * 100 / subscription.sessionLimit) : 0} + '%'"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">구독 시작일</div>
-                    <div class="info-value" th:text="${#temporals.format(subscription.startDate, 'yyyy.MM.dd')}"></div>
-                </div>
-                
-                <div class="info-row" th:if="${subscription.endDate != null}">
-                    <div class="info-label">구독 종료일</div>
-                    <div class="info-value" th:text="${#temporals.format(subscription.endDate, 'yyyy.MM.dd')}"></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-label">상태</div>
-                    <div class="info-value">
-                        <strong th:text="${subscription.status.name()}"></strong>
-                    </div>
-                </div>
-            </div>
-            
-            <div th:unless="${subscription != null}" class="empty-state">
-                🔭 활성 구독이 없습니다
-            </div>
-            
-            <div class="plan-change-form">
-                <h3>💳 플랜 변경</h3>
-                <form th:action="@{/admin/users/{id}/change-plan(id=${user.id})}" method="post">
-                    <div class="form-group">
-                        <select name="planType" required>
-                            <option value="FREE">FREE - 무료 플랜</option>
-                            <option value="BASIC">BASIC - 베이직 플랜</option>
-                            <option value="PRO">PRO - 프로 플랜</option>
-                            <option value="TEAM">TEAM - 팀 플랜</option>
-                            <option value="ENTERPRISE">ENTERPRISE - 엔터프라이즈</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary">변경 적용 →</button>
-                    </div>
-                </form>
-            </div>
+
+        <div class="info-row">
+          <div class="info-label">이메일</div>
+          <div class="info-value" th:text="${user.email}"></div>
         </div>
-        
-        <div class="footer-actions">
-            <a href="/admin/dashboard" class="btn btn-secondary">← 대시보드로 돌아가기</a>
+
+        <div class="info-row">
+          <div class="info-label">역할</div>
+          <div class="info-value">
+            <span
+              class="role-badge student"
+              th:if="${user.role.name() == 'STUDENT'}"
+              >🎓 면접자</span
+            >
+            <span class="role-badge host" th:if="${user.role.name() == 'HOST'}"
+              >💼 면접관</span
+            >
+            <span
+              class="role-badge reviewer"
+              th:if="${user.role.name() == 'REVIEWER'}"
+              >📝 리뷰어</span
+            >
+            <span
+              class="role-badge admin"
+              th:if="${user.role.name() == 'ADMIN'}"
+              >⚡ 관리자</span
+            >
+          </div>
         </div>
+
+        <div class="info-row">
+          <div class="info-label">가입일</div>
+          <div
+            class="info-value"
+            th:text="${#temporals.format(user.createdAt, 'yyyy년 MM월 dd일 HH:mm')}"
+          ></div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h2>구독 정보</h2>
+
+        <div th:if="${subscription != null}">
+          <div class="info-row">
+            <div class="info-label">현재 플랜</div>
+            <div class="info-value">
+              <span
+                class="plan-badge"
+                th:classappend="${subscription.planType.name().toLowerCase()}"
+                th:text="${subscription.planType.name()}"
+              ></span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">세션 사용량</div>
+            <div class="info-value">
+              <div style="margin-bottom: 8px">
+                <strong th:text="${subscription.usedSessions}"></strong> /
+                <span th:text="${subscription.sessionLimit}"></span> 세션
+              </div>
+              <div class="usage-bar">
+                <div
+                  class="usage-fill"
+                  th:style="'width: ' + ${subscription.sessionLimit > 0 ? (subscription.usedSessions * 100 / subscription.sessionLimit) : 0} + '%'"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">구독 시작일</div>
+            <div
+              class="info-value"
+              th:text="${#temporals.format(subscription.startDate, 'yyyy.MM.dd')}"
+            ></div>
+          </div>
+
+          <div class="info-row" th:if="${subscription.endDate != null}">
+            <div class="info-label">구독 종료일</div>
+            <div
+              class="info-value"
+              th:text="${#temporals.format(subscription.endDate, 'yyyy.MM.dd')}"
+            ></div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">상태</div>
+            <div class="info-value">
+              <strong th:text="${subscription.status.name()}"></strong>
+            </div>
+          </div>
+        </div>
+
+        <div th:unless="${subscription != null}" class="empty-state">
+          🔭 활성 구독이 없습니다
+        </div>
+
+        <div class="plan-change-form">
+          <h3>💳 플랜 변경</h3>
+          <form
+            th:action="@{/admin/users/{id}/change-plan(id=${user.id})}"
+            method="post"
+          >
+            <div class="form-group">
+              <select name="planType" required>
+                <option value="FREE">FREE - 무료 플랜</option>
+                <option value="BASIC">BASIC - 베이직 플랜</option>
+                <option value="PRO">PRO - 프로 플랜</option>
+                <option value="TEAM">TEAM - 팀 플랜</option>
+                <option value="ENTERPRISE">ENTERPRISE - 엔터프라이즈</option>
+              </select>
+              <button type="submit" class="btn btn-primary">변경 적용 →</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="footer-actions">
+        <a href="/admin/dashboard" class="btn btn-secondary"
+          >← 대시보드로 돌아가기</a
+        >
+      </div>
     </div>
-    
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
     <script>
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('active');
-        }
+      function toggleMobileMenu() {
+        const menu = document.getElementById("mobileMenu");
+        menu.classList.toggle("active");
+      }
     </script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>

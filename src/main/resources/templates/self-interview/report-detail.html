@@ -1,408 +1,452 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>면접 역량 평가 리포트 - MockerView</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: white;
+        color: #1a1a1a;
+        line-height: 1.8;
+      }
+
+      .navbar {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1.25rem 0;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .navbar-brand {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .navbar-menu {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+        align-items: center;
+      }
+
+      .navbar-menu a {
+        color: #6b7280;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9375rem;
+      }
+
+      .navbar-menu a:hover {
+        color: #667eea;
+      }
+
+      .report-container {
+        max-width: 900px;
+        margin: 4rem auto 6rem;
+        padding: 0 2rem;
+      }
+
+      .report-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+      }
+
+      .back-link {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 0.9375rem;
+        font-weight: 500;
+      }
+
+      .back-link:hover {
+        color: #667eea;
+      }
+
+      .download-btn {
+        padding: 0.75rem 1.5rem;
+        background: #667eea;
+        color: white;
+        border: none;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      .download-btn:hover {
+        background: #5568d3;
+      }
+
+      .report-header {
+        margin-bottom: 4rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .report-date {
+        font-size: 0.875rem;
+        color: #9ca3af;
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+
+      .report-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.5px;
+      }
+
+      .report-metadata {
+        display: flex;
+        gap: 2rem;
+        font-size: 0.9375rem;
+        color: #6b7280;
+      }
+
+      .metadata-item {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .metadata-label {
+        font-weight: 500;
+      }
+
+      .metadata-value {
+        color: #1a1a1a;
+        font-weight: 600;
+      }
+
+      .section {
+        margin-bottom: 4rem;
+      }
+
+      .section-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
+        color: #667eea;
+      }
+
+      .scores {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .score-item {
+        text-align: center;
+      }
+
+      .score-value {
+        font-size: 4rem;
+        font-weight: 700;
+        color: #667eea;
+        line-height: 1;
+        margin-bottom: 0.75rem;
+      }
+
+      .score-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+      }
+
+      .summary-box {
+        background: #fafbfc;
+        padding: 2rem;
+        border-left: 3px solid #667eea;
+        font-size: 1rem;
+        line-height: 1.9;
+        color: #1a1a1a;
+      }
+
+      .content-list {
+        list-style: none;
+      }
+
+      .content-list li {
+        padding: 1.25rem 0;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 0.9375rem;
+        line-height: 1.8;
+      }
+
+      .content-list li:last-child {
+        border-bottom: none;
+      }
+
+      .section-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #667eea;
+      }
+
+      .empty-message {
+        text-align: center;
+        padding: 3rem;
+        color: #9ca3af;
+        font-size: 0.9375rem;
+      }
+
+      @media print {
+        @page {
+          margin: 2cm;
         }
 
         body {
-            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: white;
-            color: #1a1a1a;
-            line-height: 1.8;
+          background: white;
+          font-size: 11pt;
         }
 
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 1.25rem 0;
-        }
-
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar-brand {
-            font-size: 1.375rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        .navbar-menu {
-            display: flex;
-            gap: 2rem;
-            list-style: none;
-            align-items: center;
-        }
-
-        .navbar-menu a {
-            color: #6b7280;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9375rem;
-        }
-
-        .navbar-menu a:hover {
-            color: #667eea;
+        .navbar,
+        .report-actions,
+        .download-btn,
+        .back-link {
+          display: none !important;
         }
 
         .report-container {
-            max-width: 900px;
-            margin: 4rem auto 6rem;
-            padding: 0 2rem;
-        }
-
-        .report-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3rem;
-        }
-
-        .back-link {
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 0.9375rem;
-            font-weight: 500;
-        }
-
-        .back-link:hover {
-            color: #667eea;
-        }
-
-        .download-btn {
-            padding: 0.75rem 1.5rem;
-            background: #667eea;
-            color: white;
-            border: none;
-            font-weight: 600;
-            font-size: 0.9375rem;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .download-btn:hover {
-            background: #5568d3;
-        }
-
-        .report-header {
-            margin-bottom: 4rem;
-            padding-bottom: 2rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .report-date {
-            font-size: 0.875rem;
-            color: #9ca3af;
-            margin-bottom: 1rem;
-            font-weight: 500;
-        }
-
-        .report-title {
-            font-size: 2.25rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 1.5rem;
-            letter-spacing: -0.5px;
-        }
-
-        .report-metadata {
-            display: flex;
-            gap: 2rem;
-            font-size: 0.9375rem;
-            color: #6b7280;
-        }
-
-        .metadata-item {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .metadata-label {
-            font-weight: 500;
-        }
-
-        .metadata-value {
-            color: #1a1a1a;
-            font-weight: 600;
+          margin: 0;
+          padding: 0;
+          max-width: 100%;
         }
 
         .section {
-            margin-bottom: 4rem;
-        }
-
-        .section-title {
-            font-size: 1.125rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.875rem;
-            color: #667eea;
-        }
-
-        .scores {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        .score-item {
-            text-align: center;
+          page-break-inside: avoid;
         }
 
         .score-value {
-            font-size: 4rem;
-            font-weight: 700;
-            color: #667eea;
-            line-height: 1;
-            margin-bottom: 0.75rem;
-        }
-
-        .score-label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .summary-box {
-            background: #fafbfc;
-            padding: 2rem;
-            border-left: 3px solid #667eea;
-            font-size: 1rem;
-            line-height: 1.9;
-            color: #1a1a1a;
-        }
-
-        .content-list {
-            list-style: none;
-        }
-
-        .content-list li {
-            padding: 1.25rem 0;
-            border-bottom: 1px solid #f3f4f6;
-            font-size: 0.9375rem;
-            line-height: 1.8;
-        }
-
-        .content-list li:last-child {
-            border-bottom: none;
+          color: #667eea !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
 
         .section-header {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #667eea;
+          border-bottom-color: #667eea !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
 
-        .empty-message {
-            text-align: center;
-            padding: 3rem;
-            color: #9ca3af;
-            font-size: 0.9375rem;
+        .summary-box {
+          background: #fafbfc !important;
+          border-left-color: #667eea !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 0 1rem;
         }
 
-        @media print {
-            @page {
-                margin: 2cm;
-            }
-
-            body {
-                background: white;
-                font-size: 11pt;
-            }
-
-            .navbar,
-            .report-actions,
-            .download-btn,
-            .back-link {
-                display: none !important;
-            }
-
-            .report-container {
-                margin: 0;
-                padding: 0;
-                max-width: 100%;
-            }
-
-            .section {
-                page-break-inside: avoid;
-            }
-
-            .score-value {
-                color: #667eea !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .section-header {
-                border-bottom-color: #667eea !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            .summary-box {
-                background: #fafbfc !important;
-                border-left-color: #667eea !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+        .report-container {
+          padding: 0 1rem;
+          margin: 2rem auto 4rem;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-            }
-
-            .report-container {
-                padding: 0 1rem;
-                margin: 2rem auto 4rem;
-            }
-
-            .scores {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
-            }
-
-            .report-title {
-                font-size: 1.75rem;
-            }
-
-            .score-value {
-                font-size: 3rem;
-            }
-
-            .report-actions {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: stretch;
-            }
+        .scores {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.5rem;
         }
+
+        .report-title {
+          font-size: 1.75rem;
+        }
+
+        .score-value {
+          font-size: 3rem;
+        }
+
+        .report-actions {
+          flex-direction: column;
+          gap: 1rem;
+          align-items: stretch;
+        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a href="/" class="navbar-brand">MockerView</a>
-                <ul class="navbar-menu">
-                    <li><a href="/session/list">세션</a></li>
-                    <li><a href="/selfinterview/create-ai">셀프 면접</a></li>
-                    <li><a href="/auth/mypage">마이페이지</a></li>
-                </ul>
-            </div>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+  </head>
+  <body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <!-- <nav class="navbar">
+      <div class="container">
+        <div class="navbar-content">
+          <a href="/" class="navbar-brand">MockerView</a>
+          <ul class="navbar-menu">
+            <li><a href="/session/list">세션</a></li>
+            <li><a href="/selfinterview/create-ai">셀프 면접</a></li>
+            <li><a href="/auth/mypage">마이페이지</a></li>
+          </ul>
         </div>
-    </nav>
+      </div>
+    </nav> -->
 
     <div class="report-container">
-        <div class="report-actions">
-            <a href="/self-interview/reports" class="back-link">← 목록</a>
-            <button onclick="window.print()" class="download-btn">PDF 다운로드</button>
-        </div>
+      <div class="report-actions">
+        <a href="/self-interview/reports" class="back-link">← 목록</a>
+        <button onclick="window.print()" class="download-btn">
+          PDF 다운로드
+        </button>
+      </div>
 
-        <div class="report-header">
-            <div class="report-date" th:text="${#temporals.format(report.createdAt, 'yyyy년 MM월 dd일')}">2025년 01월 01일</div>
-            <h1 class="report-title" th:text="${report.categoryName}">카테고리</h1>
-            <div class="report-metadata">
-                <div class="metadata-item">
-                    <span class="metadata-label">유형</span>
-                    <span class="metadata-value" th:text="${report.questionType}">TECHNICAL</span>
-                </div>
-                <div class="metadata-item">
-                    <span class="metadata-label">난이도</span>
-                    <span class="metadata-value" th:text="${report.difficulty}">1</span>
-                </div>
-                <div class="metadata-item">
-                    <span class="metadata-label">질문 수</span>
-                    <span class="metadata-value" th:text="${report.totalQuestions} + '개'">5개</span>
-                </div>
-                <div class="metadata-item">
-                    <span class="metadata-label">종합</span>
-                    <span class="metadata-value" th:text="${analysisStats.performanceLevel}">우수</span>
-                </div>
+      <div class="report-header">
+        <div
+          class="report-date"
+          th:text="${#temporals.format(report.createdAt, 'yyyy년 MM월 dd일')}"
+        >
+          2025년 01월 01일
+        </div>
+        <h1 class="report-title" th:text="${report.categoryName}">카테고리</h1>
+        <div class="report-metadata">
+          <div class="metadata-item">
+            <span class="metadata-label">유형</span>
+            <span class="metadata-value" th:text="${report.questionType}"
+              >TECHNICAL</span
+            >
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">난이도</span>
+            <span class="metadata-value" th:text="${report.difficulty}">1</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">질문 수</span>
+            <span
+              class="metadata-value"
+              th:text="${report.totalQuestions} + '개'"
+              >5개</span
+            >
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">종합</span>
+            <span
+              class="metadata-value"
+              th:text="${analysisStats.performanceLevel}"
+              >우수</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Score</div>
+        <div class="scores">
+          <div class="score-item">
+            <div
+              class="score-value"
+              th:text="${report.overallAvg != null ? #numbers.formatDecimal(report.overallAvg, 1, 1) : '—'}"
+            >
+              —
             </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Score</div>
-            <div class="scores">
-                <div class="score-item">
-                    <div class="score-value"
-                        th:text="${report.overallAvg != null ? #numbers.formatDecimal(report.overallAvg, 1, 1) : '—'}">—</div>
-                    <div class="score-label">종합</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-value"
-                        th:text="${report.textAvg != null ? #numbers.formatDecimal(report.textAvg, 1, 1) : '—'}">—</div>
-                    <div class="score-label">텍스트</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-value"
-                        th:text="${report.audioAvg != null ? #numbers.formatDecimal(report.audioAvg, 1, 1) : '—'}">—</div>
-                    <div class="score-label">음성</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-value"
-                        th:text="${report.videoAvg != null ? #numbers.formatDecimal(report.videoAvg, 1, 1) : '—'}">—</div>
-                    <div class="score-label">영상</div>
-                </div>
+            <div class="score-label">종합</div>
+          </div>
+          <div class="score-item">
+            <div
+              class="score-value"
+              th:text="${report.textAvg != null ? #numbers.formatDecimal(report.textAvg, 1, 1) : '—'}"
+            >
+              —
             </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Summary</div>
-            <div class="summary-box" th:text="${comprehensiveSummary}">
-                종합 분석 요약
+            <div class="score-label">텍스트</div>
+          </div>
+          <div class="score-item">
+            <div
+              class="score-value"
+              th:text="${report.audioAvg != null ? #numbers.formatDecimal(report.audioAvg, 1, 1) : '—'}"
+            >
+              —
             </div>
-        </div>
-
-        <div class="section">
-            <h2 class="section-header">Strengths</h2>
-            <ul class="content-list" th:if="${!keyStrengths.isEmpty()}">
-                <li th:each="strength : ${keyStrengths}" th:text="${strength}">강점</li>
-            </ul>
-            <div class="empty-message" th:if="${keyStrengths.isEmpty()}">
-                분석된 강점 데이터가 없습니다
+            <div class="score-label">음성</div>
+          </div>
+          <div class="score-item">
+            <div
+              class="score-value"
+              th:text="${report.videoAvg != null ? #numbers.formatDecimal(report.videoAvg, 1, 1) : '—'}"
+            >
+              —
             </div>
+            <div class="score-label">영상</div>
+          </div>
         </div>
+      </div>
 
-        <div class="section">
-            <h2 class="section-header">Areas for Improvement</h2>
-            <ul class="content-list" th:if="${!keyWeaknesses.isEmpty()}">
-                <li th:each="weakness : ${keyWeaknesses}" th:text="${weakness}">약점</li>
-            </ul>
-            <div class="empty-message" th:if="${keyWeaknesses.isEmpty()}">
-                분석된 약점 데이터가 없습니다
-            </div>
+      <div class="section">
+        <div class="section-title">Summary</div>
+        <div class="summary-box" th:text="${comprehensiveSummary}">
+          종합 분석 요약
         </div>
+      </div>
 
-        <div class="section">
-            <h2 class="section-header">Action Plan</h2>
-            <ul class="content-list">
-                <li th:each="plan : ${actionPlans}" th:text="${plan}">실행 계획</li>
-            </ul>
+      <div class="section">
+        <h2 class="section-header">Strengths</h2>
+        <ul class="content-list" th:if="${!keyStrengths.isEmpty()}">
+          <li th:each="strength : ${keyStrengths}" th:text="${strength}">
+            강점
+          </li>
+        </ul>
+        <div class="empty-message" th:if="${keyStrengths.isEmpty()}">
+          분석된 강점 데이터가 없습니다
         </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-header">Areas for Improvement</h2>
+        <ul class="content-list" th:if="${!keyWeaknesses.isEmpty()}">
+          <li th:each="weakness : ${keyWeaknesses}" th:text="${weakness}">
+            약점
+          </li>
+        </ul>
+        <div class="empty-message" th:if="${keyWeaknesses.isEmpty()}">
+          분석된 약점 데이터가 없습니다
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-header">Action Plan</h2>
+        <ul class="content-list">
+          <li th:each="plan : ${actionPlans}" th:text="${plan}">실행 계획</li>
+        </ul>
+      </div>
     </div>
-</body>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+  </body>
 </html>

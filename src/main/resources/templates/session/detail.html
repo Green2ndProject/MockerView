@@ -1,531 +1,595 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>세션 결과 - Mockerview</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #212529;
-            line-height: 1.6;
-        }
-        
-        .navbar {
-            background: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 64px;
-        }
-        
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #212529;
+        line-height: 1.6;
+      }
+
+      .navbar {
+        background: white;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px;
+      }
+
+      .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: #495057;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover {
+        color: #667eea;
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+        padding: 8px;
+        z-index: 1001;
+      }
+
+      .hamburger span {
+        width: 25px;
+        height: 3px;
+        background: #667eea;
+        transition: all 0.3s;
+        border-radius: 3px;
+      }
+
+      .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(8px, 8px);
+      }
+
+      .hamburger.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+      }
+
+      .results-header {
+        margin-top: 64px;
+        background: #667eea;
+        color: white;
+        padding: 3rem 0;
+        text-align: center;
+      }
+
+      .results-header h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .session-meta {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .results-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        border: 2px solid transparent;
+        transition: all 0.3s;
+      }
+
+      .stat-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #667eea;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
+      .qa-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #667eea;
+      }
+
+      .qa-item {
+        border-left: 4px solid #667eea;
+        padding-left: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .question-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 1rem;
+      }
+
+      .answer-card {
+        background: #f9fafb;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s;
+      }
+
+      .answer-card:hover {
+        border-color: #667eea;
+      }
+
+      .answer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+      }
+
+      .answer-author {
+        font-weight: 600;
+        color: #212529;
+      }
+
+      .score-group {
+        display: flex;
+        gap: 8px;
+      }
+
+      .answer-score {
+        padding: 0.35rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: white;
+      }
+
+      .answer-score.ai {
+        background: #667eea;
+      }
+
+      .answer-score.interviewer {
+        background: #f59e0b;
+      }
+
+      .answer-text {
+        color: #495057;
+        line-height: 1.6;
+      }
+
+      .feedback-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      .feedback-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 0.75rem;
+      }
+
+      .feedback-card {
+        background: #fffbeb;
+        border: 2px solid #fde68a;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .feedback-card.ai {
+        background: #eff6ff;
+        border-color: #dbeafe;
+      }
+
+      .feedback-author-tag {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+      }
+
+      .feedback-card.ai .feedback-author-tag {
+        color: #1e40af;
+      }
+
+      .feedback-text {
+        font-size: 0.9rem;
+        color: #212529;
+        line-height: 1.6;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin: 2rem 0;
+      }
+
+      .btn {
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+      }
+
+      @media (max-width: 768px) {
         .navbar-nav {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
+          position: fixed;
+          top: 64px;
+          left: 0;
+          right: 0;
+          background: white;
+          flex-direction: column;
+          gap: 0;
+          padding: 1rem 0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          transform: translateY(-100%);
+          opacity: 0;
+          transition: all 0.3s;
+          pointer-events: none;
         }
-        
+
+        .navbar-nav.active {
+          transform: translateY(0);
+          opacity: 1;
+          pointer-events: all;
+        }
+
         .nav-link {
-            color: #495057;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
+          padding: 0.75rem 1rem;
+          width: 100%;
+          text-align: center;
         }
-        
-        .nav-link:hover {
-            color: #667eea;
-        }
-        
+
         .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px;
-            z-index: 1001;
+          display: flex;
         }
-        
-        .hamburger span {
-            width: 25px;
-            height: 3px;
-            background: #667eea;
-            transition: all 0.3s;
-            border-radius: 3px;
-        }
-        
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(8px, 8px);
-        }
-        
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
-        }
-        
+
         .results-header {
-            margin-top: 64px;
-            background: #667eea;
-            color: white;
-            padding: 3rem 0;
-            text-align: center;
+          padding: 2rem 0;
         }
-        
+
         .results-header h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
+          font-size: 1.5rem;
         }
-        
+
         .session-meta {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            font-size: 0.9rem;
-            opacity: 0.9;
+          flex-direction: column;
+          gap: 0.5rem;
+          font-size: 0.85rem;
         }
-        
-        .results-container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        
+
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+          grid-template-columns: 1fr;
+          gap: 1rem;
         }
-        
+
         .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            text-align: center;
-            border: 2px solid transparent;
-            transition: all 0.3s;
+          padding: 1.5rem;
         }
-        
-        .stat-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-        }
-        
+
         .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #667eea;
-            display: block;
-            margin-bottom: 0.5rem;
+          font-size: 2rem;
         }
-        
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
+
         .qa-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
+          padding: 1rem;
         }
-        
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #212529;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #667eea;
-        }
-        
+
         .qa-item {
-            border-left: 4px solid #667eea;
-            padding-left: 1.5rem;
-            margin-bottom: 2.5rem;
+          padding-left: 1rem;
         }
-        
+
         .question-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #212529;
-            margin-bottom: 1rem;
+          font-size: 1rem;
         }
-        
+
         .answer-card {
-            background: #f9fafb;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            transition: all 0.2s;
+          padding: 1rem;
         }
-        
-        .answer-card:hover {
-            border-color: #667eea;
-        }
-        
-        .answer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-        
-        .answer-author {
-            font-weight: 600;
-            color: #212529;
-        }
-        
-        .score-group {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .answer-score {
-            padding: 0.35rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: white;
-        }
-        
-        .answer-score.ai {
-            background: #667eea;
-        }
-        
-        .answer-score.interviewer {
-            background: #f59e0b;
-        }
-        
-        .answer-text {
-            color: #495057;
-            line-height: 1.6;
-        }
-        
-        .feedback-section {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e0e0e0;
-        }
-        
-        .feedback-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #6c757d;
-            margin-bottom: 0.75rem;
-        }
-        
-        .feedback-card {
-            background: #fffbeb;
-            border: 2px solid #fde68a;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-        }
-        
-        .feedback-card.ai {
-            background: #eff6ff;
-            border-color: #dbeafe;
-        }
-        
-        .feedback-author-tag {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #92400e;
-            margin-bottom: 0.5rem;
-        }
-        
-        .feedback-card.ai .feedback-author-tag {
-            color: #1e40af;
-        }
-        
-        .feedback-text {
-            font-size: 0.9rem;
-            color: #212529;
-            line-height: 1.6;
-        }
-        
+
         .action-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin: 2rem 0;
+          flex-direction: column;
         }
-        
-        .btn {
-            padding: 0.875rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #6c757d;
-        }
-        
-        @media (max-width: 768px) {
-            .navbar-nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                flex-direction: column;
-                gap: 0;
-                padding: 1rem 0;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: all 0.3s;
-                pointer-events: none;
-            }
-            
-            .navbar-nav.active {
-                transform: translateY(0);
-                opacity: 1;
-                pointer-events: all;
-            }
-            
-            .nav-link {
-                padding: 0.75rem 1rem;
-                width: 100%;
-                text-align: center;
-            }
-            
-            .hamburger {
-                display: flex;
-            }
-            
-            .results-header {
-                padding: 2rem 0;
-            }
-            
-            .results-header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .session-meta {
-                flex-direction: column;
-                gap: 0.5rem;
-                font-size: 0.85rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .stat-card {
-                padding: 1.5rem;
-            }
-            
-            .stat-number {
-                font-size: 2rem;
-            }
-            
-            .qa-section {
-                padding: 1rem;
-            }
-            
-            .qa-item {
-                padding-left: 1rem;
-            }
-            
-            .question-text {
-                font-size: 1rem;
-            }
-            
-            .answer-card {
-                padding: 1rem;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">Mockerview</a>
-                <div class="hamburger" onclick="toggleMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="navbar-nav">
-                    <a class="nav-link" href="/session/list">세션 목록</a>
-                    <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
-                </div>
-            </div>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+  </head>
+  <body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <!-- <nav class="navbar">
+      <div class="container">
+        <div class="navbar-content">
+          <a class="navbar-brand" href="/session/list">Mockerview</a>
+          <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="navbar-nav">
+            <a class="nav-link" href="/session/list">세션 목록</a>
+            <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+            <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+          </div>
         </div>
-    </nav>
+      </div>
+    </nav>-->
 
     <div class="results-header">
-        <h1 th:text="${session.title}">모의면접 세션</h1>
-        <div class="session-meta">
-            <span th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}">2025-01-15</span>
-            <span>호스트: <span th:text="${session.host?.name}">면접관</span></span>
-            <span th:text="${session.status}">ENDED</span>
-        </div>
+      <h1 th:text="${session.title}">모의면접 세션</h1>
+      <div class="session-meta">
+        <span
+          th:text="${#temporals.format(session.createdAt, 'yyyy-MM-dd HH:mm')}"
+          >2025-01-15</span
+        >
+        <span>호스트: <span th:text="${session.host?.name}">면접관</span></span>
+        <span th:text="${session.status}">ENDED</span>
+      </div>
     </div>
 
     <div class="results-container">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-number" th:text="${#lists.size(questions)}">0</span>
-                <div class="stat-label">질문 개수</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${totalAnswerCount}">0</span>
-                <div class="stat-label">답변 개수</div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number" th:text="${answeredQuestionCount}">0</span>
-                <div class="stat-label">답변된 질문</div>
-            </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number" th:text="${#lists.size(questions)}">0</span>
+          <div class="stat-label">질문 개수</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" th:text="${totalAnswerCount}">0</span>
+          <div class="stat-label">답변 개수</div>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" th:text="${answeredQuestionCount}">0</span>
+          <div class="stat-label">답변된 질문</div>
+        </div>
+      </div>
+
+      <div class="qa-section">
+        <h2 class="section-title">질문별 답변 및 피드백</h2>
+
+        <div th:if="${questions.empty}" class="empty-state">
+          <p>아직 질문이 없습니다</p>
         </div>
 
-        <div class="qa-section">
-            <h2 class="section-title">질문별 답변 및 피드백</h2>
-            
-            <div th:if="${questions.empty}" class="empty-state">
-                <p>아직 질문이 없습니다</p>
+        <div th:each="question : ${questions}" class="qa-item">
+          <div
+            class="question-text"
+            th:text="${'Q' + question.orderNo + '. ' + question.text}"
+          >
+            질문 내용
+          </div>
+
+          <div class="answer-group">
+            <div
+              th:if="${answersByQuestion.get(question.id) == null or answersByQuestion.get(question.id).isEmpty()}"
+              class="empty-state"
+            >
+              <p>아직 답변이 없습니다</p>
             </div>
 
-            <div th:each="question : ${questions}" class="qa-item">
-                <div class="question-text" th:text="${'Q' + question.orderNo + '. ' + question.text}">질문 내용</div>
-                
-                <div class="answer-group">
-                    <div th:if="${answersByQuestion.get(question.id) == null or answersByQuestion.get(question.id).isEmpty()}" 
-                        class="empty-state">
-                        <p>아직 답변이 없습니다</p>
-                    </div>
-                    
-                    <div th:each="item : ${answersByQuestion.get(question.id)}" class="answer-card">
-                        <div class="answer-header">
-                            <span class="answer-author" th:text="${item.answer.user?.name ?: '익명'}">답변자</span>
-                            <div class="score-group">
-                                <span class="answer-score ai" th:if="${item.hasAiFeedback}"
-                                    th:text="${'AI: ' + item.aiFeedback.score + '점'}">AI: 0점</span>
-                                <span class="answer-score interviewer" th:if="${item.hasInterviewerFeedback}"
-                                    th:text="${'면접관: ' + item.interviewerFeedback.score + '점'}">면접관: 0점</span>
-                            </div>
-                        </div>
-                        <div class="answer-text" th:text="${item.answer.answerText}">답변 내용</div>
-                        
-                        <div class="feedback-section" th:if="${item.answer.feedbacks != null and !item.answer.feedbacks.isEmpty()}">
-                            <div class="feedback-title">받은 피드백</div>
-                            <div th:each="feedback : ${item.answer.feedbacks}"
-                                th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-card ai' : 'feedback-card'}">
-                                <div class="feedback-author-tag">
-                                    <span th:if="${feedback.feedbackType.toString() == 'AI'}">
-                                        AI 코치 <span th:if="${feedback.score != null}" th:text="${'(점수: ' + feedback.score + '/100)'}"></span>
-                                    </span>
-                                    <span th:if="${feedback.feedbackType.toString() == 'INTERVIEWER'}">
-                                        <span th:text="${feedback.reviewer != null ? feedback.reviewer.name + ' (면접관)' : '면접관'}"></span>
-                                        <span th:if="${feedback.score != null}" th:text="${' (점수: ' + feedback.score + '/100)'}"></span>
-                                    </span>
-                                </div>
-                                <div class="feedback-content">
-                                    <div th:if="${feedback.summary != null and !feedback.summary.isEmpty()}" class="feedback-text">
-                                        <strong>요약:</strong> <span th:text="${feedback.summary}"></span>
-                                    </div>
-                                    <div th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}" class="feedback-text" style="margin-top: 0.5rem;">
-                                        <strong>강점:</strong> <span th:text="${feedback.strengths}"></span>
-                                    </div>
-                                    <div th:if="${feedback.improvementSuggestions != null and !feedback.improvementSuggestions.isEmpty()}" class="feedback-text" style="margin-top: 0.5rem;">
-                                        <strong>개선점:</strong> <span th:text="${feedback.improvementSuggestions}"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div
+              th:each="item : ${answersByQuestion.get(question.id)}"
+              class="answer-card"
+            >
+              <div class="answer-header">
+                <span
+                  class="answer-author"
+                  th:text="${item.answer.user?.name ?: '익명'}"
+                  >답변자</span
+                >
+                <div class="score-group">
+                  <span
+                    class="answer-score ai"
+                    th:if="${item.hasAiFeedback}"
+                    th:text="${'AI: ' + item.aiFeedback.score + '점'}"
+                    >AI: 0점</span
+                  >
+                  <span
+                    class="answer-score interviewer"
+                    th:if="${item.hasInterviewerFeedback}"
+                    th:text="${'면접관: ' + item.interviewerFeedback.score + '점'}"
+                    >면접관: 0점</span
+                  >
                 </div>
-            </div>
-        </div>
+              </div>
+              <div class="answer-text" th:text="${item.answer.answerText}">
+                답변 내용
+              </div>
 
-        <div class="action-buttons">
-            <button class="btn btn-secondary" onclick="history.back()">뒤로가기</button>
-            <a th:href="@{/session/list}" class="btn btn-primary">세션 목록</a>
+              <div
+                class="feedback-section"
+                th:if="${item.answer.feedbacks != null and !item.answer.feedbacks.isEmpty()}"
+              >
+                <div class="feedback-title">받은 피드백</div>
+                <div
+                  th:each="feedback : ${item.answer.feedbacks}"
+                  th:class="${feedback.feedbackType.toString() == 'AI' ? 'feedback-card ai' : 'feedback-card'}"
+                >
+                  <div class="feedback-author-tag">
+                    <span th:if="${feedback.feedbackType.toString() == 'AI'}">
+                      AI 코치
+                      <span
+                        th:if="${feedback.score != null}"
+                        th:text="${'(점수: ' + feedback.score + '/100)'}"
+                      ></span>
+                    </span>
+                    <span
+                      th:if="${feedback.feedbackType.toString() == 'INTERVIEWER'}"
+                    >
+                      <span
+                        th:text="${feedback.reviewer != null ? feedback.reviewer.name + ' (면접관)' : '면접관'}"
+                      ></span>
+                      <span
+                        th:if="${feedback.score != null}"
+                        th:text="${' (점수: ' + feedback.score + '/100)'}"
+                      ></span>
+                    </span>
+                  </div>
+                  <div class="feedback-content">
+                    <div
+                      th:if="${feedback.summary != null and !feedback.summary.isEmpty()}"
+                      class="feedback-text"
+                    >
+                      <strong>요약:</strong>
+                      <span th:text="${feedback.summary}"></span>
+                    </div>
+                    <div
+                      th:if="${feedback.strengths != null and !feedback.strengths.isEmpty()}"
+                      class="feedback-text"
+                      style="margin-top: 0.5rem"
+                    >
+                      <strong>강점:</strong>
+                      <span th:text="${feedback.strengths}"></span>
+                    </div>
+                    <div
+                      th:if="${feedback.improvementSuggestions != null and !feedback.improvementSuggestions.isEmpty()}"
+                      class="feedback-text"
+                      style="margin-top: 0.5rem"
+                    >
+                      <strong>개선점:</strong>
+                      <span th:text="${feedback.improvementSuggestions}"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="history.back()">
+          뒤로가기
+        </button>
+        <a th:href="@{/session/list}" class="btn btn-primary">세션 목록</a>
+      </div>
     </div>
 
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
     <script>
-        function toggleMenu() {
-            const hamburger = document.querySelector('.hamburger');
-            const navbarNav = document.querySelector('.navbar-nav');
-            hamburger.classList.toggle('active');
-            navbarNav.classList.toggle('active');
-        }
+      function toggleMenu() {
+        const hamburger = document.querySelector(".hamburger");
+        const navbarNav = document.querySelector(".navbar-nav");
+        hamburger.classList.toggle("active");
+        navbarNav.classList.toggle("active");
+      }
     </script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>

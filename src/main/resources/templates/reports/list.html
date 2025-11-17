@@ -1,418 +1,483 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>면접 리포트 - MockerView</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
     <style>
-        :root {
-            --primary: #667eea;
-            --primary-dark: #5568d3;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-600: #4b5563;
-            --gray-900: #111827;
-        }
+      :root {
+        --primary: #667eea;
+        --primary-dark: #5568d3;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-600: #4b5563;
+        --gray-900: #111827;
+      }
 
-        body {
-            background: var(--gray-50);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: var(--gray-900);
-        }
+      body {
+        background: var(--gray-50);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--gray-900);
+      }
 
-        .navbar {
-            background: white;
-            border-bottom: 1px solid var(--gray-200);
-            padding: 1rem 0;
-        }
+      .navbar {
+        background: white;
+        border-bottom: 1px solid var(--gray-200);
+        padding: 1rem 0;
+      }
 
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--primary);
-            font-size: 1.5rem;
-        }
+      .navbar-brand {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 1.5rem;
+      }
 
-        .container-main {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
+      .container-main {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
 
-        .page-header {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border: 1px solid var(--gray-200);
-        }
+      .page-header {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--gray-200);
+      }
 
-        .page-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin: 0 0 0.5rem 0;
-        }
+      .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin: 0 0 0.5rem 0;
+      }
 
-        .page-subtitle {
-            color: var(--gray-600);
-            margin: 0;
-        }
+      .page-subtitle {
+        color: var(--gray-600);
+        margin: 0;
+      }
 
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--gray-200);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+      }
+
+      .stat-label {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+      }
+
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      .icon-primary {
+        background: rgba(102, 126, 234, 0.1);
+        color: var(--primary);
+      }
+      .icon-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+      }
+      .icon-warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+      }
+
+      .reports-grid {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .report-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--gray-200);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+      }
+
+      .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+      }
+
+      .report-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin: 0 0 0.5rem 0;
+      }
+
+      .report-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-completed {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+      }
+      .status-generating {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+      }
+      .status-failed {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+      }
+
+      .report-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+      }
+
+      .report-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .report-summary {
+        color: var(--gray-600);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+
+      .report-stats {
+        display: flex;
+        gap: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-200);
+      }
+
+      .report-stat {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .report-stat-label {
+        font-size: 0.75rem;
+        color: var(--gray-600);
+        margin-bottom: 0.25rem;
+      }
+
+      .report-stat-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background 0.2s;
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-dark);
+      }
+
+      .empty-state {
+        background: white;
+        border-radius: 12px;
+        padding: 4rem 2rem;
+        text-align: center;
+        border: 1px solid var(--gray-200);
+      }
+
+      .empty-icon {
+        font-size: 4rem;
+        color: var(--gray-300);
+        margin-bottom: 1rem;
+      }
+
+      .empty-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+      }
+
+      .empty-text {
+        color: var(--gray-600);
+        margin-bottom: 2rem;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid var(--gray-200);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 768px) {
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid var(--gray-200);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--gray-600);
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--gray-900);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .icon-primary { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
-        .icon-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .icon-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-
-        .reports-grid {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .report-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid var(--gray-200);
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-
-        .report-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        }
-
-        .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
-        }
-
-        .report-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin: 0 0 0.5rem 0;
-        }
-
-        .report-status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .status-completed { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-        .status-generating { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-        .status-failed { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-
-        .report-meta {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 1rem;
-            font-size: 0.875rem;
-            color: var(--gray-600);
-        }
-
-        .report-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .report-summary {
-            color: var(--gray-600);
-            line-height: 1.6;
-            margin-bottom: 1rem;
+          grid-template-columns: 1fr;
         }
 
         .report-stats {
-            display: flex;
-            gap: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--gray-200);
+          flex-wrap: wrap;
+          gap: 1rem;
         }
-
-        .report-stat {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .report-stat-label {
-            font-size: 0.75rem;
-            color: var(--gray-600);
-            margin-bottom: 0.25rem;
-        }
-
-        .report-stat-value {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-
-        .empty-state {
-            background: white;
-            border-radius: 12px;
-            padding: 4rem 2rem;
-            text-align: center;
-            border: 1px solid var(--gray-200);
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            color: var(--gray-300);
-            margin-bottom: 1rem;
-        }
-
-        .empty-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--gray-900);
-            margin-bottom: 0.5rem;
-        }
-
-        .empty-text {
-            color: var(--gray-600);
-            margin-bottom: 2rem;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--gray-200);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .report-stats {
-                flex-wrap: wrap;
-                gap: 1rem;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <nav class="navbar">
-        <div class="container-main">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-video"></i> MockerView
-            </a>
-        </div>
+      <div class="container-main">
+        <a class="navbar-brand" href="/">
+          <i class="fas fa-video"></i> MockerView
+        </a>
+      </div>
     </nav>
 
     <div class="container-main">
-        <div class="page-header">
-            <h1 class="page-title">
-                <i class="fas fa-file-alt"></i> 면접 리포트
-            </h1>
-            <p class="page-subtitle">AI 기반 심층 분석으로 면접 세션의 모든 인사이트를 확인하세요</p>
+      <div class="page-header">
+        <h1 class="page-title"><i class="fas fa-file-alt"></i> 면접 리포트</h1>
+        <p class="page-subtitle">
+          AI 기반 심층 분석으로 면접 세션의 모든 인사이트를 확인하세요
+        </p>
+      </div>
+
+      <div class="stats-grid" th:if="${reports != null and !reports.isEmpty()}">
+        <div class="stat-card">
+          <div class="stat-icon icon-primary">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="stat-label">총 리포트</div>
+          <div class="stat-value" th:text="${totalReports}">0</div>
         </div>
-
-        <div class="stats-grid" th:if="${reports != null and !reports.isEmpty()}">
-            <div class="stat-card">
-                <div class="stat-icon icon-primary">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="stat-label">총 리포트</div>
-                <div class="stat-value" th:text="${totalReports}">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon icon-success">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-label">완료된 리포트</div>
-                <div class="stat-value" th:text="${completedReports}">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon icon-warning">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stat-label">생성 중</div>
-                <div class="stat-value" th:text="${generatingReports}">0</div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-success">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-label">완료된 리포트</div>
+          <div class="stat-value" th:text="${completedReports}">0</div>
         </div>
-
-        <div class="reports-grid" th:if="${reports != null and !reports.isEmpty()}">
-            <div class="report-card" th:each="report : ${reports}" 
-                 th:onclick="'location.href=\'/reports/' + ${report.id} + '\''">
-                <div class="report-header">
-                    <div>
-                        <h3 class="report-title" th:text="${report.session.title}">면접 제목</h3>
-                        <div class="report-meta">
-                            <div class="report-meta-item">
-                                <i class="fas fa-user"></i>
-                                <span th:text="${report.generatedBy.name}">생성자</span>
-                            </div>
-                            <div class="report-meta-item">
-                                <i class="fas fa-calendar"></i>
-                                <span th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</span>
-                            </div>
-                            <div class="report-meta-item" th:if="${report.status.name() == 'COMPLETED'}">
-                                <i class="fas fa-clock"></i>
-                                <span th:text="${#temporals.format(report.completedAt, 'HH:mm:ss')} + ' 완료'">완료 시간</span>
-                            </div>
-                        </div>
-                    </div>
-                    <span class="report-status" 
-                          th:classappend="${report.status.name() == 'COMPLETED'} ? 'status-completed' : (${report.status.name() == 'GENERATING'} ? 'status-generating' : 'status-failed')"
-                          th:text="${report.status.name() == 'COMPLETED' ? '완료' : (report.status.name() == 'GENERATING' ? '생성중' : '실패')}">
-                        상태
-                    </span>
-                </div>
-
-                <p class="report-summary" th:if="${report.summary != null}" th:text="${report.summary}">
-                    리포트 요약 내용
-                </p>
-
-                <div class="report-stats" th:if="${report.status.name() == 'COMPLETED'}">
-                    <div class="report-stat">
-                        <span class="report-stat-label">참가자</span>
-                        <span class="report-stat-value">
-                            <i class="fas fa-users"></i>
-                            <span th:text="${report.totalParticipants}">0</span>명
-                        </span>
-                    </div>
-                    <div class="report-stat">
-                        <span class="report-stat-label">질문</span>
-                        <span class="report-stat-value">
-                            <i class="fas fa-question-circle"></i>
-                            <span th:text="${report.totalQuestions}">0</span>개
-                        </span>
-                    </div>
-                    <div class="report-stat">
-                        <span class="report-stat-label">답변</span>
-                        <span class="report-stat-value">
-                            <i class="fas fa-comment"></i>
-                            <span th:text="${report.totalAnswers}">0</span>개
-                        </span>
-                    </div>
-                    <div class="report-stat">
-                        <span class="report-stat-label">평균 점수</span>
-                        <span class="report-stat-value">
-                            <i class="fas fa-star"></i>
-                            <span th:text="${#numbers.formatDecimal(report.averageScore, 1, 1)}">0.0</span>점
-                        </span>
-                    </div>
-                </div>
-
-                <div th:if="${report.status.name() == 'GENERATING'}" style="padding-top: 1rem;">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="loading-spinner"></div>
-                        <span style="color: var(--gray-600);">리포트 생성 중입니다...</span>
-                    </div>
-                </div>
-
-                <div th:if="${report.status.name() == 'FAILED'}" style="padding-top: 1rem;">
-                    <div style="color: var(--danger); font-size: 0.875rem;">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span th:text="${report.errorMessage ?: '리포트 생성에 실패했습니다'}">오류 메시지</span>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-warning">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-label">생성 중</div>
+          <div class="stat-value" th:text="${generatingReports}">0</div>
         </div>
+      </div>
 
-        <div class="empty-state" th:if="${reports == null or reports.isEmpty()}">
-            <div class="empty-icon">
-                <i class="fas fa-file-alt"></i>
+      <div
+        class="reports-grid"
+        th:if="${reports != null and !reports.isEmpty()}"
+      >
+        <div
+          class="report-card"
+          th:each="report : ${reports}"
+          th:onclick="'location.href=\'/reports/' + ${report.id} + '\''"
+        >
+          <div class="report-header">
+            <div>
+              <h3 class="report-title" th:text="${report.session.title}">
+                면접 제목
+              </h3>
+              <div class="report-meta">
+                <div class="report-meta-item">
+                  <i class="fas fa-user"></i>
+                  <span th:text="${report.generatedBy.name}">생성자</span>
+                </div>
+                <div class="report-meta-item">
+                  <i class="fas fa-calendar"></i>
+                  <span
+                    th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}"
+                    >2024-01-01</span
+                  >
+                </div>
+                <div
+                  class="report-meta-item"
+                  th:if="${report.status.name() == 'COMPLETED'}"
+                >
+                  <i class="fas fa-clock"></i>
+                  <span
+                    th:text="${#temporals.format(report.completedAt, 'HH:mm:ss')} + ' 완료'"
+                    >완료 시간</span
+                  >
+                </div>
+              </div>
             </div>
-            <h2 class="empty-title">아직 생성된 리포트가 없습니다</h2>
-            <p class="empty-text">
-                종료된 면접 세션에서 리포트를 생성하여<br>
-                AI 기반 심층 분석을 확인해보세요
-            </p>
-            <a href="/sessions" class="btn btn-primary">
-                <i class="fas fa-video"></i> 세션 목록으로
-            </a>
+            <span
+              class="report-status"
+              th:classappend="${report.status.name() == 'COMPLETED'} ? 'status-completed' : (${report.status.name() == 'GENERATING'} ? 'status-generating' : 'status-failed')"
+              th:text="${report.status.name() == 'COMPLETED' ? '완료' : (report.status.name() == 'GENERATING' ? '생성중' : '실패')}"
+            >
+              상태
+            </span>
+          </div>
+
+          <p
+            class="report-summary"
+            th:if="${report.summary != null}"
+            th:text="${report.summary}"
+          >
+            리포트 요약 내용
+          </p>
+
+          <div
+            class="report-stats"
+            th:if="${report.status.name() == 'COMPLETED'}"
+          >
+            <div class="report-stat">
+              <span class="report-stat-label">참가자</span>
+              <span class="report-stat-value">
+                <i class="fas fa-users"></i>
+                <span th:text="${report.totalParticipants}">0</span>명
+              </span>
+            </div>
+            <div class="report-stat">
+              <span class="report-stat-label">질문</span>
+              <span class="report-stat-value">
+                <i class="fas fa-question-circle"></i>
+                <span th:text="${report.totalQuestions}">0</span>개
+              </span>
+            </div>
+            <div class="report-stat">
+              <span class="report-stat-label">답변</span>
+              <span class="report-stat-value">
+                <i class="fas fa-comment"></i>
+                <span th:text="${report.totalAnswers}">0</span>개
+              </span>
+            </div>
+            <div class="report-stat">
+              <span class="report-stat-label">평균 점수</span>
+              <span class="report-stat-value">
+                <i class="fas fa-star"></i>
+                <span
+                  th:text="${#numbers.formatDecimal(report.averageScore, 1, 1)}"
+                  >0.0</span
+                >점
+              </span>
+            </div>
+          </div>
+
+          <div
+            th:if="${report.status.name() == 'GENERATING'}"
+            style="padding-top: 1rem"
+          >
+            <div class="d-flex align-items-center gap-2">
+              <div class="loading-spinner"></div>
+              <span style="color: var(--gray-600)"
+                >리포트 생성 중입니다...</span
+              >
+            </div>
+          </div>
+
+          <div
+            th:if="${report.status.name() == 'FAILED'}"
+            style="padding-top: 1rem"
+          >
+            <div style="color: var(--danger); font-size: 0.875rem">
+              <i class="fas fa-exclamation-circle"></i>
+              <span
+                th:text="${report.errorMessage ?: '리포트 생성에 실패했습니다'}"
+                >오류 메시지</span
+              >
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div class="empty-state" th:if="${reports == null or reports.isEmpty()}">
+        <div class="empty-icon">
+          <i class="fas fa-file-alt"></i>
+        </div>
+        <h2 class="empty-title">아직 생성된 리포트가 없습니다</h2>
+        <p class="empty-text">
+          종료된 면접 세션에서 리포트를 생성하여<br />
+          AI 기반 심층 분석을 확인해보세요
+        </p>
+        <a href="/sessions" class="btn btn-primary">
+          <i class="fas fa-video"></i> 세션 목록으로
+        </a>
+      </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        $(document).ready(function() {
-            let generatingReports = $('[class*="status-generating"]').length;
-            
-            if (generatingReports > 0) {
-                setTimeout(function() {
-                    location.reload();
-                }, 5000);
-            }
-        });
+      $(document).ready(function () {
+        let generatingReports = $('[class*="status-generating"]').length;
+
+        if (generatingReports > 0) {
+          setTimeout(function () {
+            location.reload();
+          }, 5000);
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

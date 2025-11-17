@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CategoryScoreDTO {
     private String category;
-    private Double avgScore;
-    private Long count;
+    private double accuracy;
+    private int count;
 }

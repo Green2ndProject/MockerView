@@ -1,7 +1,7 @@
 spring:
   application:
     name: mockerview
-  
+
   main:
     allow-bean-definition-overriding: true
 
@@ -32,7 +32,7 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
-  
+
   cache:
     type: redis
     redis:
@@ -85,6 +85,11 @@ spring:
       write-dates-as-timestamps: false
     deserialization:
       fail-on-unknown-properties: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
 
 server:
   port: 8080
@@ -161,7 +166,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -217,7 +222,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
