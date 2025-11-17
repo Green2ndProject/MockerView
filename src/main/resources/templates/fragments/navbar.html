@@ -1,23 +1,32 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-<nav th:fragment="navbar" class="navbar">
-    <div class="nav-container">
+  <body>
+    <nav th:fragment="navbar" class="navbar">
+      <div class="nav-container">
         <a href="/" class="logo">MockerView</a>
-        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="메뉴">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
+        <button
+          class="mobile-menu-toggle"
+          id="mobileMenuToggle"
+          aria-label="메뉴"
+        >
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
         </button>
         <div class="nav-links" id="navLinks">
-            <a href="/sessions/list" class="nav-link">면접 세션</a>
-            <a href="/selfinterview/list" class="nav-link">셀프 면접</a>
-            <a href="/review/list" class="nav-link">리뷰</a>
-            <a href="/auth/mypage" class="nav-link">마이페이지</a>
-            <a href="/auth/logout" class="nav-link" onclick="return confirm('로그아웃 하시겠습니까?')">로그아웃</a>
+          <a href="/session/list" class="nav-link">면접 세션</a>
+          <a href="/selfinterview/list" class="nav-link">셀프 면접</a>
+          <a href="/review/list" class="nav-link">리뷰</a>
+          <a href="/auth/mypage" class="nav-link">마이페이지</a>
+          <a
+            href="/auth/logout"
+            class="nav-link"
+            onclick="return confirm('로그아웃 하시겠습니까?')"
+            >로그아웃</a
+          >
         </div>
-    </div>
-    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
-</nav>
-</body>
+      </div>
+      <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    </nav>
+  </body>
 </html>
