@@ -63,6 +63,18 @@ public class User {
     @Column(name = "AGREE_THIRD_PARTY")
     private Boolean agreeThirdParty;
     
+    @Column(name = "AGREE_MARKETING")
+    private Boolean agreeMarketing;
+    
+    @Column(name = "AGREE_MARKETING_EMAIL")
+    private Boolean agreeMarketingEmail;
+    
+    @Column(name = "AGREE_MARKETING_PUSH")
+    private Boolean agreeMarketingPush;
+    
+    @Column(name = "PRIVACY_CONSENT_DATE")
+    private LocalDateTime privacyConsentDate;
+    
     public boolean isDeleted() {
         return this.isDeleted != null && this.isDeleted == 1;
     }
