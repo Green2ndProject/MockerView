@@ -288,9 +288,9 @@ public class UserService {
                     .average()
                     .orElse(0.0);
                 return CategoryScoreDTO.builder()
-                    .categoryName(entry.getKey())
-                    .averageScore(Math.round(avg * 10) / 10.0)
-                    .answerCount(entry.getValue().size())
+                    .category(entry.getKey())
+                    .accuracy(Math.round(avg * 10) / 10.0)
+                    .count(entry.getValue().size())
                     .build();
             })
             .collect(Collectors.toList());

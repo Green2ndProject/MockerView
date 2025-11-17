@@ -3,7 +3,6 @@ package com.mockerview.controller.web;
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.dto.StatisticsDTO;
 import com.mockerview.entity.SelfInterviewReport;
-import com.mockerview.entity.Session;
 import com.mockerview.entity.Subscription;
 import com.mockerview.entity.User;
 import com.mockerview.repository.SelfInterviewReportRepository;
@@ -107,7 +106,7 @@ public class MyPageController {
             model.addAttribute("totalInterviews", stats.getTotalSessions());
             model.addAttribute("averageScore", String.format("%.1f", stats.getAverageScore()));
             model.addAttribute("highestScore", stats.getCategoryScores().stream()
-                .mapToDouble(c -> c.getAverageScore())
+                .mapToDouble(c -> c.getAccuracy())
                 .max()
                 .orElse(0.0));
             model.addAttribute("totalAnswers", stats.getTotalAnswers());
