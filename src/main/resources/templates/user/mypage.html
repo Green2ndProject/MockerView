@@ -1,461 +1,839 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>마이페이지 - MockerView</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; color: #1a1a1a; }
-        
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-        
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        .navbar-content { display: flex; justify-content: space-between; align-items: center; }
-        .navbar-brand { font-size: 1.375rem; font-weight: 700; color: #667eea; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-        
-        .plan-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.6875rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-        .plan-badge.free { background: #f3f4f6; color: #6b7280; }
-        .plan-badge.basic { background: #dbeafe; color: #1e40af; }
-        .plan-badge.pro { background: #fce7f3; color: #9f1239; }
-        .plan-badge.team { background: #f0fdf4; color: #166534; }
-        
-        .navbar-nav { display: flex; gap: 20px; align-items: center; }
-        .nav-link { color: #4a5568; text-decoration: none; font-weight: 500; font-size: 0.9375rem; transition: color 0.2s; }
-        .nav-link:hover, .nav-link.active { color: #667eea; }
-        
-        .page-header { padding: 40px 0 28px; }
-        .page-title h1 { font-size: 2rem; font-weight: 700; color: #0a0a0a; letter-spacing: -0.5px; margin-bottom: 6px; }
-        .page-title p { font-size: 0.9375rem; color: #6b7280; }
-        
-        .content-grid { display: grid; grid-template-columns: 280px 1fr; gap: 28px; margin-bottom: 40px; }
-        .sidebar { display: flex; flex-direction: column; gap: 14px; }
-        
-        .profile-card {
-            background: white;
-            border-radius: 14px;
-            padding: 28px 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            text-align: center;
-        }
-        
-        .profile-avatar {
-            width: 70px;
-            height: 70px;
-            background: #667eea;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.75rem;
-            color: white;
-            margin: 0 auto 16px;
-            font-weight: 700;
-        }
-        
-        .profile-name { font-size: 1.125rem; font-weight: 700; color: #0a0a0a; margin-bottom: 4px; }
-        .profile-email { font-size: 0.8125rem; color: #6b7280; margin-bottom: 14px; }
-        .profile-role { display: inline-block; padding: 5px 12px; background: #f0f4ff; color: #667eea; border-radius: 16px; font-size: 0.8125rem; font-weight: 600; }
-        
-        .quick-actions { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .quick-actions h3 { font-size: 0.8125rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
-        
-        .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 11px 14px;
-            background: white;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #1a1a1a;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            margin-bottom: 8px;
-        }
-        .action-btn:hover { border-color: #667eea; background: #fafbfc; }
-        .action-icon { font-size: 1.125rem; }
-        
-        .main-content { display: flex; flex-direction: column; gap: 20px; }
-        .section-card { background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .section-header h2 { font-size: 1.25rem; font-weight: 700; color: #0a0a0a; letter-spacing: -0.5px; }
-        
-        .btn {
-            padding: 9px 18px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            text-decoration: none;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover { background: #5568d3; }
-        .btn-danger { background: #dc2626; color: white; }
-        .btn-danger:hover { background: #b91c1c; }
-        
-        .subscription-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; margin-bottom: 20px; }
-        .info-box { padding: 18px; background: #f9fafb; border-radius: 10px; border: 1px solid #e5e7eb; }
-        .info-label { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .info-value { font-size: 1.375rem; font-weight: 700; color: #667eea; }
-        
-        .progress-bar { width: 100%; height: 7px; background: #e5e7eb; border-radius: 8px; overflow: hidden; margin-top: 10px; }
-        .progress-fill { height: 100%; background: #667eea; border-radius: 8px; transition: width 0.3s; }
-        
-        .form-group { margin-bottom: 18px; }
-        .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; }
-        .form-input { width: 100%; padding: 11px 14px; font-size: 0.9375rem; border: 1.5px solid #e5e7eb; border-radius: 8px; transition: all 0.2s; }
-        .form-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-        .form-input:disabled { background: #f9fafb; color: #9ca3af; cursor: not-allowed; }
-        
-        .report-card {
-            padding: 18px;
-            background: #fafbfc;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 12px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .report-card:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1); transform: translateY(-2px); }
-        
-        .report-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
-        .report-info h3 { font-size: 1rem; font-weight: 600; color: #0a0a0a; margin-bottom: 4px; }
-        .report-meta { font-size: 0.8125rem; color: #6b7280; }
-        
-        .report-scores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .score-box { text-align: center; padding: 10px; background: white; border-radius: 8px; border: 1px solid #e5e7eb; }
-        .score-value { font-size: 1.5rem; font-weight: 700; color: #667eea; }
-        .score-label { font-size: 0.75rem; color: #6b7280; margin-top: 2px; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #1a1a1a;
+      }
 
-        @media (max-width: 1024px) {
-            .content-grid { grid-template-columns: 1fr; }
-            .report-scores { grid-template-columns: repeat(2, 1fr); }
-        }
+      .navbar {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
 
-        @media (max-width: 768px) {
-            .container { padding: 0 16px; }
-            .section-card { padding: 20px; }
-            .report-scores { grid-template-columns: 1fr; }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .navbar-brand {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .plan-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .plan-badge.free {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+      .plan-badge.basic {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .plan-badge.pro {
+        background: #fce7f3;
+        color: #9f1239;
+      }
+      .plan-badge.team {
+        background: #f0fdf4;
+        color: #166534;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+      .nav-link {
+        color: #4a5568;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9375rem;
+        transition: color 0.2s;
+      }
+      .nav-link:hover,
+      .nav-link.active {
+        color: #667eea;
+      }
+
+      .page-header {
+        padding: 40px 0 28px;
+      }
+      .page-title h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        letter-spacing: -0.5px;
+        margin-bottom: 6px;
+      }
+      .page-title p {
+        font-size: 0.9375rem;
+        color: #6b7280;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 28px;
+        margin-bottom: 40px;
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .profile-card {
+        background: white;
+        border-radius: 14px;
+        padding: 28px 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        text-align: center;
+      }
+
+      .profile-avatar {
+        width: 70px;
+        height: 70px;
+        background: #667eea;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        color: white;
+        margin: 0 auto 16px;
+        font-weight: 700;
+      }
+
+      .profile-name {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 4px;
+      }
+      .profile-email {
+        font-size: 0.8125rem;
+        color: #6b7280;
+        margin-bottom: 14px;
+      }
+      .profile-role {
+        display: inline-block;
+        padding: 5px 12px;
+        background: #f0f4ff;
+        color: #667eea;
+        border-radius: 16px;
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+
+      .quick-actions {
+        background: white;
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .quick-actions h3 {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 14px;
+      }
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 11px 14px;
+        background: white;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1a1a1a;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        margin-bottom: 8px;
+      }
+      .action-btn:hover {
+        border-color: #667eea;
+        background: #fafbfc;
+      }
+      .action-icon {
+        font-size: 1.125rem;
+      }
+
+      .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .section-card {
+        background: white;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      }
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .section-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        letter-spacing: -0.5px;
+      }
+
+      .btn {
+        padding: 9px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #5568d3;
+      }
+      .btn-danger {
+        background: #dc2626;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #b91c1c;
+      }
+
+      .subscription-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+      .info-box {
+        padding: 18px;
+        background: #f9fafb;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+      }
+      .info-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+      .info-value {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 7px;
+        background: #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+      .progress-fill {
+        height: 100%;
+        background: #667eea;
+        border-radius: 8px;
+        transition: width 0.3s;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+      .form-input {
+        width: 100%;
+        padding: 11px 14px;
+        font-size: 0.9375rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        transition: all 0.2s;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+      .form-input:disabled {
+        background: #f9fafb;
+        color: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .report-card {
+        padding: 18px;
+        background: #fafbfc;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 12px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+      .report-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 12px;
+      }
+      .report-info h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0a0a0a;
+        margin-bottom: 4px;
+      }
+      .report-meta {
+        font-size: 0.8125rem;
+        color: #6b7280;
+      }
+
+      .report-scores {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .score-box {
+        text-align: center;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
+      .score-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+      }
+      .score-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+
+      @media (max-width: 1024px) {
+        .content-grid {
+          grid-template-columns: 1fr;
         }
+        .report-scores {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 0 16px;
+        }
+        .section-card {
+          padding: 20px;
+        }
+        .report-scores {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">
-                    MockerView
-                    <span class="plan-badge"
-                        th:classappend="${subscription != null && subscription.planType != null ? subscription.planType.name().toLowerCase() : 'free'}"
-                        th:text="${subscription != null && subscription.planType != null ? subscription.planType.name() : 'FREE'}">FREE</span>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+  </head>
+  <body>
+    <!--   <nav class="navbar">
+      <div class="container">
+          <div class="navbar-content">
+              <a class="navbar-brand" href="/session/list">
+                  MockerView
+                  <span
+                  class="plan-badge"
+                  th:classappend="${subscription != null && subscription.planType != null ? subscription.planType.name().toLowerCase() : 'free'}"
+                  th:text="${subscription != null && subscription.planType != null ? subscription.planType.name() : 'FREE'}"
+                  >FREE</span
+                  >
                 </a>
-                <div class="navbar-nav">
-                    <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
-                    <a class="nav-link active" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a class="nav-link" th:if="${user.role.name() == 'ADMIN'}" th:href="@{/admin/dashboard}">관리자</a>
-                    <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
-                </div>
-            </div>
+          <div class="navbar-nav">
+            <a class="nav-link" th:href="@{/session/list}">세션 목록</a>
+            <a class="nav-link active" th:href="@{/auth/mypage}">마이페이지</a>
+            <a
+              class="nav-link"
+              th:if="${user.role.name() == 'ADMIN'}"
+              th:href="@{/admin/dashboard}"
+              >관리자</a
+            >
+            <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+          </div>
         </div>
-    </nav>
-    
+      </div>
+    </nav>-->
+
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
     <div class="page-header">
-        <div class="container">
-            <div class="page-title">
-                <h1>마이페이지</h1>
-                <p>계정 정보 및 구독 관리</p>
-            </div>
+      <div class="container">
+        <div class="page-title">
+          <h1>마이페이지</h1>
+          <p>계정 정보 및 구독 관리</p>
         </div>
+      </div>
     </div>
-    
+
     <div class="container">
-        <div class="content-grid">
-            <div class="sidebar">
-                <div class="profile-card">
-                    <div class="profile-avatar" th:text="${#strings.substring(user.name, 0, 1)}">홍</div>
-                    <div class="profile-name" th:text="${user.name}">홍길동</div>
-                    <div class="profile-email" th:text="${user.email}">hong@example.com</div>
-                    <span class="profile-role">
-                        <span th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
-                        <span th:if="${user.role.name() == 'HOST'}">💼 면접관</span>
-                        <span th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
-                        <span th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
-                    </span>
-                </div>
-                
-                <div class="quick-actions">
-                    <h3>빠른 메뉴</h3>
-                    <a href="/session/list" class="action-btn">
-                        <span class="action-icon">🏠</span>
-                        세션 목록
-                    </a>
-                    <a href="/auth/mypage/stats" class="action-btn">
-                        <span class="action-icon">📊</span>
-                        활동 통계
-                    </a>
-                    <a href="/selfinterview/create-ai" class="action-btn">
-                        <span class="action-icon">🎯</span>
-                        셀프 면접
-                    </a>
-                    <a href="/selfinterview/videos" class="action-btn">
-                        <span class="action-icon">🎬</span>
-                        녹화 영상 보기
-                    </a>
-                    <a href="/user/consent-management" class="action-btn">
-                        <span class="action-icon">🔒</span>
-                        개인정보 동의 관리
-                    </a>
-                    <a href="/payment/plans" class="action-btn">
-                        <span class="action-icon">💳</span>
-                        플랜 업그레이드
-                    </a>
-                </div>
+      <div class="content-grid">
+        <div class="sidebar">
+          <div class="profile-card">
+            <div
+              class="profile-avatar"
+              th:text="${#strings.substring(user.name, 0, 1)}"
+            >
+              홍
             </div>
-            
-            <div class="main-content">
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>구독 정보</h2>
-                        <a href="/payment/plans" class="btn btn-primary">플랜 변경</a>
-                    </div>
-                    
-                    <div class="subscription-info">
-                        <div class="info-box">
-                            <div class="info-label">현재 플랜</div>
-                            <div class="info-value" th:text="${subscription != null && subscription.planType != null ? subscription.planType.name() : 'FREE'}">FREE</div>
-                        </div>
-                        
-                        <div class="info-box">
-                            <div class="info-label">세션 사용량</div>
-                            <div class="info-value">
-                                <span th:text="${subscription != null && subscription.usedSessions != null ? subscription.usedSessions : 0}">0</span>
-                                <span style="font-size: 0.875rem; color: #6b7280;">/ </span>
-                                <span style="font-size: 0.875rem; color: #6b7280;" 
-                                        th:text="${subscription != null && subscription.sessionLimit != null ? subscription.sessionLimit : 5}">5</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" 
-                                     th:style="'width: ' + ${subscription != null && subscription.sessionLimit != null && subscription.sessionLimit > 0 ? (subscription.usedSessions * 100 / subscription.sessionLimit) : 0} + '%'"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box">
-                            <div class="info-label">리뷰 읽기</div>
-                            <div class="info-value">
-                                <span th:text="${subscription != null && subscription.usedReviewReads != null ? subscription.usedReviewReads : 0}">0</span>
-                                <span style="font-size: 0.875rem; color: #6b7280;">/ </span>
-                                <span style="font-size: 0.875rem; color: #6b7280;" 
-                                        th:text="${subscription != null && subscription.reviewReadLimit != null ? (subscription.reviewReadLimit == 2147483647 ? '무제한' : subscription.reviewReadLimit) : 3}">3</span>
-                            </div>
-                            <div class="progress-bar" th:if="${subscription != null && subscription.reviewReadLimit != null && subscription.reviewReadLimit != 2147483647}">
-                                <div class="progress-fill" 
-                                     th:style="'width: ' + ${subscription.reviewReadLimit > 0 ? (subscription.usedReviewReads * 100 / subscription.reviewReadLimit) : 0} + '%'"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="profile-name" th:text="${user.name}">홍길동</div>
+            <div class="profile-email" th:text="${user.email}">
+              hong@example.com
+            </div>
+            <span class="profile-role">
+              <span th:if="${user.role.name() == 'STUDENT'}">🎓 면접자</span>
+              <span th:if="${user.role.name() == 'HOST'}">💼 면접관</span>
+              <span th:if="${user.role.name() == 'REVIEWER'}">📝 리뷰어</span>
+              <span th:if="${user.role.name() == 'ADMIN'}">⚡ 관리자</span>
+            </span>
+          </div>
 
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>🎯 셀프 면접 리포트</h2>
-                        <a href="/selfinterview/videos" style="color: #667eea; text-decoration: none; font-size: 0.875rem; font-weight: 600;">
-                            전체보기 (<span th:text="${totalReports}">0</span>) →
-                        </a>
-                    </div>
-                    
-                    <div th:if="${selfReports != null and !selfReports.isEmpty()}">
-                        <div th:each="report : ${selfReports}" 
-                            class="report-card"
-                            th:onclick="'location.href=\'/self-interview/reports/' + ${report.id} + '\''">
-                            <div class="report-header">
-                                <div class="report-info">
-                                    <h3 th:text="${report.categoryName}">카테고리</h3>
-                                    <div class="report-meta">
-                                        <span th:text="${report.questionType}">TECHNICAL</span> · 
-                                        난이도 <span th:text="${report.difficulty}">1</span> · 
-                                        질문 <span th:text="${report.totalQuestions}">5</span>개 · 
-                                        <span th:text="${#temporals.format(report.createdAt, 'MM-dd HH:mm')}">01-01 10:00</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="report-scores">
-                                <div class="score-box">
-                                    <div class="score-value" th:text="${report.overallAvg != null ? report.overallAvg : '-'}">-</div>
-                                    <div class="score-label">종합</div>
-                                </div>
-                                <div class="score-box">
-                                    <div class="score-value" th:text="${report.textAvg != null ? report.textAvg : '-'}">-</div>
-                                    <div class="score-label">텍스트</div>
-                                </div>
-                                <div class="score-box">
-                                    <div class="score-value" th:text="${report.audioAvg != null ? report.audioAvg : '-'}">-</div>
-                                    <div class="score-label">음성</div>
-                                </div>
-                                <div class="score-box">
-                                    <div class="score-value" th:text="${report.videoAvg != null ? report.videoAvg : '-'}">-</div>
-                                    <div class="score-label">영상</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div th:if="${selfReports == null or selfReports.isEmpty()}" 
-                        style="text-align: center; padding: 40px 20px; color: #9ca3af;">
-                        <div style="font-size: 3rem; margin-bottom: 12px;">🎯</div>
-                        <div style="font-weight: 600; color: #6b7280; margin-bottom: 8px;">아직 셀프 면접 기록이 없습니다</div>
-                        <div style="font-size: 0.875rem; margin-bottom: 16px;">AI와 함께 혼자서도 면접 연습을 시작해보세요</div>
-                        <a href="/selfinterview/create-ai" class="btn btn-primary">셀프 면접 시작하기</a>
-                    </div>
-                </div>
-                
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>계정 정보</h2>
-                    </div>
-                    
-                    <form th:action="@{/auth/mypage/update}" method="post">
-                        <div class="form-group">
-                            <label class="form-label" for="username">아이디</label>
-                            <input type="text" id="username" class="form-input" th:value="${user.username}" disabled>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="name">이름</label>
-                            <input type="text" id="name" name="name" class="form-input" th:value="${user.name}" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="email">이메일</label>
-                            <input type="email" id="email" name="email" class="form-input" th:value="${user.email}" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">정보 수정</button>
-                    </form>
-                </div>
-                
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>🔒 개인정보 관리</h2>
-                    </div>
-                    
-                    <p style="color: #6b7280; margin-bottom: 18px; font-size: 0.9375rem;">
-                        개인정보 수집 및 이용 동의 내역을 확인하고 마케팅 수신 동의를 변경할 수 있습니다.
-                    </p>
-                    
-                    <a href="/user/consent-management" class="btn btn-primary">
-                        개인정보 동의 관리
-                    </a>
-                </div>
-                
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>비밀번호 변경</h2>
-                    </div>
-                    
-                    <form id="changePasswordForm">
-                        <div class="form-group">
-                            <label class="form-label" for="currentPassword">현재 비밀번호</label>
-                            <input type="password" id="currentPassword" name="currentPassword" class="form-input" placeholder="현재 비밀번호" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="newPassword">새 비밀번호</label>
-                            <input type="password" id="newPassword" name="newPassword" class="form-input" placeholder="새 비밀번호 (8자 이상)" required minlength="8">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="confirmNewPassword">새 비밀번호 확인</label>
-                            <input type="password" id="confirmNewPassword" class="form-input" placeholder="새 비밀번호 확인" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">비밀번호 변경</button>
-                    </form>
-                </div>
-                
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2>회원 탈퇴</h2>
-                    </div>
-                    
-                    <p style="color: #6b7280; margin-bottom: 18px; font-size: 0.9375rem;">
-                        탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 신중하게 결정해주세요.
-                    </p>
-                    
-                    <button onclick="confirmWithdrawal()" class="btn btn-danger">회원 탈퇴</button>
-                </div>
-            </div>
+          <div class="quick-actions">
+            <h3>빠른 메뉴</h3>
+            <a href="/session/list" class="action-btn">
+              <span class="action-icon">🏠</span>
+              세션 목록
+            </a>
+            <a href="/auth/mypage/stats" class="action-btn">
+              <span class="action-icon">📊</span>
+              활동 통계
+            </a>
+            <a href="/selfinterview/create-ai" class="action-btn">
+              <span class="action-icon">🎯</span>
+              셀프 면접
+            </a>
+            <a href="/selfinterview/videos" class="action-btn">
+              <span class="action-icon">🎬</span>
+              녹화 영상 보기
+            </a>
+            <a href="/user/consent-management" class="action-btn">
+              <span class="action-icon">🔒</span>
+              개인정보 동의 관리
+            </a>
+            <a href="/payment/plans" class="action-btn">
+              <span class="action-icon">💳</span>
+              플랜 업그레이드
+            </a>
+          </div>
         </div>
-    </div>
-    
-    <script>
-        function confirmWithdrawal() {
-            if (confirm('회원 탈퇴 페이지로 이동하시겠습니까?')) {
-                window.location.href = '/auth/mypage/withdraw';
-            }
-        }
 
-        document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmNewPassword').value;
-            
-            if (newPassword !== confirmPassword) {
-                alert('새 비밀번호가 일치하지 않습니다.');
-                return;
+        <div class="main-content">
+          <div class="section-card">
+            <div class="section-header">
+              <h2>구독 정보</h2>
+              <a href="/payment/plans" class="btn btn-primary">플랜 변경</a>
+            </div>
+
+            <div class="subscription-info">
+              <div class="info-box">
+                <div class="info-label">현재 플랜</div>
+                <div
+                  class="info-value"
+                  th:text="${subscription != null && subscription.planType != null ? subscription.planType.name() : 'FREE'}"
+                >
+                  FREE
+                </div>
+              </div>
+
+              <div class="info-box">
+                <div class="info-label">세션 사용량</div>
+                <div class="info-value">
+                  <span
+                    th:text="${subscription != null && subscription.usedSessions != null ? subscription.usedSessions : 0}"
+                    >0</span
+                  >
+                  <span style="font-size: 0.875rem; color: #6b7280">/ </span>
+                  <span
+                    style="font-size: 0.875rem; color: #6b7280"
+                    th:text="${subscription != null && subscription.sessionLimit != null ? subscription.sessionLimit : 5}"
+                    >5</span
+                  >
+                </div>
+                <div class="progress-bar">
+                  <div
+                    class="progress-fill"
+                    th:style="'width: ' + ${subscription != null && subscription.sessionLimit != null && subscription.sessionLimit > 0 ? (subscription.usedSessions * 100 / subscription.sessionLimit) : 0} + '%'"
+                  ></div>
+                </div>
+              </div>
+
+              <div class="info-box">
+                <div class="info-label">리뷰 읽기</div>
+                <div class="info-value">
+                  <span
+                    th:text="${subscription != null && subscription.usedReviewReads != null ? subscription.usedReviewReads : 0}"
+                    >0</span
+                  >
+                  <span style="font-size: 0.875rem; color: #6b7280">/ </span>
+                  <span
+                    style="font-size: 0.875rem; color: #6b7280"
+                    th:text="${subscription != null && subscription.reviewReadLimit != null ? (subscription.reviewReadLimit == 2147483647 ? '무제한' : subscription.reviewReadLimit) : 3}"
+                    >3</span
+                  >
+                </div>
+                <div
+                  class="progress-bar"
+                  th:if="${subscription != null && subscription.reviewReadLimit != null && subscription.reviewReadLimit != 2147483647}"
+                >
+                  <div
+                    class="progress-fill"
+                    th:style="'width: ' + ${subscription.reviewReadLimit > 0 ? (subscription.usedReviewReads * 100 / subscription.reviewReadLimit) : 0} + '%'"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>🎯 셀프 면접 리포트</h2>
+              <a
+                href="/selfinterview/videos"
+                style="
+                  color: #667eea;
+                  text-decoration: none;
+                  font-size: 0.875rem;
+                  font-weight: 600;
+                "
+              >
+                전체보기 (<span th:text="${totalReports}">0</span>) →
+              </a>
+            </div>
+
+            <div th:if="${selfReports != null and !selfReports.isEmpty()}">
+              <div
+                th:each="report : ${selfReports}"
+                class="report-card"
+                th:onclick="'location.href=\'/self-interview/reports/' + ${report.id} + '\''"
+              >
+                <div class="report-header">
+                  <div class="report-info">
+                    <h3 th:text="${report.categoryName}">카테고리</h3>
+                    <div class="report-meta">
+                      <span th:text="${report.questionType}">TECHNICAL</span> ·
+                      난이도 <span th:text="${report.difficulty}">1</span> ·
+                      질문 <span th:text="${report.totalQuestions}">5</span>개 ·
+                      <span
+                        th:text="${#temporals.format(report.createdAt, 'MM-dd HH:mm')}"
+                        >01-01 10:00</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div class="report-scores">
+                  <div class="score-box">
+                    <div
+                      class="score-value"
+                      th:text="${report.overallAvg != null ? report.overallAvg : '-'}"
+                    >
+                      -
+                    </div>
+                    <div class="score-label">종합</div>
+                  </div>
+                  <div class="score-box">
+                    <div
+                      class="score-value"
+                      th:text="${report.textAvg != null ? report.textAvg : '-'}"
+                    >
+                      -
+                    </div>
+                    <div class="score-label">텍스트</div>
+                  </div>
+                  <div class="score-box">
+                    <div
+                      class="score-value"
+                      th:text="${report.audioAvg != null ? report.audioAvg : '-'}"
+                    >
+                      -
+                    </div>
+                    <div class="score-label">음성</div>
+                  </div>
+                  <div class="score-box">
+                    <div
+                      class="score-value"
+                      th:text="${report.videoAvg != null ? report.videoAvg : '-'}"
+                    >
+                      -
+                    </div>
+                    <div class="score-label">영상</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              th:if="${selfReports == null or selfReports.isEmpty()}"
+              style="text-align: center; padding: 40px 20px; color: #9ca3af"
+            >
+              <div style="font-size: 3rem; margin-bottom: 12px">🎯</div>
+              <div style="font-weight: 600; color: #6b7280; margin-bottom: 8px">
+                아직 셀프 면접 기록이 없습니다
+              </div>
+              <div style="font-size: 0.875rem; margin-bottom: 16px">
+                AI와 함께 혼자서도 면접 연습을 시작해보세요
+              </div>
+              <a href="/selfinterview/create-ai" class="btn btn-primary"
+                >셀프 면접 시작하기</a
+              >
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>계정 정보</h2>
+            </div>
+
+            <form th:action="@{/auth/mypage/update}" method="post">
+              <div class="form-group">
+                <label class="form-label" for="username">아이디</label>
+                <input
+                  type="text"
+                  id="username"
+                  class="form-input"
+                  th:value="${user.username}"
+                  disabled
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="name">이름</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  class="form-input"
+                  th:value="${user.name}"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="email">이메일</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  class="form-input"
+                  th:value="${user.email}"
+                  required
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary">정보 수정</button>
+            </form>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>🔒 개인정보 관리</h2>
+            </div>
+
+            <p
+              style="color: #6b7280; margin-bottom: 18px; font-size: 0.9375rem"
+            >
+              개인정보 수집 및 이용 동의 내역을 확인하고 마케팅 수신 동의를
+              변경할 수 있습니다.
+            </p>
+
+            <a href="/user/consent-management" class="btn btn-primary">
+              개인정보 동의 관리
+            </a>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>비밀번호 변경</h2>
+            </div>
+
+            <form id="changePasswordForm">
+              <div class="form-group">
+                <label class="form-label" for="currentPassword"
+                  >현재 비밀번호</label
+                >
+                <input
+                  type="password"
+                  id="currentPassword"
+                  name="currentPassword"
+                  class="form-input"
+                  placeholder="현재 비밀번호"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="newPassword">새 비밀번호</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  name="newPassword"
+                  class="form-input"
+                  placeholder="새 비밀번호 (8자 이상)"
+                  required
+                  minlength="8"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="confirmNewPassword"
+                  >새 비밀번호 확인</label
+                >
+                <input
+                  type="password"
+                  id="confirmNewPassword"
+                  class="form-input"
+                  placeholder="새 비밀번호 확인"
+                  required
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                비밀번호 변경
+              </button>
+            </form>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>회원 탈퇴</h2>
+            </div>
+
+            <p
+              style="color: #6b7280; margin-bottom: 18px; font-size: 0.9375rem"
+            >
+              탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 신중하게
+              결정해주세요.
+            </p>
+
+            <button onclick="confirmWithdrawal()" class="btn btn-danger">
+              회원 탈퇴
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
+    <script>
+      function confirmWithdrawal() {
+        if (confirm("회원 탈퇴 페이지로 이동하시겠습니까?")) {
+          window.location.href = "/auth/mypage/withdraw";
+        }
+      }
+
+      document
+        .getElementById("changePasswordForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const currentPassword =
+            document.getElementById("currentPassword").value;
+          const newPassword = document.getElementById("newPassword").value;
+          const confirmPassword =
+            document.getElementById("confirmNewPassword").value;
+
+          if (newPassword !== confirmPassword) {
+            alert("새 비밀번호가 일치하지 않습니다.");
+            return;
+          }
+
+          try {
+            const response = await fetch("/api/users/change-password", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                currentPassword: currentPassword,
+                newPassword: newPassword,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              alert("비밀번호가 변경되었습니다.");
+              document.getElementById("changePasswordForm").reset();
+            } else {
+              alert(data.message || "비밀번호 변경에 실패했습니다.");
             }
-            
-            try {
-                const response = await fetch('/api/users/change-password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        currentPassword: currentPassword,
-                        newPassword: newPassword
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('비밀번호가 변경되었습니다.');
-                    document.getElementById('changePasswordForm').reset();
-                } else {
-                    alert(data.message || '비밀번호 변경에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('비밀번호 변경 중 오류가 발생했습니다.');
-            }
+          } catch (error) {
+            console.error("Error:", error);
+            alert("비밀번호 변경 중 오류가 발생했습니다.");
+          }
         });
     </script>
-</body>
+  </body>
 </html>

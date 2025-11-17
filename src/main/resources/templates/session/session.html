@@ -1,56 +1,55 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
+  <head>
     <div th:replace="~{fragments/head :: head}"></div>
     <title>면접 대기실 - MockerView</title>
     <div th:replace="~{fragments/styles :: styles}"></div>
-</head>
-<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-<style>
-    body {
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+      body {
         padding-top: 70px;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-    }
+      }
 
-    .container {
+      .container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 40px 20px;
         flex: 1;
-    }
+      }
 
-    .header {
+      .header {
         text-align: center;
         margin-bottom: 40px;
-    }
+      }
 
-    .header h1 {
+      .header h1 {
         font-size: 2rem;
         color: #667eea;
         margin-bottom: 10px;
-    }
+      }
 
-    .header p {
+      .header p {
         color: #6b7280;
-    }
+      }
 
-    .main-grid {
+      .main-grid {
         display: grid;
         grid-template-columns: 2fr 1fr;
         gap: 20px;
-    }
+      }
 
-    .waiting-room {
+      .waiting-room {
         background: white;
         border-radius: 12px;
         padding: 30px;
         border: 1px solid #e5e7eb;
-    }
+      }
 
-    .chat-panel {
+      .chat-panel {
         background: white;
         border-radius: 12px;
         padding: 30px;
@@ -58,83 +57,83 @@
         display: flex;
         flex-direction: column;
         height: 600px;
-    }
+      }
 
-    .section {
+      .section {
         margin-bottom: 30px;
         padding-bottom: 30px;
         border-bottom: 1px solid #f3f4f6;
-    }
+      }
 
-    .section:last-child {
+      .section:last-child {
         border-bottom: none;
         margin-bottom: 0;
-    }
+      }
 
-    .section-title {
+      .section-title {
         font-size: 1.125rem;
         font-weight: 700;
         color: #1a1a1a;
         margin-bottom: 15px;
-    }
+      }
 
-    .participants {
+      .participants {
         display: grid;
         gap: 15px;
-    }
+      }
 
-    .participant-group {
+      .participant-group {
         background: #f9fafb;
         border-radius: 8px;
         padding: 15px;
-    }
+      }
 
-    .group-title {
+      .group-title {
         font-size: 0.875rem;
         font-weight: 700;
         color: #667eea;
         margin-bottom: 10px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-    }
+      }
 
-    .participant-list {
+      .participant-list {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-    }
+      }
 
-    .participant-item {
+      .participant-item {
         background: white;
         border: 1px solid #e5e7eb;
         border-radius: 6px;
         padding: 8px 12px;
         font-size: 0.875rem;
         color: #374151;
-    }
+      }
 
-    .invite-section {
+      .invite-section {
         background: #f9fafb;
         border-radius: 8px;
         padding: 15px;
-    }
+      }
 
-    .invite-url {
+      .invite-url {
         display: flex;
         gap: 10px;
         margin-top: 10px;
-    }
+      }
 
-    .invite-input {
+      .invite-input {
         flex: 1;
         padding: 10px;
         border: 2px solid #e5e7eb;
         border-radius: 6px;
         font-size: 0.875rem;
         background: white;
-    }
+      }
 
-    .btn {
+      .btn {
         padding: 10px 20px;
         border: none;
         border-radius: 6px;
@@ -142,91 +141,91 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
-    }
+      }
 
-    .btn-copy {
+      .btn-copy {
         background: #667eea;
         color: white;
-    }
+      }
 
-    .btn-copy:hover {
+      .btn-copy:hover {
         background: #5568d3;
-    }
+      }
 
-    .start-section {
+      .start-section {
         text-align: center;
         padding-top: 20px;
-    }
+      }
 
-    .btn-start {
+      .btn-start {
         background: #667eea;
         color: white;
         padding: 15px 40px;
         font-size: 1.125rem;
-    }
+      }
 
-    .btn-start:hover {
+      .btn-start:hover {
         background: #5568d3;
-    }
+      }
 
-    .btn-start:disabled {
+      .btn-start:disabled {
         background: #9ca3af;
         cursor: not-allowed;
-    }
+      }
 
-    .chat-messages {
+      .chat-messages {
         flex: 1;
         overflow-y: auto;
         margin-bottom: 15px;
         padding: 15px;
         background: #f9fafb;
         border-radius: 8px;
-    }
+      }
 
-    .chat-message {
+      .chat-message {
         margin-bottom: 12px;
         padding: 10px;
         background: white;
         border-radius: 6px;
         border: 1px solid #e5e7eb;
-    }
+      }
 
-    .chat-message-header {
+      .chat-message-header {
         display: flex;
         justify-content: space-between;
         margin-bottom: 5px;
-    }
+      }
 
-    .chat-user {
+      .chat-user {
         font-weight: 600;
         color: #667eea;
         font-size: 0.875rem;
-    }
+      }
 
-    .chat-time {
+      .chat-time {
         font-size: 0.75rem;
         color: #9ca3af;
-    }
+      }
 
-    .chat-text {
+      .chat-text {
         font-size: 0.875rem;
         color: #374151;
-    }
+      }
 
-    .chat-input-area {
+      .chat-input-area {
         display: flex;
         gap: 10px;
-    }
+      }
 
-    .chat-input {
+      .chat-input {
         flex: 1;
         padding: 10px;
         border: 2px solid #e5e7eb;
         border-radius: 6px;
         font-size: 0.875rem;
-    }
+      }
 
-    .btn-send {
+      .btn-send {
         background: #667eea;
         color: white;
         padding: 10px 20px;
@@ -236,13 +235,13 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
-    }
+      }
 
-    .btn-send:hover {
+      .btn-send:hover {
         background: #5568d3;
-    }
+      }
 
-    .modal-overlay {
+      .modal-overlay {
         display: none;
         position: fixed;
         top: 0;
@@ -253,9 +252,9 @@
         z-index: 9999;
         align-items: center;
         justify-content: center;
-    }
+      }
 
-    .modal-content {
+      .modal-content {
         background: white;
         border-radius: 16px;
         padding: 32px;
@@ -263,32 +262,32 @@
         width: 90%;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         text-align: center;
-    }
+      }
 
-    .modal-icon {
+      .modal-icon {
         font-size: 3rem;
         margin-bottom: 16px;
-    }
+      }
 
-    .modal-title {
+      .modal-title {
         font-size: 1.5rem;
         font-weight: 700;
         color: #1a1a1a;
         margin-bottom: 8px;
-    }
+      }
 
-    .modal-message {
+      .modal-message {
         font-size: 0.9375rem;
         color: #6b7280;
         margin-bottom: 24px;
-    }
+      }
 
-    .modal-buttons {
+      .modal-buttons {
         display: flex;
         gap: 12px;
-    }
+      }
 
-    .modal-btn {
+      .modal-btn {
         flex: 1;
         padding: 12px;
         border: none;
@@ -297,27 +296,27 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
-    }
+      }
 
-    .modal-btn-cancel {
+      .modal-btn-cancel {
         background: #f3f4f6;
         color: #374151;
-    }
+      }
 
-    .modal-btn-cancel:hover {
+      .modal-btn-cancel:hover {
         background: #e5e7eb;
-    }
+      }
 
-    .modal-btn-confirm {
+      .modal-btn-confirm {
         background: #667eea;
         color: white;
-    }
+      }
 
-    .modal-btn-confirm:hover {
+      .modal-btn-confirm:hover {
         background: #5568d3;
-    }
+      }
 
-    .toast {
+      .toast {
         position: fixed;
         top: 80px;
         right: 20px;
@@ -331,389 +330,464 @@
         z-index: 10000;
         animation: slideIn 0.3s ease-out;
         min-width: 300px;
-    }
+      }
 
-    .toast-success {
+      .toast-success {
         border-left: 4px solid #10b981;
-    }
+      }
 
-    .toast-icon {
+      .toast-icon {
         font-size: 1.5rem;
-    }
+      }
 
-    .toast-content {
+      .toast-content {
         flex: 1;
-    }
+      }
 
-    .toast-title {
+      .toast-title {
         font-weight: 600;
         color: #1a1a1a;
         margin-bottom: 4px;
-    }
+      }
 
-    .toast-message {
+      .toast-message {
         font-size: 0.875rem;
         color: #6b7280;
-    }
+      }
 
-    @keyframes slideIn {
+      @keyframes slideIn {
         from {
-            transform: translateX(400px);
-            opacity: 0;
+          transform: translateX(400px);
+          opacity: 0;
         }
         to {
-            transform: translateX(0);
-            opacity: 1;
+          transform: translateX(0);
+          opacity: 1;
         }
-    }
+      }
 
-    @media (max-width: 968px) {
+      @media (max-width: 968px) {
         .main-grid {
-            grid-template-columns: 1fr;
+          grid-template-columns: 1fr;
         }
 
         .chat-panel {
-            height: 400px;
+          height: 400px;
         }
-    }
+      }
 
-    @media (max-width: 768px) {
+      @media (max-width: 768px) {
         .container {
-            padding: 20px 15px;
+          padding: 20px 15px;
         }
 
         .header h1 {
-            font-size: 1.5rem;
+          font-size: 1.5rem;
         }
 
-        .waiting-room, .chat-panel {
-            padding: 20px;
+        .waiting-room,
+        .chat-panel {
+          padding: 20px;
         }
 
         .chat-input-area {
-            flex-direction: column;
+          flex-direction: column;
         }
 
         .btn-send {
-            width: 100%;
+          width: 100%;
         }
 
         .invite-url {
-            flex-direction: column;
+          flex-direction: column;
         }
 
         .btn-copy {
-            width: 100%;
+          width: 100%;
         }
-    }
+      }
 
-    @media (max-width: 480px) {
+      @media (max-width: 480px) {
         .waiting-room,
         .chat-panel {
-            padding: 15px;
+          padding: 15px;
         }
 
         .section-title {
-            font-size: 0.9375rem;
+          font-size: 0.9375rem;
         }
 
         .participant-group {
-            padding: 10px;
+          padding: 10px;
         }
 
         .participant-list {
-            gap: 6px;
+          gap: 6px;
         }
 
         .participant-item {
-            font-size: 0.75rem;
-            padding: 5px 8px;
+          font-size: 0.75rem;
+          padding: 5px 8px;
         }
 
         .btn-start {
-            padding: 10px 20px;
-            font-size: 0.9375rem;
+          padding: 10px 20px;
+          font-size: 0.9375rem;
         }
 
         .chat-panel {
-            height: 350px;
-            padding: 15px;
+          height: 350px;
+          padding: 15px;
         }
-    }
-</style>
-</head>
-<body>
+      }
+    </style>
+  </head>
+  <body>
     <div th:replace="~{fragments/navbar :: navbar}"></div>
-
     <div class="container">
-        <div class="header">
-            <h1 th:text="${sessionTitle}">면접 대기실</h1>
-            <p>면접 시작 전 대기 중입니다</p>
+      <div class="header">
+        <h1 th:text="${sessionTitle}">면접 대기실</h1>
+        <p>면접 시작 전 대기 중입니다</p>
+      </div>
+
+      <div class="main-grid">
+        <div class="waiting-room">
+          <div class="section">
+            <div class="section-title">참가자</div>
+            <div class="participants">
+              <div class="participant-group">
+                <div class="group-title">👔 면접관</div>
+                <div class="participant-list" id="interviewerList">
+                  <div class="participant-item">로딩중...</div>
+                </div>
+              </div>
+              <div class="participant-group">
+                <div class="group-title">🎓 면접자</div>
+                <div class="participant-list" id="intervieweeList">
+                  <div class="participant-item">로딩중...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="section"
+            th:if="${selectedRole != null and (selectedRole.name() == 'HOST' or selectedRole.name() == 'REVIEWER')}"
+          >
+            <div class="section-title">초대 링크</div>
+            <div class="invite-section">
+              <div class="invite-url">
+                <input
+                  type="text"
+                  class="invite-input"
+                  id="inviteUrl"
+                  readonly
+                />
+                <button class="btn btn-copy" onclick="copyInviteLink()">
+                  복사
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="start-section"
+            th:if="${selectedRole != null and (selectedRole.name() == 'HOST' or selectedRole.name() == 'REVIEWER')}"
+          >
+            <button class="btn btn-start" onclick="startInterview()">
+              면접 시작
+            </button>
+          </div>
+
+          <div
+            class="start-section"
+            th:if="${selectedRole == null or (selectedRole.name() != 'HOST' and selectedRole.name() != 'REVIEWER')}"
+          >
+            <p style="color: #6b7280">
+              면접관이 면접을 시작할 때까지 대기해주세요
+            </p>
+          </div>
         </div>
 
-        <div class="main-grid">
-            <div class="waiting-room">
-                <div class="section">
-                    <div class="section-title">참가자</div>
-                    <div class="participants">
-                        <div class="participant-group">
-                            <div class="group-title">👔 면접관</div>
-                            <div class="participant-list" id="interviewerList">
-                                <div class="participant-item">로딩중...</div>
-                            </div>
-                        </div>
-                        <div class="participant-group">
-                            <div class="group-title">🎓 면접자</div>
-                            <div class="participant-list" id="intervieweeList">
-                                <div class="participant-item">로딩중...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="section" th:if="${selectedRole != null and (selectedRole.name() == 'HOST' or selectedRole.name() == 'REVIEWER')}">
-                    <div class="section-title">초대 링크</div>
-                    <div class="invite-section">
-                        <div class="invite-url">
-                            <input type="text" class="invite-input" id="inviteUrl" readonly>
-                            <button class="btn btn-copy" onclick="copyInviteLink()">복사</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="start-section" th:if="${selectedRole != null and (selectedRole.name() == 'HOST' or selectedRole.name() == 'REVIEWER')}">
-                    <button class="btn btn-start" onclick="startInterview()">면접 시작</button>
-                </div>
-
-                <div class="start-section" th:if="${selectedRole == null or (selectedRole.name() != 'HOST' and selectedRole.name() != 'REVIEWER')}">
-                    <p style="color: #6b7280;">면접관이 면접을 시작할 때까지 대기해주세요</p>
-                </div>
-            </div>
-
-            <div class="chat-panel">
-                <div class="section-title">팀 채팅</div>
-                <div class="chat-messages" id="chatMessages"></div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chatInput" placeholder="메시지를 입력하세요..." maxlength="200">
-                    <button class="btn-send" onclick="sendMessage()">전송</button>
-                </div>
-            </div>
+        <div class="chat-panel">
+          <div class="section-title">팀 채팅</div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-area">
+            <input
+              type="text"
+              class="chat-input"
+              id="chatInput"
+              placeholder="메시지를 입력하세요..."
+              maxlength="200"
+            />
+            <button class="btn-send" onclick="sendMessage()">전송</button>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="startModal">
+      <div class="modal-content">
+        <div class="modal-icon">🚀</div>
+        <div class="modal-title">면접을 시작하시겠습니까?</div>
+        <div class="modal-message">모든 참가자에게 알림이 전송됩니다</div>
+        <div class="modal-buttons">
+          <button
+            class="modal-btn modal-btn-cancel"
+            onclick="closeStartModal()"
+          >
+            취소
+          </button>
+          <button class="modal-btn modal-btn-confirm" onclick="confirmStart()">
+            시작하기
+          </button>
+        </div>
+      </div>
     </div>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
-
-    <div class="modal-overlay" id="startModal">
-        <div class="modal-content">
-            <div class="modal-icon">🚀</div>
-            <div class="modal-title">면접을 시작하시겠습니까?</div>
-            <div class="modal-message">모든 참가자에게 알림이 전송됩니다</div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-cancel" onclick="closeStartModal()">취소</button>
-                <button class="modal-btn modal-btn-confirm" onclick="confirmStart()">시작하기</button>
-            </div>
-        </div>
-    </div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script th:inline="javascript">
-        const sessionId = /*[[${sessionId}]]*/ null;
-        const currentUserId = /*[[${currentUser.id}]]*/ null;
-        const currentUserRole = /*[[${currentUser.role.name()}]]*/ 'STUDENT';
-        const currentUserName = /*[[${currentUser.name}]]*/ 'User';
-        const selectedRole = /*[[${selectedRole != null ? selectedRole.name() : 'STUDENT'}]]*/ 'STUDENT';
+      const sessionId = /*[[${sessionId}]]*/ null;
+      const currentUserId = /*[[${currentUser.id}]]*/ null;
+      const currentUserRole = /*[[${currentUser.role.name()}]]*/ "STUDENT";
+      const currentUserName = /*[[${currentUser.name}]]*/ "User";
+      const selectedRole =
+        /*[[${selectedRole != null ? selectedRole.name() : 'STUDENT'}]]*/ "STUDENT";
 
-        let stompClient = null;
+      let stompClient = null;
 
-        function connectWebSocket() {
-            const socket = new SockJS('/ws');
-            stompClient = Stomp.over(socket);
+      function connectWebSocket() {
+        const socket = new SockJS("/ws");
+        stompClient = Stomp.over(socket);
 
-            stompClient.connect({}, function(frame) {
-                console.log('WebSocket Connected');
+        stompClient.connect({}, function (frame) {
+          console.log("WebSocket Connected");
 
-                stompClient.subscribe('/topic/session/' + sessionId + '/participants', function(message) {
-                    updateParticipants(JSON.parse(message.body));
-                });
-
-                stompClient.subscribe('/topic/session/' + sessionId + '/start', function(message) {
-                    if (selectedRole === 'STUDENT') {
-                        showToast('면접 시작', '면접이 시작되었습니다');
-                        setTimeout(() => {
-                            window.location.href = '/session/interview/' + sessionId;
-                        }, 1500);
-                    } else {
-                        window.location.href = '/session/interview/' + sessionId;
-                    }
-                });
-
-                stompClient.subscribe('/topic/session/' + sessionId + '/chat', function(message) {
-                    addChatMessage(JSON.parse(message.body));
-                });
-
-                joinSession();
-                loadParticipants();
-            });
-        }
-
-        async function joinSession() {
-            try {
-                const response = await fetch('/api/session/' + sessionId + '/participants/join?role=' + selectedRole, {
-                    method: 'POST'
-                });
-                if (response.ok) {
-                    console.log('세션 참가 완료');
-                }
-            } catch (error) {
-                console.error('세션 참가 실패:', error);
+          stompClient.subscribe(
+            "/topic/session/" + sessionId + "/participants",
+            function (message) {
+              updateParticipants(JSON.parse(message.body));
             }
-        }
+          );
 
-        async function loadParticipants() {
-            try {
-                const response = await fetch('/api/session/' + sessionId + '/participants');
-                const participants = await response.json();
-                updateParticipants(participants);
-            } catch (error) {
-                console.error('Failed to load participants:', error);
+          stompClient.subscribe(
+            "/topic/session/" + sessionId + "/start",
+            function (message) {
+              if (selectedRole === "STUDENT") {
+                showToast("면접 시작", "면접이 시작되었습니다");
+                setTimeout(() => {
+                  window.location.href = "/session/interview/" + sessionId;
+                }, 1500);
+              } else {
+                window.location.href = "/session/interview/" + sessionId;
+              }
             }
-        }
+          );
 
-        function updateParticipants(participants) {
-            const interviewers = participants.filter(p => p.role === 'HOST' || p.role === 'REVIEWER');
-            const interviewees = participants.filter(p => p.role === 'STUDENT');
-
-            const interviewerList = document.getElementById('interviewerList');
-            const intervieweeList = document.getElementById('intervieweeList');
-
-            if (interviewers.length === 0) {
-                interviewerList.innerHTML = '<div class="participant-item">대기중</div>';
-            } else {
-                interviewerList.innerHTML = interviewers.map(p => 
-                    `<div class="participant-item">${p.userName}</div>`
-                ).join('');
+          stompClient.subscribe(
+            "/topic/session/" + sessionId + "/chat",
+            function (message) {
+              addChatMessage(JSON.parse(message.body));
             }
+          );
 
-            if (interviewees.length === 0) {
-                intervieweeList.innerHTML = '<div class="participant-item">대기중</div>';
-            } else {
-                intervieweeList.innerHTML = interviewees.map(p => 
-                    `<div class="participant-item">${p.userName}</div>`
-                ).join('');
+          joinSession();
+          loadParticipants();
+        });
+      }
+
+      async function joinSession() {
+        try {
+          const response = await fetch(
+            "/api/session/" +
+              sessionId +
+              "/participants/join?role=" +
+              selectedRole,
+            {
+              method: "POST",
             }
+          );
+          if (response.ok) {
+            console.log("세션 참가 완료");
+          }
+        } catch (error) {
+          console.error("세션 참가 실패:", error);
+        }
+      }
+
+      async function loadParticipants() {
+        try {
+          const response = await fetch(
+            "/api/session/" + sessionId + "/participants"
+          );
+          const participants = await response.json();
+          updateParticipants(participants);
+        } catch (error) {
+          console.error("Failed to load participants:", error);
+        }
+      }
+
+      function updateParticipants(participants) {
+        const interviewers = participants.filter(
+          (p) => p.role === "HOST" || p.role === "REVIEWER"
+        );
+        const interviewees = participants.filter((p) => p.role === "STUDENT");
+
+        const interviewerList = document.getElementById("interviewerList");
+        const intervieweeList = document.getElementById("intervieweeList");
+
+        if (interviewers.length === 0) {
+          interviewerList.innerHTML =
+            '<div class="participant-item">대기중</div>';
+        } else {
+          interviewerList.innerHTML = interviewers
+            .map((p) => `<div class="participant-item">${p.userName}</div>`)
+            .join("");
         }
 
-        function copyInviteLink() {
-            const input = document.getElementById('inviteUrl');
-            input.select();
-            document.execCommand('copy');
-            alert('초대 링크가 복사되었습니다');
+        if (interviewees.length === 0) {
+          intervieweeList.innerHTML =
+            '<div class="participant-item">대기중</div>';
+        } else {
+          intervieweeList.innerHTML = interviewees
+            .map((p) => `<div class="participant-item">${p.userName}</div>`)
+            .join("");
         }
+      }
 
-        async function startInterview() {
-            document.getElementById('startModal').style.display = 'flex';
-        }
+      function copyInviteLink() {
+        const input = document.getElementById("inviteUrl");
+        input.select();
+        document.execCommand("copy");
+        alert("초대 링크가 복사되었습니다");
+      }
 
-        function closeStartModal() {
-            document.getElementById('startModal').style.display = 'none';
-        }
+      async function startInterview() {
+        document.getElementById("startModal").style.display = "flex";
+      }
 
-        async function confirmStart() {
-            closeStartModal();
+      function closeStartModal() {
+        document.getElementById("startModal").style.display = "none";
+      }
 
-            try {
-                const response = await fetch('/api/session/' + sessionId + '/start-recording', {
-                    method: 'POST'
-                });
+      async function confirmStart() {
+        closeStartModal();
 
-                if (response.ok) {
-                    stompClient.send('/app/session/' + sessionId + '/start', {}, JSON.stringify({}));
-                    
-                    showToast('면접 시작', '면접이 시작되었습니다');
-                    
-                    setTimeout(() => {
-                        window.location.href = '/session/interview/' + sessionId;
-                    }, 1500);
-                } else {
-                    showToast('오류', '면접 시작에 실패했습니다', 'error');
-                }
-            } catch (error) {
-                console.error('Failed to start interview:', error);
-                showToast('오류', '면접 시작 중 오류가 발생했습니다', 'error');
+        try {
+          const response = await fetch(
+            "/api/session/" + sessionId + "/start-recording",
+            {
+              method: "POST",
             }
-        }
+          );
 
-        function showToast(title, message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.innerHTML = `
-                <div class="toast-icon">${type === 'success' ? '✅' : '❌'}</div>
+          if (response.ok) {
+            stompClient.send(
+              "/app/session/" + sessionId + "/start",
+              {},
+              JSON.stringify({})
+            );
+
+            showToast("면접 시작", "면접이 시작되었습니다");
+
+            setTimeout(() => {
+              window.location.href = "/session/interview/" + sessionId;
+            }, 1500);
+          } else {
+            showToast("오류", "면접 시작에 실패했습니다", "error");
+          }
+        } catch (error) {
+          console.error("Failed to start interview:", error);
+          showToast("오류", "면접 시작 중 오류가 발생했습니다", "error");
+        }
+      }
+
+      function showToast(title, message, type = "success") {
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+                <div class="toast-icon">${
+                  type === "success" ? "✅" : "❌"
+                }</div>
                 <div class="toast-content">
                     <div class="toast-title">${title}</div>
                     <div class="toast-message">${message}</div>
                 </div>
             `;
-            
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.animation = 'slideIn 0.3s ease-out reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
 
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
+        document.body.appendChild(toast);
 
-            if (!message) return;
+        setTimeout(() => {
+          toast.style.animation = "slideIn 0.3s ease-out reverse";
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
 
-            const chatMessage = {
-                userId: currentUserId,
-                userName: currentUserName,
-                message: message,
-                timestamp: new Date().toISOString()
-            };
+      function sendMessage() {
+        const input = document.getElementById("chatInput");
+        const message = input.value.trim();
 
-            stompClient.send('/app/session/' + sessionId + '/chat', {}, JSON.stringify(chatMessage));
-            input.value = '';
-        }
+        if (!message) return;
 
-        function addChatMessage(msg) {
-            const container = document.getElementById('chatMessages');
-            const time = new Date(msg.timestamp).toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'});
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-message';
-            messageDiv.innerHTML = `
+        const chatMessage = {
+          userId: currentUserId,
+          userName: currentUserName,
+          message: message,
+          timestamp: new Date().toISOString(),
+        };
+
+        stompClient.send(
+          "/app/session/" + sessionId + "/chat",
+          {},
+          JSON.stringify(chatMessage)
+        );
+        input.value = "";
+      }
+
+      function addChatMessage(msg) {
+        const container = document.getElementById("chatMessages");
+        const time = new Date(msg.timestamp).toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "chat-message";
+        messageDiv.innerHTML = `
                 <div class="chat-message-header">
                     <span class="chat-user">${msg.userName}</span>
                     <span class="chat-time">${time}</span>
                 </div>
                 <div class="chat-text">${msg.message}</div>
             `;
-            
-            container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
+
+        container.appendChild(messageDiv);
+        container.scrollTop = container.scrollHeight;
+      }
+
+      document
+        .getElementById("chatInput")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        });
+
+      window.addEventListener("DOMContentLoaded", function () {
+        const inviteUrl =
+          window.location.origin +
+          "/session/" +
+          sessionId +
+          "/join?role=STUDENT";
+        const input = document.getElementById("inviteUrl");
+        if (input) {
+          input.value = inviteUrl;
         }
 
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', function() {
-            const inviteUrl = window.location.origin + '/session/' + sessionId + '/join?role=STUDENT';
-            const input = document.getElementById('inviteUrl');
-            if (input) {
-                input.value = inviteUrl;
-            }
-
-            connectWebSocket();
-        });
+        connectWebSocket();
+      });
     </script>
-    
-    <div th:replace="~{fragments/scripts :: scripts}"></div>
-    <!-- <div th:replace="~{fragments/scripts :: scripts}"></div> -->
-</body>
+  </body>
 </html>

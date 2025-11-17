@@ -1,1023 +1,1140 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>리뷰 작성 - MockerView</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #1a1a1a;
-        }
-        
-        .navbar {
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 16px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand {
-            font-size: 1.375rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #1a1a1a;
+      }
+
+      .navbar {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 16px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .navbar-brand {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: #4a5568;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9375rem;
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        color: #667eea;
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
+        padding: 8px;
+      }
+
+      .hamburger span {
+        width: 24px;
+        height: 2px;
+        background: #667eea;
+        border-radius: 2px;
+        transition: all 0.3s;
+      }
+
+      .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(8px, 8px);
+      }
+
+      .hamburger.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+      }
+
+      .mobile-menu {
+        display: none;
+        position: fixed;
+        top: 57px;
+        left: 0;
+        right: 0;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        z-index: 99;
+      }
+
+      .mobile-menu.active {
+        display: block;
+      }
+
+      .mobile-menu a {
+        display: block;
+        padding: 14px 20px;
+        color: #4a5568;
+        text-decoration: none;
+        font-weight: 500;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .mobile-menu a:hover,
+      .mobile-menu a.active {
+        background: #f8f9ff;
+        color: #667eea;
+      }
+
+      .page-header {
+        padding: 40px 0 28px;
+      }
+
+      .page-title h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        letter-spacing: -0.5px;
+        margin-bottom: 6px;
+      }
+
+      .page-title p {
+        font-size: 0.9375rem;
+        color: #6b7280;
+      }
+
+      .message {
+        padding: 14px 18px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .success-message {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+
+      .error-message {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+
+      .session-summary {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 32px;
+        padding: 20px 24px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        flex-wrap: wrap;
+      }
+
+      .summary-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .summary-item .label {
+        font-size: 0.8125rem;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .summary-item .value {
+        font-size: 0.9375rem;
+        color: #1a1a1a;
+        font-weight: 600;
+      }
+
+      .qa-container h2 {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 20px;
+        letter-spacing: -0.5px;
+      }
+
+      .qa-card {
+        background: white;
+        border-radius: 14px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #e5e7eb;
+      }
+
+      .question-header {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 18px;
+        align-items: flex-start;
+      }
+
+      .question-number {
+        padding: 6px 12px;
+        background: #667eea;
+        color: white;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+      }
+
+      .question-header h3 {
+        font-size: 1.0625rem;
+        font-weight: 600;
+        color: #0a0a0a;
+        line-height: 1.5;
+      }
+
+      .answer-section {
+        margin-top: 18px;
+      }
+
+      .user-answer-block {
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 14px;
+      }
+
+      .answer-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .answer-header .label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #667eea;
+      }
+
+      .answer-time {
+        font-size: 0.8125rem;
+        color: #9ca3af;
+      }
+
+      .answer-content {
+        color: #4a5568;
+        line-height: 1.6;
+        font-size: 0.9375rem;
+        white-space: pre-wrap;
+      }
+
+      .feedback-section {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .feedback-card {
+        background: white;
+        border-radius: 10px;
+        padding: 16px;
+        border-left: 3px solid #667eea;
+      }
+
+      .feedback-card.feedback-ai {
+        border-left-color: #3b82f6;
+      }
+
+      .feedback-card.feedback-interviewer {
+        border-left-color: #f59e0b;
+      }
+
+      .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .feedback-type {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #667eea;
+      }
+
+      .feedback-card.feedback-ai .feedback-type {
+        color: #3b82f6;
+      }
+
+      .feedback-card.feedback-interviewer .feedback-type {
+        color: #f59e0b;
+      }
+
+      .feedback-score {
+        font-size: 0.875rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        background: #f0f4ff;
+        color: #667eea;
+        border-radius: 6px;
+      }
+
+      .feedback-item {
+        margin-bottom: 12px;
+      }
+
+      .feedback-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .feedback-item strong {
+        display: block;
+        font-size: 0.8125rem;
+        color: #6b7280;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      .feedback-item p {
+        color: #4a5568;
+        line-height: 1.6;
+        font-size: 0.875rem;
+      }
+
+      .no-answer {
+        padding: 20px;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.875rem;
+        background: #f9fafb;
+        border-radius: 8px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 48px;
+        background: white;
+        border-radius: 14px;
+        color: #9ca3af;
+      }
+
+      .review-form-card {
+        background: white;
+        border-radius: 14px;
+        padding: 28px;
+        margin-top: 32px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #e5e7eb;
+      }
+
+      .review-form-card h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0a0a0a;
+        margin-bottom: 20px;
+        letter-spacing: -0.5px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+      }
+
+      .rating-input {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .rating-input input {
+        width: 120px;
+        padding: 10px 12px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+      }
+
+      .rating-input input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .rating-label {
+        font-size: 0.9375rem;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 0.9375rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .btn-primary {
+        padding: 11px 24px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+      }
+
+      .btn-primary:disabled {
+        background: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        padding: 11px 24px;
+        background: white;
+        color: #667eea;
+        border: 1.5px solid #667eea;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s;
+      }
+
+      .btn-secondary:hover {
+        background: #f8f9ff;
+      }
+
+      @media (max-width: 768px) {
         .navbar-nav {
-            display: flex;
-            gap: 20px;
-            align-items: center;
+          display: none;
         }
-        
-        .nav-link {
-            color: #4a5568;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9375rem;
-            transition: color 0.2s;
-        }
-        
-        .nav-link:hover,
-        .nav-link.active {
-            color: #667eea;
-        }
-        
+
         .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            cursor: pointer;
-            padding: 8px;
+          display: flex;
         }
-        
-        .hamburger span {
-            width: 24px;
-            height: 2px;
-            background: #667eea;
-            border-radius: 2px;
-            transition: all 0.3s;
+
+        .container {
+          padding: 0 16px;
         }
-        
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(8px, 8px);
-        }
-        
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
-        }
-        
-        .mobile-menu {
-            display: none;
-            position: fixed;
-            top: 57px;
-            left: 0;
-            right: 0;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            z-index: 99;
-        }
-        
-        .mobile-menu.active {
-            display: block;
-        }
-        
-        .mobile-menu a {
-            display: block;
-            padding: 14px 20px;
-            color: #4a5568;
-            text-decoration: none;
-            font-weight: 500;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        
-        .mobile-menu a:hover,
-        .mobile-menu a.active {
-            background: #f8f9ff;
-            color: #667eea;
-        }
-        
+
         .page-header {
-            padding: 40px 0 28px;
+          padding: 28px 0 20px;
         }
-        
+
         .page-title h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
+          font-size: 1.625rem;
         }
-        
-        .page-title p {
-            font-size: 0.9375rem;
-            color: #6b7280;
-        }
-        
-        .message {
-            padding: 14px 18px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        
-        .success-message {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-        
-        .error-message {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-        
+
         .session-summary {
-            display: flex;
-            gap: 24px;
-            margin-bottom: 32px;
-            padding: 20px 24px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            flex-wrap: wrap;
+          flex-direction: column;
+          gap: 12px;
+          padding: 16px;
         }
-        
-        .summary-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .summary-item .label {
-            font-size: 0.8125rem;
-            color: #6b7280;
-            font-weight: 600;
-        }
-        
-        .summary-item .value {
-            font-size: 0.9375rem;
-            color: #1a1a1a;
-            font-weight: 600;
-        }
-        
-        .qa-container h2 {
-            font-size: 1.375rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 20px;
-            letter-spacing: -0.5px;
-        }
-        
+
         .qa-card {
-            background: white;
-            border-radius: 14px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid #e5e7eb;
+          padding: 18px;
         }
-        
+
         .question-header {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 18px;
-            align-items: flex-start;
+          flex-direction: column;
+          gap: 10px;
         }
-        
-        .question-number {
-            padding: 6px 12px;
-            background: #667eea;
-            color: white;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.875rem;
-            flex-shrink: 0;
-        }
-        
-        .question-header h3 {
-            font-size: 1.0625rem;
-            font-weight: 600;
-            color: #0a0a0a;
-            line-height: 1.5;
-        }
-        
-        .answer-section {
-            margin-top: 18px;
-        }
-        
-        .user-answer-block {
-            background: #f9fafb;
-            border-radius: 10px;
-            padding: 18px;
-            margin-bottom: 14px;
-        }
-        
-        .answer-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        
-        .answer-header .label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #667eea;
-        }
-        
-        .answer-time {
-            font-size: 0.8125rem;
-            color: #9ca3af;
-        }
-        
-        .answer-content {
-            color: #4a5568;
-            line-height: 1.6;
-            font-size: 0.9375rem;
-            white-space: pre-wrap;
-        }
-        
-        .feedback-section {
-            margin-top: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .feedback-card {
-            background: white;
-            border-radius: 10px;
-            padding: 16px;
-            border-left: 3px solid #667eea;
-        }
-        
-        .feedback-card.feedback-ai {
-            border-left-color: #3b82f6;
-        }
-        
-        .feedback-card.feedback-interviewer {
-            border-left-color: #f59e0b;
-        }
-        
-        .feedback-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        
-        .feedback-type {
-            font-size: 0.875rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-        
-        .feedback-card.feedback-ai .feedback-type {
-            color: #3b82f6;
-        }
-        
-        .feedback-card.feedback-interviewer .feedback-type {
-            color: #f59e0b;
-        }
-        
-        .feedback-score {
-            font-size: 0.875rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            background: #f0f4ff;
-            color: #667eea;
-            border-radius: 6px;
-        }
-        
-        .feedback-item {
-            margin-bottom: 12px;
-        }
-        
-        .feedback-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .feedback-item strong {
-            display: block;
-            font-size: 0.8125rem;
-            color: #6b7280;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-        
-        .feedback-item p {
-            color: #4a5568;
-            line-height: 1.6;
-            font-size: 0.875rem;
-        }
-        
-        .no-answer {
-            padding: 20px;
-            text-align: center;
-            color: #9ca3af;
-            font-size: 0.875rem;
-            background: #f9fafb;
-            border-radius: 8px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 48px;
-            background: white;
-            border-radius: 14px;
-            color: #9ca3af;
-        }
-        
+
         .review-form-card {
-            background: white;
-            border-radius: 14px;
-            padding: 28px;
-            margin-top: 32px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid #e5e7eb;
+          padding: 20px;
         }
-        
-        .review-form-card h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #0a0a0a;
-            margin-bottom: 20px;
-            letter-spacing: -0.5px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-        }
-        
-        .rating-input {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .rating-input input {
-            width: 120px;
-            padding: 10px 12px;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.9375rem;
-            font-weight: 600;
-        }
-        
-        .rating-input input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-        }
-        
-        .rating-label {
-            font-size: 0.9375rem;
-            color: #6b7280;
-            font-weight: 600;
-        }
-        
-        textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 0.9375rem;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 120px;
-        }
-        
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
-        }
-        
+
         .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
+          flex-direction: column;
         }
-        
-        .btn-primary {
-            padding: 11px 24px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-        
-        .btn-primary:disabled {
-            background: #e5e7eb;
-            color: #9ca3af;
-            cursor: not-allowed;
-        }
-        
+
+        .btn-primary,
         .btn-secondary {
-            padding: 11px 24px;
-            background: white;
-            color: #667eea;
-            border: 1.5px solid #667eea;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.2s;
+          width: 100%;
+          text-align: center;
         }
-        
-        .btn-secondary:hover {
-            background: #f8f9ff;
-        }
-        
-        @media (max-width: 768px) {
-            .navbar-nav {
-                display: none;
-            }
-            
-            .hamburger {
-                display: flex;
-            }
-            
-            .container {
-                padding: 0 16px;
-            }
-            
-            .page-header {
-                padding: 28px 0 20px;
-            }
-            
-            .page-title h1 {
-                font-size: 1.625rem;
-            }
-            
-            .session-summary {
-                flex-direction: column;
-                gap: 12px;
-                padding: 16px;
-            }
-            
-            .qa-card {
-                padding: 18px;
-            }
-            
-            .question-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .review-form-card {
-                padding: 20px;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-            }
-            
-            .btn-primary,
-            .btn-secondary {
-                width: 100%;
-                text-align: center;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">MockerView</a>
-                <div class="navbar-nav">
-                    <a class="nav-link" href="/session/list">세션 목록</a>
-                    <a class="nav-link active" href="/review/list">리뷰 작성</a>
-                    <a class="nav-link" href="/review/my">내 리뷰</a>
-                </div>
-                <div class="hamburger" onclick="toggleMobileMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+  </head>
+  <body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <!-- <nav class="navbar">
+      <div class="container">
+        <div class="navbar-content">
+          <a class="navbar-brand" href="/session/list">MockerView</a>
+          <div class="navbar-nav">
+            <a class="nav-link" href="/session/list">세션 목록</a>
+            <a class="nav-link active" href="/review/list">리뷰 작성</a>
+            <a class="nav-link" href="/review/my">내 리뷰</a>
+          </div>
+          <div class="hamburger" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
         </div>
-    </nav>
-    
+      </div>
+    </nav> -->
+
     <div class="mobile-menu" id="mobileMenu">
-        <a href="/session/list">세션 목록</a>
-        <a class="active" href="/review/list">리뷰 작성</a>
-        <a href="/review/my">내 리뷰</a>
+      <a href="/session/list">세션 목록</a>
+      <a class="active" href="/review/list">리뷰 작성</a>
+      <a href="/review/my">내 리뷰</a>
     </div>
-    
+
     <div class="page-header">
-        <div class="container">
-            <div class="page-title">
-                <h1>리뷰 작성</h1>
-                <p th:text="${interviewSession.title}">세션 제목</p>
-            </div>
+      <div class="container">
+        <div class="page-title">
+          <h1>리뷰 작성</h1>
+          <p th:text="${interviewSession.title}">세션 제목</p>
         </div>
+      </div>
     </div>
-    
+
     <div class="container">
-        <div id="successMessage" class="message success-message" style="display: none;"></div>
-        <div id="errorMessage" class="message error-message" style="display: none;"></div>
-        
-        <div class="session-summary">
-            <div class="summary-item">
-                <span class="label">면접관</span>
-                <span class="value" th:text="${interviewSession.host != null ? interviewSession.host.name : '알 수 없음'}">면접관</span>
-            </div>
-            <div class="summary-item">
-                <span class="label">종료 시간</span>
-                <span class="value" th:text="${interviewSession.endTime != null ? #temporals.format(interviewSession.endTime, 'yyyy-MM-dd HH:mm') : '알 수 없음'}">날짜</span>
-            </div>
-            <div class="summary-item">
-                <span class="label">질문 수</span>
-                <span class="value" th:text="${questions != null ? questions.size() : 0} + '개'">0개</span>
-            </div>
+      <div
+        id="successMessage"
+        class="message success-message"
+        style="display: none"
+      ></div>
+      <div
+        id="errorMessage"
+        class="message error-message"
+        style="display: none"
+      ></div>
+
+      <div class="session-summary">
+        <div class="summary-item">
+          <span class="label">면접관</span>
+          <span
+            class="value"
+            th:text="${interviewSession.host != null ? interviewSession.host.name : '알 수 없음'}"
+            >면접관</span
+          >
         </div>
-        
-        <div class="qa-container">
-            <h2>면접 내용</h2>
-            
-            <div th:if="${questions != null and !questions.empty}">
-                <div th:each="question, iterStat : ${questions}" class="qa-card">
-                    <div class="question-header">
-                        <span class="question-number" th:text="'Q' + ${iterStat.count}">Q1</span>
-                        <h3 th:text="${question.text}">질문 내용</h3>
-                    </div>
-                    
-                    <div th:if="${answersByQuestion.containsKey(question.id)}" class="answer-section">
-                        <div th:each="answer : ${answersByQuestion.get(question.id)}" class="user-answer-block">
-                            <div class="answer-header">
-                                <span class="label" th:text="${answer.user.name} + '님의 답변'">사용자 답변</span>
-                                <span class="answer-time" th:text="${#temporals.format(answer.createdAt, 'HH:mm:ss')}">시간</span>
-                            </div>
-                            <div class="answer-content" th:text="${answer.answerText}">답변 내용</div>
-                            
-                            <div th:if="${answer.feedbacks != null and !answer.feedbacks.empty}" class="feedback-section">
-                                <div th:each="feedback : ${answer.feedbacks}" 
-                                        th:classappend="${feedback.feedbackType.toString() == 'AI'} ? 'feedback-ai' : 'feedback-interviewer'"
-                                        class="feedback-card">
-                                    <div class="feedback-header">
-                                        <span class="feedback-type" th:text="${feedback.feedbackType.toString() == 'AI'} ? 'AI 피드백' : '면접관 피드백'">피드백 유형</span>
-                                        <span th:if="${feedback.score != null}" class="feedback-score" th:text="${feedback.score} + '점'">점수</span>
-                                    </div>
-                                    
-                                    <div th:if="${feedback.summary != null}" class="feedback-item">
-                                        <strong>요약</strong>
-                                        <p th:text="${feedback.summary}">요약</p>
-                                    </div>
-                                    
-                                    <div th:if="${feedback.strengths != null}" class="feedback-item">
-                                        <strong>강점</strong>
-                                        <p th:text="${feedback.strengths}">강점</p>
-                                    </div>
-                                    
-                                    <div th:if="${feedback.weaknesses != null}" class="feedback-item">
-                                        <strong>약점</strong>
-                                        <p th:text="${feedback.weaknesses}">약점</p>
-                                    </div>
-                                    
-                                    <div th:if="${feedback.improvement != null}" class="feedback-item">
-                                        <strong>개선 방향</strong>
-                                        <p th:text="${feedback.improvement}">개선 방향</p>
-                                    </div>
-                                    
-                                    <div th:if="${feedback.reviewerComment != null}" class="feedback-item">
-                                        <strong>코멘트</strong>
-                                        <p th:text="${feedback.reviewerComment}">코멘트</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div th:unless="${answersByQuestion.containsKey(question.id)}" class="no-answer">
-                        아직 답변이 제출되지 않았습니다
-                    </div>
-                </div>
-            </div>
-            
-            <div th:if="${questions == null or questions.empty}" class="empty-state">
-                <p>이 세션에는 질문이 없습니다.</p>
-            </div>
+        <div class="summary-item">
+          <span class="label">종료 시간</span>
+          <span
+            class="value"
+            th:text="${interviewSession.endTime != null ? #temporals.format(interviewSession.endTime, 'yyyy-MM-dd HH:mm') : '알 수 없음'}"
+            >날짜</span
+          >
         </div>
-        
-        <div class="review-form-card">
-            <h2>전체 세션 리뷰</h2>
-            <form id="reviewForm" onsubmit="submitReview(event)">
-                <input type="hidden" id="sessionIdInput" th:value="${interviewSession.id}">
-                
-                <div class="form-group">
-                    <label>평점</label>
-                    <div class="rating-input">
-                        <input type="number" name="rating" step="0.5" min="0" max="5" value="4.0" required>
-                        <span class="rating-label">/ 5.0</span>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>종합 피드백</label>
-                    <textarea name="comment" rows="6" placeholder="이번 면접 세션에 대한 전반적인 피드백을 작성해주세요..." required></textarea>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary" id="submitBtn">리뷰 제출</button>
-                    <a th:href="@{/review/list}" class="btn-secondary">목록으로</a>
-                </div>
-            </form>
+        <div class="summary-item">
+          <span class="label">질문 수</span>
+          <span
+            class="value"
+            th:text="${questions != null ? questions.size() : 0} + '개'"
+            >0개</span
+          >
         </div>
+      </div>
+
+      <div class="qa-container">
+        <h2>면접 내용</h2>
+
+        <div th:if="${questions != null and !questions.empty}">
+          <div th:each="question, iterStat : ${questions}" class="qa-card">
+            <div class="question-header">
+              <span class="question-number" th:text="'Q' + ${iterStat.count}"
+                >Q1</span
+              >
+              <h3 th:text="${question.text}">질문 내용</h3>
+            </div>
+
+            <div
+              th:if="${answersByQuestion.containsKey(question.id)}"
+              class="answer-section"
+            >
+              <div
+                th:each="answer : ${answersByQuestion.get(question.id)}"
+                class="user-answer-block"
+              >
+                <div class="answer-header">
+                  <span
+                    class="label"
+                    th:text="${answer.user.name} + '님의 답변'"
+                    >사용자 답변</span
+                  >
+                  <span
+                    class="answer-time"
+                    th:text="${#temporals.format(answer.createdAt, 'HH:mm:ss')}"
+                    >시간</span
+                  >
+                </div>
+                <div class="answer-content" th:text="${answer.answerText}">
+                  답변 내용
+                </div>
+
+                <div
+                  th:if="${answer.feedbacks != null and !answer.feedbacks.empty}"
+                  class="feedback-section"
+                >
+                  <div
+                    th:each="feedback : ${answer.feedbacks}"
+                    th:classappend="${feedback.feedbackType.toString() == 'AI'} ? 'feedback-ai' : 'feedback-interviewer'"
+                    class="feedback-card"
+                  >
+                    <div class="feedback-header">
+                      <span
+                        class="feedback-type"
+                        th:text="${feedback.feedbackType.toString() == 'AI'} ? 'AI 피드백' : '면접관 피드백'"
+                        >피드백 유형</span
+                      >
+                      <span
+                        th:if="${feedback.score != null}"
+                        class="feedback-score"
+                        th:text="${feedback.score} + '점'"
+                        >점수</span
+                      >
+                    </div>
+
+                    <div
+                      th:if="${feedback.summary != null}"
+                      class="feedback-item"
+                    >
+                      <strong>요약</strong>
+                      <p th:text="${feedback.summary}">요약</p>
+                    </div>
+
+                    <div
+                      th:if="${feedback.strengths != null}"
+                      class="feedback-item"
+                    >
+                      <strong>강점</strong>
+                      <p th:text="${feedback.strengths}">강점</p>
+                    </div>
+
+                    <div
+                      th:if="${feedback.weaknesses != null}"
+                      class="feedback-item"
+                    >
+                      <strong>약점</strong>
+                      <p th:text="${feedback.weaknesses}">약점</p>
+                    </div>
+
+                    <div
+                      th:if="${feedback.improvement != null}"
+                      class="feedback-item"
+                    >
+                      <strong>개선 방향</strong>
+                      <p th:text="${feedback.improvement}">개선 방향</p>
+                    </div>
+
+                    <div
+                      th:if="${feedback.reviewerComment != null}"
+                      class="feedback-item"
+                    >
+                      <strong>코멘트</strong>
+                      <p th:text="${feedback.reviewerComment}">코멘트</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              th:unless="${answersByQuestion.containsKey(question.id)}"
+              class="no-answer"
+            >
+              아직 답변이 제출되지 않았습니다
+            </div>
+          </div>
+        </div>
+
+        <div
+          th:if="${questions == null or questions.empty}"
+          class="empty-state"
+        >
+          <p>이 세션에는 질문이 없습니다.</p>
+        </div>
+      </div>
+
+      <div class="review-form-card">
+        <h2>전체 세션 리뷰</h2>
+        <form id="reviewForm" onsubmit="submitReview(event)">
+          <input
+            type="hidden"
+            id="sessionIdInput"
+            th:value="${interviewSession.id}"
+          />
+
+          <div class="form-group">
+            <label>평점</label>
+            <div class="rating-input">
+              <input
+                type="number"
+                name="rating"
+                step="0.5"
+                min="0"
+                max="5"
+                value="4.0"
+                required
+              />
+              <span class="rating-label">/ 5.0</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>종합 피드백</label>
+            <textarea
+              name="comment"
+              rows="6"
+              placeholder="이번 면접 세션에 대한 전반적인 피드백을 작성해주세요..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="submitBtn">
+              리뷰 제출
+            </button>
+            <a th:href="@{/review/list}" class="btn-secondary">목록으로</a>
+          </div>
+        </form>
+      </div>
     </div>
 
     <div id="reviewLimitModal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal()">&times;</button>
-            
-            <div class="modal-title-row">
-                <div class="modal-icon">📚</div>
-                <h2>리뷰 읽기 한도 도달</h2>
-            </div>
-            
-            <div class="limit-info-box">
-                <div class="info-row">
-                    <span class="info-label">현재 플랜</span>
-                    <span class="error-badge" id="currentPlan">ERROR</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">리뷰 읽기</span>
-                    <span class="info-value">
-                        <span class="error-text" id="usedReads">0</span> / <span id="readLimit">0</span>
-                    </span>
-                </div>
-            </div>
-            
-            <p class="modal-message">더 많은 리뷰를 읽으려면 플랜을 업그레이드하세요</p>
-            
-            <div class="features-box">
-                <div class="feature-item">
-                    <span class="check-icon">✓</span>
-                    <span>무제한 리뷰 읽기</span>
-                </div>
-                <div class="feature-item">
-                    <span class="check-icon">✓</span>
-                    <span>무제한 세션 생성</span>
-                </div>
-                <div class="feature-item">
-                    <span class="check-icon">✓</span>
-                    <span>고급 AI 피드백</span>
-                </div>
-            </div>
-            
-            <div class="modal-actions">
-                <button onclick="closeModal()" class="btn-cancel">취소</button>
-                <a href="/subscription/upgrade" class="btn-upgrade">플랜 업그레이드 →</a>
-            </div>
+      <div class="modal-content">
+        <button class="close-modal" onclick="closeModal()">&times;</button>
+
+        <div class="modal-title-row">
+          <div class="modal-icon">📚</div>
+          <h2>리뷰 읽기 한도 도달</h2>
         </div>
+
+        <div class="limit-info-box">
+          <div class="info-row">
+            <span class="info-label">현재 플랜</span>
+            <span class="error-badge" id="currentPlan">ERROR</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">리뷰 읽기</span>
+            <span class="info-value">
+              <span class="error-text" id="usedReads">0</span> /
+              <span id="readLimit">0</span>
+            </span>
+          </div>
+        </div>
+
+        <p class="modal-message">
+          더 많은 리뷰를 읽으려면 플랜을 업그레이드하세요
+        </p>
+
+        <div class="features-box">
+          <div class="feature-item">
+            <span class="check-icon">✓</span>
+            <span>무제한 리뷰 읽기</span>
+          </div>
+          <div class="feature-item">
+            <span class="check-icon">✓</span>
+            <span>무제한 세션 생성</span>
+          </div>
+          <div class="feature-item">
+            <span class="check-icon">✓</span>
+            <span>고급 AI 피드백</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button onclick="closeModal()" class="btn-cancel">취소</button>
+          <a href="/subscription/upgrade" class="btn-upgrade"
+            >플랜 업그레이드 →</a
+          >
+        </div>
+      </div>
     </div>
 
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
     <style>
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .modal.show {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 480px;
-            width: 90%;
-            position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 1.25rem;
-            right: 1.25rem;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #9ca3af;
-            line-height: 1;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .close-modal:hover {
-            color: #6b7280;
-        }
-        
-        .modal-title-row {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .modal-icon {
-            font-size: 2rem;
-            background: #fef3c7;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-        }
-        
-        .modal-title-row h2 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin: 0;
-        }
-        
-        .limit-info-box {
-            background: #f9fafb;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-        
-        .info-row:last-child {
-            margin-bottom: 0;
-        }
-        
-        .info-label {
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
-        
-        .info-value {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        
-        .error-badge {
-            background: #374151;
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            font-weight: 600;
-        }
-        
-        .error-text {
-            color: #dc2626;
-            font-weight: 700;
-        }
-        
-        .modal-message {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-        }
-        
-        .features-box {
-            background: #f3f4f6;
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .feature-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.625rem;
-            font-size: 0.875rem;
-            color: #374151;
-        }
-        
-        .feature-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .check-icon {
-            color: #667eea;
-            font-weight: 700;
-            margin-right: 0.625rem;
-            font-size: 1rem;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 0.625rem;
-        }
-        
-        .btn-cancel,
-        .btn-upgrade {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            font-size: 0.9375rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-cancel {
-            background: #f3f4f6;
-            color: #6b7280;
-        }
-        
-        .btn-cancel:hover {
-            background: #e5e7eb;
-        }
-        
-        .btn-upgrade {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-upgrade:hover {
-            background: #5568d3;
-        }
-        
-        .content-locked {
-            filter: blur(8px);
-            pointer-events: none;
-            user-select: none;
-        }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 480px;
+        width: 90%;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .close-modal {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.25rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #9ca3af;
+        line-height: 1;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .close-modal:hover {
+        color: #6b7280;
+      }
+
+      .modal-title-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .modal-icon {
+        font-size: 2rem;
+        background: #fef3c7;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+      }
+
+      .modal-title-row h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .limit-info-box {
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+      }
+
+      .info-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .info-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+
+      .info-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .error-badge {
+        background: #374151;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+
+      .error-text {
+        color: #dc2626;
+        font-weight: 700;
+      }
+
+      .modal-message {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+      }
+
+      .features-box {
+        background: #f3f4f6;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.625rem;
+        font-size: 0.875rem;
+        color: #374151;
+      }
+
+      .feature-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .check-icon {
+        color: #667eea;
+        font-weight: 700;
+        margin-right: 0.625rem;
+        font-size: 1rem;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 0.625rem;
+      }
+
+      .btn-cancel,
+      .btn-upgrade {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-cancel {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+
+      .btn-cancel:hover {
+        background: #e5e7eb;
+      }
+
+      .btn-upgrade {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-upgrade:hover {
+        background: #5568d3;
+      }
+
+      .content-locked {
+        filter: blur(8px);
+        pointer-events: none;
+        user-select: none;
+      }
     </style>
 
     <script src="/js/authFetch.js"></script>
     <script>
-        const sessionId = parseInt(document.getElementById('sessionIdInput').value);
-        
-        async function trackReviewRead() {
-            try {
-                const response = await authFetch(`/api/review/track-read/${sessionId}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'}
-                });
-                
-                const result = await response.json();
-                
-                if (!result.success && result.limitReached) {
-                    const limitInfo = result.limitInfo;
-                    document.getElementById('usedReads').textContent = limitInfo.usedReads;
-                    document.getElementById('readLimit').textContent = limitInfo.readLimit;
-                    document.getElementById('currentPlan').textContent = limitInfo.currentPlan;
-                    
-                    document.querySelector('.qa-container').classList.add('content-locked');
-                    document.getElementById('reviewLimitModal').classList.add('show');
-                    
-                    console.log('리뷰 읽기 한도 초과');
-                } else {
-                    console.log('리뷰 읽기 카운팅 완료:', result.limitInfo);
-                }
-            } catch (error) {
-                console.error('리뷰 읽기 카운팅 오류:', error);
+      const sessionId = parseInt(
+        document.getElementById("sessionIdInput").value
+      );
+
+      async function trackReviewRead() {
+        try {
+          const response = await authFetch(
+            `/api/review/track-read/${sessionId}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
             }
+          );
+
+          const result = await response.json();
+
+          if (!result.success && result.limitReached) {
+            const limitInfo = result.limitInfo;
+            document.getElementById("usedReads").textContent =
+              limitInfo.usedReads;
+            document.getElementById("readLimit").textContent =
+              limitInfo.readLimit;
+            document.getElementById("currentPlan").textContent =
+              limitInfo.currentPlan;
+
+            document
+              .querySelector(".qa-container")
+              .classList.add("content-locked");
+            document.getElementById("reviewLimitModal").classList.add("show");
+
+            console.log("리뷰 읽기 한도 초과");
+          } else {
+            console.log("리뷰 읽기 카운팅 완료:", result.limitInfo);
+          }
+        } catch (error) {
+          console.error("리뷰 읽기 카운팅 오류:", error);
         }
-        
-        function closeModal() {
-            document.getElementById('reviewLimitModal').classList.remove('show');
-        }
-        
-        window.addEventListener('load', () => {
-            trackReviewRead();
-        });
-        
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            const hamburger = document.querySelector('.hamburger');
-            menu.classList.toggle('active');
-            hamburger.classList.toggle('active');
-        }
-        
-        async function submitReview(event) {
-            event.preventDefault();
-            
-            const form = event.target;
-            const sessionId = parseInt(document.getElementById('sessionIdInput').value);
-            const rating = parseFloat(form.rating.value);
-            const comment = form.comment.value;
-            const submitBtn = document.getElementById('submitBtn');
-            
-            const payload = {
-                sessionId: sessionId,
-                answerId: null,
-                comment: comment,
-                rating: rating
-            };
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = '제출 중...';
-            
-            try {
-                const response = await authFetch('/api/review', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showMessage('successMessage', '리뷰가 성공적으로 제출되었습니다!');
-                    form.reset();
-                    setTimeout(() => {
-                        window.location.href = '/review/my';
-                    }, 2000);
-                } else {
-                    showMessage('errorMessage', result.message || '리뷰 제출에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showMessage('errorMessage', '리뷰 제출 중 오류가 발생했습니다.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '리뷰 제출';
-            }
-        }
-        
-        function showMessage(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.style.display = 'block';
-            
+      }
+
+      function closeModal() {
+        document.getElementById("reviewLimitModal").classList.remove("show");
+      }
+
+      window.addEventListener("load", () => {
+        trackReviewRead();
+      });
+
+      function toggleMobileMenu() {
+        const menu = document.getElementById("mobileMenu");
+        const hamburger = document.querySelector(".hamburger");
+        menu.classList.toggle("active");
+        hamburger.classList.toggle("active");
+      }
+
+      async function submitReview(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const sessionId = parseInt(
+          document.getElementById("sessionIdInput").value
+        );
+        const rating = parseFloat(form.rating.value);
+        const comment = form.comment.value;
+        const submitBtn = document.getElementById("submitBtn");
+
+        const payload = {
+          sessionId: sessionId,
+          answerId: null,
+          comment: comment,
+          rating: rating,
+        };
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "제출 중...";
+
+        try {
+          const response = await authFetch("/api/review", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            showMessage("successMessage", "리뷰가 성공적으로 제출되었습니다!");
+            form.reset();
             setTimeout(() => {
-                element.style.display = 'none';
-            }, 5000);
+              window.location.href = "/review/my";
+            }, 2000);
+          } else {
+            showMessage(
+              "errorMessage",
+              result.message || "리뷰 제출에 실패했습니다."
+            );
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          showMessage("errorMessage", "리뷰 제출 중 오류가 발생했습니다.");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "리뷰 제출";
         }
+      }
+
+      function showMessage(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.style.display = "block";
+
+        setTimeout(() => {
+          element.style.display = "none";
+        }, 5000);
+      }
     </script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>

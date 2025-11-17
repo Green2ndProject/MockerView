@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>면접 진행</title>
-
+    <div th:replace="~{fragments/styles :: styles}"></div>
     <script>
       if (
         location.protocol !== "https:" &&
@@ -917,6 +916,9 @@
         </div>
       </div>
     </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script th:inline="javascript">
       const sessionId = /*[[${sessionId}]]*/ null;

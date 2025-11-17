@@ -1,530 +1,541 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>음성 분석 결과 - MockerView</title>
+    <div th:replace="~{fragments/styles :: styles}"></div>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            background: #f5f7fa;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
-            min-height: 100vh;
-            padding-bottom: 40px;
-        }
+      body {
+        background: #f5f7fa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Noto Sans KR", sans-serif;
+        min-height: 100vh;
+        padding-bottom: 40px;
+      }
 
-        .navbar {
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+      .navbar {
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
 
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-            height: 64px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+      .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        height: 64px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-        .nav-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
+      .nav-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+      }
 
+      .nav-menu {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9375rem;
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover {
+        color: #667eea;
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
+        padding: 8px;
+      }
+
+      .hamburger span {
+        width: 24px;
+        height: 2px;
+        background: #667eea;
+        border-radius: 2px;
+        transition: all 0.3s;
+      }
+
+      .mobile-menu {
+        display: none;
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        z-index: 999;
+      }
+
+      .mobile-menu.active {
+        display: block;
+      }
+
+      .mobile-menu a {
+        display: block;
+        padding: 16px 20px;
+        color: #64748b;
+        text-decoration: none;
+        font-weight: 500;
+        border-bottom: 1px solid #f1f5f9;
+        transition: all 0.2s;
+      }
+
+      .mobile-menu a:hover {
+        background: #f8fafc;
+        color: #667eea;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 8px;
+      }
+
+      .page-subtitle {
+        font-size: 1rem;
+        color: #64748b;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 12px;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 4px;
+      }
+
+      .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+      }
+
+      .analysis-card {
+        background: white;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .analysis-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #f1f5f9;
+      }
+
+      .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+      }
+
+      .card-date {
+        font-size: 0.875rem;
+        color: #64748b;
+        background: #f8fafc;
+        padding: 6px 12px;
+        border-radius: 8px;
+      }
+
+      .scores-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .score-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+      }
+
+      .score-box:hover {
+        border-color: #667eea;
+        background: #f0f4ff;
+      }
+
+      .score-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+
+      .score-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+      }
+
+      .score-high {
+        color: #10b981;
+      }
+      .score-mid {
+        color: #f59e0b;
+      }
+      .score-low {
+        color: #ef4444;
+      }
+
+      .detail-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        border-left: 4px solid #667eea;
+      }
+
+      .detail-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+      }
+
+      .detail-content {
+        font-size: 0.9375rem;
+        color: #475569;
+        line-height: 1.7;
+        white-space: pre-line;
+      }
+
+      .suggestion-box {
+        background: #fef3c7;
+        border-radius: 12px;
+        padding: 20px;
+        border-left: 4px solid #f59e0b;
+      }
+
+      .suggestion-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 12px;
+      }
+
+      .suggestion-content {
+        font-size: 0.9375rem;
+        color: #92400e;
+        line-height: 1.7;
+        white-space: pre-line;
+      }
+
+      .empty-state {
+        background: white;
+        border-radius: 16px;
+        text-align: center;
+        padding: 80px 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 16px;
+        opacity: 0.5;
+      }
+
+      .empty-text {
+        font-size: 1.125rem;
+        color: #94a3b8;
+        margin-bottom: 24px;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      @media (max-width: 768px) {
         .nav-menu {
-            display: flex;
-            gap: 24px;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: #64748b;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9375rem;
-            transition: color 0.2s;
-        }
-
-        .nav-link:hover {
-            color: #667eea;
+          display: none;
         }
 
         .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            cursor: pointer;
-            padding: 8px;
-        }
-
-        .hamburger span {
-            width: 24px;
-            height: 2px;
-            background: #667eea;
-            border-radius: 2px;
-            transition: all 0.3s;
-        }
-
-        .mobile-menu {
-            display: none;
-            position: fixed;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: white;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            z-index: 999;
-        }
-
-        .mobile-menu.active {
-            display: block;
-        }
-
-        .mobile-menu a {
-            display: block;
-            padding: 16px 20px;
-            color: #64748b;
-            text-decoration: none;
-            font-weight: 500;
-            border-bottom: 1px solid #f1f5f9;
-            transition: all 0.2s;
-        }
-
-        .mobile-menu a:hover {
-            background: #f8fafc;
-            color: #667eea;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 32px 20px;
-        }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
+          display: flex;
         }
 
         .page-title {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #1e293b;
-            margin-bottom: 8px;
-        }
-
-        .page-subtitle {
-            font-size: 1rem;
-            color: #64748b;
+          font-size: 1.5rem;
         }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102,126,234,0.15);
-        }
-
-        .stat-icon {
-            font-size: 2rem;
-            margin-bottom: 12px;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 4px;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        .analysis-card {
-            background: white;
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .analysis-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .card-date {
-            font-size: 0.875rem;
-            color: #64748b;
-            background: #f8fafc;
-            padding: 6px 12px;
-            border-radius: 8px;
+          grid-template-columns: repeat(2, 1fr);
         }
 
         .scores-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+          grid-template-columns: repeat(2, 1fr);
         }
 
-        .score-box {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            border: 2px solid transparent;
-            transition: all 0.2s;
+        .card-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
         }
 
-        .score-box:hover {
-            border-color: #667eea;
-            background: #f0f4ff;
+        .analysis-card {
+          padding: 20px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
         }
 
-        .score-label {
-            font-size: 0.875rem;
-            color: #64748b;
-            margin-bottom: 8px;
-            font-weight: 500;
+        .scores-grid {
+          grid-template-columns: 1fr;
         }
-
-        .score-value {
-            font-size: 1.75rem;
-            font-weight: 800;
-        }
-
-        .score-high { color: #10b981; }
-        .score-mid { color: #f59e0b; }
-        .score-low { color: #ef4444; }
-
-        .detail-box {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            border-left: 4px solid #667eea;
-        }
-
-        .detail-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 12px;
-        }
-
-        .detail-content {
-            font-size: 0.9375rem;
-            color: #475569;
-            line-height: 1.7;
-            white-space: pre-line;
-        }
-
-        .suggestion-box {
-            background: #fef3c7;
-            border-radius: 12px;
-            padding: 20px;
-            border-left: 4px solid #f59e0b;
-        }
-
-        .suggestion-title {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #92400e;
-            margin-bottom: 12px;
-        }
-
-        .suggestion-content {
-            font-size: 0.9375rem;
-            color: #92400e;
-            line-height: 1.7;
-            white-space: pre-line;
-        }
-
-        .empty-state {
-            background: white;
-            border-radius: 16px;
-            text-align: center;
-            padding: 80px 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-text {
-            font-size: 1.125rem;
-            color: #94a3b8;
-            margin-bottom: 24px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9375rem;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
-        }
-
-        @media (max-width: 768px) {
-            .nav-menu {
-                display: none;
-            }
-
-            .hamburger {
-                display: flex;
-            }
-
-            .page-title {
-                font-size: 1.5rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .scores-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-
-            .analysis-card {
-                padding: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .scores-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <a class="nav-brand" href="/session/list">MockerView</a>
-            <div class="nav-menu">
-                <a class="nav-link" href="/session/list">세션</a>
-                <a class="nav-link" href="/auth/mypage">마이페이지</a>
-                <a class="nav-link" href="/auth/mypage/stats">통계</a>
-                <a class="nav-link" href="/auth/logout">로그아웃</a>
-            </div>
-            <div class="hamburger" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
+  </head>
+  <body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <!-- <nav class="navbar">
+      <div class="nav-container">
+        <a class="nav-brand" href="/session/list">MockerView</a>
+        <div class="nav-menu">
+          <a class="nav-link" href="/session/list">세션</a>
+          <a class="nav-link" href="/auth/mypage">마이페이지</a>
+          <a class="nav-link" href="/auth/mypage/stats">통계</a>
+          <a class="nav-link" href="/auth/logout">로그아웃</a>
         </div>
-    </nav>
+        <div class="hamburger" onclick="toggleMenu()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </nav> -->
 
     <div class="mobile-menu" id="mobileMenu">
-        <a href="/session/list">세션 목록</a>
-        <a href="/auth/mypage">마이페이지</a>
-        <a href="/auth/mypage/stats">통계</a>
-        <a href="/auth/logout">로그아웃</a>
+      <a href="/session/list">세션 목록</a>
+      <a href="/auth/mypage">마이페이지</a>
+      <a href="/auth/mypage/stats">통계</a>
+      <a href="/auth/logout">로그아웃</a>
     </div>
 
     <div class="container">
-        <div class="page-header">
-            <div class="page-title">🎤 음성 분석 결과</div>
-            <div class="page-subtitle">AI 기반 발화 패턴 분석</div>
-        </div>
+      <div class="page-header">
+        <div class="page-title">🎤 음성 분석 결과</div>
+        <div class="page-subtitle">AI 기반 발화 패턴 분석</div>
+      </div>
 
-        <div id="statsOverview" class="stats-grid" style="display: none;">
-            <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-value" id="totalCount">0</div>
-                <div class="stat-label">총 분석 횟수</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⚡</div>
-                <div class="stat-value" id="avgSpeed">0</div>
-                <div class="stat-label">평균 속도</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🗣️</div>
-                <div class="stat-value" id="avgPronunciation">0</div>
-                <div class="stat-label">평균 발음</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📉</div>
-                <div class="stat-value" id="avgFiller">0</div>
-                <div class="stat-label">평균 습관어</div>
-            </div>
+      <div id="statsOverview" class="stats-grid" style="display: none">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <div class="stat-value" id="totalCount">0</div>
+          <div class="stat-label">총 분석 횟수</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-value" id="avgSpeed">0</div>
+          <div class="stat-label">평균 속도</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🗣️</div>
+          <div class="stat-value" id="avgPronunciation">0</div>
+          <div class="stat-label">평균 발음</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📉</div>
+          <div class="stat-value" id="avgFiller">0</div>
+          <div class="stat-label">평균 습관어</div>
+        </div>
+      </div>
 
-        <div id="analysisContainer"></div>
-        
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <div class="empty-icon">🎤</div>
-            <div class="empty-text">아직 음성 분석 결과가 없습니다</div>
-            <a href="/auth/mypage/stats" class="btn">통계로 돌아가기</a>
-        </div>
+      <div id="analysisContainer"></div>
+
+      <div id="emptyState" class="empty-state" style="display: none">
+        <div class="empty-icon">🎤</div>
+        <div class="empty-text">아직 음성 분석 결과가 없습니다</div>
+        <a href="/auth/mypage/stats" class="btn">통계로 돌아가기</a>
+      </div>
     </div>
 
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
+
     <script>
-        function toggleMenu() {
-            document.getElementById('mobileMenu').classList.toggle('active');
-        }
+      function toggleMenu() {
+        document.getElementById("mobileMenu").classList.toggle("active");
+      }
     </script>
     <script src="/js/notification-handler.js"></script>
     <script th:inline="javascript">
-        const userId = [[${userId}]];
+      const userId = [[${userId}]];
 
-        fetch('/api/analysis/voice/user/' + userId)
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (!Array.isArray(data) || data.length === 0) {
-                    document.getElementById('emptyState').style.display = 'block';
-                    return;
-                }
+      fetch('/api/analysis/voice/user/' + userId)
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+              if (!Array.isArray(data) || data.length === 0) {
+                  document.getElementById('emptyState').style.display = 'block';
+                  return;
+              }
 
-                document.getElementById('statsOverview').style.display = 'grid';
+              document.getElementById('statsOverview').style.display = 'grid';
 
-                const avgSpeed = Math.round(data.reduce(function(sum, d) { return sum + (d.speakingSpeed || 0); }, 0) / data.length);
-                const avgPronunciation = Math.round(data.reduce(function(sum, d) { return sum + (d.pronunciationScore || 0); }, 0) / data.length);
-                const avgFiller = Math.round(data.reduce(function(sum, d) { return sum + (d.fillerWordsCount || 0); }, 0) / data.length);
+              const avgSpeed = Math.round(data.reduce(function(sum, d) { return sum + (d.speakingSpeed || 0); }, 0) / data.length);
+              const avgPronunciation = Math.round(data.reduce(function(sum, d) { return sum + (d.pronunciationScore || 0); }, 0) / data.length);
+              const avgFiller = Math.round(data.reduce(function(sum, d) { return sum + (d.fillerWordsCount || 0); }, 0) / data.length);
 
-                document.getElementById('totalCount').textContent = data.length;
-                document.getElementById('avgSpeed').textContent = avgSpeed;
-                document.getElementById('avgPronunciation').textContent = avgPronunciation;
-                document.getElementById('avgFiller').textContent = avgFiller;
+              document.getElementById('totalCount').textContent = data.length;
+              document.getElementById('avgSpeed').textContent = avgSpeed;
+              document.getElementById('avgPronunciation').textContent = avgPronunciation;
+              document.getElementById('avgFiller').textContent = avgFiller;
 
-                const container = document.getElementById('analysisContainer');
-                
-                function getScoreClass(score) {
-                    if (score >= 80) return 'score-high';
-                    if (score >= 60) return 'score-mid';
-                    return 'score-low';
-                }
+              const container = document.getElementById('analysisContainer');
 
-                data.forEach(function(analysis, index) {
-                    const card = document.createElement('div');
-                    card.className = 'analysis-card';
-                    
-                    const analysisDate = new Date(analysis.createdAt).toLocaleString('ko-KR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    
-                    card.innerHTML = '<div class="card-header">' +
-                        '<div class="card-title">🎤 음성 분석 결과</div>' +
-                        '<div class="card-date">' + analysisDate + '</div>' +
-                        '</div>' +
-                        '<div class="scores-grid">' +
-                        '<div class="score-box">' +
-                        '<div class="score-label">⚡ 속도</div>' +
-                        '<div class="score-value ' + getScoreClass(analysis.speakingSpeed || 0) + '">' + (analysis.speakingSpeed || 0) + '</div>' +
-                        '</div>' +
-                        '<div class="score-box">' +
-                        '<div class="score-label">🗣️ 발음</div>' +
-                        '<div class="score-value ' + getScoreClass(analysis.pronunciationScore || 0) + '">' + (analysis.pronunciationScore || 0) + '</div>' +
-                        '</div>' +
-                        '<div class="score-box">' +
-                        '<div class="score-label">📉 습관어</div>' +
-                        '<div class="score-value ' + getScoreClass(100 - (analysis.fillerWordsCount || 0)) + '">' + (analysis.fillerWordsCount || 0) + '</div>' +
-                        '</div>' +
-                        '<div class="score-box">' +
-                        '<div class="score-label">⏸️ 휴지</div>' +
-                        '<div class="score-value ' + getScoreClass(100 - (analysis.pauseCount || 0)) + '">' + (analysis.pauseCount || 0) + '</div>' +
-                        '</div>' +
-                        '<div class="score-box">' +
-                        '<div class="score-label">🎵 안정성</div>' +
-                        '<div class="score-value ' + getScoreClass(analysis.voiceStability || 0) + '">' + (analysis.voiceStability || 0) + '</div>' +
-                        '</div>' +
-                        '</div>' +
-                        '<div class="detail-box">' +
-                        '<div class="detail-title">📋 습관어 상세</div>' +
-                        '<div class="detail-content">' + (analysis.fillerWordsDetail || '습관어 상세 내용이 없습니다.') + '</div>' +
-                        '</div>' +
-                        '<div class="suggestion-box">' +
-                        '<div class="suggestion-title">💡 개선 제안</div>' +
-                        '<div class="suggestion-content">' + (analysis.improvementSuggestions || '개선 제안이 없습니다.') + '</div>' +
-                        '</div>';
-                    
-                    container.appendChild(card);
-                });
-            })
-            .catch(function(err) {
-                console.error('음성 분석 데이터 로드 실패', err);
-                document.getElementById('emptyState').style.display = 'block';
-            });
+              function getScoreClass(score) {
+                  if (score >= 80) return 'score-high';
+                  if (score >= 60) return 'score-mid';
+                  return 'score-low';
+              }
+
+              data.forEach(function(analysis, index) {
+                  const card = document.createElement('div');
+                  card.className = 'analysis-card';
+
+                  const analysisDate = new Date(analysis.createdAt).toLocaleString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                  });
+
+                  card.innerHTML = '<div class="card-header">' +
+                      '<div class="card-title">🎤 음성 분석 결과</div>' +
+                      '<div class="card-date">' + analysisDate + '</div>' +
+                      '</div>' +
+                      '<div class="scores-grid">' +
+                      '<div class="score-box">' +
+                      '<div class="score-label">⚡ 속도</div>' +
+                      '<div class="score-value ' + getScoreClass(analysis.speakingSpeed || 0) + '">' + (analysis.speakingSpeed || 0) + '</div>' +
+                      '</div>' +
+                      '<div class="score-box">' +
+                      '<div class="score-label">🗣️ 발음</div>' +
+                      '<div class="score-value ' + getScoreClass(analysis.pronunciationScore || 0) + '">' + (analysis.pronunciationScore || 0) + '</div>' +
+                      '</div>' +
+                      '<div class="score-box">' +
+                      '<div class="score-label">📉 습관어</div>' +
+                      '<div class="score-value ' + getScoreClass(100 - (analysis.fillerWordsCount || 0)) + '">' + (analysis.fillerWordsCount || 0) + '</div>' +
+                      '</div>' +
+                      '<div class="score-box">' +
+                      '<div class="score-label">⏸️ 휴지</div>' +
+                      '<div class="score-value ' + getScoreClass(100 - (analysis.pauseCount || 0)) + '">' + (analysis.pauseCount || 0) + '</div>' +
+                      '</div>' +
+                      '<div class="score-box">' +
+                      '<div class="score-label">🎵 안정성</div>' +
+                      '<div class="score-value ' + getScoreClass(analysis.voiceStability || 0) + '">' + (analysis.voiceStability || 0) + '</div>' +
+                      '</div>' +
+                      '</div>' +
+                      '<div class="detail-box">' +
+                      '<div class="detail-title">📋 습관어 상세</div>' +
+                      '<div class="detail-content">' + (analysis.fillerWordsDetail || '습관어 상세 내용이 없습니다.') + '</div>' +
+                      '</div>' +
+                      '<div class="suggestion-box">' +
+                      '<div class="suggestion-title">💡 개선 제안</div>' +
+                      '<div class="suggestion-content">' + (analysis.improvementSuggestions || '개선 제안이 없습니다.') + '</div>' +
+                      '</div>';
+
+                  container.appendChild(card);
+              });
+          })
+          .catch(function(err) {
+              console.error('음성 분석 데이터 로드 실패', err);
+              document.getElementById('emptyState').style.display = 'block';
+          });
     </script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>

@@ -1,1035 +1,1197 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>세션 목록 - MockerView</title>
-    <link rel="stylesheet" href="/css/session-limit-modal.css">
+    <link rel="stylesheet" href="/css/session-limit-modal.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <div th:replace="~{fragments/styles :: styles}"></div>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            color: #212529;
-            line-height: 1.6;
-        }
-        
-        .navbar {
-            background: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 64px;
-        }
-        
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
-        .navbar-nav {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .nav-link {
-            color: #495057;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        
-        .nav-link:hover,
-        .nav-link.active {
-            color: #667eea;
-        }
-        
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px;
-            z-index: 1001;
-        }
-        
-        .hamburger span {
-            width: 25px;
-            height: 3px;
-            background: #667eea;
-            transition: all 0.3s;
-            border-radius: 3px;
-        }
-        
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(8px, 8px);
-        }
-        
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
-        }
-        
-        .page-header {
-            margin-top: 64px;
-            padding: 3rem 0 2rem;
-            background: #667eea;
-            color: white;
-        }
-        
-        .page-title h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .section-tabs {
-            display: flex;
-            gap: 1rem;
-            margin: 2rem 0;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        .tab-btn {
-            padding: 1rem 2rem;
-            background: none;
-            border: none;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #6c757d;
-            transition: all 0.2s;
-        }
-        
-        .tab-btn:hover {
-            color: #667eea;
-        }
-        
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .quick-action-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .quick-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-        
-        .quick-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-            border-color: #667eea;
-        }
-        
-        .quick-card-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .quick-card h3 {
-            margin-bottom: 0.5rem;
-            color: #212529;
-            font-size: 1.25rem;
-        }
-        
-        .quick-card p {
-            color: #6c757d;
-            margin-bottom: 1.5rem;
-        }
-        
-        .status-filter-tabs {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 2rem;
-        }
-        
-        .status-tab {
-            flex: 1;
-            padding: 1rem 1.5rem;
-            border: 2px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        
-        .status-tab:hover {
-            background: #f0f3ff;
-        }
-        
-        .status-tab.active {
-            background: #667eea;
-            color: white;
-        }
-        
-        .status-tab .count {
-            display: inline-block;
-            margin-left: 0.5rem;
-            padding: 0.25rem 0.6rem;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            font-size: 0.9rem;
-        }
-        
-        .search-container {
-            margin-bottom: 2rem;
-        }
-        
-        .search-form {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .search-input {
-            flex: 1;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #218838;
-        }
-        
-        .session-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .session-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-        
-        .session-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-            border-color: #667eea;
-        }
-        
-        .session-header {
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .session-header h3 {
-            margin-bottom: 0.75rem;
-            color: #212529;
-            font-size: 1.2rem;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        .session-description {
-            color: #6b7280;
-            font-size: 0.9375rem;
-            line-height: 1.6;
-            margin: 0.75rem 0 1rem 0;
-            padding: 0.75rem 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 3px solid #667eea;
-        }
-        
-        .session-meta {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            align-items: center;
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-        
-        .badge {
-            padding: 0.35rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-        
-        .badge-live {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-waiting {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .badge-ended {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .empty-state h3 {
-            color: #6c757d;
-            margin-bottom: 1rem;
-        }
-        
-        .empty-state p {
-            color: #adb5bd;
-        }
-        
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #f8f9fa;
+        color: #212529;
+        line-height: 1.6;
+      }
+
+      .navbar {
+        background: white;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px;
+      }
+
+      .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: #495057;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        color: #667eea;
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        cursor: pointer;
+        padding: 8px;
+        z-index: 1001;
+      }
+
+      .hamburger span {
+        width: 25px;
+        height: 3px;
+        background: #667eea;
+        transition: all 0.3s;
+        border-radius: 3px;
+      }
+
+      .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(8px, 8px);
+      }
+
+      .hamburger.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -7px);
+      }
+
+      .page-header {
+        margin-top: 64px;
+        padding: 3rem 0 2rem;
+        background: #667eea;
+        color: white;
+      }
+
+      .page-title h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .section-tabs {
+        display: flex;
+        gap: 1rem;
+        margin: 2rem 0;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .tab-btn {
+        padding: 1rem 2rem;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #6c757d;
+        transition: all 0.2s;
+      }
+
+      .tab-btn:hover {
+        color: #667eea;
+      }
+
+      .tab-btn.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .quick-action-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .quick-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+      }
+
+      .quick-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        border-color: #667eea;
+      }
+
+      .quick-card-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .quick-card h3 {
+        margin-bottom: 0.5rem;
+        color: #212529;
+        font-size: 1.25rem;
+      }
+
+      .quick-card p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+      }
+
+      .status-filter-tabs {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+
+      .status-tab {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        text-align: center;
+      }
+
+      .status-tab:hover {
+        background: #f0f3ff;
+      }
+
+      .status-tab.active {
+        background: #667eea;
+        color: white;
+      }
+
+      .status-tab .count {
+        display: inline-block;
+        margin-left: 0.5rem;
+        padding: 0.25rem 0.6rem;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        font-size: 0.9rem;
+      }
+
+      .search-container {
+        margin-bottom: 2rem;
+      }
+
+      .search-form {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .search-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+      }
+
+      .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      .btn-success {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #218838;
+      }
+
+      .session-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .session-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s;
+        border: 2px solid transparent;
+      }
+
+      .session-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        border-color: #667eea;
+      }
+
+      .session-header {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .session-header h3 {
+        margin-bottom: 0.75rem;
+        color: #212529;
+        font-size: 1.2rem;
+      }
+
+      .session-description {
+        color: #6b7280;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        margin: 0.75rem 0 1rem 0;
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 3px solid #667eea;
+      }
+
+      .session-meta {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+      }
+
+      .badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .badge-live {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .badge-waiting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .badge-ended {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .empty-state h3 {
+        color: #6c757d;
+        margin-bottom: 1rem;
+      }
+
+      .empty-state p {
+        color: #adb5bd;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin: 3rem 0;
+        padding: 20px;
+      }
+
+      .pagination button {
+        min-width: 44px;
+        height: 44px;
+        padding: 0 16px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        color: #6b7280;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 15px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .pagination button:hover:not(:disabled):not(.active) {
+        background: #f9fafb;
+        border-color: #667eea;
+        color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      }
+
+      .pagination button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background: #f9fafb;
+        border-color: #e5e7eb;
+        color: #9ca3af;
+      }
+
+      .pagination button.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
+        transform: scale(1.05);
+      }
+
+      .page-numbers {
+        display: flex;
+        gap: 6px;
+        padding: 0 12px;
+      }
+
+      .pagination button:first-child,
+      .pagination button:nth-child(2) {
+        border-radius: 10px 10px 10px 10px;
+      }
+
+      .pagination button:nth-last-child(2),
+      .pagination button:last-child {
+        border-radius: 10px 10px 10px 10px;
+      }
+
+      @media (max-width: 768px) {
         .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin: 3rem 0;
-            padding: 20px;
+          gap: 4px;
+          padding: 15px;
         }
-        
+
         .pagination button {
-            min-width: 44px;
-            height: 44px;
-            padding: 0 16px;
-            border: 2px solid #e5e7eb;
-            background: white;
-            color: #6b7280;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+          min-width: 38px;
+          height: 38px;
+          padding: 0 10px;
+          font-size: 14px;
         }
-        
-        .pagination button:hover:not(:disabled):not(.active) {
-            background: #f9fafb;
-            border-color: #667eea;
-            color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-        }
-        
-        .pagination button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            background: #f9fafb;
-            border-color: #e5e7eb;
-            color: #9ca3af;
-        }
-        
-        .pagination button.active {
-            background: #667eea;
-            border-color: #667eea;
-            color: white;
-            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35);
-            transform: scale(1.05);
-        }
-        
+
         .page-numbers {
-            display: flex;
-            gap: 6px;
-            padding: 0 12px;
+          gap: 4px;
+          padding: 0 8px;
         }
-        
-        .pagination button:first-child,
-        .pagination button:nth-child(2) {
-            border-radius: 10px 10px 10px 10px;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        animation: fadeIn 0.2s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
         }
-        
-        .pagination button:nth-last-child(2),
-        .pagination button:last-child {
-            border-radius: 10px 10px 10px 10px;
+        to {
+          opacity: 1;
         }
-        
-        @media (max-width: 768px) {
-            .pagination {
-                gap: 4px;
-                padding: 15px;
-            }
-            
-            .pagination button {
-                min-width: 38px;
-                height: 38px;
-                padding: 0 10px;
-                font-size: 14px;
-            }
-            
-            .page-numbers {
-                gap: 4px;
-                padding: 0 8px;
-            }
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 560px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(30px);
+          opacity: 0;
         }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            animation: fadeIn 0.2s ease-out;
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+      }
+
+      .modal-header h2 {
+        font-size: 1.5rem;
+        color: #1a1a1a;
+        font-weight: 700;
+      }
+
+      .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.75rem;
+        cursor: pointer;
+        color: #9ca3af;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s;
+      }
+
+      .close-modal:hover {
+        background: #f3f4f6;
+        color: #1a1a1a;
+      }
+
+      .form-group {
+        margin-bottom: 1.75rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.625rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        font-size: 0.9375rem;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.9375rem;
+        transition: all 0.2s;
+        font-family: inherit;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .form-control::placeholder {
+        color: #9ca3af;
+      }
+
+      .interview-mode-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .mode-option-card {
+        padding: 1.25rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+      }
+
+      .mode-option-card:hover {
+        border-color: #667eea;
+        background: #fafbff;
+      }
+
+      .mode-option-card.active {
+        border-color: #667eea;
+        background: #f0f3ff;
+      }
+
+      .mode-option-card input {
+        display: none;
+      }
+
+      .mode-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .mode-title {
+        font-weight: 700;
+        margin-bottom: 0.375rem;
+        color: #1a1a1a;
+        font-size: 1.0625rem;
+      }
+
+      .mode-desc {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.4;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #f0f0f0;
+      }
+
+      @media (max-width: 768px) {
+        .navbar-nav {
+          position: fixed;
+          top: 64px;
+          left: 0;
+          right: 0;
+          background: white;
+          flex-direction: column;
+          gap: 0;
+          padding: 0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          transform: translateX(-100%);
+          opacity: 0;
+          transition: all 0.3s ease;
+          pointer-events: none;
+          height: calc(100vh - 64px);
+          overflow-y: auto;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 2.5rem;
-            max-width: 560px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s ease-out;
+        .navbar-nav.active {
+          transform: translateX(0);
+          opacity: 1;
+          pointer-events: all;
         }
 
-        @keyframes slideUp {
-            from {
-                transform: translateY(30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #f0f0f0;
+        .nav-link {
+          padding: 1.2rem 1.5rem;
+          width: 100%;
+          text-align: left;
+          border-bottom: 1px solid #f0f0f0;
+          font-size: 1.1rem;
         }
 
-        .modal-header h2 {
-            font-size: 1.5rem;
-            color: #1a1a1a;
-            font-weight: 700;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.75rem;
-            cursor: pointer;
-            color: #9ca3af;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            transition: all 0.2s;
+        .nav-link:hover {
+          background: #f8f9ff;
         }
 
-        .close-modal:hover {
-            background: #f3f4f6;
-            color: #1a1a1a;
-        }
-        
-        .form-group {
-            margin-bottom: 1.75rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.625rem;
-            font-weight: 600;
-            color: #1a1a1a;
-            font-size: 0.9375rem;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.875rem 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 0.9375rem;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        .hamburger {
+          display: flex;
         }
 
-        .form-control::placeholder {
-            color: #9ca3af;
+        .page-header {
+          padding: 2rem 0 1.5rem;
         }
-        
+
+        .page-title h1 {
+          font-size: 1.5rem;
+        }
+
+        .section-tabs {
+          gap: 0.5rem;
+          overflow-x: auto;
+        }
+
+        .tab-btn {
+          padding: 0.75rem 1.25rem;
+          font-size: 1rem;
+        }
+
+        .status-filter-tabs {
+          flex-direction: column;
+        }
+
+        .quick-action-cards {
+          grid-template-columns: 1fr;
+        }
+
+        .session-grid {
+          grid-template-columns: 1fr;
+        }
+
         .interview-mode-options {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
+          grid-template-columns: 1fr;
         }
-        
-        .mode-option-card {
-            padding: 1.25rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: white;
-        }
-        
-        .mode-option-card:hover {
-            border-color: #667eea;
-            background: #fafbff;
-        }
-        
-        .mode-option-card.active {
-            border-color: #667eea;
-            background: #f0f3ff;
-        }
-        
-        .mode-option-card input {
-            display: none;
-        }
-        
-        .mode-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-        }
-        
-        .mode-title {
-            font-weight: 700;
-            margin-bottom: 0.375rem;
-            color: #1a1a1a;
-            font-size: 1.0625rem;
-        }
-        
-        .mode-desc {
-            font-size: 0.875rem;
-            color: #6b7280;
-            line-height: 1.4;
-        }
-        
+
         .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid #f0f0f0;
+          flex-direction: column;
         }
-        
-        @media (max-width: 768px) {
-            .navbar-nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                flex-direction: column;
-                gap: 0;
-                padding: 0;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                transform: translateX(-100%);
-                opacity: 0;
-                transition: all 0.3s ease;
-                pointer-events: none;
-                height: calc(100vh - 64px);
-                overflow-y: auto;
-            }
-            
-            .navbar-nav.active {
-                transform: translateX(0);
-                opacity: 1;
-                pointer-events: all;
-            }
-            
-            .nav-link {
-                padding: 1.2rem 1.5rem;
-                width: 100%;
-                text-align: left;
-                border-bottom: 1px solid #f0f0f0;
-                font-size: 1.1rem;
-            }
-            
-            .nav-link:hover {
-                background: #f8f9ff;
-            }
-            
-            .hamburger {
-                display: flex;
-            }
-            
-            .page-header {
-                padding: 2rem 0 1.5rem;
-            }
-            
-            .page-title h1 {
-                font-size: 1.5rem;
-            }
-            
-            .section-tabs {
-                gap: 0.5rem;
-                overflow-x: auto;
-            }
-            
-            .tab-btn {
-                padding: 0.75rem 1.25rem;
-                font-size: 1rem;
-            }
-            
-            .status-filter-tabs {
-                flex-direction: column;
-            }
-            
-            .quick-action-cards {
-                grid-template-columns: 1fr;
-            }
-            
-            .session-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .interview-mode-options {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-actions {
-                flex-direction: column;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">Mockerview</a>
-                <div class="hamburger" onclick="toggleMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="navbar-nav">
-                    <a class="nav-link active" href="/session/list">세션 관리</a>
-                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a class="nav-link" th:if="${currentUser != null}" th:href="@{/auth/logout}">로그아웃</a>
-                </div>
-            </div>
+  </head>
+  <body>
+    <!-- <nav class="navbar">
+      <div class="container">
+        <div class="navbar-content">
+          <a class="navbar-brand" href="/session/list">Mockerview</a>
+          <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="navbar-nav">
+            <a class="nav-link active" href="/session/list">세션 관리</a>
+            <a
+              class="nav-link"
+              th:if="${currentUser != null}"
+              th:href="@{/auth/mypage}"
+              >마이페이지</a
+            >
+            <a
+              class="nav-link"
+              th:if="${currentUser != null}"
+              th:href="@{/auth/logout}"
+              >로그아웃</a
+            >
+          </div>
         </div>
-    </nav>
+      </div>
+    </nav>-->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
 
     <div class="page-header">
-        <div class="container">
-            <div class="page-title">
-                <h1>MockerView 면접 플랫폼</h1>
-            </div>
+      <div class="container">
+        <div class="page-title">
+          <h1>MockerView 면접 플랫폼</h1>
         </div>
+      </div>
     </div>
 
     <div class="container">
-        <div class="section-tabs">
-            <button class="tab-btn active" onclick="switchTab('group', event)">화상 면접</button>
-            <button class="tab-btn" onclick="switchTab('self', event)">셀프 면접</button>
-            <button class="tab-btn" onclick="switchTab('review', event)">리뷰</button>
+      <div class="section-tabs">
+        <button class="tab-btn active" onclick="switchTab('group', event)">
+          화상 면접
+        </button>
+        <button class="tab-btn" onclick="switchTab('self', event)">
+          셀프 면접
+        </button>
+        <button class="tab-btn" onclick="switchTab('review', event)">
+          리뷰
+        </button>
+      </div>
+
+      <div id="group-tab" class="tab-content active">
+        <div class="quick-action-cards">
+          <div class="quick-card">
+            <div class="quick-card-icon">🖥️</div>
+            <h3>화상 면접</h3>
+            <p>실시간 화상으로 여러 명이 참여하는 모의면접</p>
+            <button
+              th:if="${currentUser != null and currentUser.role != null and currentUser.role.name() == 'HOST'}"
+              class="btn btn-primary"
+              onclick="createNewSession()"
+            >
+              새 세션 생성
+            </button>
+          </div>
         </div>
 
-        <div id="group-tab" class="tab-content active">
-            <div class="quick-action-cards">
-                <div class="quick-card">
-                    <div class="quick-card-icon">🖥️</div>
-                    <h3>화상 면접</h3>
-                    <p>실시간 화상으로 여러 명이 참여하는 모의면접</p>
-                    <button th:if="${currentUser != null and currentUser.role != null and currentUser.role.name() == 'HOST'}" class="btn btn-primary" onclick="createNewSession()">
-                        새 세션 생성
-                    </button>
-                </div>
-            </div>
-
-            <div class="status-filter-tabs">
-                <button class="status-tab" th:classappend="${statusFilter == null or statusFilter == '' ? 'active' : ''}" onclick="filterByStatus('')">
-                    전체보기
-                    <span class="count" th:text="${totalCount}">0</span>
-                </button>
-                <button class="status-tab" th:classappend="${statusFilter == 'PLANNED' ? 'active' : ''}" onclick="filterByStatus('PLANNED')">
-                    예정된 세션
-                    <span class="count" th:text="${plannedCount}">0</span>
-                </button>
-                <button class="status-tab" th:classappend="${statusFilter == 'RUNNING' ? 'active' : ''}" onclick="filterByStatus('RUNNING')">
-                    진행 중
-                    <span class="count" th:text="${runningCount}">0</span>
-                </button>
-                <button class="status-tab" th:classappend="${statusFilter == 'ENDED' ? 'active' : ''}" onclick="filterByStatus('ENDED')">
-                    종료됨
-                    <span class="count" th:text="${endedCount}">0</span>
-                </button>
-            </div>
-
-            <div class="search-container">
-                <form class="search-form" method="get" action="/session/list">
-                    <input type="hidden" name="status" th:value="${statusFilter}">
-                    <input type="text" name="keyword" class="search-input" placeholder="세션 제목 또는 호스트명으로 검색" th:value="${searchDTO?.keyword}">
-                    <button type="submit" class="btn btn-primary">검색</button>
-                    <button type="button" class="btn btn-secondary" onclick="resetSearch()">초기화</button>
-                </form>
-            </div>
-
-            <div class="session-grid" th:if="${sessions != null and !sessions.empty}">
-                <div th:each="sessionItem : ${sessions}" class="session-card" th:if="${sessionItem != null}">
-                    <div class="session-header">
-                        <h3 th:text="${sessionItem.title}">모의면접 세션</h3>
-                        <div class="session-meta">
-                            <span class="badge" th:classappend="${sessionItem.sessionStatus == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus == 'ENDED' ? 'badge-ended' : 'badge-waiting')}" th:text="${sessionItem.sessionStatus}">PLANNED</span>
-                            <span class="badge">🖥️ 화상면접</span>
-                        </div>
-                    </div>
-
-                    <p th:if="${sessionItem != null and sessionItem.description != null and !sessionItem.description.isEmpty()}" 
-                       class="session-description" 
-                       th:text="${sessionItem.description}">
-                        세션 설명
-                    </p>
-
-                    <div class="session-meta" th:if="${sessionItem != null and sessionItem.host != null}">
-                        <span>호스트: <span th:text="${sessionItem.host.name}">호스트명</span></span>
-                        <span th:if="${sessionItem.sessionStatus == 'PLANNED' and sessionItem.startTime != null}" class="scheduled-time">
-                            ⏰ [[${#temporals.format(sessionItem.startTime, 'MM/dd HH:mm')}]] 시작 예정
-                        </span>
-                    </div>
-
-                    <div style="margin-top: 1rem;">
-                        <a th:if="${currentUser != null and currentUser.role != null and currentUser.role.name() == 'HOST'}" th:href="@{/session/{id}/join(id=${sessionItem.id}, role='HOST')}" class="btn btn-success">
-                            면접관으로 참가
-                        </a>
-                        <a th:if="${currentUser != null and currentUser.role != null and currentUser.role.name() == 'STUDENT' and sessionItem.sessionStatus != 'ENDED'}" th:href="@{/session/{id}/join(id=${sessionItem.id}, role='STUDENT')}" class="btn btn-primary">
-                            학생으로 참가
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div th:if="${sessions == null or sessions.empty}" class="empty-state">
-                <h3>현재 조건에 맞는 세션이 없습니다</h3>
-                <p>다른 필터를 선택하거나 새로운 세션을 생성해주세요.</p>
-            </div>
-            
-            <div class="pagination" th:if="${totalPages > 1}">
-                <button th:disabled="${currentPage == 1}" 
-                        data-page="1" 
-                        th:attr="data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
-                        onclick="navigateToPage(this)">처음</button>
-                <button th:disabled="${currentPage == 1}" 
-                        th:attr="data-page=${currentPage - 1}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
-                        onclick="navigateToPage(this)">이전</button>
-                
-                <div class="page-numbers">
-                    <button th:each="i : ${#numbers.sequence(startPage, endPage)}" 
-                            th:classappend="${i == currentPage ? 'active' : ''}"
-                            th:attr="data-page=${i}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
-                            onclick="navigateToPage(this)"
-                            th:text="${i}">1</button>
-                </div>
-                
-                <button th:disabled="${currentPage == totalPages}" 
-                        th:attr="data-page=${currentPage + 1}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
-                        onclick="navigateToPage(this)">다음</button>
-                <button th:disabled="${currentPage == totalPages}" 
-                        th:attr="data-page=${totalPages}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
-                        onclick="navigateToPage(this)">마지막</button>
-            </div>
+        <div class="status-filter-tabs">
+          <button
+            class="status-tab"
+            th:classappend="${statusFilter == null or statusFilter == '' ? 'active' : ''}"
+            onclick="filterByStatus('')"
+          >
+            전체보기
+            <span class="count" th:text="${totalCount}">0</span>
+          </button>
+          <button
+            class="status-tab"
+            th:classappend="${statusFilter == 'PLANNED' ? 'active' : ''}"
+            onclick="filterByStatus('PLANNED')"
+          >
+            예정된 세션
+            <span class="count" th:text="${plannedCount}">0</span>
+          </button>
+          <button
+            class="status-tab"
+            th:classappend="${statusFilter == 'RUNNING' ? 'active' : ''}"
+            onclick="filterByStatus('RUNNING')"
+          >
+            진행 중
+            <span class="count" th:text="${runningCount}">0</span>
+          </button>
+          <button
+            class="status-tab"
+            th:classappend="${statusFilter == 'ENDED' ? 'active' : ''}"
+            onclick="filterByStatus('ENDED')"
+          >
+            종료됨
+            <span class="count" th:text="${endedCount}">0</span>
+          </button>
         </div>
 
-        <div id="self-tab" class="tab-content">
-            <div class="quick-action-cards">
-                <div class="quick-card">
-                    <div class="quick-card-icon">🤖</div>
-                    <h3>AI 셀프 면접</h3>
-                    <p>직무 선택하고 AI가 맞춤 질문 자동 생성</p>
-                    <a href="/selfinterview/create-ai" class="btn btn-primary">AI로 시작하기</a>
-                </div>
-                <div class="quick-card">
-                    <div class="quick-card-icon">📊</div>
-                    <h3>내 연습 기록</h3>
-                    <p>지난 셀프 면접 결과 보기</p>
-                    <a href="/selfinterview/list" class="btn btn-secondary">보러가기</a>
-                </div>
-            </div>
+        <div class="search-container">
+          <form class="search-form" method="get" action="/session/list">
+            <input type="hidden" name="status" th:value="${statusFilter}" />
+            <input
+              type="text"
+              name="keyword"
+              class="search-input"
+              placeholder="세션 제목 또는 호스트명으로 검색"
+              th:value="${searchDTO?.keyword}"
+            />
+            <button type="submit" class="btn btn-primary">검색</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="resetSearch()"
+            >
+              초기화
+            </button>
+          </form>
         </div>
 
-        <div id="review-tab" class="tab-content">
-            <div class="quick-action-cards">
-                <div class="quick-card">
-                    <div class="quick-card-icon">📝</div>
-                    <h3>리뷰 가능한 세션</h3>
-                    <p>종료된 면접에 피드백 작성하기</p>
-                    <a href="/review/list" class="btn btn-primary">리뷰하러 가기</a>
-                </div>
-                <div class="quick-card">
-                    <div class="quick-card-icon">⭐</div>
-                    <h3>내가 작성한 리뷰</h3>
-                    <p>내가 남긴 피드백 보기</p>
-                    <a href="/review/my" class="btn btn-secondary">확인하기</a>
-                </div>
+        <div
+          class="session-grid"
+          th:if="${sessions != null and !sessions.empty}"
+        >
+          <div
+            th:each="sessionItem : ${sessions}"
+            class="session-card"
+            th:if="${sessionItem != null}"
+          >
+            <div class="session-header">
+              <h3 th:text="${sessionItem.title}">모의면접 세션</h3>
+              <div class="session-meta">
+                <span
+                  class="badge"
+                  th:classappend="${sessionItem.sessionStatus == 'RUNNING' ? 'badge-live' : (sessionItem.sessionStatus == 'ENDED' ? 'badge-ended' : 'badge-waiting')}"
+                  th:text="${sessionItem.sessionStatus}"
+                  >PLANNED</span
+                >
+                <span class="badge">🖥️ 화상면접</span>
+              </div>
             </div>
+
+            <p
+              th:if="${sessionItem != null and sessionItem.description != null and !sessionItem.description.isEmpty()}"
+              class="session-description"
+              th:text="${sessionItem.description}"
+            >
+              세션 설명
+            </p>
+
+            <div
+              class="session-meta"
+              th:if="${sessionItem != null and sessionItem.host != null}"
+            >
+              <span
+                >호스트:
+                <span th:text="${sessionItem.host.name}">호스트명</span></span
+              >
+              <span
+                th:if="${sessionItem.sessionStatus == 'PLANNED' and sessionItem.startTime != null}"
+                class="scheduled-time"
+              >
+                ⏰ [[${#temporals.format(sessionItem.startTime, 'MM/dd
+                HH:mm')}]] 시작 예정
+              </span>
+            </div>
+
+            <div style="margin-top: 1rem">
+              <a
+                th:if="${currentUser != null and currentUser.role != null and currentUser.role.name() == 'HOST'}"
+                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='HOST')}"
+                class="btn btn-success"
+              >
+                면접관으로 참가
+              </a>
+              <a
+                th:if="${currentUser != null and currentUser.role != null and currentUser.role.name() == 'STUDENT' and sessionItem.sessionStatus != 'ENDED'}"
+                th:href="@{/session/{id}/join(id=${sessionItem.id}, role='STUDENT')}"
+                class="btn btn-primary"
+              >
+                학생으로 참가
+              </a>
+            </div>
+          </div>
         </div>
+
+        <div th:if="${sessions == null or sessions.empty}" class="empty-state">
+          <h3>현재 조건에 맞는 세션이 없습니다</h3>
+          <p>다른 필터를 선택하거나 새로운 세션을 생성해주세요.</p>
+        </div>
+
+        <div class="pagination" th:if="${totalPages > 1}">
+          <button
+            th:disabled="${currentPage == 1}"
+            data-page="1"
+            th:attr="data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
+            onclick="navigateToPage(this)"
+          >
+            처음
+          </button>
+          <button
+            th:disabled="${currentPage == 1}"
+            th:attr="data-page=${currentPage - 1}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
+            onclick="navigateToPage(this)"
+          >
+            이전
+          </button>
+
+          <div class="page-numbers">
+            <button
+              th:each="i : ${#numbers.sequence(startPage, endPage)}"
+              th:classappend="${i == currentPage ? 'active' : ''}"
+              th:attr="data-page=${i}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
+              onclick="navigateToPage(this)"
+              th:text="${i}"
+            >
+              1
+            </button>
+          </div>
+
+          <button
+            th:disabled="${currentPage == totalPages}"
+            th:attr="data-page=${currentPage + 1}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
+            onclick="navigateToPage(this)"
+          >
+            다음
+          </button>
+          <button
+            th:disabled="${currentPage == totalPages}"
+            th:attr="data-page=${totalPages}, data-status=${statusFilter ?: ''}, data-keyword=${keyword ?: ''}"
+            onclick="navigateToPage(this)"
+          >
+            마지막
+          </button>
+        </div>
+      </div>
+
+      <div id="self-tab" class="tab-content">
+        <div class="quick-action-cards">
+          <div class="quick-card">
+            <div class="quick-card-icon">🤖</div>
+            <h3>AI 셀프 면접</h3>
+            <p>직무 선택하고 AI가 맞춤 질문 자동 생성</p>
+            <a href="/selfinterview/create-ai" class="btn btn-primary"
+              >AI로 시작하기</a
+            >
+          </div>
+          <div class="quick-card">
+            <div class="quick-card-icon">📊</div>
+            <h3>내 연습 기록</h3>
+            <p>지난 셀프 면접 결과 보기</p>
+            <a href="/selfinterview/list" class="btn btn-secondary">보러가기</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="review-tab" class="tab-content">
+        <div class="quick-action-cards">
+          <div class="quick-card">
+            <div class="quick-card-icon">📝</div>
+            <h3>리뷰 가능한 세션</h3>
+            <p>종료된 면접에 피드백 작성하기</p>
+            <a href="/review/list" class="btn btn-primary">리뷰하러 가기</a>
+          </div>
+          <div class="quick-card">
+            <div class="quick-card-icon">⭐</div>
+            <h3>내가 작성한 리뷰</h3>
+            <p>내가 남긴 피드백 보기</p>
+            <a href="/review/my" class="btn btn-secondary">확인하기</a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="sessionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>새 세션 생성</h2>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="createSessionForm">
-                    <div class="form-group">
-                        <label for="sessionTitle">세션 제목 <span style="color: #ef4444;">*</span></label>
-                        <input type="text" id="sessionTitle" name="title" class="form-control" placeholder="예: 신입 개발자 모의면접" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="sessionDescription">세션 설명 <span style="color: #9ca3af; font-size: 0.875rem;">(선택)</span></label>
-                        <textarea id="sessionDescription" name="description" class="form-control" rows="3" placeholder="면접 진행 방식, 준비사항 등을 간단히 작성하세요"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>면접 방식</label>
-                        <div class="interview-mode-options">
-                            <label class="mode-option-card active">
-                                <input type="radio" name="sessionType" value="VIDEO" checked>
-                                <div class="mode-icon">🖥️</div>
-                                <div class="mode-title">화상 면접</div>
-                                <div class="mode-desc">실시간 화상으로 진행</div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="scheduledStartTime">시작 예정 시간 <span style="color: #9ca3af; font-size: 0.875rem;">(선택)</span></label>
-                        <input type="datetime-local" id="scheduledStartTime" name="scheduledStartTime" class="form-control">
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">생성하기</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeModal()">취소</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>새 세션 생성</h2>
+          <button class="close-modal" onclick="closeModal()">&times;</button>
         </div>
+        <div class="modal-body">
+          <form id="createSessionForm">
+            <div class="form-group">
+              <label for="sessionTitle"
+                >세션 제목 <span style="color: #ef4444">*</span></label
+              >
+              <input
+                type="text"
+                id="sessionTitle"
+                name="title"
+                class="form-control"
+                placeholder="예: 신입 개발자 모의면접"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="sessionDescription"
+                >세션 설명
+                <span style="color: #9ca3af; font-size: 0.875rem"
+                  >(선택)</span
+                ></label
+              >
+              <textarea
+                id="sessionDescription"
+                name="description"
+                class="form-control"
+                rows="3"
+                placeholder="면접 진행 방식, 준비사항 등을 간단히 작성하세요"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>면접 방식</label>
+              <div class="interview-mode-options">
+                <label class="mode-option-card active">
+                  <input
+                    type="radio"
+                    name="sessionType"
+                    value="VIDEO"
+                    checked
+                  />
+                  <div class="mode-icon">🖥️</div>
+                  <div class="mode-title">화상 면접</div>
+                  <div class="mode-desc">실시간 화상으로 진행</div>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="scheduledStartTime"
+                >시작 예정 시간
+                <span style="color: #9ca3af; font-size: 0.875rem"
+                  >(선택)</span
+                ></label
+              >
+              <input
+                type="datetime-local"
+                id="scheduledStartTime"
+                name="scheduledStartTime"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">생성하기</button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeModal()"
+              >
+                취소
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
     <script>
-        function toggleMenu() {
-            const hamburger = document.querySelector('.hamburger');
-            const navbarNav = document.querySelector('.navbar-nav');
-            hamburger.classList.toggle('active');
-            navbarNav.classList.toggle('active');
+      function toggleMenu() {
+        const hamburger = document.querySelector(".hamburger");
+        const navbarNav = document.querySelector(".navbar-nav");
+        hamburger.classList.toggle("active");
+        navbarNav.classList.toggle("active");
+      }
+
+      function switchTab(tabName, event) {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((content) => content.classList.remove("active"));
+        event.target.classList.add("active");
+        document.getElementById(tabName + "-tab").classList.add("active");
+      }
+
+      function filterByStatus(status) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("page");
+        if (status) {
+          url.searchParams.set("status", status);
+        } else {
+          url.searchParams.delete("status");
         }
+        window.location.href = url.toString();
+      }
 
-        function switchTab(tabName, event) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById(tabName + '-tab').classList.add('active');
-        }
+      function navigateToPage(button) {
+        const page = button.getAttribute("data-page");
+        const status = button.getAttribute("data-status") || "";
+        const keyword = button.getAttribute("data-keyword") || "";
+        window.location.href = `/session/list?page=${page}&status=${status}&keyword=${keyword}`;
+      }
 
-        function filterByStatus(status) {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('page');
-            if (status) {
-                url.searchParams.set('status', status);
-            } else {
-                url.searchParams.delete('status');
-            }
-            window.location.href = url.toString();
-        }
+      function createNewSession() {
+        checkSessionLimitBeforeCreate();
+      }
 
-        function navigateToPage(button) {
-            const page = button.getAttribute('data-page');
-            const status = button.getAttribute('data-status') || '';
-            const keyword = button.getAttribute('data-keyword') || '';
-            window.location.href = `/session/list?page=${page}&status=${status}&keyword=${keyword}`;
-        }
+      function closeModal() {
+        document.getElementById("sessionModal").style.display = "none";
+      }
 
-        function createNewSession() {
-            checkSessionLimitBeforeCreate();
-        }
+      function resetSearch() {
+        window.location.href = "/session/list";
+      }
 
-        function closeModal() {
-            document.getElementById('sessionModal').style.display = 'none';
-        }
-
-        function resetSearch() {
-            window.location.href = '/session/list';
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.mode-option-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    document.querySelectorAll('.mode-option-card').forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    this.querySelector('input').checked = true;
-                });
-            });
-
-            document.getElementById('createSessionForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const title = document.getElementById('sessionTitle').value;
-                const sessionType = document.querySelector('input[name="sessionType"]:checked').value;
-                const scheduledStartTime = document.getElementById('scheduledStartTime').value;
-
-                if (title.trim()) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '/session/create';
-
-                    const titleInput = document.createElement('input');
-                    titleInput.type = 'hidden';
-                    titleInput.name = 'title';
-                    titleInput.value = title.trim();
-                    form.appendChild(titleInput);
-
-                    const typeInput = document.createElement('input');
-                    typeInput.type = 'hidden';
-                    typeInput.name = 'sessionType';
-                    typeInput.value = sessionType;
-                    form.appendChild(typeInput);
-
-                    if (scheduledStartTime) {
-                        const timeInput = document.createElement('input');
-                        timeInput.type = 'hidden';
-                        timeInput.name = 'scheduledStartTime';
-                        timeInput.value = scheduledStartTime;
-                        form.appendChild(timeInput);
-                    }
-
-                    document.body.appendChild(form);
-                    form.submit();
-                } else {
-                    alert('세션 제목을 입력해주세요!');
-                }
-            });
-
-            window.onclick = function(event) {
-                const modal = document.getElementById('sessionModal');
-                if (event.target === modal) {
-                    closeModal();
-                }
-            };
+      document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".mode-option-card").forEach((card) => {
+          card.addEventListener("click", function () {
+            document
+              .querySelectorAll(".mode-option-card")
+              .forEach((c) => c.classList.remove("active"));
+            this.classList.add("active");
+            this.querySelector("input").checked = true;
+          });
         });
+
+        document
+          .getElementById("createSessionForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            const title = document.getElementById("sessionTitle").value;
+            const sessionType = document.querySelector(
+              'input[name="sessionType"]:checked'
+            ).value;
+            const scheduledStartTime =
+              document.getElementById("scheduledStartTime").value;
+
+            if (title.trim()) {
+              const form = document.createElement("form");
+              form.method = "POST";
+              form.action = "/session/create";
+
+              const titleInput = document.createElement("input");
+              titleInput.type = "hidden";
+              titleInput.name = "title";
+              titleInput.value = title.trim();
+              form.appendChild(titleInput);
+
+              const typeInput = document.createElement("input");
+              typeInput.type = "hidden";
+              typeInput.name = "sessionType";
+              typeInput.value = sessionType;
+              form.appendChild(typeInput);
+
+              if (scheduledStartTime) {
+                const timeInput = document.createElement("input");
+                timeInput.type = "hidden";
+                timeInput.name = "scheduledStartTime";
+                timeInput.value = scheduledStartTime;
+                form.appendChild(timeInput);
+              }
+
+              document.body.appendChild(form);
+              form.submit();
+            } else {
+              alert("세션 제목을 입력해주세요!");
+            }
+          });
+
+        window.onclick = function (event) {
+          const modal = document.getElementById("sessionModal");
+          if (event.target === modal) {
+            closeModal();
+          }
+        };
+      });
     </script>
     <script src="/js/session-limit-check.js"></script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>

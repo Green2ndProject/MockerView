@@ -1,520 +1,561 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <div th:replace="~{fragments/head :: head}"></div>
     <title>셀프 면접 시작 - MockerView</title>
-    <link rel="stylesheet" href="/css/session-limit-modal.css">
+    <link rel="stylesheet" href="/css/session-limit-modal.css" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #f8f9fa;
-            color: #212529;
-            line-height: 1.6;
-        }
-        
-        .navbar {
-            background: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        
-        .navbar-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 64px;
-        }
-        
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background: #f8f9fa;
+        color: #212529;
+        line-height: 1.6;
+      }
+
+      .navbar {
+        background: white;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      .navbar-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px;
+      }
+
+      .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+        text-decoration: none;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .nav-link {
+        color: #495057;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+
+      .nav-link:hover {
+        color: #667eea;
+      }
+
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
+        padding: 8px;
+      }
+
+      .hamburger span {
+        width: 24px;
+        height: 2px;
+        background: #667eea;
+        transition: all 0.3s;
+        border-radius: 2px;
+      }
+
+      .hamburger.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+      }
+
+      .hamburger.active span:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -6px);
+      }
+
+      .page-header {
+        margin-top: 64px;
+        padding: 3rem 0 2rem;
+        background: #667eea;
+        color: white;
+      }
+
+      .page-title h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .page-title p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .create-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+      }
+
+      .create-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .info-box {
+        background: #f0f3ff;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        border-left: 4px solid #667eea;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .info-box::before {
+        content: "💡";
+        font-size: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #212529;
+      }
+
+      .tooltip-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        font-size: 12px;
+        cursor: help;
+        position: relative;
+      }
+
+      .tooltip-icon:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        white-space: nowrap;
+        font-size: 12px;
+        margin-bottom: 8px;
+        z-index: 10;
+      }
+
+      .tooltip-icon:hover::before {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #333;
+        margin-bottom: 2px;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      select.form-control {
+        cursor: pointer;
+        background: white;
+      }
+
+      .interview-mode-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 0.5rem;
+      }
+
+      .mode-option-card {
+        padding: 1.25rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mode-option-card:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+        transform: translateY(-2px);
+      }
+
+      .mode-option-card.active {
+        border-color: #667eea;
+        background: #f0f3ff;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      }
+
+      .mode-option-card input[type="radio"] {
+        display: none;
+      }
+
+      .mode-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        line-height: 1;
+      }
+
+      .mode-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #212529;
+        margin-bottom: 0.35rem;
+        line-height: 1.3;
+      }
+
+      .mode-desc {
+        font-size: 0.8rem;
+        color: #6c757d;
+        line-height: 1.3;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+
+      .btn {
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+        flex: 1;
+      }
+
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+      }
+
+      @media (max-width: 768px) {
         .navbar-nav {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
+          position: fixed;
+          top: 64px;
+          left: 0;
+          right: 0;
+          background: white;
+          flex-direction: column;
+          gap: 0;
+          padding: 1rem 0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          transform: translateY(-100%);
+          opacity: 0;
+          transition: all 0.3s;
+          pointer-events: none;
         }
-        
+
+        .navbar-nav.active {
+          transform: translateY(0);
+          opacity: 1;
+          pointer-events: all;
+        }
+
         .nav-link {
-            color: #495057;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
+          padding: 0.75rem 1rem;
+          width: 100%;
+          text-align: center;
         }
-        
-        .nav-link:hover {
-            color: #667eea;
-        }
-        
+
         .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            cursor: pointer;
-            padding: 8px;
+          display: flex;
         }
-        
-        .hamburger span {
-            width: 24px;
-            height: 2px;
-            background: #667eea;
-            transition: all 0.3s;
-            border-radius: 2px;
-        }
-        
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(5px, 5px);
-        }
-        
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -6px);
-        }
-        
+
         .page-header {
-            margin-top: 64px;
-            padding: 3rem 0 2rem;
-            background: #667eea;
-            color: white;
+          padding: 2rem 0 1.5rem;
         }
-        
+
         .page-title h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+          font-size: 1.5rem;
         }
-        
+
         .page-title p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+          font-size: 0.95rem;
         }
-        
+
         .create-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
+          margin: 1rem auto;
+          padding: 1rem;
         }
-        
+
         .create-card {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+          padding: 1.5rem;
         }
-        
-        .info-box {
-            background: #f0f3ff;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            border-left: 4px solid #667eea;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .info-box::before {
-            content: "💡";
-            font-size: 1.5rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #212529;
-        }
-        
-        .tooltip-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 18px;
-            height: 18px;
-            background: #667eea;
-            color: white;
-            border-radius: 50%;
-            font-size: 12px;
-            cursor: help;
-            position: relative;
-        }
-        
-        .tooltip-icon:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            white-space: nowrap;
-            font-size: 12px;
-            margin-bottom: 8px;
-            z-index: 10;
-        }
-        
-        .tooltip-icon:hover::before {
-            content: "";
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 6px solid transparent;
-            border-top-color: #333;
-            margin-bottom: 2px;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        select.form-control {
-            cursor: pointer;
-            background: white;
-        }
-        
+
         .interview-mode-options {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 0.5rem;
+          grid-template-columns: 1fr;
         }
-        
-        .mode-option-card {
-            padding: 1.25rem 1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .mode-option-card:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-            transform: translateY(-2px);
-        }
-        
-        .mode-option-card.active {
-            border-color: #667eea;
-            background: #f0f3ff;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-        }
-        
-        .mode-option-card input[type="radio"] {
-            display: none;
-        }
-        
-        .mode-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-            line-height: 1;
-        }
-        
-        .mode-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: #212529;
-            margin-bottom: 0.35rem;
-            line-height: 1.3;
-        }
-        
-        .mode-desc {
-            font-size: 0.8rem;
-            color: #6c757d;
-            line-height: 1.3;
-        }
-        
+
         .btn-group {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
+          flex-direction: column;
         }
-        
-        .btn {
-            padding: 0.875rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            flex: 1;
-        }
-        
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        @media (max-width: 768px) {
-            .navbar-nav {
-                position: fixed;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background: white;
-                flex-direction: column;
-                gap: 0;
-                padding: 1rem 0;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                transform: translateY(-100%);
-                opacity: 0;
-                transition: all 0.3s;
-                pointer-events: none;
-            }
-            
-            .navbar-nav.active {
-                transform: translateY(0);
-                opacity: 1;
-                pointer-events: all;
-            }
-            
-            .nav-link {
-                padding: 0.75rem 1rem;
-                width: 100%;
-                text-align: center;
-            }
-            
-            .hamburger {
-                display: flex;
-            }
-            
-            .page-header {
-                padding: 2rem 0 1.5rem;
-            }
-            
-            .page-title h1 {
-                font-size: 1.5rem;
-            }
-            
-            .page-title p {
-                font-size: 0.95rem;
-            }
-            
-            .create-container {
-                margin: 1rem auto;
-                padding: 1rem;
-            }
-            
-            .create-card {
-                padding: 1.5rem;
-            }
-            
-            .interview-mode-options {
-                grid-template-columns: 1fr;
-            }
-            
-            .btn-group {
-                flex-direction: column;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-content">
-                <a class="navbar-brand" href="/session/list">Mockerview</a>
-                <div class="hamburger" onclick="toggleMenu()">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="navbar-nav">
-                    <a class="nav-link" href="/session/list">세션 관리</a>
-                    <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
-                    <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
-                </div>
-            </div>
+    <div th:replace="~{fragments/styles :: styles}"></div>
+  </head>
+  <body>
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+    <!-- <nav class="navbar">
+      <div class="container">
+        <div class="navbar-content">
+          <a class="navbar-brand" href="/session/list">Mockerview</a>
+          <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="navbar-nav">
+            <a class="nav-link" href="/session/list">세션 관리</a>
+            <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
+            <a class="nav-link" th:href="@{/auth/logout}">로그아웃</a>
+          </div>
         </div>
-    </nav>
+      </div>
+    </nav> -->
 
     <div class="page-header">
-        <div class="container">
-            <div class="page-title">
-                <h1>셀프 면접 시작</h1>
-                <p>AI와 함께하는 1:1 모의면접</p>
-            </div>
+      <div class="container">
+        <div class="page-title">
+          <h1>셀프 면접 시작</h1>
+          <p>AI와 함께하는 1:1 모의면접</p>
         </div>
+      </div>
     </div>
 
     <div class="container create-container">
-        <div class="create-card">
-            <div class="info-box">
-                AI가 자동으로 질문을 생성하고 답변에 대한 피드백을 제공합니다
-            </div>
-
-            <form id="createForm">
-                <div class="form-group">
-                    <label for="title">
-                        면접 제목
-                        <span class="tooltip-icon" data-tooltip="면접 내용을 구분할 제목을 입력하세요">?</span>
-                    </label>
-                    <input type="text" id="title" name="title" class="form-control" 
-                        placeholder="예: 신입 개발자 기술면접 연습" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="questionCount">
-                        질문 개수
-                        <span class="tooltip-icon" data-tooltip="AI가 생성할 질문의 총 개수입니다">?</span>
-                    </label>
-                    <select id="questionCount" name="questionCount" class="form-control" required>
-                        <option value="3">3개</option>
-                        <option value="5" selected>5개</option>
-                        <option value="7">7개</option>
-                        <option value="10">10개</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="difficulty">
-                        난이도
-                        <span class="tooltip-icon" data-tooltip="질문의 난이도를 선택하세요">?</span>
-                    </label>
-                    <select id="difficulty" name="difficulty" class="form-control" required>
-                        <option value="EASY">쉬움 ⭐</option>
-                        <option value="MEDIUM" selected>보통 ⭐⭐</option>
-                        <option value="HARD">어려움 ⭐⭐⭐</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="category">
-                        카테고리
-                        <span class="tooltip-icon" data-tooltip="면접 유형을 선택하세요">?</span>
-                    </label>
-                    <select id="category" name="category" class="form-control" required>
-                        <option value="TECHNICAL">기술면접</option>
-                        <option value="PERSONALITY">인성면접</option>
-                        <option value="PROJECT">프로젝트 경험</option>
-                        <option value="SITUATION">상황 대처</option>
-                        <option value="GENERAL" selected>일반 질문</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        면접 방식
-                        <span class="tooltip-icon" data-tooltip="텍스트, 음성, 화상 중 선택하세요">?</span>
-                    </label>
-                    <div class="interview-mode-options">
-                        <label class="mode-option-card active">
-                            <input type="radio" name="sessionType" value="TEXT" checked>
-                            <div class="mode-icon">✏️</div>
-                            <div class="mode-title">텍스트 면접</div>
-                            <div class="mode-desc">글로만 면접 진행</div>
-                        </label>
-                        <label class="mode-option-card">
-                            <input type="radio" name="sessionType" value="AUDIO">
-                            <div class="mode-icon">🎤</div>
-                            <div class="mode-title">음성 면접</div>
-                            <div class="mode-desc">목소리로 대화</div>
-                        </label>
-                        <label class="mode-option-card">
-                            <input type="radio" name="sessionType" value="VIDEO">
-                            <div class="mode-icon">🖥️</div>
-                            <div class="mode-title">화상 면접</div>
-                            <div class="mode-desc">얼굴 보며 면접</div>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">면접 시작</button>
-                    <a href="/session/list" class="btn btn-secondary">취소</a>
-                </div>
-            </form>
+      <div class="create-card">
+        <div class="info-box">
+          AI가 자동으로 질문을 생성하고 답변에 대한 피드백을 제공합니다
         </div>
+
+        <form id="createForm">
+          <div class="form-group">
+            <label for="title">
+              면접 제목
+              <span
+                class="tooltip-icon"
+                data-tooltip="면접 내용을 구분할 제목을 입력하세요"
+                >?</span
+              >
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              class="form-control"
+              placeholder="예: 신입 개발자 기술면접 연습"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="questionCount">
+              질문 개수
+              <span
+                class="tooltip-icon"
+                data-tooltip="AI가 생성할 질문의 총 개수입니다"
+                >?</span
+              >
+            </label>
+            <select
+              id="questionCount"
+              name="questionCount"
+              class="form-control"
+              required
+            >
+              <option value="3">3개</option>
+              <option value="5" selected>5개</option>
+              <option value="7">7개</option>
+              <option value="10">10개</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="difficulty">
+              난이도
+              <span
+                class="tooltip-icon"
+                data-tooltip="질문의 난이도를 선택하세요"
+                >?</span
+              >
+            </label>
+            <select
+              id="difficulty"
+              name="difficulty"
+              class="form-control"
+              required
+            >
+              <option value="EASY">쉬움 ⭐</option>
+              <option value="MEDIUM" selected>보통 ⭐⭐</option>
+              <option value="HARD">어려움 ⭐⭐⭐</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="category">
+              카테고리
+              <span class="tooltip-icon" data-tooltip="면접 유형을 선택하세요"
+                >?</span
+              >
+            </label>
+            <select id="category" name="category" class="form-control" required>
+              <option value="TECHNICAL">기술면접</option>
+              <option value="PERSONALITY">인성면접</option>
+              <option value="PROJECT">프로젝트 경험</option>
+              <option value="SITUATION">상황 대처</option>
+              <option value="GENERAL" selected>일반 질문</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>
+              면접 방식
+              <span
+                class="tooltip-icon"
+                data-tooltip="텍스트, 음성, 화상 중 선택하세요"
+                >?</span
+              >
+            </label>
+            <div class="interview-mode-options">
+              <label class="mode-option-card active">
+                <input type="radio" name="sessionType" value="TEXT" checked />
+                <div class="mode-icon">✏️</div>
+                <div class="mode-title">텍스트 면접</div>
+                <div class="mode-desc">글로만 면접 진행</div>
+              </label>
+              <label class="mode-option-card">
+                <input type="radio" name="sessionType" value="AUDIO" />
+                <div class="mode-icon">🎤</div>
+                <div class="mode-title">음성 면접</div>
+                <div class="mode-desc">목소리로 대화</div>
+              </label>
+              <label class="mode-option-card">
+                <input type="radio" name="sessionType" value="VIDEO" />
+                <div class="mode-icon">🖥️</div>
+                <div class="mode-title">화상 면접</div>
+                <div class="mode-desc">얼굴 보며 면접</div>
+              </label>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn btn-primary">면접 시작</button>
+            <a href="/session/list" class="btn btn-secondary">취소</a>
+          </div>
+        </form>
+      </div>
     </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script src="/js/authFetch.js"></script>
     <script src="/js/self-interview-limit-check.js"></script>
     <script src="/js/selfinterview.js"></script>
     <script>
-        function toggleMenu() {
-            const hamburger = document.querySelector('.hamburger');
-            const navbarNav = document.querySelector('.navbar-nav');
-            hamburger.classList.toggle('active');
-            navbarNav.classList.toggle('active');
-        }
+      function toggleMenu() {
+        const hamburger = document.querySelector(".hamburger");
+        const navbarNav = document.querySelector(".navbar-nav");
+        hamburger.classList.toggle("active");
+        navbarNav.classList.toggle("active");
+      }
 
-        document.querySelectorAll('.mode-option-card').forEach(card => {
-            card.addEventListener('click', function() {
-                document.querySelectorAll('.mode-option-card').forEach(c => c.classList.remove('active'));
-                this.classList.add('active');
-                this.querySelector('input').checked = true;
-            });
+      document.querySelectorAll(".mode-option-card").forEach((card) => {
+        card.addEventListener("click", function () {
+          document
+            .querySelectorAll(".mode-option-card")
+            .forEach((c) => c.classList.remove("active"));
+          this.classList.add("active");
+          this.querySelector("input").checked = true;
         });
+      });
     </script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-</body>
+  </body>
 </html>
