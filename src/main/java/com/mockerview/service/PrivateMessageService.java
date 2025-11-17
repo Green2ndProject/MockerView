@@ -74,7 +74,7 @@ public class PrivateMessageService {
 
     public List<MessagePartnerResponse> getMessagePartnerWithUnreadCount(String currentUsername){
 
-        List<String> partnerUsernames = findMyAllPartners(currentUsername);
+        List<String> partnerUsernames = privateMessageRepository.findMyAllPartners(currentUsername);
 
         return partnerUsernames.stream()
                                 .map(partnerUsername -> {
@@ -98,11 +98,6 @@ public class PrivateMessageService {
                                 })
                                 .collect(Collectors.toList());
     }
-
-    // private List<String> findMyAllPartners(String currentUsername) {
-        
-    //     return privateMessageRepository.findByAllPartners(currentUsername)
-    // }
     
 
 }
