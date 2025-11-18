@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,10 +40,14 @@ public class PrivateMessageRestController {
        return ResponseEntity.ok(history);
     }
 
-    @PutMapping("path/{id}")
-    public String putMethodName(@PathVariable String id, @RequestBody String entity) {
-        //TODO: process PUT request
+    // 메시지 읽음 표시
+    @PutMapping("/read/{partnerUsername}")
+    public ResponseEntity<Void> markAsRead(
+            @PathVariable String partnerUsername, 
+            @AuthenticationPrincipal String currentUsername) {
         
-        return entity;
+        privateMessageService.markMessageAsRead(currentUsername, partnerUsername);
+
+        return ResponseEntity.ok().build();
     }
 }

@@ -102,9 +102,10 @@ public class PrivateMessageService {
 
     public void markMessageAsRead(String currentUsername, String partnerUsername){
 
-        PrivateMessage lastMessage = privateMessageRepository.findTopBySenderUsernameAndReceiverUsernameOrReceiverUsernameAndSenderUsernameOrderByIdDesc(
-            currentUsername, partnerUsername, currentUsername, partnerUsername
-        ).orElse(null);
+        PrivateMessage lastMessage = 
+            privateMessageRepository.findTopLatestMessage(
+                currentUsername, partnerUsername
+            ).orElse(null);
 
         if(lastMessage == null){
 

@@ -15,29 +15,51 @@
 
     
 
-    getTokenFromCookie(){
-        const cookies = document.cookie.split(';');
-        for(let cookie of cookies){
-            const [name, value] = cookie.trim().split('=');
-            if(name === 'Authorization') return value;
-        }
+    async getTokenFromCookie(){
+        
+        const URI_TOKEN = '/api/auth/gettoken';
 
-        return null;
+        try{
+            const response = await fetch(URI_TOKEN, {
+                method: 'GET',
+                headers: {
+                    'Content-Type':'application/json'
+                }
+            });
+
+            if(!response.ok){
+                throw new Error('인증 토큰을 가져오는데 실패했습니다.');
+            }
+
+            const data = await response.json();
+
+            return data.Authorization;
+
+        }catch(error){
+
+            console.error('WebSocket 토큰 획득 오류 : ', error);
+            return null;
+        }
     }
 
-    connect(){
+    async connect(){
 
-        const token = this.getTokenFromCookie();
+        const token = await this.getTokenFromCookie();
+
         if(!token){
             console.error('❌ 토큰 없음. 1:1 채팅 연결 실패.');
             return;
+        }
+
+        const headers = {
+            'Authorization':`Bearer ${token}`
         }
 
         const socket = new SockJS("/ws");
         this.stompClient = Stomp.over(socket);
         this.stompClient.debug = null;
 
-        this.stompClient.connect({}, (frame)=> {
+        this.stompClient.connect(headers, (frame)=> {
             console.log("✅ [PrivateMessage] STOMP 연결 성공");
             this.connected = true;
             this.subscribePrivateQueue();
@@ -55,6 +77,14 @@
             if(typeof this.onMessageReceived === 'function'){
                 this.onMessageReceived(privateMessage);
             }
+        });
+
+        this.stompClient.subscribe('/user/queue/messagelist-update', (message) => {
+            console.log('✅ [ChatList Update] 채팅 목록 갱신 신호 수신');
+
+            const readerUsername = JSON.parse(message.body);
+
+            clearLocalUnreadBadge(readerUsername);
         });
 
         console.log('✅ [PrivateMessage] 개인 큐 구독 완료: /user/queue/messages');
@@ -154,6 +184,26 @@ async function openMessageWindow(targetUsername){
         messageHistory.innerHTML = '<div class="error-message">메시지 내역을 불러오는데 실패했습니다.</div>';
     }
 
+    try{
+        const response = await fetch(`/api/private/messages/read/${targetUsername}`, {
+            method : 'PUT',    
+            headers: {'Content-Type' : 'application/json'},
+            credentials: "include"        
+        });
+
+        if(response.ok){
+            
+            console.log(`[Read Status] ${targetUsername}과의 대화를 읽음 처리 완료`);
+
+            clearLocalUnreadBadge(targetUsername);
+        }else{
+            console.error(`[Read Status] 서버 응답 오류 : `, response.status);
+        }
+
+    }catch(error){
+        console.error("🚫 메시지 읽음 처리 실패 : ",error);
+    }
+
     //clearMessageDisplay();
 
     //messageHistory.forEach(msg => {
@@ -163,6 +213,16 @@ async function openMessageWindow(targetUsername){
 
     if(!window.privateMessageWsClient.connected){
         window.privateMessageWsClient.connect();
+    }
+
+}
+
+function clearLocalUnreadBadge(partnerUsername){
+    const badgeElement = document.getElementById(`unread-badge-${partnerUsername}`);
+
+    if(badgeElement){
+        badgeElement.textContent = '0';
+        badgeElement.style.display = 'none';
     }
 
 }
