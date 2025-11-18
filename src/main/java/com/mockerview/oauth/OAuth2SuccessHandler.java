@@ -87,6 +87,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         response.addCookie(refreshCookie);
         
         log.info("✅ OAuth2 로그인 완료: {}. Access: 7일, Refresh: 30일", username);
-        response.sendRedirect("/");
+        response.sendRedirect("/session/list");
     }
 }
