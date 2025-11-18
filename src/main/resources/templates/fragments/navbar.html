@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
   <body>
     <nav th:fragment="navbar" class="navbar">
+    <style th:replace="~{fragments/chat-widget-css::chat-widget-css}"></style>
+    
       <div class="nav-container">
         <a href="/" class="logo">MockerView</a>
         <button
@@ -27,6 +29,8 @@
         </div>
       </div>
       <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+
+        <script th:replace="~{fragments/chat-widget-scripts::chat-widget-scripts}"></script>
     </nav>
   </body>
 </html>

@@ -1,6 +1,7 @@
 package com.mockerview.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -97,6 +98,40 @@ public class PrivateMessageService {
                                     .build();
                                 })
                                 .collect(Collectors.toList());
+    }
+
+    public void markMessageAsRead(String currentUsername, String partnerUsername){
+
+        PrivateMessage lastMessage = privateMessageRepository.findTopBySenderUsernameAndReceiverUsernameOrReceiverUsernameAndSenderUsernameOrderByIdDesc(
+            currentUsername, partnerUsername, currentUsername, partnerUsername
+        ).orElse(null);
+
+        if(lastMessage == null){
+
+            return;
+        }
+
+        Long latestMessageId = lastMessage.getId();
+
+        PrivateMessageStatus status = 
+            messageStatusRepository.findByUserUsernameAndPartnerUsername(currentUsername, partnerUsername)
+                .orElseGet(() -> PrivateMessageStatus.builder()
+                                    .userUsername(currentUsername)
+                                    .partnerUsername(partnerUsername)
+                                    .build());
+
+        if(status.getLastReadMessageId() >= latestMessageId){
+            return;
+        }          
+        
+        status.updateLastReadMessageId(latestMessageId);
+        messageStatusRepository.save(status);
+
+        messagingTemplate.convertAndSendToUser(
+            partnerUsername, 
+            "/queue/messagelist-update", 
+            currentUsername);
+
     }
     
 

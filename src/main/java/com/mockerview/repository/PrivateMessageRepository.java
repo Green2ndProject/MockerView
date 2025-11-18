@@ -25,4 +25,7 @@ public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, 
            "UNION " + 
            "SELECT DISTINCT p.receiverUsername FROM PrivateMessage p WHERE p.senderUsername = :username")
     List<String> findMyAllPartners(String username);
+
+    Optional<PrivateMessage> findTopBySenderUsernameAndReceiverUsernameOrReceiverUsernameAndSenderUsernameOrderByIdDesc(
+            String sender1, String receiver1, String sender2, String receiver2);
 }

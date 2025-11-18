@@ -14,6 +14,9 @@ import com.mockerview.service.PrivateMessageService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @Slf4j
@@ -34,5 +37,12 @@ public class PrivateMessageRestController {
        List<PrivateMessageResponse> history = privateMessageService.getMessageHistory(myUsername, targetUsername);
        
        return ResponseEntity.ok(history);
+    }
+
+    @PutMapping("path/{id}")
+    public String putMethodName(@PathVariable String id, @RequestBody String entity) {
+        //TODO: process PUT request
+        
+        return entity;
     }
 }

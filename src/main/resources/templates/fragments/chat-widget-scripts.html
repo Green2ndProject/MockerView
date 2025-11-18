@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<script th:fragment="chat-widget-scripts">
 
     class PrivateMessageWebsocket {
 
@@ -320,6 +325,7 @@ function handleSearchResults(users){
 
     users.forEach(user => {
         const item = createCandidateItem(user);
+        
         candidateList.appendChild(item);
     });
 }
@@ -446,3 +452,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
     }
 });
 
+
+</script>
+
+</body>
+</html>

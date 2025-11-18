@@ -4,7 +4,6 @@
     <div th:replace="~{fragments/head :: head}"></div>
     <title>세션 목록 - MockerView</title>
     <link rel="stylesheet" href="/css/session-limit-modal.css" />
-    <link rel="stylesheet" href="/css/chat-widget.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <div th:replace="~{fragments/styles :: styles}"></div>
@@ -1078,14 +1077,11 @@
       </div>
     </div>
 
-<<<<<<< HEAD
-    <div th:replace="fragments/chat-widget :: messageWidget"></div>
-    <div th:replace="fragments/chat-widget :: messageWidgetBtn"></div>
-    
-=======
+    <div th:replace="~{fragments/chat-widget :: messageWidget}"></div>
+    <button th:replace="~{fragments/chat-widget :: messageWidgetBtn}"></button>
+
     <div th:replace="~{fragments/footer :: footer}"></div>
     <div th:replace="~{fragments/scripts :: scripts}"></div>
->>>>>>> 52bd66d34655cd30e588821a2d8b63bebd8b47f2
     <script>
       function toggleMenu() {
         const hamburger = document.querySelector(".hamburger");
@@ -1200,11 +1196,5 @@
     <script src="/js/session-limit-check.js"></script>
     <script src="/js/push-init.js"></script>
     <script src="/js/push-notifications.js"></script>
-<<<<<<< HEAD
-    <script src="/js/chat-widget.js"></script>
-</body>
-</html>
-=======
   </body>
 </html>
->>>>>>> 52bd66d34655cd30e588821a2d8b63bebd8b47f2

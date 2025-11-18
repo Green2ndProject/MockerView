@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<style th:fragment="chat-widget-css">
+    .chat-toggle-btn{
+    position         : fixed;
+    bottom           : 20px;
+    right            : 20px;
+    width            : 60px;
+    height           : 60px;
+    border-radius    : 50%;
+    background-color : #3f51b5;
+    color            : white;
+    font-size        : 2rem;
+    border           : none;
+    box-shadow       : 0 4px 12px rgba(0,0,0,0.2);
+    cursor           : pointer;
+    z-index          : 1001;
+    transition : opacity 0.3s ease-in-out;
+}
+
+.chat-toggle-btn.hidden-by-widget {
+    opacity: 0;
+    visibility: hidden;
+    z-index: 0;
+}
+
+.unread-badge {
+    position         : absolute;
+    top              : -5px;
+    right            : -5px;
+    background-color : #f44336;
+    color            : white;
+    border-radius    : 50%;
+    padding          : 3px 6px;
+    font-size        : 12px;
+    font-weight      : bold;
+    display          : flex;
+    align-items      : center;
+    justify-content  : center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.chat-widget-container {
+    position   : fixed;
+    bottom : 20px;
+    right : 20px;
+    width : 60px;
+    height : 60px;
+    box-shadow : none;
+    border-radius : 50%;
+    --open-width: 400px;
+    --open-height: 550px;
+    visibility: hidden;
+    opacity: 0;
+    transform : scale(0.95);
+    transform-origin : bottom right;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    background : white;
+    z-index    : 1000;
+    display    : flex;
+
+}
+
+.chat-widget-container.active {
+    bottom: 20px;
+    right: 20px;
+    width:var(--open-width);
+    height:var(--open-height);
+    border-radius: 10px;
+    visibility: visible;
+    opacity: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.chat-sidebar {
+    width : 35%;
+    min-width : 140px;
+    border-right : 1px solid #eee;
+}
+
+.chat-main {
+    width : 65%;
+    display : flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    display : flex;
+    justify-content : space-between;
+    align-items : center;
+    padding : 15px;
+    border-bottom: 1px solid #eee;
+}
+
+#message-history {
+    overflow : scroll;
+}
+
+
+</style>
+</head>
+</html>
