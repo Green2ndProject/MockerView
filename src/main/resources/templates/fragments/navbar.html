@@ -14,6 +14,13 @@
           <span class="hamburger-line"></span>
         </button>
         <div class="nav-links" id="navLinks">
+          <a
+            th:if="${users != null and users.UserRole == 'ADMIN'}"
+            href="/admin/dashboard"
+            class="nav-link"
+          >
+            관리자
+          </a>
           <a href="/session/list" class="nav-link">면접 세션</a>
           <a href="/selfinterview/list" class="nav-link">셀프 면접</a>
           <a href="/review/list" class="nav-link">리뷰</a>
