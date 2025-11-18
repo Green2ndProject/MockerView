@@ -35,51 +35,51 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
-public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) 
-        throws AuthenticationException {
-    
-    String username = null;
-    String password = null;
-    
-    String contentType = request.getContentType();
-    log.info("📝 Content-Type: {}", contentType);
-    
-    try {
-        if (contentType != null && contentType.contains("application/json")) {
-            String body = request.getReader().lines()
-                    .reduce("", (accumulator, actual) -> accumulator + actual);
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) 
+            throws AuthenticationException {
+        
+        String username = null;
+        String password = null;
+        
+        String contentType = request.getContentType();
+        log.info("📝 Content-Type: {}", contentType);
+        
+        try {
+            if (contentType != null && contentType.contains("application/json")) {
+                String body = request.getReader().lines()
+                        .reduce("", (accumulator, actual) -> accumulator + actual);
+                
+                log.info("✅ Raw JSON Body: {}", body);
+                
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, String> credentials = mapper.readValue(body, Map.class);
+                
+                username = credentials.get("username");
+                password = credentials.get("password");
+                
+                log.info("✅ JSON 파싱 성공 - username: {}", username);
+                
+            } else {
+                username = request.getParameter("username");
+                password = request.getParameter("password");
+                
+                log.info("✅ Form 파싱 성공 - username: {}", username);
+            }
             
-            log.info("✅ Raw JSON Body: {}", body);
+            if (username == null || password == null) {
+                throw new RuntimeException("Username or password is missing");
+            }
             
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, String> credentials = mapper.readValue(body, Map.class);
+            UsernamePasswordAuthenticationToken authToken = 
+                new UsernamePasswordAuthenticationToken(username, password, null);
             
-            username = credentials.get("username");
-            password = credentials.get("password");
+            return authenticationManager.authenticate(authToken);
             
-            log.info("✅ JSON 파싱 성공 - username: {}", username);
-            
-        } else {
-            username = request.getParameter("username");
-            password = request.getParameter("password");
-            
-            log.info("✅ Form 파싱 성공 - username: {}", username);
+        } catch (IOException e) {
+            log.error("❌ 파싱 실패", e);
+            throw new RuntimeException(e);
         }
-        
-        if (username == null || password == null) {
-            throw new RuntimeException("Username or password is missing");
-        }
-        
-        UsernamePasswordAuthenticationToken authToken = 
-            new UsernamePasswordAuthenticationToken(username, password, null);
-        
-        return authenticationManager.authenticate(authToken);
-        
-    } catch (IOException e) {
-        log.error("❌ 파싱 실패", e);
-        throw new RuntimeException(e);
     }
-}
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, 
@@ -93,18 +93,20 @@ public Authentication attemptAuthentication(HttpServletRequest request, HttpServ
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
         
-        String accessToken = jwtUtil.createJwt(username, role, 60 * 60 * 1000L);
+        String accessToken = jwtUtil.createJwt(username, role, 7 * 24 * 60 * 60 * 1000L);
         String refreshToken = refreshTokenService.createRefreshToken(username);
         
         Cookie accessCookie = new Cookie("Authorization", accessToken);
-        accessCookie.setMaxAge(60 * 60);
+        accessCookie.setMaxAge(7 * 24 * 60 * 60);
         accessCookie.setPath("/");
-        accessCookie.setHttpOnly(false);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(false);
         
         Cookie refreshCookie = new Cookie("RefreshToken", refreshToken);
         refreshCookie.setMaxAge(30 * 24 * 60 * 60);
         refreshCookie.setPath("/");
         refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false);
         
         response.addCookie(accessCookie);
         response.addCookie(refreshCookie);
@@ -112,7 +114,7 @@ public Authentication attemptAuthentication(HttpServletRequest request, HttpServ
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"success\":true,\"redirect\":\"/session/list\"}");
         
-        log.info("✅ Login successful - Access Token: 1h, Refresh Token: 30d");
+        log.info("✅ 로그인 성공 - {}. Access: 7일, Refresh: 30일", username);
     }
 
     @Override
@@ -124,5 +126,7 @@ public Authentication attemptAuthentication(HttpServletRequest request, HttpServ
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"success\":false,\"message\":\"로그인 실패\"}");
+        
+        log.warn("❌ 로그인 실패");
     }
 }

@@ -42,14 +42,25 @@ public class TokenRefreshController {
         
         if (refreshToken == null) {
             log.warn("⚠️ Refresh token not found in cookies");
-            return ResponseEntity.status(401).body("Refresh token missing");
+            return ResponseEntity.status(401).body("{\"success\":false,\"message\":\"Refresh token missing\"}");
         }
         
         Optional<RefreshToken> tokenOptional = refreshTokenService.validateRefreshToken(refreshToken);
         
         if (tokenOptional.isEmpty()) {
             log.warn("⚠️ Invalid or expired refresh token");
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            
+            Cookie deleteCookie = new Cookie("Authorization", null);
+            deleteCookie.setMaxAge(0);
+            deleteCookie.setPath("/");
+            response.addCookie(deleteCookie);
+            
+            Cookie deleteRefreshCookie = new Cookie("RefreshToken", null);
+            deleteRefreshCookie.setMaxAge(0);
+            deleteRefreshCookie.setPath("/");
+            response.addCookie(deleteRefreshCookie);
+            
+            return ResponseEntity.status(401).body("{\"success\":false,\"message\":\"Invalid refresh token\"}");
         }
         
         RefreshToken token = tokenOptional.get();
@@ -59,12 +70,13 @@ public class TokenRefreshController {
             .map(user -> user.getRole().toString())
             .orElse("ROLE_USER");
         
-        String newAccessToken = jwtUtil.createJwt(username, role, 60 * 60 * 1000L);
+        String newAccessToken = jwtUtil.createJwt(username, role, 7 * 24 * 60 * 60 * 1000L);
         
         Cookie accessCookie = new Cookie("Authorization", newAccessToken);
-        accessCookie.setMaxAge(60 * 60);
+        accessCookie.setMaxAge(7 * 24 * 60 * 60);
         accessCookie.setPath("/");
-        accessCookie.setHttpOnly(false);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(false);
         
         response.addCookie(accessCookie);
         

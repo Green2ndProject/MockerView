@@ -35,13 +35,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
         String username = oAuth2User.getUsername();
         
-        log.info("OAuth2 로그인 성공: {}", username);
+        log.info("🔐 OAuth2 로그인 시도: {}", username);
         
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         if (user.isDeleted()) {
-            log.warn("탈퇴한 사용자 OAuth2 로그인 시도: {}", username);
+            log.warn("❌ 탈퇴한 사용자 접근: {}", username);
             response.sendRedirect("/auth/login?error=deleted");
             return;
         }
@@ -50,7 +50,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                             || user.getAgreeThirdParty() == null || !user.getAgreeThirdParty();
         
         if (needsConsent) {
-            log.info("개인정보 동의 필요: {}", username);
+            log.info("📝 개인정보 동의 필요: {}", username);
             
             String tempToken = jwtUtil.createJwt(username, user.getRole().toString(), 600000L);
             
@@ -58,6 +58,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             tempCookie.setMaxAge(600);
             tempCookie.setPath("/");
             tempCookie.setHttpOnly(true);
+            tempCookie.setSecure(false);
             
             response.addCookie(tempCookie);
             response.sendRedirect("/auth/oauth-consent");
@@ -67,23 +68,25 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         user.setLastLoginDate(LocalDateTime.now());
         userRepository.save(user);
         
-        String accessToken = jwtUtil.createJwt(username, user.getRole().toString(), 3600000L);
+        String accessToken = jwtUtil.createJwt(username, user.getRole().toString(), 7 * 24 * 60 * 60 * 1000L);
         String refreshToken = refreshTokenService.createRefreshToken(username);
         
         Cookie accessCookie = new Cookie("Authorization", accessToken);
-        accessCookie.setMaxAge(3600);
+        accessCookie.setMaxAge(7 * 24 * 60 * 60);
         accessCookie.setPath("/");
         accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(false);
         
         Cookie refreshCookie = new Cookie("RefreshToken", refreshToken);
-        refreshCookie.setMaxAge(604800);
+        refreshCookie.setMaxAge(30 * 24 * 60 * 60);
         refreshCookie.setPath("/");
         refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false);
         
         response.addCookie(accessCookie);
         response.addCookie(refreshCookie);
         
-        log.info("✅ OAuth2 로그인 완료: {}", username);
-        response.sendRedirect("/");
+        log.info("✅ OAuth2 로그인 완료: {}. Access: 7일, Refresh: 30일", username);
+        response.sendRedirect("/session/list");
     }
 }

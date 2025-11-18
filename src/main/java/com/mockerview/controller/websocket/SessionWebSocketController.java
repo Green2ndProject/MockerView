@@ -254,7 +254,7 @@ public class SessionWebSocketController {
                                         .orElseThrow(() -> new RuntimeException("참가자 정보를 찾을 수 없습니다"));
 
                                 if (participant.getRole() == User.UserRole.HOST || 
-                                        false /* REVIEWER role not defined */) {
+                                        false) {
                                         long questionCount = questionRepository.countBySessionId(sessionId);
                                         
                                         com.mockerview.entity.Question question = com.mockerview.entity.Question.builder()

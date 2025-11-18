@@ -58,29 +58,19 @@ public class User {
     private LocalDateTime lastLoginDate;
     
     @Column(name = "AGREE_PERSONAL_INFO")
-    @ColumnDefault("false")
-    @Builder.Default
-    private Boolean agreePersonalInfo = false;
+    private Boolean agreePersonalInfo;
     
     @Column(name = "AGREE_THIRD_PARTY")
-    @ColumnDefault("false")
-    @Builder.Default
-    private Boolean agreeThirdParty = false;
+    private Boolean agreeThirdParty;
     
     @Column(name = "AGREE_MARKETING")
-    @ColumnDefault("false")
-    @Builder.Default
-    private Boolean agreeMarketing = false;
+    private Boolean agreeMarketing;
     
     @Column(name = "AGREE_MARKETING_EMAIL")
-    @ColumnDefault("false")
-    @Builder.Default
-    private Boolean agreeMarketingEmail = false;
+    private Boolean agreeMarketingEmail;
     
     @Column(name = "AGREE_MARKETING_PUSH")
-    @ColumnDefault("false")
-    @Builder.Default
-    private Boolean agreeMarketingPush = false;
+    private Boolean agreeMarketingPush;
     
     @Column(name = "PRIVACY_CONSENT_DATE")
     private LocalDateTime privacyConsentDate;

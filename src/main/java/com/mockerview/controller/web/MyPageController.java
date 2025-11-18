@@ -1,6 +1,7 @@
 package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
+import com.mockerview.dto.StatisticsDTO;
 import com.mockerview.entity.SelfInterviewReport;
 import com.mockerview.entity.Subscription;
 import com.mockerview.entity.User;
@@ -20,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -98,19 +101,65 @@ public class MyPageController {
                 return "redirect:/auth/mypage/myStatsInterviewer";
             }
             
+            StatisticsDTO stats = userService.getUserStatistics(user.getId());
+            
+            List<Map<String, Object>> categoryAccuracyList = new ArrayList<>();
+            for (var category : stats.getCategoryScores()) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("name", category.getCategory());
+                item.put("accuracy", category.getAccuracy());
+                categoryAccuracyList.add(item);
+            }
+            
+            Map<String, Object> performanceChartData = new HashMap<>();
+            performanceChartData.put("labels", new ArrayList<>(stats.getMonthlyProgress().keySet()));
+            Map<String, Object> dataset = new HashMap<>();
+            dataset.put("label", "면접 횟수");
+            dataset.put("data", new ArrayList<>(stats.getMonthlyProgress().values()));
+            dataset.put("borderColor", "#667eea");
+            dataset.put("backgroundColor", "rgba(102, 126, 234, 0.1)");
+            performanceChartData.put("datasets", List.of(dataset));
+            
+            Map<String, Object> activityChartData = new HashMap<>();
+            activityChartData.put("labels", new ArrayList<>(stats.getMonthlyProgress().keySet()));
+            Map<String, Object> activityDataset = new HashMap<>();
+            activityDataset.put("label", "활동");
+            activityDataset.put("data", new ArrayList<>(stats.getMonthlyProgress().values()));
+            activityDataset.put("backgroundColor", "#667eea");
+            activityChartData.put("datasets", List.of(activityDataset));
+            
             model.addAttribute("user", user);
-            model.addAttribute("totalInterviews", 0);
-            model.addAttribute("averageScore", "0.0");
-            model.addAttribute("highestScore", "0");
+            model.addAttribute("totalInterviews", stats.getTotalSessions());
+            model.addAttribute("averageScore", String.format("%.1f", stats.getAverageScore()));
+            model.addAttribute("highestScore", String.format("%.1f", 
+                stats.getCategoryScores().stream()
+                    .mapToDouble(c -> c.getAccuracy())
+                    .max()
+                    .orElse(0.0)));
+            model.addAttribute("totalAnswers", stats.getTotalAnswers());
+            model.addAttribute("totalFeedbacks", stats.getTotalFeedbacks());
+            model.addAttribute("mbtiType", stats.getMbtiType());
+            model.addAttribute("completedSessions", stats.getCompletedSessions());
+            model.addAttribute("categoryScores", stats.getCategoryScores());
+            model.addAttribute("monthlyProgress", stats.getMonthlyProgress());
+            model.addAttribute("categoryAccuracy", categoryAccuracyList);
+            model.addAttribute("performanceChartData", performanceChartData);
+            model.addAttribute("activityChartData", activityChartData);
             model.addAttribute("streak", "0일");
-            model.addAttribute("categoryAccuracy", new ArrayList<>());
             model.addAttribute("achievements", new ArrayList<>());
             model.addAttribute("rankings", new ArrayList<>());
-            model.addAttribute("achievementProgress", "0/10");
+            model.addAttribute("achievementProgress", stats.getTotalAnswers() + "/100");
+            model.addAttribute("interviewChange", null);
+            model.addAttribute("scoreChange", null);
+            model.addAttribute("highestScoreDate", null);
+            model.addAttribute("streakStatus", null);
+            
+            log.info("✅ 통계 페이지 로딩 완료 - 총 세션: {}, 카테고리: {}", 
+                stats.getTotalSessions(), categoryAccuracyList.size());
             
             return "user/myStats";
         } catch (Exception e) {
-            log.error("내 통계 페이지 로딩 실패: {}", e.getMessage());
+            log.error("내 통계 페이지 로딩 실패: {}", e.getMessage(), e);
             return "redirect:/auth/mypage";
         }
     }
@@ -125,18 +174,20 @@ public class MyPageController {
                 return "redirect:/auth/mypage/stats";
             }
             
+            Map<String, Object> stats = userService.getInterviewerStatistics(user.getId());
+            
             model.addAttribute("user", user);
-            model.addAttribute("totalHostedSessions", 0);
-            model.addAttribute("endedSessionsCount", 0);
-            model.addAttribute("totalFeedbacksGiven", 0);
+            model.addAttribute("totalHostedSessions", stats.get("totalHostedSessions"));
+            model.addAttribute("endedSessionsCount", stats.get("endedSessionsCount"));
+            model.addAttribute("totalFeedbacksGiven", stats.get("totalFeedbacksGiven"));
             model.addAttribute("avgGivenScore", "0.0");
-            model.addAttribute("sessionsByMonth", new java.util.HashMap<>());
+            model.addAttribute("sessionsByMonth", stats.get("sessionsByMonth"));
             model.addAttribute("hostedSessions", new ArrayList<>());
             model.addAttribute("topInterviewees", new ArrayList<>());
             
             return "user/myStatsInterviewer";
         } catch (Exception e) {
-            log.error("면접관 통계 페이지 로딩 실패: {}", e.getMessage());
+            log.error("면접관 통계 페이지 로딩 실패: {}", e.getMessage(), e);
             return "redirect:/auth/mypage";
         }
     }
