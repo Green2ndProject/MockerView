@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <style th:fragment="chat-widget-css">
-    .chat-toggle-btn{
+.chat-toggle-btn{
     position         : fixed;
     bottom           : 20px;
     right            : 20px;
@@ -52,7 +52,7 @@
     height : 60px;
     box-shadow : none;
     border-radius : 50%;
-    --open-width: 400px;
+    --open-width: 750px;
     --open-height: 550px;
     visibility: hidden;
     opacity: 0;
@@ -74,18 +74,27 @@
     visibility: visible;
     opacity: 1;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    border : 1px solid #ccc;
+    overflow : hidden;
+    display : flex;
+    z-index: 1000;
 }
 
 .chat-sidebar {
-    width : 35%;
-    min-width : 140px;
+    width : 300px;
     border-right : 1px solid #eee;
+    background-color : #f7f7f7;
+    display : flex;
+    flex-direction: column;
 }
 
 .chat-main {
-    width : 65%;
+    flex-grow : 1;
     display : flex;
+    width : 500px;
     flex-direction: column;
+    padding : 10px;
+    background-color: #f9f9f9;
 }
 
 .chat-header {
@@ -93,14 +102,276 @@
     justify-content : space-between;
     align-items : center;
     padding : 15px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ddd;
+    background-color: #fff;
+
+}
+
+.chat-header h4 {
+    margin : 0;
+    font-size : 16px;
+    font-weight : 600;
+    color : #333;
+}
+
+.close-x-btn {
+    background: none;
+    border : none;
+    font-size : 18px;
+    cursor : pointer;
+    color : #999;
+    transition: color 0.2s;
+}
+
+.close-x-btn:hover {
+    color : #333;
 }
 
 #message-history {
     overflow : scroll;
 }
 
+.message-history {
+    flex-grow : 1;
+    overflow-y : auto;
+    padding : 10px 15px;
+    display : flex;
+    flex-direction: column;
+}
 
+.message-container {
+    display : flex;
+    margin-bottom : 10px;
+    flex-direction: column;
+}
+
+.candidate-item {
+    display : flex;
+    justify-content : space-between;
+    align-items : center;
+    padding : 12px 15px;
+    cursor : pointer;
+    border-bottom : 1px solid #eee;
+    transition : background-color 0.15s;
+}
+
+.candidate-item:hover, .candidate-item.active {
+    background-color: #f0f0f0;
+}
+
+.badge {
+    background-color : #fa5252;
+    color : white;
+    font-size : 11px;
+    min-width : 18px;
+    height : 18px;
+    line-height : 18px;
+    text-align: center;
+    padding : 0 4px;
+    border-radius : 9px;
+    display : inline-block; 
+    font-weight : bold;
+}
+
+.message-bubble {
+    max-width: 60%;
+    padding : 10px 14px;
+    font-size : 14px;
+    line-height : 1.4;
+    word-wrap : break-word;
+}
+
+.message-container.receiver {
+    align-items : flex-start; 
+}
+
+.message-container.receiver .message-bubble {
+    background-color: #ffffff; 
+    border: 1px solid #e0e0e0;
+    color: #333;
+    border-radius: 15px 15px 15px 5px; 
+}
+
+/* .message-bubble.receiver {
+    background-color : #e5e5ea;
+    border-radius : 15px 15px 15px 5px;
+    align-self : flex-start;
+} */
+
+.message-container.sender {
+    align-items: flex-end; 
+}
+
+/* .message-bubble.sender {
+    background-color : #007aff;
+    color : white;
+    border-radius : 15px 15px 5px 15px;
+    align-self : flex-end;
+} */
+
+.message-container.sender .message-bubble {
+    background-color: #007aff;
+    color: white;
+    border-radius: 15px 15px 5px 15px; 
+}
+
+.message-time {
+    font-size: 10px;
+    color: #999;
+    margin-top: 2px;
+}
+
+.chat-input-area {
+    display : flex;
+    padding : 10px 15px;
+    border-top : 1px solid #ddd;
+    background-color : #fff;
+    align-items: flex-end;
+}
+
+#message-input {
+    flex-grow : 1;
+    padding : 8px 10px;
+    border : 1px solid #ccc;
+    border-radius: 8px;
+    resize : none;
+    font-size: 14px;
+    margin-right: 10px;
+    max-height : 80px;
+}
+
+.send-button {
+    background-color : #4CAF50;
+    color : white;
+    border : none;
+    padding : 10px 15px;
+    border-radius : 8px;
+    cursor : pointer;
+    font-weight: 600;
+    transition : background-color 0.2s;
+    height : 38px;
+}
+
+.send-button:hover {
+    background-color : #45a049;
+}
+
+.send-button[disabled] {
+    background-color : #ccc;
+    cursor : not-allowed;
+}
+
+.search-header {
+    padding : 15px;
+    border-bottom : 1px solid #ddd;
+    background-color : #fff;
+}
+
+.search-header h3 {
+    margin : 0 0 10px 0;
+    font-size : 18px;
+    color : #333;
+    font-weight : 600;
+}
+
+#candidate-search {
+    width : calc(100% - 20px);
+    padding : 8px 10px;
+    border : 1px solid #ccc;
+    border-radius : 5px;
+    font-size : 14px;
+    box-sizing : border-box;
+}
+
+.candidate-list {
+    list-style: none;
+    padding : 0;
+    margin : 0;
+    overflow-y: auto;
+    flex-grow : 1;
+}
+
+.info-text-area { 
+    display:flex;
+    flex-direction: column;
+    flex-grow : 1;
+    overflow : hidden;
+}
+
+.candidate-item .name {
+    font-weight : 600;
+    font-size : 15px;
+    color : #333;
+}
+
+.last-message-snippet {
+    font-size : 13px;
+    color : #777;
+    white-space : nowrap;
+    overflow : hidden;
+    text-overflow: ellipsis;
+}
+
+.status-area {
+    display : flex;
+    flex-direction: column;
+    align-items : flex-end;
+    margin-left : 10px;
+}
+
+.message-time {
+    font-size : 11px;
+    color : #999;
+    margin-bottom : 3px;
+}
+
+.status.online {
+    color : #4CAF50;
+    margin-right : 5px;
+    font-size : 10px;
+}
+
+.toast-container {
+    position: fixed; 
+    bottom: 20px; 
+    right: 20px; 
+    z-index: 10000; 
+    display: flex;
+    flex-direction: column; 
+    gap: 10px; 
+    pointer-events: none; 
+}
+
+.toast-notification {
+    background-color: #333; 
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    max-width: 300px;
+    opacity: 0; 
+    transform: translateY(20px); 
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    pointer-events: auto; 
+    cursor: pointer;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.toast-body {
+    font-size: 14px;
+    color: #e0e0e0;
+}
 </style>
 </head>
 </html>
