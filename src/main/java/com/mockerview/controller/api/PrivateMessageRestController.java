@@ -18,6 +18,9 @@ import com.mockerview.service.PrivateMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 
 
@@ -43,9 +46,9 @@ public class PrivateMessageRestController {
     }
 
     // 메시지 읽음 표시
-    @PutMapping("/read/{targetUsername}")
+    @PutMapping("/read/{partnerUsername}")
     public ResponseEntity<Void> markAsRead(
-            @PathVariable("targetUsername") String partnerUsername, 
+            @PathVariable("partnerUsername") String partnerUsername, 
             @AuthenticationPrincipal UserDetails userDetails) {
         
         String currentUsername = userDetails.getUsername();
@@ -76,4 +79,29 @@ public class PrivateMessageRestController {
 
         return ResponseEntity.ok(conversations);
     }
+
+    @PostMapping("/exit/{partnerUsername}")
+    public ResponseEntity<Void> exitConversation(
+        @PathVariable String partnerUsername,
+        @AuthenticationPrincipal UserDetails userDetails) {
+        
+        String currentUsername = userDetails.getUsername();
+
+        privateMessageService.exitConversation(currentUsername, partnerUsername);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/restore/{partnerUsername}")
+    public ResponseEntity<Void> restoreConversation(
+        @PathVariable String partnerUsername,
+        @AuthenticationPrincipal UserDetails userDetails) {
+    
+        String currentUsername = userDetails.getUsername();
+
+        privateMessageService.restoreConversation(currentUsername, partnerUsername);
+
+        return ResponseEntity.ok().build();
+    }
+    
 }

@@ -213,10 +213,10 @@ function onConversationUpdateReceived(payload){
     renderConversationList(updatedList);
 }
 
-async function fetchMessageHistory(targetUsername){
+async function fetchMessageHistory(partnerUsername){
 
     const API_BASE_URL = 'http://localhost:8080';
-    const API_URL      = `${API_BASE_URL}/api/private/messages/${encodeURIComponent(targetUsername)}`;
+    const API_URL      = `${API_BASE_URL}/api/private/messages/${encodeURIComponent(partnerUsername)}`;
 
     const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
 
@@ -237,7 +237,7 @@ async function fetchMessageHistory(targetUsername){
         }
 
         const history = await response.json();
-        console.log(`✅ ${targetUsername}과의 메시지 내역 ${history.length}개 조회`);
+        console.log(`✅ ${partnerUsername}과의 메시지 내역 ${history.length}개 조회`);
         return history;        
         
     }catch(error){
@@ -246,31 +246,62 @@ async function fetchMessageHistory(targetUsername){
     }
 }
 
-async function openMessageWindow(targetUsername){
+async function openMessageWindow(partnerUsername){
 
-    const chatHeader = document.getElementById('chat-header')
+    const RESTORE_URL = `http://localhost:8080/api/private/messages/restore/${encodeURIComponent(partnerUsername)}`;
+
+    try{
+        await fetch(RESTORE_URL, {method: 'POST'});
+        console.log(`대화방 상태 복구 완료 : ${partnerUsername}`);
+    }catch(e){
+        console.error("대화방 상태 복구 실패", e);
+    }
+
+    const container = document.getElementById('chat-widget-container');
+    const toggleBtn = document.getElementById('chat-toggle-btn');
+
+    if(!container || !toggleBtn){
+        console.error("위젯 요소를 찾을 수 없습니다.");
+        return;
+    }
+
+    const chatHeader = document.getElementById('chat-header');
     const h4 = chatHeader.querySelector('h4');
     const messageHistory = document.getElementById('message-history');
     const sendBtn = document.getElementById('send-btn');
 
+    container.classList.add('active');
+    toggleBtn.classList.add('hidden-by-widget');
+
     if(chatHeader){
-        chatHeader.innerHTML = `<h4>${targetUsername}과 대화중</h4><button id="chat-close-x-btn" class="close-x-btn">✖️</button>`;
-        chatHeader.dataset.partner = targetUsername;
+
+        const headerTitle = chatHeader.querySelector('h4');
+        const exitBtn = document.getElementById('exitConversation');
+
+        if(headerTitle){
+            headerTitle.innerHTML = `${partnerUsername}과 대화중`; 
+        }
+        
+        if(exitBtn){
+            exitBtn.classList.remove('hidden');
+        }
+
+        chatHeader.dataset.partner = partnerUsername;
     }
 
     messageHistory.innerHTML = '';
 
-    window.currentChatPartner = targetUsername;
+    window.currentChatPartner = partnerUsername;
     sendBtn.disabled = false;
 
     try{
-        const history = await fetchMessageHistory(targetUsername);
+        const history = await fetchMessageHistory(partnerUsername);
 
         history.forEach(msg => displayMessageInHistory(msg));
 
         messageHistory.scrollTop = messageHistory.scrollHeight;
 
-        const response = await fetch(`/api/private/messages/read/${targetUsername}`, {
+        const response = await fetch(`/api/private/messages/read/${partnerUsername}`, {
             method : 'PUT',    
             headers: {'Content-Type' : 'application/json'},
                    
@@ -278,9 +309,9 @@ async function openMessageWindow(targetUsername){
 
         if(response.ok){
             
-            console.log(`[Read Status] ${targetUsername}과의 대화를 읽음 처리 완료`);
+            console.log(`[Read Status] ${partnerUsername}과의 대화를 읽음 처리 완료`);
 
-            clearLocalUnreadBadge(targetUsername);
+            clearLocalUnreadBadge(partnerUsername);
         }else{
             console.error(`[Read Status] 서버 응답 오류 : `, response.status);
         }
@@ -302,6 +333,68 @@ async function openMessageWindow(targetUsername){
         window.privateMessageWsClient.connect();
     }
 
+}
+
+async function exitConversation(partnerUsername){
+
+    const API_BASE_URL = 'http://localhost:8080';
+    const API_URL = `${API_BASE_URL}/api/private/messages/exit/${encodeURIComponent(partnerUsername)}`;
+
+    try {
+        
+        const response = await fetch(API_URL, {method: 'POST'});
+
+        if(response.ok){
+            alert(`${partnerUsername}님과의 대화방을 나갔습니다.`);
+
+            closeChatWidget();
+        }else{
+            alert('대화방 나가기 실패');
+        }
+
+    } catch (error) {
+        console.error('대화방 나가기중 에러 : ', error);
+        alert('서버 연결 오류');
+    }
+    
+}
+
+function closeChatWidget(){
+    const widgetContainer = document.getElementById('chat-widget-container');
+    const toggleBtn = document.getElementById('chat-toggle-btn');
+    const chatHeader = document.getElementById('chat-header');
+
+    window.currentChatPartner = null;
+
+    if(chatHeader && chatHeader.dataset.partner){
+        chatHeader.removeAttribute('data-partner');        
+    }
+
+    if(chatHeader){
+        const headerTitle = chatHeader.querySelector('h4');
+        if(headerTitle){
+            headerTitle.textContent = '[대화 상태를 선택하세요]';
+        }
+    }
+
+    const messageHistory = document.getElementById('message-history');
+
+    if(messageHistory){
+        messageHistory.innerHTML = '';
+    }
+
+    const exitBtn = document.getElementById('exitConversation');
+
+    if(exitBtn){
+        exitBtn.classList.add('hidden');
+    }
+
+    if (widgetContainer) {
+        widgetContainer.classList.remove('active');
+    }
+    if (toggleBtn) {
+        toggleBtn.classList.remove('hidden-by-widget');
+    }
 }
 
 function clearLocalUnreadBadge(partnerUsername){
@@ -482,12 +575,13 @@ function setupSearchHandler(){
 
 function handleSearchInput(event){
     const query = event.target.value.trim();
+
     if(query.length > 1){
         fetchSearchUsers(query);
     }else{
         const candidateList = document.getElementById('candidate-list');
-        // fetchAndRenderPartnerList();
-    }
+        fetchAndRenderPartnerList();
+    }    
 }
 
 async function fetchSearchUsers(query){
@@ -586,6 +680,43 @@ function startPrivateChat(targetname, targetusername){
     //    fetch(`/api/messages/${targetUserId}`).then(...)
 }
 
+function resetActivePartnerState(){
+
+    const chatHeader = document.getElementById('chat-header');
+
+    window.currentChatPartner = null;
+
+    if(chatHeader && chatHeader.dataset.partner){
+        chatHeader.removeAttribute('data-partner');
+    }
+
+    if(chatHeader){
+        // chatHeader.innerHTML = '<h4>[대화 상대를 선택하세요]</h4><button id="chat-close-x-btn" class="close-x-btn">✖️</button>';
+        chatHeader.querySelector('h4').textContent = '[대화 상대를 선택하세요]';
+    }
+
+    const messageHistory = document.getElementById('message-history');
+    if(messageHistory){
+        messageHistory.innerHTML = '';
+    }
+}
+
+function closeChatWidget(){
+    const widgetContainer = document.getElementById('chat-widget-container');
+    const searchInput = document.getElementById('candidate-search');
+
+    if(searchInput.value.trim() !== ''){
+        searchInput.value = '';
+        fetchAndRenderPartnerList();
+    }
+
+    resetActivePartnerState();
+
+    if(widgetContainer){
+        widgetContainer.classList.remove('open');
+    }
+}
+
 function setupWidgetToggle(){
 
     const toggleBtn = document.getElementById('chat-toggle-btn');
@@ -603,6 +734,19 @@ function setupWidgetToggle(){
 
         if(isActive){
             toggleBtn.classList.add('hidden-by-widget');
+
+            const chatHeader = document.getElementById('chat-header');
+            const exitBtn = document.getElementById('exitConversation');
+
+            const currentPartner = chatHeader ? chatHeader.dataset.partner : null;
+
+            if (exitBtn) {
+                if (currentPartner) {
+                    exitBtn.classList.remove('hidden');
+                } else {
+                    exitBtn.classList.add('hidden');
+                }
+            }
         }else{
             toggleBtn.classList.remove('hidden-by-widget');
         }
@@ -624,6 +768,7 @@ function setupWidgetToggle(){
         e.stopPropagation();
         container.classList.remove('active');
         toggleBtn.classList.remove('hidden-by-widget');
+
     });
 
 }
@@ -643,8 +788,29 @@ function getCurrentUsername(){
 document.addEventListener('DOMContentLoaded', ()=>{
       
     const myUsername = getCurrentUsername(); // 받아와야함
+    const closexBtn = document.querySelector('.close-x-btn');
+    const exitBtn = document.getElementById('exitConversation');
+
+    if(exitBtn){
+        exitBtn.addEventListener('click',()=>{
+            const chatHeader = document.getElementById('chat-header');
+            const partner = chatHeader ? chatHeader.dataset.partner : null;
+
+            if(partner){
+                exitConversation(partner);
+            }else{
+                alert('대화 상대를 찾을 수 없습니다.');
+            }
+        });
+    }
+
+    if(closexBtn){
+        closexBtn.addEventListener('click', closeChatWidget);
+
+    }
 
     if(myUsername){
+        
         window.privateMessageWsClient = new PrivateMessageWebsocket(myUsername, handleReceivedMessage);
 
         window.privateMessageWsClient.connect();
@@ -656,13 +822,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
         setupWidgetToggle();
 
         setupMessageEvents();
+
     }else{
 
         console.warn("사용자 정보 없음. 채팅 위젯을 비활성화합니다.");
 
     }
 });
-
 
 </script>
 

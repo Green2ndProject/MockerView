@@ -165,23 +165,25 @@ public class PrivateMessageService {
         status.updateLastReadMessageId(latestMessageId);
         messageStatusRepository.save(status);
 
-        List<ConversationSummaryDTO> summaries = getConversationSummaries(currentUsername);
+        List<ConversationSummaryDTO> currentSummaries = getConversationSummaries(currentUsername);
+
+        List<ConversationSummaryDTO> partnerSummaries = getConversationSummaries(partnerUsername);
 
         messagingTemplate.convertAndSendToUser(
             partnerUsername, 
             "/queue/messagelist-update", 
-            summaries);
+            partnerSummaries);
 
         messagingTemplate.convertAndSendToUser(
             currentUsername,
             "/queue/messagelist-update",
-            summaries);
+            currentSummaries);
 
     }
 
     public List<ConversationSummaryDTO> getConversationSummaries(String currentUsername) {
         // 대화 상대방 목록 조회
-        List<String> partnerUsernames = privateMessageRepository.findDistinctPartners(currentUsername);
+        List<String> partnerUsernames = messageStatusRepository.findActivePartnerUsernames(currentUsername);
 
         List<ConversationSummaryDTO> summaries = new ArrayList<>();
 
@@ -189,7 +191,9 @@ public class PrivateMessageService {
             
             ConversationSummaryDTO summary = getSummaryForPartner(currentUsername, partnerUsername);
 
-            summaries.add(summary);
+            if(summary.getLastMessageSentAt()!= null){
+                summaries.add(summary);
+            }
 
         }
 
@@ -235,5 +239,49 @@ public class PrivateMessageService {
         );
     }
     
+    @Transactional
+    public void exitConversation(String currentUsername, String partnerUsername){
+
+        Optional<PrivateMessageStatus> statusOpt = messageStatusRepository.findByUserUsernameAndPartnerUsername(currentUsername, partnerUsername);
+
+        if(statusOpt.isPresent()){
+            PrivateMessageStatus messageStatus = statusOpt.get();
+
+            messageStatus.setIsExited(true);
+            messageStatusRepository.save(messageStatus);
+
+            List<ConversationSummaryDTO> updateSummaries = getConversationSummaries(currentUsername);
+
+            messagingTemplate.convertAndSendToUser(
+                currentUsername, 
+                "/queue/messagelist-update", 
+                updateSummaries
+            );
+        }
+
+
+    }
+
+    @Transactional
+    public void restoreConversation(String currentUsername, String partnerUsername) {
+
+        Optional<PrivateMessageStatus> statusOpt = messageStatusRepository.findByUserUsernameAndPartnerUsername(
+        currentUsername, partnerUsername);
+
+    if (statusOpt.isPresent() && statusOpt.get().isExited()) { // 나간 상태일 때만 복구
+        PrivateMessageStatus status = statusOpt.get();
+        
+        status.setIsExited(false);
+        messageStatusRepository.save(status);
+        
+        List<ConversationSummaryDTO> updatedSummaries = getConversationSummaries(currentUsername);
+        
+        messagingTemplate.convertAndSendToUser(
+            currentUsername,
+            "/queue/messagelist-update", 
+            updatedSummaries
+        );
+    }
+}
 
 }

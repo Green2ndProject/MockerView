@@ -33,6 +33,7 @@
     <div class="chat-main">
         <div class="chat-header" id="chat-header">
             <h4>[대화 상대를 선택하세요]</h4>
+            <button id="exitConversation" class="exitConversation hidden">나가기</button>
             <button id="chat-close-x-btn" class="close-x-btn">✖️</button>
         </div>
 
@@ -45,8 +46,9 @@
         </div>
     </div>
 
-    <div id="toast-container" class="toast-container"></div>
 </div>
+
+<div th:fragment="toast" id="toast-container" class="toast-container"></div>
 
 </body>
 </html>

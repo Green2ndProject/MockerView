@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "private_message_status")
+@Table(name = "private_message_status")     
 public class PrivateMessageStatus {
     
     @Id
@@ -29,6 +29,9 @@ public class PrivateMessageStatus {
     @Column(name = "last_read_message_id")
     private Long lastReadMessageId;
 
+    @Column(name = "is_exited")
+    private boolean isExited = false; 
+
     @Builder
     public PrivateMessageStatus(String userUsername, String partnerUsername, Long lastReadMessageId){
 
@@ -40,5 +43,10 @@ public class PrivateMessageStatus {
     public void updateLastReadMessageId(Long messageId){
 
         this.lastReadMessageId = messageId;
+    }
+
+    public void setIsExited(boolean isExited){
+        
+        this.isExited = isExited;
     }
 }
