@@ -34,6 +34,11 @@ public class SelfInterviewApiController {
             User user = userRepository.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
+            String videoUrlsJson = null;
+            if (reportData.containsKey("videoUrls") && reportData.get("videoUrls") != null) {
+                videoUrlsJson = objectMapper.writeValueAsString(reportData.get("videoUrls"));
+            }
+
             SelfInterviewReport report = SelfInterviewReport.builder()
                     .user(user)
                     .categoryCode((String) reportData.get("categoryCode"))
@@ -47,11 +52,18 @@ public class SelfInterviewApiController {
                     .videoAvg(parseDouble(reportData.get("videoAvg")))
                     .questionsData(objectMapper.writeValueAsString(reportData.get("questions")))
                     .feedbacksData(objectMapper.writeValueAsString(reportData.get("feedbacks")))
+                    .videoUrlsData(videoUrlsJson)
                     .build();
 
             reportRepository.save(report);
 
-            log.info("셀프 면접 리포트 저장 완료 - userId: {}, reportId: {}", user.getId(), report.getId());
+            int videoCount = 0;
+            if (reportData.containsKey("videoUrls") && reportData.get("videoUrls") instanceof Map) {
+                videoCount = ((Map) reportData.get("videoUrls")).size();
+            }
+
+            log.info("✅ 셀프 면접 리포트 저장 완료 - userId: {}, reportId: {}, 영상 개수: {}", 
+                user.getId(), report.getId(), videoCount);
 
             return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -59,13 +71,13 @@ public class SelfInterviewApiController {
             ));
 
         } catch (JsonProcessingException e) {
-            log.error("리포트 데이터 직렬화 실패", e);
+            log.error("❌ 리포트 데이터 직렬화 실패", e);
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
                     "message", "리포트 저장에 실패했습니다."
             ));
         } catch (Exception e) {
-            log.error("리포트 저장 실패", e);
+            log.error("❌ 리포트 저장 실패", e);
             return ResponseEntity.status(500).body(Map.of(
                     "success", false,
                     "message", "리포트 저장에 실패했습니다: " + e.getMessage()

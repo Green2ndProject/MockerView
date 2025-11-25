@@ -2,7 +2,6 @@ package com.mockerview.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -13,32 +12,38 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class PushSubscription {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-    
-    @Column(nullable = false, unique = true, length = 500)
+
+    @Column(name = "endpoint", nullable = false, unique = true, length = 500)
     private String endpoint;
-    
-    @Column(nullable = false, length = 500)
+
+    @Column(name = "p256dh_key")
     private String p256dh;
-    
-    @Column(nullable = false, length = 500)
+
+    @Column(name = "auth_key")
     private String auth;
-    
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+
+    @Column(name = "active")
+    private Boolean active = true;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-    
+
     @Column(name = "last_used")
     private LocalDateTime lastUsed;
-    
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.lastUsed = LocalDateTime.now();
+        if (this.active == null) {
+            this.active = true;
+        }
+    }
 }

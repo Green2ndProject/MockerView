@@ -47,6 +47,9 @@ public class SelfInterviewReport {
     @Column(columnDefinition = "TEXT")
     private String feedbacksData;
 
+    @Column(columnDefinition = "TEXT")
+    private String videoUrlsData;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

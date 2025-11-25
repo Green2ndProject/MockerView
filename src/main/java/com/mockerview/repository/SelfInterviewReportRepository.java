@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface SelfInterviewReportRepository extends JpaRepository<SelfInterviewReport, Long> {
     List<SelfInterviewReport> findByUserOrderByCreatedAtDesc(User user);
-
-        List<SelfInterviewReport> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
-        long countByUserId(Long userId);
+    List<SelfInterviewReport> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    List<SelfInterviewReport> findByUserIdOrderByCreatedAtDesc(Long userId);
+    long countByUserId(Long userId);
 }

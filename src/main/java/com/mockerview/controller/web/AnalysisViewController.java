@@ -1,22 +1,26 @@
 package com.mockerview.controller.web;
 
-import com.mockerview.dto.CustomUserDetails;
-import com.mockerview.entity.User;
-import com.mockerview.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.mockerview.entity.User;
+import com.mockerview.entity.InterviewMBTI;
+import com.mockerview.repository.UserRepository;
+import com.mockerview.repository.InterviewMBTIRepository;
+import com.mockerview.dto.CustomUserDetails;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/analysis")
 @RequiredArgsConstructor
-@Slf4j
 public class AnalysisViewController {
 
     private final UserRepository userRepository;
+    private final InterviewMBTIRepository interviewMBTIRepository;
 
     @GetMapping("/voice-result")
     public String voiceAnalysisPage(
@@ -76,14 +80,16 @@ public class AnalysisViewController {
 
     @GetMapping("/mbti/detail")
     public String mbtiDetailPage(
-        @RequestParam String type,
         @AuthenticationPrincipal CustomUserDetails userDetails,
         Model model
     ) {
         User currentUser = userRepository.findByUsername(userDetails.getUsername())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        model.addAttribute("mbtiType", type);
+        InterviewMBTI mbtiData = interviewMBTIRepository.findLatestByUserId(currentUser.getId())
+            .orElseThrow(() -> new RuntimeException("MBTI 분석 데이터가 없습니다"));
+        
+        model.addAttribute("mbti", mbtiData);
         model.addAttribute("userId", currentUser.getId());
         model.addAttribute("user", currentUser);
         
