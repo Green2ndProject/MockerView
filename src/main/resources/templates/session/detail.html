@@ -577,7 +577,9 @@
         <a th:href="@{/session/list}" class="btn btn-primary">세션 목록</a>
       </div>
     </div>
-
+    <div th:replace="~{fragments/chat-widget :: messageWidget}"></div>
+    <button th:replace="~{fragments/chat-widget :: messageWidgetBtn}"></button>
+    <div th:replace="~{fragments/chat-widget :: toast}"></div>
     <div th:replace="~{fragments/footer :: footer}"></div>
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 

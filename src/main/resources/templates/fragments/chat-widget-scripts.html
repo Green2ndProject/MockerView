@@ -79,6 +79,14 @@
 
                     console.log('✅ [PrivateMessage] 개인 큐 구독 완료: /user/queue/messages');
                 }
+
+                const activePartner = document.getElementById('chat-header').dataset.partner;
+
+                if(privateMessage.senderUsername === activePartner){
+                    this.stompClient.send("/app/messages/read", {}, JSON.stringify({
+                        partnerUsername : activePartner
+                    }));
+                }
             });
             // /user/queue/messagelist-update - 실시간 메시지 목록 업데이트 갱신 구독
             this.stompClient.subscribe('/user/queue/messagelist-update', onConversationUpdateReceived);
@@ -93,6 +101,8 @@
             this.stompClient.subscribe('/user/queue/total-unread', (message) => {
 
                 const newCount = message.body;
+
+                console.log('✅ [Badge] 뱃지 업데이트 신호 수신:', message.body);
 
                 updateUnreadBadge(newCount);
 

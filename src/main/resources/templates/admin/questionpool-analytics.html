@@ -223,7 +223,9 @@
             </div>
         </div>
     </div>
-
+    <div th:replace="~{fragments/chat-widget :: messageWidget}"></div>
+    <button th:replace="~{fragments/chat-widget :: messageWidgetBtn}"></button>
+    <div th:replace="~{fragments/chat-widget :: toast}"></div>
     <script>
         let learningCurveChart, efficiencyChart, performanceChart;
 

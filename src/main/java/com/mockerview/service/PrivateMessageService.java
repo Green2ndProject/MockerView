@@ -182,6 +182,8 @@ public class PrivateMessageService {
             "/queue/messagelist-update",
             currentSummaries);
 
+            System.out.println("DEBUG: notifyTotalUnreadCount 호출!");
+
         notifyTotalUnreadCount(currentUsername);
 
     }

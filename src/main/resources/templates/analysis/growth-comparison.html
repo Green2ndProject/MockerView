@@ -407,6 +407,9 @@
         <a href="/auth/mypage/stats" class="btn">통계 페이지로 돌아가기</a>
       </div>
     </div>
+    <div th:replace="~{fragments/chat-widget :: messageWidget}"></div>
+    <button th:replace="~{fragments/chat-widget :: messageWidgetBtn}"></button>
+    <div th:replace="~{fragments/chat-widget :: toast}"></div>
     <div th:replace="~{fragments/footer :: footer}"></div>
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 

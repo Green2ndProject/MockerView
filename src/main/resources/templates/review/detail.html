@@ -816,7 +816,9 @@
         </div>
       </div>
     </div>
-
+    <div th:replace="~{fragments/chat-widget :: messageWidget}"></div>
+    <button th:replace="~{fragments/chat-widget :: messageWidgetBtn}"></button>
+    <div th:replace="~{fragments/chat-widget :: toast}"></div>
     <div th:replace="~{fragments/footer :: footer}"></div>
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 
