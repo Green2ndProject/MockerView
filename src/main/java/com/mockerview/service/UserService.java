@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,19 +15,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mockerview.dto.UserSearchResponse;
+import com.mockerview.dto.AchievementDTO;
 import com.mockerview.dto.CategoryScoreDTO;
+import com.mockerview.dto.RankingDTO;
 import com.mockerview.dto.StatisticsDTO;
 import com.mockerview.entity.Answer;
 import com.mockerview.entity.Feedback;
 import com.mockerview.entity.InterviewMBTI;
 import com.mockerview.entity.Session;
+import com.mockerview.entity.SelfInterviewReport;
 import com.mockerview.entity.User;
 import com.mockerview.exception.AlreadyDeletedException;
 import com.mockerview.repository.AnswerRepository;
 import com.mockerview.repository.FeedbackRepository;
 import com.mockerview.repository.InterviewMBTIRepository;
 import com.mockerview.repository.SessionRepository;
+import com.mockerview.repository.SelfInterviewReportRepository;
 import com.mockerview.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +47,7 @@ public class UserService {
     private final AnswerRepository answerRepository;
     private final FeedbackRepository feedbackRepository;
     private final InterviewMBTIRepository mbtiRepository;
+    private final SelfInterviewReportRepository selfInterviewReportRepository;
 
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
@@ -152,7 +158,9 @@ public class UserService {
             );
             List<Session> selfSessions = sessionRepository.findSelfInterviewsByUserId(userId);
             
-            int totalSessions = normalSessions.size() + selfSessions.size();
+            List<SelfInterviewReport> selfReports = selfInterviewReportRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            
+            int totalSessions = normalSessions.size() + selfSessions.size() + selfReports.size();
             
             long completedCount = normalSessions.stream()
                 .filter(s -> s.getSessionStatus() == Session.SessionStatus.ENDED)
@@ -160,12 +168,17 @@ public class UserService {
             completedCount += selfSessions.stream()
                 .filter(s -> s.getSessionStatus() == Session.SessionStatus.ENDED)
                 .count();
+            completedCount += selfReports.size();
             
             List<Answer> answers = answerRepository.findByUserIdOrderByCreatedAtDesc(userId);
             int totalAnswers = answers.size();
+            totalAnswers += selfReports.stream()
+                .mapToInt(SelfInterviewReport::getTotalQuestions)
+                .sum();
             
             List<Feedback> feedbacks = feedbackRepository.findByAnswerIn(answers);
             int totalFeedbacks = feedbacks.size();
+            totalFeedbacks += selfReports.size();
             
             double averageScore = answers.stream()
                 .filter(a -> a.getScore() != null && a.getScore() > 0)
@@ -173,13 +186,25 @@ public class UserService {
                 .average()
                 .orElse(0.0);
             
+            double selfReportAvg = selfReports.stream()
+                .filter(r -> r.getOverallAvg() != null)
+                .mapToDouble(SelfInterviewReport::getOverallAvg)
+                .average()
+                .orElse(0.0);
+            
+            if (averageScore > 0 && selfReportAvg > 0) {
+                averageScore = (averageScore + selfReportAvg) / 2.0;
+            } else if (selfReportAvg > 0) {
+                averageScore = selfReportAvg;
+            }
+            
             String mbtiType = mbtiRepository.findLatestByUserId(userId)
                 .map(InterviewMBTI::getMbtiType)
                 .orElse("미분석");
             
-            Map<String, Integer> monthlyProgress = calculateMonthlyProgress(normalSessions, selfSessions);
+            Map<String, Integer> monthlyProgress = calculateMonthlyProgress(normalSessions, selfSessions, selfReports);
             
-            List<CategoryScoreDTO> categoryScores = calculateCategoryScores(answers);
+            List<CategoryScoreDTO> categoryScores = calculateCategoryScores(answers, selfReports);
 
             StatisticsDTO stats = StatisticsDTO.builder()
                 .totalSessions(totalSessions)
@@ -262,7 +287,169 @@ public class UserService {
         }
     }
 
-    private Map<String, Integer> calculateMonthlyProgress(List<Session> normalSessions, List<Session> selfSessions) {
+    @Transactional(readOnly = true)
+    public List<AchievementDTO> getUserAchievements(Long userId) {
+        try {
+            StatisticsDTO stats = getUserStatistics(userId);
+            boolean hasMbti = !stats.getMbtiType().equals("미분석");
+            
+            List<Answer> answers = answerRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            boolean hasPerfectScore = answers.stream().anyMatch(a -> a.getScore() != null && a.getScore() == 5);
+            
+            List<Session> allSessions = new ArrayList<>();
+            allSessions.addAll(sessionRepository.findByHostAndIsSelfInterviewOrderByCreatedAtDesc(
+                userRepository.findById(userId).orElseThrow(), "N"
+            ));
+            allSessions.addAll(sessionRepository.findSelfInterviewsByUserId(userId));
+            
+            boolean hasEarlyBird = allSessions.stream()
+                .anyMatch(s -> s.getCreatedAt() != null && s.getCreatedAt().getHour() < 6);
+            boolean hasNightOwl = allSessions.stream()
+                .anyMatch(s -> s.getCreatedAt() != null && s.getCreatedAt().getHour() >= 22);
+            
+            Map<String, Integer> monthlyProgress = stats.getMonthlyProgress();
+            boolean hasMonthlyChallenge = monthlyProgress.values().stream().anyMatch(count -> count >= 10);
+            
+            List<AchievementDTO> achievements = new ArrayList<>();
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("🎯")
+                .name("첫걸음")
+                .description("첫 면접 완료")
+                .earned(stats.getTotalSessions() >= 1)
+                .progress(Math.min(stats.getTotalSessions(), 1))
+                .target(1)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("🔥")
+                .name("열정")
+                .description("10회 면접 달성")
+                .earned(stats.getTotalSessions() >= 10)
+                .progress(Math.min(stats.getTotalSessions(), 10))
+                .target(10)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("💎")
+                .name("백전노장")
+                .description("50회 면접 달성")
+                .earned(stats.getTotalSessions() >= 50)
+                .progress(Math.min(stats.getTotalSessions(), 50))
+                .target(50)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("🏆")
+                .name("완벽주의자")
+                .description("만점 달성하기")
+                .earned(hasPerfectScore)
+                .progress(hasPerfectScore ? 1 : 0)
+                .target(1)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("⭐")
+                .name("우수상")
+                .description("평균 80점 이상")
+                .earned(stats.getAverageScore() >= 80)
+                .progress((int) Math.min(stats.getAverageScore(), 80))
+                .target(80)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("🧠")
+                .name("자기탐구자")
+                .description("MBTI 분석 완료")
+                .earned(hasMbti)
+                .progress(hasMbti ? 1 : 0)
+                .target(1)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("🗣️")
+                .name("수다쟁이")
+                .description("답변 50개 이상")
+                .earned(stats.getTotalAnswers() >= 50)
+                .progress(Math.min(stats.getTotalAnswers(), 50))
+                .target(50)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("🌅")
+                .name("새벽형 인간")
+                .description("새벽 6시 전 면접")
+                .earned(hasEarlyBird)
+                .progress(hasEarlyBird ? 1 : 0)
+                .target(1)
+                .build());
+            
+            achievements.add(AchievementDTO.builder()
+                .icon("🌙")
+                .name("야행성")
+                .description("밤 10시 이후 면접")
+                .earned(hasNightOwl)
+                .progress(hasNightOwl ? 1 : 0)
+                .target(1)
+                .build());
+            
+            log.info("✅ 업적 조회 완료 - 총 {}개, 획득 {}개", 
+                achievements.size(), 
+                achievements.stream().filter(AchievementDTO::isEarned).count());
+            
+            return achievements;
+        } catch (Exception e) {
+            log.error("❌ 업적 조회 실패", e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public List<RankingDTO> getGlobalRankings(Long currentUserId, String period) {
+        try {
+            List<User> allUsers = userRepository.findAll().stream()
+                .filter(u -> u.getIsDeleted() == 0)
+                .collect(Collectors.toList());
+            
+            Map<Long, Integer> userScores = new HashMap<>();
+            
+            for (User user : allUsers) {
+                StatisticsDTO stats = getUserStatistics(user.getId());
+                int score = stats.getTotalSessions();
+                userScores.put(user.getId(), score);
+            }
+            
+            List<RankingDTO> rankings = userScores.entrySet().stream()
+                .sorted(Map.Entry.<Long, Integer>comparingByValue().reversed())
+                .limit(10)
+                .map(entry -> {
+                    User user = findById(entry.getKey());
+                    StatisticsDTO stats = getUserStatistics(user.getId());
+                    return RankingDTO.builder()
+                        .name(user.getName())
+                        .stats(String.format("면접 %d회 · 평균 %.1f점", 
+                            stats.getTotalSessions(), 
+                            stats.getAverageScore()))
+                        .score(entry.getValue() + "회")
+                        .isCurrentUser(user.getId().equals(currentUserId))
+                        .build();
+                })
+                .collect(Collectors.toList());
+            
+            for (int i = 0; i < rankings.size(); i++) {
+                rankings.get(i).setRank(i + 1);
+            }
+            
+            log.info("✅ 랭킹 조회 완료 - 총 {}명", rankings.size());
+            
+            return rankings;
+        } catch (Exception e) {
+            log.error("❌ 랭킹 조회 실패", e);
+            return new ArrayList<>();
+        }
+    }
+
+    private Map<String, Integer> calculateMonthlyProgress(List<Session> normalSessions, List<Session> selfSessions, List<SelfInterviewReport> selfReports) {
         Map<String, Integer> monthlyMap = new HashMap<>();
         
         for (Session session : normalSessions) {
@@ -279,11 +466,18 @@ public class UserService {
             }
         }
         
+        for (SelfInterviewReport report : selfReports) {
+            if (report.getCreatedAt() != null) {
+                YearMonth ym = YearMonth.from(report.getCreatedAt());
+                monthlyMap.merge(ym.toString(), 1, Integer::sum);
+            }
+        }
+        
         return monthlyMap;
     }
 
-    private List<CategoryScoreDTO> calculateCategoryScores(List<Answer> answers) {
-        Map<String, List<Integer>> categoryScores = new HashMap<>();
+    private List<CategoryScoreDTO> calculateCategoryScores(List<Answer> answers, List<SelfInterviewReport> selfReports) {
+        Map<String, List<Double>> categoryScores = new HashMap<>();
         
         for (Answer answer : answers) {
             if (answer.getScore() != null && answer.getScore() > 0) {
@@ -292,14 +486,25 @@ public class UserService {
                     category = "일반";
                 }
                 categoryScores.computeIfAbsent(category, k -> new java.util.ArrayList<>())
-                    .add(answer.getScore());
+                    .add((double) answer.getScore());
+            }
+        }
+        
+        for (SelfInterviewReport report : selfReports) {
+            if (report.getOverallAvg() != null && report.getOverallAvg() > 0) {
+                String category = report.getCategoryName();
+                if (category == null || category.isEmpty()) {
+                    category = "일반";
+                }
+                categoryScores.computeIfAbsent(category, k -> new java.util.ArrayList<>())
+                    .add(report.getOverallAvg());
             }
         }
         
         return categoryScores.entrySet().stream()
             .map(entry -> {
                 double avg = entry.getValue().stream()
-                    .mapToInt(Integer::intValue)
+                    .mapToDouble(Double::doubleValue)
                     .average()
                     .orElse(0.0);
                 return CategoryScoreDTO.builder()
@@ -312,4 +517,3 @@ public class UserService {
     }
     
 }
-

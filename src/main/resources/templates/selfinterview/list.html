@@ -97,10 +97,10 @@
       }
 
       .page-header {
-        margin-top: 64px;
         padding: 3rem 0 2rem;
         background: #667eea;
         color: white;
+        margin-top: 0;
       }
 
       .page-title h1 {
@@ -366,24 +366,6 @@
   </head>
   <body>
     <div th:replace="~{fragments/navbar :: navbar}"></div>
-    <!--<nav class="navbar">
-      <div class="container">
-        <div class="navbar-content">
-          <a class="navbar-brand" href="/">Mockerview</a>
-          <div class="hamburger" onclick="toggleMenu()">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <div class="navbar-nav">
-            <a class="nav-link" href="/selfinterview/list">셀프 면접</a>
-            <a class="nav-link active" href="/selfinterview/history">내 기록</a>
-            <a class="nav-link" href="/session/list">세션 목록</a>
-            <a class="nav-link" th:href="@{/auth/mypage}">마이페이지</a>
-          </div>
-        </div>
-      </div>
-    </nav> -->
 
     <div class="page-header">
       <div class="container">
@@ -440,7 +422,7 @@
           </div>
 
           <div class="session-card-footer">
-            <a
+            
               th:href="@{/session/scoreboard/{id}(id=${interviewSession.id})}"
               class="btn btn-view"
               >결과 보기</a

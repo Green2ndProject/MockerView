@@ -10,8 +10,7 @@
         box-sizing: border-box;
       }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: #f8f9fa;
         padding-top: 80px;
       }
@@ -83,6 +82,7 @@
         background: #1a1a1a;
         position: relative;
         overflow: hidden;
+        cursor: pointer;
       }
 
       .video-player {
@@ -125,11 +125,32 @@
         font-weight: 600;
         color: #1a1a1a;
         margin-bottom: 8px;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
       .video-meta {
         font-size: 0.875rem;
         color: #6b7280;
         margin-bottom: 12px;
+      }
+      .source-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .badge-self {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+      }
+      .badge-normal {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
       }
 
       .video-actions {
@@ -275,84 +296,50 @@
         </div>
         <div class="stat-box">
           <div class="stat-label">최근 녹화</div>
-          <div
-            class="stat-value"
-            style="font-size: 1rem"
-            th:text="${videoAnswers != null && !videoAnswers.isEmpty() ? #temporals.format(videoAnswers[0].createdAt, 'MM월 dd일') : '-'}"
-          >
-            -
-          </div>
+          <div class="stat-value" style="font-size: 1rem" th:text="${allVideos != null && !allVideos.isEmpty() ? #temporals.format(allVideos[0].createdAt, 'MM월 dd일') : '-'}">-</div>
         </div>
       </div>
 
-      <div th:if="${videoAnswers != null && !videoAnswers.isEmpty()}">
+      <div th:if="${allVideos != null && !allVideos.isEmpty()}">
         <div class="video-grid">
-          <div th:each="answer : ${videoAnswers}" class="video-card">
-            <div class="video-thumbnail">
-              <video
-                class="video-player"
-                th:id="'preview-' + ${answer.id}"
-                preload="metadata"
-                muted
-              >
-                <source th:src="${answer.videoUrl}" type="video/webm" />
+          <div th:each="video, iterStat : ${allVideos}" class="video-card">
+            <div class="video-thumbnail" 
+                 th:data-video-url="${video.videoUrl}"
+                 th:data-question-text="${video.questionText}"
+                 onclick="playVideo(this)">
+              <video class="video-player" th:id="'preview-' + ${iterStat.index}" preload="metadata" muted>
+                <source th:src="${video.videoUrl}" type="video/webm" />
               </video>
-              <div
-                class="play-overlay"
-                th:onclick="'openVideoModal(' + ${answer.id} + ', \'' + ${answer.videoUrl} + '\')'"
-              ></div>
+              <div class="play-overlay"></div>
             </div>
             <div class="video-info">
-              <div
-                class="video-title"
-                th:text="${answer.question != null ? answer.question.questionText : '면접 답변'}"
-              >
-                질문 제목
-              </div>
+              <div class="source-badge" th:classappend="${video.source == '셀프면접' ? 'badge-self' : 'badge-normal'}" th:text="${video.source}">셀프면접</div>
+              <div class="video-title" th:text="${video.questionText}">질문 제목</div>
               <div class="video-meta">
-                <span
-                  th:text="${#temporals.format(answer.createdAt, 'yyyy-MM-dd HH:mm')}"
-                  >2024-01-01 10:00</span
-                >
+                <span th:if="${video.categoryName}" th:text="${video.categoryName} + ' · '"></span>
+                <span th:text="${#temporals.format(video.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 10:00</span>
               </div>
               <div class="video-actions">
-                <button
-                  class="btn btn-primary"
-                  th:onclick="'openVideoModal(' + ${answer.id} + ', \'' + ${answer.videoUrl} + '\')'"
-                >
-                  재생
-                </button>
-                <a
-                  th:href="${answer.videoUrl}"
-                  download
-                  class="btn btn-outline"
-                >
-                  다운로드
-                </a>
+                <button class="btn btn-primary" 
+                        th:data-video-url="${video.videoUrl}"
+                        th:data-question-text="${video.questionText}"
+                        onclick="playVideo(this)">재생</button>
+                <a th:href="${video.videoUrl}" download class="btn btn-outline">다운로드</a>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div
-        th:if="${videoAnswers == null || videoAnswers.isEmpty()}"
-        class="empty-state"
-      >
+      <div th:if="${allVideos == null || allVideos.isEmpty()}" class="empty-state">
         <div class="empty-icon">🎥</div>
         <div class="empty-text">아직 녹화된 영상이 없습니다</div>
-        <div class="empty-subtext">
-          셀프 면접을 진행하면 영상이 자동으로 저장됩니다
-        </div>
-        <a href="/selfinterview/create-ai" class="btn btn-primary"
-          >셀프 면접 시작하기</a
-        >
+        <div class="empty-subtext">셀프 면접을 진행하면 영상이 자동으로 저장됩니다</div>
+        <a href="/selfinterview/create-ai" class="btn btn-primary">셀프 면접 시작하기</a>
       </div>
 
       <div style="margin-top: 40px; text-align: center">
-        <a href="/auth/mypage" class="btn btn-outline"
-          >← 마이페이지로 돌아가기</a
-        >
+        <a href="/auth/mypage" class="btn btn-outline">← 마이페이지로 돌아가기</a>
       </div>
     </div>
 
@@ -374,11 +361,16 @@
     <div th:replace="~{fragments/scripts :: scripts}"></div>
 
     <script>
-      function openVideoModal(answerId, videoUrl) {
+      function playVideo(element) {
+        const videoUrl = element.dataset.videoUrl;
+        const questionText = element.dataset.questionText;
+        
         const modal = document.getElementById("videoModal");
         const video = document.getElementById("modalVideo");
+        const title = document.getElementById("modalTitle");
 
         video.src = videoUrl;
+        title.textContent = questionText || "영상 재생";
         modal.classList.add("active");
         video.play();
       }

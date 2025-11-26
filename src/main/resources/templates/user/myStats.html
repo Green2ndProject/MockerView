@@ -514,11 +514,11 @@
             <div class="analysis-subtitle">성장 추이</div>
           </div>
         </a>
-        <a href="/analysis/mbti-result" class="analysis-card">
+        <a th:href="${mbtiType != null && mbtiType != 'N/A'} ? @{/analysis/mbti/detail(type=${mbtiType})} : @{/analysis/mbti-result}" class="analysis-card">
           <div class="analysis-icon">🧠</div>
           <div class="analysis-content">
             <div class="analysis-title">면접 MBTI</div>
-            <div class="analysis-subtitle">성향 분석</div>
+            <div class="analysis-subtitle" th:text="${mbtiType != null && mbtiType != 'N/A'} ? ${mbtiType} + ' 상세보기' : '성향 분석'">CLDS 상세보기</div>
           </div>
         </a>
         <a href="/analysis/voice-result" class="analysis-card">

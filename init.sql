@@ -406,6 +406,7 @@ CREATE TABLE self_interview_reports (
     video_avg DOUBLE PRECISION,
     questions_data TEXT,
     feedbacks_data TEXT,
+    video_urls_data TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

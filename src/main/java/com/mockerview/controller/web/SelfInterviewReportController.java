@@ -102,25 +102,27 @@ public class SelfInterviewReportController {
                     @SuppressWarnings("unchecked")
                     Map<String, Object> feedbackMap = (Map<String, Object>) feedbackObj;
                     
-                    Object textFeedback = feedbackMap.get("text");
-                    if (textFeedback instanceof Map) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> textMap = (Map<String, Object>) textFeedback;
-                        
-                        if (textMap.get("score") != null) {
-                            scores.add(Double.parseDouble(textMap.get("score").toString()));
-                        }
-                        
-                        if (textMap.get("strengths") != null) {
-                            allStrengths.add(textMap.get("strengths").toString());
-                        }
-                        
-                        if (textMap.get("weaknesses") != null) {
-                            allWeaknesses.add(textMap.get("weaknesses").toString());
-                        }
-                        
-                        if (textMap.get("improvements") != null) {
-                            allImprovements.add(textMap.get("improvements").toString());
+                    for (String feedbackType : Arrays.asList("text", "audio", "video")) {
+                        Object typedFeedback = feedbackMap.get(feedbackType);
+                        if (typedFeedback instanceof Map) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> feedbackData = (Map<String, Object>) typedFeedback;
+                            
+                            if (feedbackData.get("score") != null) {
+                                scores.add(Double.parseDouble(feedbackData.get("score").toString()));
+                            }
+                            
+                            if (feedbackData.get("strengths") != null) {
+                                allStrengths.add(feedbackData.get("strengths").toString());
+                            }
+                            
+                            if (feedbackData.get("weaknesses") != null) {
+                                allWeaknesses.add(feedbackData.get("weaknesses").toString());
+                            }
+                            
+                            if (feedbackData.get("improvements") != null) {
+                                allImprovements.add(feedbackData.get("improvements").toString());
+                            }
                         }
                     }
                 }

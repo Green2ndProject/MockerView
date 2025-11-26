@@ -128,6 +128,11 @@ public class MyPageController {
             activityDataset.put("backgroundColor", "#667eea");
             activityChartData.put("datasets", List.of(activityDataset));
             
+            var achievements = userService.getUserAchievements(user.getId());
+            var rankings = userService.getGlobalRankings(user.getId(), "all");
+            
+            long earnedCount = achievements.stream().filter(a -> a.isEarned()).count();
+            
             model.addAttribute("user", user);
             model.addAttribute("totalInterviews", stats.getTotalSessions());
             model.addAttribute("averageScore", String.format("%.1f", stats.getAverageScore()));
@@ -146,16 +151,17 @@ public class MyPageController {
             model.addAttribute("performanceChartData", performanceChartData);
             model.addAttribute("activityChartData", activityChartData);
             model.addAttribute("streak", "0일");
-            model.addAttribute("achievements", new ArrayList<>());
-            model.addAttribute("rankings", new ArrayList<>());
-            model.addAttribute("achievementProgress", stats.getTotalAnswers() + "/100");
+            model.addAttribute("achievements", achievements);
+            model.addAttribute("rankings", rankings);
+            model.addAttribute("achievementProgress", earnedCount + "/" + achievements.size());
             model.addAttribute("interviewChange", null);
             model.addAttribute("scoreChange", null);
             model.addAttribute("highestScoreDate", null);
             model.addAttribute("streakStatus", null);
             
-            log.info("✅ 통계 페이지 로딩 완료 - 총 세션: {}, 카테고리: {}", 
-                stats.getTotalSessions(), categoryAccuracyList.size());
+            log.info("✅ 통계 페이지 로딩 완료 - 총 세션: {}, 카테고리: {}, 업적: {}/{}, 랭킹: {}위", 
+                stats.getTotalSessions(), categoryAccuracyList.size(), earnedCount, achievements.size(),
+                rankings.stream().filter(r -> r.isCurrentUser()).findFirst().map(r -> r.getRank()).orElse(0));
             
             return "user/myStats";
         } catch (Exception e) {
