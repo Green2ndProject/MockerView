@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/head :: head}"></div>
+    <title>셀프 면접 리포트 - MockerView</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-900: #111827;
+        }
+        body { background: var(--gray-50); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--gray-900); }
+        .navbar { background: white; border-bottom: 1px solid var(--gray-200); padding: 1rem 0; }
+        .navbar-brand { font-weight: 700; color: var(--primary); font-size: 1.5rem; text-decoration: none; }
+        .container-main { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .page-header { background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border: 1px solid var(--gray-200); }
+        .page-title { font-size: 2rem; font-weight: 700; color: var(--gray-900); margin: 0 0 0.5rem 0; }
+        .page-subtitle { color: var(--gray-600); margin: 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--gray-200); }
+        .stat-label { font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--gray-900); }
+        .stat-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.5rem; }
+        .icon-primary { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
+        .icon-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .icon-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .reports-grid { display: grid; gap: 1rem; }
+        .report-card { background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--gray-200); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .report-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); }
+        .report-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
+        .report-title { font-size: 1.125rem; font-weight: 600; color: var(--gray-900); margin: 0 0 0.5rem 0; }
+        .report-meta { display: flex; gap: 1rem; font-size: 0.875rem; color: var(--gray-600); flex-wrap: wrap; }
+        .report-meta-item { display: flex; align-items: center; gap: 0.5rem; }
+        .badge-category { background: rgba(102, 126, 234, 0.1); color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .badge-difficulty { padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .difficulty-1 { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .difficulty-2 { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .difficulty-3 { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .report-stats { display: flex; gap: 2rem; padding-top: 1rem; border-top: 1px solid var(--gray-200); margin-top: 1rem; }
+        .report-stat { display: flex; flex-direction: column; }
+        .report-stat-label { font-size: 0.75rem; color: var(--gray-600); }
+        .report-stat-value { font-size: 1rem; font-weight: 600; color: var(--gray-900); }
+        .score-badge { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .empty-state { background: white; border-radius: 12px; padding: 4rem 2rem; text-align: center; border: 1px solid var(--gray-200); }
+        .empty-icon { font-size: 4rem; color: var(--gray-300); margin-bottom: 1rem; }
+        .empty-title { font-size: 1.5rem; font-weight: 600; color: var(--gray-900); margin-bottom: 0.5rem; }
+        .empty-text { color: var(--gray-600); margin-bottom: 2rem; }
+        .btn-primary { background: var(--primary); border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; color: white; text-decoration: none; display: inline-block; }
+        .btn-primary:hover { background: var(--primary-dark); color: white; }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr; } .report-stats { flex-wrap: wrap; gap: 1rem; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container-main d-flex justify-content-between align-items-center">
+            <a class="navbar-brand" href="/"><i class="fas fa-video"></i> MockerView</a>
+            <a href="/user/mypage" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> 마이페이지</a>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-file-alt"></i> 셀프 면접 리포트</h1>
+            <p class="page-subtitle">AI 분석 기반 면접 연습 결과를 확인하세요</p>
+        </div>
+
+        <div class="stats-grid" th:if="${reports != null and !reports.isEmpty()}">
+            <div class="stat-card">
+                <div class="stat-icon icon-primary"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-label">총 리포트</div>
+                <div class="stat-value" th:text="${totalReports}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-success"><i class="fas fa-star"></i></div>
+                <div class="stat-label">평균 점수</div>
+                <div class="stat-value" th:text="${#numbers.formatDecimal(avgScore, 1, 1)} + '점'">0.0점</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-warning"><i class="fas fa-question-circle"></i></div>
+                <div class="stat-label">총 질문 수</div>
+                <div class="stat-value" th:text="${totalQuestions}">0</div>
+            </div>
+        </div>
+
+        <div class="reports-grid" th:if="${reports != null and !reports.isEmpty()}">
+            <div class="report-card" th:each="report : ${reports}" th:onclick="'location.href=\'/selfinterview/reports/' + ${report.id} + '\''">
+                <div class="report-header">
+                    <div>
+                        <h3 class="report-title" th:text="${report.categoryName} + ' 면접'">카테고리 면접</h3>
+                        <div class="report-meta">
+                            <div class="report-meta-item">
+                                <i class="fas fa-calendar"></i>
+                                <span th:text="${#temporals.format(report.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01</span>
+                            </div>
+                            <div class="report-meta-item">
+                                <i class="fas fa-list"></i>
+                                <span th:text="${report.totalQuestions} + '개 질문'">0개 질문</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="badge-category" th:text="${report.questionType == 'TECHNICAL' ? '기술' : (report.questionType == 'BEHAVIORAL' ? '인성' : '상황')}">유형</span>
+                        <span class="badge-difficulty" 
+                              th:classappend="${report.difficulty == 1 ? 'difficulty-1' : (report.difficulty == 2 ? 'difficulty-2' : 'difficulty-3')}"
+                              th:text="${report.difficulty == 1 ? '쉬움' : (report.difficulty == 2 ? '보통' : '어려움')}">난이도</span>
+                    </div>
+                </div>
+                <div class="report-stats">
+                    <div class="report-stat">
+                        <span class="report-stat-label">텍스트 점수</span>
+                        <span class="report-stat-value" th:text="${report.textAvg != null ? #numbers.formatDecimal(report.textAvg, 1, 1) + '점' : '-'}">-</span>
+                    </div>
+                    <div class="report-stat">
+                        <span class="report-stat-label">음성 점수</span>
+                        <span class="report-stat-value" th:text="${report.audioAvg != null ? #numbers.formatDecimal(report.audioAvg, 1, 1) + '점' : '-'}">-</span>
+                    </div>
+                    <div class="report-stat">
+                        <span class="report-stat-label">영상 점수</span>
+                        <span class="report-stat-value" th:text="${report.videoAvg != null ? #numbers.formatDecimal(report.videoAvg, 1, 1) + '점' : '-'}">-</span>
+                    </div>
+                    <div class="report-stat">
+                        <span class="report-stat-label">종합 점수</span>
+                        <span class="score-badge" th:text="${report.overallAvg != null ? #numbers.formatDecimal(report.overallAvg, 1, 1) + '점' : '-'}">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="empty-state" th:if="${reports == null or reports.isEmpty()}">
+            <div class="empty-icon"><i class="fas fa-file-alt"></i></div>
+            <h2 class="empty-title">아직 리포트가 없습니다</h2>
+            <p class="empty-text">셀프 면접을 진행하고 AI 분석 리포트를 받아보세요</p>
+            <a href="/selfinterview/create" class="btn btn-primary"><i class="fas fa-play"></i> 셀프 면접 시작</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

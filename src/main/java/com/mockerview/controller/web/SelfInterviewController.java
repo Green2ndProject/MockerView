@@ -1,5 +1,6 @@
 package com.mockerview.controller.web;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mockerview.dto.CustomUserDetails;
 import com.mockerview.entity.Answer;
@@ -17,10 +18,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Slf4j
 @Controller
@@ -33,95 +32,134 @@ public class SelfInterviewController {
     private final AnswerRepository answerRepository;
     private final ObjectMapper objectMapper;
 
-    @GetMapping("/create-ai")
-    public String createAI(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        try {
-            User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
+    @GetMapping("/create")
+    public String createPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        if (userDetails != null) {
+            User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
             model.addAttribute("user", user);
-            return "selfinterview/create-ai";
-        } catch (Exception e) {
-            log.error("셀프 면접 페이지 로딩 실패: {}", e.getMessage(), e);
-            return "redirect:/auth/mypage";
         }
+        return "selfinterview/create-ai";
     }
 
-    @GetMapping("/reports/{reportId}")
-    public String reportDetail(@PathVariable Long reportId, @AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        try {
-            User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
-            SelfInterviewReport report = selfInterviewReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Report not found"));
-            
-            if (!report.getUser().getId().equals(user.getId())) {
-                throw new RuntimeException("권한이 없습니다");
-            }
-            
-            model.addAttribute("user", user);
-            model.addAttribute("report", report);
-            
-            return "selfinterview/report-detail";
-        } catch (Exception e) {
-            log.error("리포트 조회 실패: {}", e.getMessage(), e);
-            return "redirect:/auth/mypage";
+    @GetMapping("/reports")
+    public String reportsList(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        List<SelfInterviewReport> reports = selfInterviewReportRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        
+        double avgScore = reports.stream()
+                .filter(r -> r.getOverallAvg() != null)
+                .mapToDouble(SelfInterviewReport::getOverallAvg)
+                .average()
+                .orElse(0.0);
+        
+        int totalQuestions = reports.stream()
+                .filter(r -> r.getTotalQuestions() != null)
+                .mapToInt(SelfInterviewReport::getTotalQuestions)
+                .sum();
+        
+        model.addAttribute("user", user);
+        model.addAttribute("reports", reports);
+        model.addAttribute("totalReports", reports.size());
+        model.addAttribute("avgScore", avgScore);
+        model.addAttribute("totalQuestions", totalQuestions);
+        
+        return "selfinterview/reports-list";
+    }
+
+    @GetMapping("/reports/{id}")
+    public String reportDetail(@PathVariable Long id, 
+                               @AuthenticationPrincipal CustomUserDetails userDetails, 
+                               Model model) {
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        SelfInterviewReport report = selfInterviewReportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("리포트를 찾을 수 없습니다."));
+        
+        if (!report.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("접근 권한이 없습니다.");
         }
+        
+        model.addAttribute("user", user);
+        model.addAttribute("report", report);
+        
+        return "selfinterview/report-detail";
     }
 
     @GetMapping("/videos")
     public String videos(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        try {
-            User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow(() -> new RuntimeException("User not found"));
-            
-            List<Map<String, Object>> allVideos = new ArrayList<>();
-            
-            List<SelfInterviewReport> reports = selfInterviewReportRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
-            for (SelfInterviewReport report : reports) {
-                if (report.getVideoUrlsData() != null && !report.getVideoUrlsData().trim().isEmpty()) {
-                    try {
-                        Map<String, String> videoUrls = objectMapper.readValue(report.getVideoUrlsData(), Map.class);
-                        
-                        List<String> questions = objectMapper.readValue(report.getQuestionsData(), List.class);
-                        
-                        for (Map.Entry<String, String> entry : videoUrls.entrySet()) {
-                            int index = Integer.parseInt(entry.getKey());
-                            String videoUrl = entry.getValue();
-                            
-                            Map<String, Object> video = new HashMap<>();
-                            video.put("videoUrl", videoUrl);
-                            video.put("questionText", index < questions.size() ? questions.get(index) : "질문 없음");
-                            video.put("createdAt", report.getCreatedAt());
-                            video.put("reportId", report.getId());
-                            video.put("categoryName", report.getCategoryName());
-                            video.put("source", "셀프면접");
-                            
-                            allVideos.add(video);
-                        }
-                    } catch (Exception e) {
-                        log.error("영상 데이터 파싱 실패 - reportId: {}", report.getId(), e);
+        User user = userRepository.findByUsername(userDetails.getUsername()).orElseThrow();
+        
+        List<Map<String, Object>> allVideos = new ArrayList<>();
+        
+        List<SelfInterviewReport> reports = selfInterviewReportRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        for (SelfInterviewReport report : reports) {
+            if (report.getVideoUrlsData() != null && !report.getVideoUrlsData().isEmpty()) {
+                try {
+                    Map<String, String> videoUrls = objectMapper.readValue(
+                            report.getVideoUrlsData(), 
+                            new TypeReference<Map<String, String>>() {}
+                    );
+                    
+                    List<Map<String, Object>> questions = new ArrayList<>();
+                    if (report.getQuestionsData() != null) {
+                        questions = objectMapper.readValue(
+                                report.getQuestionsData(),
+                                new TypeReference<List<Map<String, Object>>>() {}
+                        );
                     }
+                    
+                    for (Map.Entry<String, String> entry : videoUrls.entrySet()) {
+                        String questionIndex = entry.getKey();
+                        String videoUrl = entry.getValue();
+                        
+                        if (videoUrl != null && !videoUrl.isEmpty()) {
+                            Map<String, Object> videoInfo = new HashMap<>();
+                            videoInfo.put("videoUrl", videoUrl);
+                            videoInfo.put("createdAt", report.getCreatedAt());
+                            videoInfo.put("source", "셀프면접");
+                            videoInfo.put("categoryName", report.getCategoryName());
+                            
+                            try {
+                                int idx = Integer.parseInt(questionIndex);
+                                if (idx < questions.size()) {
+                                    Object questionText = questions.get(idx).get("question");
+                                    videoInfo.put("questionText", questionText != null ? questionText.toString() : "질문 " + (idx + 1));
+                                } else {
+                                    videoInfo.put("questionText", "질문 " + (idx + 1));
+                                }
+                            } catch (NumberFormatException e) {
+                                videoInfo.put("questionText", "질문");
+                            }
+                            
+                            allVideos.add(videoInfo);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("영상 URL 파싱 에러: {}", e.getMessage());
                 }
             }
-            
-            List<Answer> answerVideos = answerRepository.findByUserIdAndVideoUrlIsNotNull(user.getId());
-            for (Answer answer : answerVideos) {
-                Map<String, Object> video = new HashMap<>();
-                video.put("videoUrl", answer.getVideoUrl());
-                video.put("questionText", "일반면접 답변");
-                video.put("createdAt", answer.getCreatedAt());
-                video.put("answerId", answer.getId());
-                video.put("source", "일반면접");
-                
-                allVideos.add(video);
-            }
-            
-            allVideos.sort((v1, v2) -> ((java.time.LocalDateTime) v2.get("createdAt")).compareTo((java.time.LocalDateTime) v1.get("createdAt")));
-            
-            model.addAttribute("user", user);
-            model.addAttribute("allVideos", allVideos);
-            model.addAttribute("totalVideos", allVideos.size());
-            
-            return "selfinterview/videos";
-        } catch (Exception e) {
-            log.error("녹화 영상 목록 로딩 실패: {}", e.getMessage(), e);
-            return "redirect:/auth/mypage";
         }
+        
+        List<Answer> videoAnswers = answerRepository.findByUserIdAndVideoUrlIsNotNull(user.getId());
+        for (Answer answer : videoAnswers) {
+            Map<String, Object> videoInfo = new HashMap<>();
+            videoInfo.put("videoUrl", answer.getVideoUrl());
+            videoInfo.put("questionText", answer.getQuestion() != null ? answer.getQuestion().getText() : "질문");
+            videoInfo.put("createdAt", answer.getCreatedAt());
+            videoInfo.put("source", "일반면접");
+            videoInfo.put("categoryName", answer.getQuestion() != null && answer.getQuestion().getSession() != null ? answer.getQuestion().getSession().getCategory() : "");
+            allVideos.add(videoInfo);
+        }
+        
+        allVideos.sort((a, b) -> {
+            LocalDateTime dateA = (LocalDateTime) a.get("createdAt");
+            LocalDateTime dateB = (LocalDateTime) b.get("createdAt");
+            return dateB.compareTo(dateA);
+        });
+        
+        model.addAttribute("user", user);
+        model.addAttribute("allVideos", allVideos);
+        model.addAttribute("totalVideos", allVideos.size());
+        
+        return "selfinterview/videos";
     }
 }
