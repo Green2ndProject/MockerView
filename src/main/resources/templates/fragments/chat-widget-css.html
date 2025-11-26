@@ -11,18 +11,26 @@
     border-radius    : 50%;
     background-color : #3f51b5;
     color            : white;
-    font-size        : 2rem;
+    font-size        : 1rem;
     border           : none;
     box-shadow       : 0 4px 12px rgba(0,0,0,0.2);
     cursor           : pointer;
     z-index          : 1001;
     transition : opacity 0.3s ease-in-out;
+    display    : flex;
+    align-items : center;
+    justify-content : center;
 }
 
 .chat-toggle-btn.hidden-by-widget {
     opacity: 0;
     visibility: hidden;
     z-index: 0;
+}
+
+.toggle-icon {
+    font-size : 2rem;
+    line-height : 1;
 }
 
 .unread-badge {
@@ -32,12 +40,14 @@
     background-color : #f44336;
     color            : white;
     border-radius    : 50%;
-    padding          : 3px 6px;
+    padding          : 3px;
     font-size        : 12px;
     font-weight      : bold;
     display          : flex;
     align-items      : center;
     justify-content  : center;
+    min-width        : 20px;
+    height           : 20px; 
 }
 
 .hidden {

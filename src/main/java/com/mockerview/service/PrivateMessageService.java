@@ -80,6 +80,9 @@ public class PrivateMessageService {
             )
         );
 
+        // 전체 읽지 않은 메시지 카운트 업데이트 푸시
+        notifyTotalUnreadCount(receiverUsername);
+
     }
 
     @Transactional(readOnly = true)
@@ -179,6 +182,8 @@ public class PrivateMessageService {
             "/queue/messagelist-update",
             currentSummaries);
 
+        notifyTotalUnreadCount(currentUsername);
+
     }
 
     public List<ConversationSummaryDTO> getConversationSummaries(String currentUsername) {
@@ -268,20 +273,49 @@ public class PrivateMessageService {
         Optional<PrivateMessageStatus> statusOpt = messageStatusRepository.findByUserUsernameAndPartnerUsername(
         currentUsername, partnerUsername);
 
-    if (statusOpt.isPresent() && statusOpt.get().isExited()) { // 나간 상태일 때만 복구
-        PrivateMessageStatus status = statusOpt.get();
-        
-        status.setIsExited(false);
-        messageStatusRepository.save(status);
-        
-        List<ConversationSummaryDTO> updatedSummaries = getConversationSummaries(currentUsername);
-        
+        if (statusOpt.isPresent() && statusOpt.get().isExited()) { // 나간 상태일 때만 복구
+            PrivateMessageStatus status = statusOpt.get();
+            
+            status.setIsExited(false);
+            messageStatusRepository.save(status);
+            
+            List<ConversationSummaryDTO> updatedSummaries = getConversationSummaries(currentUsername);
+            
+            messagingTemplate.convertAndSendToUser(
+                currentUsername,
+                "/queue/messagelist-update", 
+                updatedSummaries
+            );
+        }
+    }
+
+    public Long getTotalUnreadCount(String currentUsername){
+
+        return privateMessageRepository.sumTotalUnreadMessagesByUser(currentUsername);
+    }
+
+    // public Long getTotalUnreadCount(String currentUsername){
+
+    //     List<String> partnerUsernames = messageStatusRepository.findActivePartnerUsernames(currentUsername);
+
+    //     Long totalUnreadCount = 0L;
+
+    //     for(String partnerUsername : partnerUsernames){
+    //         totalUnreadCount += calculateUnreadCount(currentUsername, partnerUsername);
+    //     }
+
+    //     return totalUnreadCount;
+    // }
+
+    public void notifyTotalUnreadCount(String currentUsername){
+
+        Long totalUnreadCount = privateMessageRepository.sumTotalUnreadMessagesByUser(currentUsername);
+
         messagingTemplate.convertAndSendToUser(
-            currentUsername,
-            "/queue/messagelist-update", 
-            updatedSummaries
+            currentUsername, 
+            "/queue/total-unread", 
+            totalUnreadCount
         );
     }
-}
 
 }

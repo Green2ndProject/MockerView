@@ -51,5 +51,17 @@ public interface PrivateMessageRepository extends JpaRepository<PrivateMessage, 
 	long countUnreadMessages(
         @Param("currentUsername") String currentUsername, 
         @Param("partnerUsername") String partnerUsername, 
-        @Param("lastReadMessageId") Long lastReadMessageId);    
+        @Param("lastReadMessageId") Long lastReadMessageId);  
+        
+    @Query(value =
+        "SELECT COALESCE(SUM(CASE WHEN pm.id > pms.last_read_message_id THEN 1 ELSE 0 END), 0) " +
+        "FROM private_message pm " +
+        "JOIN private_message_status pms " +
+        "  ON pm.receiver_username = pms.user_username " +
+        "  AND pm.sender_username = pms.partner_username " +
+        "WHERE pms.user_username = :currentUsername " +
+        "  AND pms.is_exited = FALSE " +
+        "  AND pm.receiver_username = :currentUsername",
+        nativeQuery = true)
+    Long sumTotalUnreadMessagesByUser(@Param("currentUsername") String currentUsername);
 }

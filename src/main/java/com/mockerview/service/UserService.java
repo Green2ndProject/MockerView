@@ -19,6 +19,7 @@ import com.mockerview.dto.AchievementDTO;
 import com.mockerview.dto.CategoryScoreDTO;
 import com.mockerview.dto.RankingDTO;
 import com.mockerview.dto.StatisticsDTO;
+import com.mockerview.dto.UserSearchResponse;
 import com.mockerview.entity.Answer;
 import com.mockerview.entity.Feedback;
 import com.mockerview.entity.InterviewMBTI;

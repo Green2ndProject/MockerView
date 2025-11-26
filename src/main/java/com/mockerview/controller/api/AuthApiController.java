@@ -67,5 +67,5 @@ public class AuthApiController {
         }
 
         return Collections.singletonMap("Authorization", null);
-    }   
+    }
 }

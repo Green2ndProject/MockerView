@@ -87,7 +87,32 @@
             
             this.stompClient.subscribe('/user/queue/notification', onNotificationReceived);
 
-            console.log('✅ [notification] 메시지 알림 구독 완료')
+            console.log('✅ [notification] 메시지 알림 구독 완료');
+            
+            // unreadCount 뱃지 업데이트 구독
+            this.stompClient.subscribe('/user/queue/total-unread', (message) => {
+
+                const newCount = message.body;
+
+                updateUnreadBadge(newCount);
+
+            })
+
+            fetch('/api/private/messages/unread/total') 
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Initial count fetch failed');
+                    }
+                    return response.json();
+                })
+                .then(count => {
+                    updateUnreadBadge(count);
+                })
+                .catch(error => {
+                    console.error("초기 전체 읽지 않은 메시지 카운트 로딩 실패:", error);
+                });
+//--------------------------------------------------------------------
+
 
         }, (error)=> {
                 console.error("❌ [PrivateMessage] WebSocket 연결 실패:", error);
@@ -440,7 +465,7 @@ function showToast(title, body, senderUsername){
         toast.classList.remove('show');
 
         toast.addEventListener('transitioned', () => toast.remove());
-    }, 5000);
+    }, 2000);
 
     console.log(`[알림]제목 : ${title}, 내용 : ${body}`)
    
@@ -728,6 +753,10 @@ function setupWidgetToggle(){
         return;
     }
 
+    
+    //updateUnreadBadge();
+    //setInterval(updateUnreadBadge, 60000);
+
     toggleBtn.addEventListener('click', ()=>{
 
         const isActive = container.classList.toggle('active');
@@ -772,6 +801,21 @@ function setupWidgetToggle(){
     });
 
 }
+
+function updateUnreadBadge(count){
+
+    const unreadBadge = document.getElementById('unread-badge');
+    const totalCount = parseInt(count) || 0;
+
+    unreadBadge.textContent = totalCount;
+
+    if (totalCount > 0) {
+        unreadBadge.classList.remove('hidden');
+    } else {
+        unreadBadge.classList.add('hidden');
+    }
+}
+
 
 function getCurrentUsername(){
 

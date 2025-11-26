@@ -103,5 +103,16 @@ public class PrivateMessageRestController {
 
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/unread/total")
+    public ResponseEntity<Long> getTotalUnreadCount(
+        @AuthenticationPrincipal UserDetails userDetails
+    ){
+        String currentUsername = userDetails.getUsername();
+
+        Long totalUnreadCount = privateMessageService.getTotalUnreadCount(currentUsername);
+
+        return ResponseEntity.ok(totalUnreadCount);
+    }
     
 }
