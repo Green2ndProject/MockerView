@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{fragments/head :: head}"></div>
+    <title>리포트 상세 - MockerView</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-900: #111827;
+        }
+        body { background: var(--gray-50); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--gray-900); }
+        .navbar { background: white; border-bottom: 1px solid var(--gray-200); padding: 1rem 0; }
+        .navbar-brand { font-weight: 700; color: var(--primary); font-size: 1.5rem; text-decoration: none; }
+        .container-main { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .report-header { background: white; border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; border: 1px solid var(--gray-200); }
+        .report-title { font-size: 1.75rem; font-weight: 700; color: var(--gray-900); margin: 0 0 1.5rem 0; }
+        .report-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .meta-item { display: flex; align-items: center; gap: 0.5rem; color: var(--gray-600); font-size: 0.875rem; }
+        .report-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .btn { padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 500; font-size: 0.875rem; border: none; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); color: white; }
+        .btn-outline { background: white; color: var(--gray-600); border: 1px solid var(--gray-200); }
+        .btn-outline:hover { background: var(--gray-50); color: var(--gray-900); }
+        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: white; border-radius: 16px; padding: 1.5rem; border: 1px solid var(--gray-200); text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 0.25rem; }
+        .stat-value.success { color: var(--success); }
+        .stat-value.info { color: var(--info); }
+        .stat-value.warning { color: var(--warning); }
+        .stat-label { font-size: 0.8125rem; color: var(--gray-600); }
+        .content-card { background: white; border-radius: 16px; padding: 2rem; border: 1px solid var(--gray-200); margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.25rem; font-weight: 700; color: var(--gray-900); margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.75rem; }
+        .card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: rgba(102, 126, 234, 0.1); color: var(--primary); }
+        .question-item { background: var(--gray-50); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+        .question-item:last-child { margin-bottom: 0; }
+        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .question-number { background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .question-score { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+        .question-text { font-size: 1rem; font-weight: 600; color: var(--gray-900); margin-bottom: 1rem; line-height: 1.5; }
+        .feedback-section { background: white; border-radius: 10px; padding: 1.25rem; border: 1px solid var(--gray-200); }
+        .feedback-title { font-size: 0.75rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+        .feedback-summary { color: var(--gray-900); line-height: 1.6; margin-bottom: 1rem; font-size: 0.9375rem; }
+        .feedback-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem; }
+        .feedback-box { padding: 0.875rem; border-radius: 8px; }
+        .feedback-box.strengths { background: rgba(16, 185, 129, 0.08); border-left: 3px solid var(--success); }
+        .feedback-box.weaknesses { background: rgba(239, 68, 68, 0.08); border-left: 3px solid var(--danger); }
+        .feedback-box-title { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+        .feedback-box.strengths .feedback-box-title { color: var(--success); }
+        .feedback-box.weaknesses .feedback-box-title { color: var(--danger); }
+        .feedback-box-content { font-size: 0.875rem; color: var(--gray-600); line-height: 1.5; }
+        .improvement-box { background: rgba(59, 130, 246, 0.08); border-left: 3px solid var(--info); padding: 0.875rem; border-radius: 8px; }
+        .improvement-box .feedback-box-title { color: var(--info); }
+        .score-grid { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+        .score-item { background: var(--gray-100); padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.75rem; color: var(--gray-600); display: flex; align-items: center; gap: 0.375rem; }
+        .score-item i { font-size: 0.625rem; }
+        .video-player { width: 100%; max-width: 480px; border-radius: 10px; margin-top: 1rem; }
+        .badge-type { padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; }
+        .type-technical { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
+        .type-behavioral { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .type-situational { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .difficulty-1 { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .difficulty-2 { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .difficulty-3 { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+        @media print { .navbar, .report-actions { display: none; } body { background: white; } .content-card, .stat-card, .report-header { border: 1px solid #ddd; box-shadow: none; } }
+        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .feedback-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container-main d-flex justify-content-between align-items-center">
+            <a class="navbar-brand" href="/"><i class="fas fa-video"></i> MockerView</a>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="report-header">
+            <h1 class="report-title" th:text="${report.categoryName} + ' 셀프 면접 리포트'">면접 리포트</h1>
+            <div class="report-meta">
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <span th:text="${user.name}">이름</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span th:text="${#temporals.format(report.createdAt, 'yyyy년 MM월 dd일 HH:mm')}">날짜</span>
+                </div>
+                <div class="meta-item">
+                    <span class="badge-type" 
+                          th:classappend="${report.questionType == 'TECHNICAL' ? 'type-technical' : (report.questionType == 'BEHAVIORAL' ? 'type-behavioral' : 'type-situational')}"
+                          th:text="${report.questionType == 'TECHNICAL' ? '기술 면접' : (report.questionType == 'BEHAVIORAL' ? '인성 면접' : '상황 면접')}">유형</span>
+                </div>
+                <div class="meta-item">
+                    <span class="badge-type"
+                          th:classappend="${report.difficulty == 1 ? 'difficulty-1' : (report.difficulty == 2 ? 'difficulty-2' : 'difficulty-3')}"
+                          th:text="${report.difficulty == 1 ? '쉬움' : (report.difficulty == 2 ? '보통' : '어려움')}">난이도</span>
+                </div>
+            </div>
+            <div class="report-actions">
+                <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> 인쇄</button>
+                <button class="btn btn-outline" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> PDF 저장</button>
+                <button class="btn btn-outline" onclick="shareReport()"><i class="fas fa-share-alt"></i> 공유</button>
+                <a th:href="@{/selfinterview/reports}" class="btn btn-outline"><i class="fas fa-list"></i> 목록</a>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value success" th:text="${report.overallAvg != null ? #numbers.formatDecimal(report.overallAvg, 1, 1) : '-'}">0.0</div>
+                <div class="stat-label">종합 점수</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:text="${report.textAvg != null ? #numbers.formatDecimal(report.textAvg, 1, 1) : '-'}">0.0</div>
+                <div class="stat-label">텍스트</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value info" th:text="${report.audioAvg != null ? #numbers.formatDecimal(report.audioAvg, 1, 1) : '-'}">0.0</div>
+                <div class="stat-label">음성</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value warning" th:text="${report.videoAvg != null ? #numbers.formatDecimal(report.videoAvg, 1, 1) : '-'}">0.0</div>
+                <div class="stat-label">영상</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" th:text="${report.totalQuestions}">0</div>
+                <div class="stat-label">질문 수</div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">
+                <span class="card-icon"><i class="fas fa-clipboard-list"></i></span>
+                질문별 AI 분석
+            </h2>
+            <div id="questionsContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script th:inline="javascript">
+        const reportId = /*[[${report.id}]]*/ 0;
+
+        $(document).ready(function() {
+            const questionsRaw = /*[[${report.questionsData}]]*/ '[]';
+            const feedbacksRaw = /*[[${report.feedbacksData}]]*/ '{}';
+            const videoUrlsRaw = /*[[${report.videoUrlsData}]]*/ '{}';
+
+            let questions = [], feedbacks = {}, videoUrls = {};
+            try {
+                questions = JSON.parse(questionsRaw || '[]');
+                feedbacks = JSON.parse(feedbacksRaw || '{}');
+                videoUrls = JSON.parse(videoUrlsRaw || '{}');
+            } catch (e) { console.error('JSON 파싱 에러:', e); }
+
+            const container = $('#questionsContainer');
+            container.empty();
+
+            if (questions.length === 0) {
+                container.html('<p class="text-muted text-center py-4">질문 데이터가 없습니다.</p>');
+                return;
+            }
+
+            questions.forEach((questionText, idx) => {
+                const fb = feedbacks[String(idx)] || feedbacks[idx] || {};
+                const videoFb = fb.video || {};
+                const textFb = fb.text || {};
+                const audioFb = fb.audio || {};
+                const videoUrl = videoUrls[String(idx)] || videoUrls[idx] || null;
+
+                const score = videoFb.score || textFb.score || audioFb.score || '-';
+                const summary = videoFb.summary || textFb.summary || audioFb.summary || '';
+                const strengths = videoFb.strengths || textFb.strengths || '';
+                const weaknesses = videoFb.weaknesses || textFb.weaknesses || '';
+                const improvements = videoFb.improvements || textFb.improvements || '';
+
+                let html = `
+                    <div class="question-item">
+                        <div class="question-header">
+                            <span class="question-number">Q${idx + 1}</span>
+                            <span class="question-score">${score}점</span>
+                        </div>
+                        <div class="question-text">${questionText}</div>
+                        <div class="feedback-section">
+                            <div class="feedback-title"><i class="fas fa-robot"></i> AI 피드백</div>
+                            ${summary ? `<div class="feedback-summary">${summary}</div>` : ''}
+                            ${(strengths || weaknesses) ? `
+                            <div class="feedback-grid">
+                                ${strengths ? `
+                                <div class="feedback-box strengths">
+                                    <div class="feedback-box-title"><i class="fas fa-check-circle"></i> 강점</div>
+                                    <div class="feedback-box-content">${strengths}</div>
+                                </div>` : ''}
+                                ${weaknesses ? `
+                                <div class="feedback-box weaknesses">
+                                    <div class="feedback-box-title"><i class="fas fa-exclamation-circle"></i> 약점</div>
+                                    <div class="feedback-box-content">${weaknesses}</div>
+                                </div>` : ''}
+                            </div>` : ''}
+                            ${improvements ? `
+                            <div class="improvement-box">
+                                <div class="feedback-box-title"><i class="fas fa-lightbulb"></i> 개선 제안</div>
+                                <div class="feedback-box-content">${improvements}</div>
+                            </div>` : ''}
+                `;
+
+                if (videoFb.eye_contact_score !== undefined) {
+                    html += `
+                        <div class="score-grid">
+                            <div class="score-item"><i class="fas fa-eye"></i> 시선 ${videoFb.eye_contact_score}</div>
+                            <div class="score-item"><i class="fas fa-smile"></i> 미소 ${videoFb.smile_frequency}</div>
+                            <div class="score-item"><i class="fas fa-hand-paper"></i> 제스처 ${videoFb.gesture_score}</div>
+                            <div class="score-item"><i class="fas fa-user"></i> 자세 ${videoFb.posture_score}</div>
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+
+                if (videoUrl) {
+                    html += `<video src="${videoUrl}" controls class="video-player"></video>`;
+                }
+
+                html += '</div>';
+                container.append(html);
+            });
+        });
+
+        function exportPDF() {
+            const element = document.querySelector('.container-main');
+            const buttons = document.querySelectorAll('.report-actions');
+            buttons.forEach(b => b.style.display = 'none');
+            
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `셀프면접리포트_${reportId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                buttons.forEach(b => b.style.display = 'flex');
+            });
+        }
+
+        function shareReport() {
+            const shareUrl = window.location.href;
+            if (navigator.share) {
+                navigator.share({ title: '셀프 면접 리포트', url: shareUrl });
+            } else {
+                navigator.clipboard.writeText(shareUrl).then(() => alert('링크가 복사되었습니다!'));
+            }
+        }
+    </script>
+</body>
+</html>
