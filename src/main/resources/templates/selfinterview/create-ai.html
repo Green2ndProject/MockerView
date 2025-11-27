@@ -1146,6 +1146,9 @@
       let selectedDifficulty = null;
       let questionCount = 5;
       let generatedQuestions = [];
+      let currentSessionId = null;
+      let currentUserId = null;
+      let questionIds = {};
       let currentAnswers = {};
       let videoStreams = {};
       let videoRecorders = {};
@@ -1334,7 +1337,12 @@
             count: questionCount,
           }),
           success: function (response) {
-            generatedQuestions = response;
+            currentSessionId = response.sessionId;
+            currentUserId = response.userId;
+            generatedQuestions = response.questions.map(q => q.text);
+            response.questions.forEach((q, idx) => {
+              questionIds[idx] = q.id;
+            });
             displayQuestions();
             $("#setupSection").hide();
             $("#questionsSection").addClass("active");
@@ -1551,6 +1559,7 @@
             questionText: generatedQuestions[index],
             answerText: answer,
             categoryCode: selectedSubCategory,
+            questionId: questionIds[index],
           }),
           success: function (response) {
             feedbackResults[index] = feedbackResults[index] || {};
@@ -1580,6 +1589,7 @@
         const formData = new FormData();
         formData.append("audio", audioBlobs[index], "audio.webm");
         formData.append("questionText", generatedQuestions[index]);
+        formData.append("questionId", questionIds[index]);
 
         $.ajax({
           url: "/api/feedback/audio",
@@ -1611,6 +1621,7 @@
         const formData = new FormData();
         formData.append("video", videoBlobs[index], "video.webm");
         formData.append("questionText", generatedQuestions[index]);
+        formData.append("questionId", questionIds[index]);
 
         $.ajax({
           url: "/api/feedback/video",

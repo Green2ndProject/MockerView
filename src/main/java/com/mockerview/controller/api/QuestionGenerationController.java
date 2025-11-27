@@ -6,6 +6,7 @@ import com.mockerview.entity.Session;
 import com.mockerview.entity.Subscription;
 import com.mockerview.entity.User;
 import com.mockerview.repository.CategoryRepository;
+import com.mockerview.repository.QuestionRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.SubscriptionRepository;
 import com.mockerview.repository.UserRepository;
@@ -18,9 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -32,6 +31,7 @@ public class QuestionGenerationController {
     private final DifficultyAdaptiveService difficultyAdaptiveService;
     private final CategoryRepository categoryRepository;
     private final SessionRepository sessionRepository;
+    private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
     private final SubscriptionRepository subscriptionRepository;
 
@@ -168,14 +168,38 @@ public class QuestionGenerationController {
             subscription.setUsedSessions(subscription.getUsedSessions() + 1);
             subscriptionRepository.save(subscription);
 
-            List<String> questions = aiQuestionGenerator.generateMultipleQuestions(
+            List<String> questionTexts = aiQuestionGenerator.generateMultipleQuestions(
                     category, difficulty, questionType, count
             );
 
-            log.info("✨ 셀프 면접 세션 생성 완료 - 사용자: {}, 세션: {}/{}", 
-                     user.getUsername(), subscription.getUsedSessions(), subscription.getSessionLimit());
+            List<Map<String, Object>> questionList = new ArrayList<>();
+            int orderNo = 1;
+            for (String text : questionTexts) {
+                Question question = Question.builder()
+                        .session(session)
+                        .text(text)
+                        .orderNo(orderNo++)
+                        .questioner(user)
+                        .difficultyLevel(difficulty)
+                        .build();
+                questionRepository.save(question);
+                
+                Map<String, Object> qMap = new HashMap<>();
+                qMap.put("id", question.getId());
+                qMap.put("text", text);
+                qMap.put("orderNo", question.getOrderNo());
+                questionList.add(qMap);
+            }
 
-            return ResponseEntity.ok(questions);
+            log.info("✨ 셀프 면접 세션 생성 완료 - 사용자: {}, 세션ID: {}, 질문수: {}", 
+                     user.getUsername(), session.getId(), questionList.size());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("sessionId", session.getId());
+            response.put("userId", user.getId());
+            response.put("questions", questionList);
+
+            return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
