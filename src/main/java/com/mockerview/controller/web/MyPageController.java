@@ -186,10 +186,10 @@ public class MyPageController {
             model.addAttribute("totalHostedSessions", stats.get("totalHostedSessions"));
             model.addAttribute("endedSessionsCount", stats.get("endedSessionsCount"));
             model.addAttribute("totalFeedbacksGiven", stats.get("totalFeedbacksGiven"));
-            model.addAttribute("avgGivenScore", "0.0");
+            model.addAttribute("avgGivenScore", stats.get("avgGivenScore"));
             model.addAttribute("sessionsByMonth", stats.get("sessionsByMonth"));
-            model.addAttribute("hostedSessions", new ArrayList<>());
-            model.addAttribute("topInterviewees", new ArrayList<>());
+            model.addAttribute("hostedSessions", stats.get("hostedSessions"));
+            model.addAttribute("topInterviewees", stats.get("topInterviewees"));
             
             return "user/myStatsInterviewer";
         } catch (Exception e) {
@@ -197,7 +197,6 @@ public class MyPageController {
             return "redirect:/auth/mypage";
         }
     }
-
     @GetMapping("/withdraw")
     public String withdrawPage() {
         return "user/withdraw";

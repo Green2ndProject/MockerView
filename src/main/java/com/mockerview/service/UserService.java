@@ -30,6 +30,7 @@ import com.mockerview.exception.AlreadyDeletedException;
 import com.mockerview.repository.AnswerRepository;
 import com.mockerview.repository.FeedbackRepository;
 import com.mockerview.repository.InterviewMBTIRepository;
+import com.mockerview.repository.InterviewerNoteRepository;
 import com.mockerview.repository.SessionRepository;
 import com.mockerview.repository.SelfInterviewReportRepository;
 import com.mockerview.repository.UserRepository;
@@ -49,6 +50,7 @@ public class UserService {
     private final FeedbackRepository feedbackRepository;
     private final InterviewMBTIRepository mbtiRepository;
     private final SelfInterviewReportRepository selfInterviewReportRepository;
+    private final InterviewerNoteRepository interviewerNoteRepository;
 
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
@@ -137,17 +139,13 @@ public class UserService {
     }
 
     public List<UserSearchResponse> searchUsers(String keyword){
-
         if(keyword == null || keyword.trim().isEmpty()){
             return Collections.emptyList();
         }
-
         List<User> users = 
             userRepository.findByNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(keyword, keyword);
-
         return users.stream().map(UserSearchResponse::from).collect(Collectors.toList());
     }
-
 
     @Transactional(readOnly = true)
     public StatisticsDTO getUserStatistics(Long userId) {
@@ -266,15 +264,33 @@ public class UserService {
                     sessionsByMonth.merge(key, 1, Integer::sum);
                 }
             }
+            
+            Double avgGivenScore = interviewerNoteRepository.findAverageRatingByInterviewerId(userId);
+            if (avgGivenScore == null) {
+                avgGivenScore = 0.0;
+            }
+            
+            List<Object[]> topInterviewees = interviewerNoteRepository.findTopIntervieweesByInterviewerId(userId);
+            if (topInterviewees == null) {
+                topInterviewees = new ArrayList<>();
+            }
+            
+            List<Session> recentHostedSessions = hostedSessions.stream()
+                .sorted(Comparator.comparing(Session::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(10)
+                .collect(Collectors.toList());
 
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalHostedSessions", hostedSessions.size());
             stats.put("endedSessionsCount", endedSessions);
             stats.put("totalFeedbacksGiven", totalFeedbacks);
             stats.put("sessionsByMonth", sessionsByMonth);
+            stats.put("avgGivenScore", Math.round(avgGivenScore * 10) / 10.0);
+            stats.put("topInterviewees", topInterviewees);
+            stats.put("hostedSessions", recentHostedSessions);
 
-            log.info("✅ 면접관 통계 수집 완료 - 총 세션: {}, 종료: {}, 피드백: {}", 
-                hostedSessions.size(), endedSessions, totalFeedbacks);
+            log.info("✅ 면접관 통계 수집 완료 - 총 세션: {}, 종료: {}, 피드백: {}, 평균점수: {}", 
+                hostedSessions.size(), endedSessions, totalFeedbacks, avgGivenScore);
 
             return stats;
         } catch (Exception e) {
@@ -284,6 +300,9 @@ public class UserService {
             emptyStats.put("endedSessionsCount", 0);
             emptyStats.put("totalFeedbacksGiven", 0);
             emptyStats.put("sessionsByMonth", new HashMap<>());
+            emptyStats.put("avgGivenScore", 0.0);
+            emptyStats.put("topInterviewees", new ArrayList<>());
+            emptyStats.put("hostedSessions", new ArrayList<>());
             return emptyStats;
         }
     }
@@ -516,5 +535,4 @@ public class UserService {
             })
             .collect(Collectors.toList());
     }
-    
 }

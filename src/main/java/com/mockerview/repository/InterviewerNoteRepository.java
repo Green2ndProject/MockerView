@@ -2,6 +2,8 @@ package com.mockerview.repository;
 
 import com.mockerview.entity.InterviewerNote;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,4 +19,16 @@ public interface InterviewerNoteRepository extends JpaRepository<InterviewerNote
         Long sessionId, Long interviewerId, Long intervieweeId);
     
     List<InterviewerNote> findByIntervieweeIdAndSubmitted(Long intervieweeId, Boolean submitted);
+    
+    List<InterviewerNote> findByInterviewerIdAndSubmitted(Long interviewerId, Boolean submitted);
+    
+    @Query("SELECT AVG(n.rating) FROM InterviewerNote n WHERE n.interviewer.id = :interviewerId AND n.submitted = true AND n.rating IS NOT NULL")
+    Double findAverageRatingByInterviewerId(@Param("interviewerId") Long interviewerId);
+    
+    @Query("SELECT n.interviewee.id, n.interviewee.name, AVG(n.rating) " +
+            "FROM InterviewerNote n " +
+            "WHERE n.interviewer.id = :interviewerId AND n.submitted = true AND n.rating IS NOT NULL " +
+            "GROUP BY n.interviewee.id, n.interviewee.name " +
+            "ORDER BY AVG(n.rating) DESC")
+    List<Object[]> findTopIntervieweesByInterviewerId(@Param("interviewerId") Long interviewerId);
 }
