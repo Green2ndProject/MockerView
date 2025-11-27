@@ -32,7 +32,7 @@ public class SelfInterviewController {
     private final AnswerRepository answerRepository;
     private final ObjectMapper objectMapper;
 
-    @GetMapping("/create")
+    @GetMapping({"/create", "/create-ai"})
     public String createPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         if (userDetails != null) {
             User user = userRepository.findByUsername(userDetails.getUsername()).orElse(null);
@@ -99,11 +99,11 @@ public class SelfInterviewController {
                             new TypeReference<Map<String, String>>() {}
                     );
                     
-                    List<Map<String, Object>> questions = new ArrayList<>();
+                    List<String> questions = new ArrayList<>();
                     if (report.getQuestionsData() != null) {
                         questions = objectMapper.readValue(
                                 report.getQuestionsData(),
-                                new TypeReference<List<Map<String, Object>>>() {}
+                                new TypeReference<List<String>>() {}
                         );
                     }
                     
@@ -121,8 +121,7 @@ public class SelfInterviewController {
                             try {
                                 int idx = Integer.parseInt(questionIndex);
                                 if (idx < questions.size()) {
-                                    Object questionText = questions.get(idx).get("question");
-                                    videoInfo.put("questionText", questionText != null ? questionText.toString() : "질문 " + (idx + 1));
+                                    videoInfo.put("questionText", questions.get(idx));
                                 } else {
                                     videoInfo.put("questionText", "질문 " + (idx + 1));
                                 }
