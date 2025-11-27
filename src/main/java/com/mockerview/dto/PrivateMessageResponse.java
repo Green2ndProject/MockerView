@@ -19,7 +19,7 @@ public class PrivateMessageResponse {
     
     private String senderUsername;
     private String receiverUsername;
-    private String receiverName;
+    private String senderName;
     private String content;
 
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "Asia/Seoul")

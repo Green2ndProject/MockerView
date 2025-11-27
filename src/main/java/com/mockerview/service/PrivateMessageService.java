@@ -2,6 +2,7 @@ package com.mockerview.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,19 +98,27 @@ public class PrivateMessageService {
                 userA, userB  // Receiver = userA, Sender = userB
             );
 
-        User partner = userRepository.findByUsername(userB).orElse(null);
+        User userAEntity = userRepository.findByUsername(userA).orElseThrow();
+        User userBEntity = userRepository.findByUsername(userB).orElseThrow();
 
-        String partnerName = partner.getName();
-        
+        Map<String, String> nameCache = new HashMap<>();
+        nameCache.put(userA, userAEntity.getName()); // userA(나) 의 이름
+        nameCache.put(userB, userBEntity.getName()); // userB(상대방)의 이름
+
         return messages.stream()
-                .map(message -> PrivateMessageResponse.builder()
-                                .senderUsername(message.getSenderUsername())
+        .map(message -> {
+            String senderUsername = message.getSenderUsername();
+            String senderName = nameCache.get(senderUsername);
+
+            return PrivateMessageResponse.builder()
+                                .senderUsername(senderUsername)
                                 .receiverUsername(message.getReceiverUsername())
-                                .receiverName(partnerName)
+                                .senderName(senderName)
                                 .content(message.getContent())
                                 .sentAt(message.getSentAt())
-                                .build())
-                                .collect(Collectors.toList());                
+                                .build();
+        })
+        .collect(Collectors.toList());                
                 
         
                                 
