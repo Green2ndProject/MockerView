@@ -250,7 +250,7 @@ function onConversationUpdateReceived(payload){
 
 async function fetchMessageHistory(partnerUsername){
 
-    const API_BASE_URL = 'http://localhost:8080';
+    const API_BASE_URL = 'https://mockerview.net';
     const API_URL      = `${API_BASE_URL}/api/private/messages/${encodeURIComponent(partnerUsername)}`;
 
     const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
@@ -283,7 +283,7 @@ async function fetchMessageHistory(partnerUsername){
 
 async function openMessageWindow(partnerUsername){
 
-    const RESTORE_URL = `http://localhost:8080/api/private/messages/restore/${encodeURIComponent(partnerUsername)}`;
+    const RESTORE_URL = `https://mockerview.net/api/private/messages/restore/${encodeURIComponent(partnerUsername)}`;
 
     try{
         await fetch(RESTORE_URL, {method: 'POST'});
@@ -372,7 +372,7 @@ async function openMessageWindow(partnerUsername){
 
 async function exitConversation(partnerUsername){
 
-    const API_BASE_URL = 'http://localhost:8080';
+    const API_BASE_URL = 'https://mockerview.net';
     const API_URL = `${API_BASE_URL}/api/private/messages/exit/${encodeURIComponent(partnerUsername)}`;
 
     try {
@@ -621,7 +621,7 @@ function handleSearchInput(event){
 
 async function fetchSearchUsers(query){
 
-    const API_BASE_URL = 'http://localhost:8080';
+    const API_BASE_URL = 'https://mockerview.net';
     const API_URL = `${API_BASE_URL}/api/users/search?q=${encodeURIComponent(query)}`;
     const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
 
