@@ -526,19 +526,13 @@ public class SessionWebController {
         long interviewerCount = userRepository.countByRole(User.UserRole.HOST);
         long intervieweeCount = userRepository.countByRole(User.UserRole.STUDENT);
         
-        double averageRating = allFeedbacks.stream()
-                .filter(f -> f.getRating() != null && f.getRating() > 0)
-                .mapToInt(Feedback::getRating)
-                .average()
-                .orElse(0.0);
-        
         model.addAttribute("session", session);
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("questionCount", questions.size());
         model.addAttribute("interviewerCount", interviewerCount);
         model.addAttribute("intervieweeCount", intervieweeCount);
         model.addAttribute("feedbacks", allFeedbacks);
-        model.addAttribute("averageRating", averageRating);
+        model.addAttribute("averageRating", 0.0);
         
         if (session.getStartTime() != null && session.getEndTime() != null) {
             long duration = java.time.Duration.between(
