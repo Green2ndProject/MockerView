@@ -102,6 +102,7 @@
     flex-grow : 1;
     display : flex;
     width : 500px;
+    height : 100%;
     flex-direction: column;
     padding : 10px;
     background-color: #f9f9f9;
@@ -109,6 +110,7 @@
 
 .chat-header {
     display : flex;
+    flex-shrink: 0;
     justify-content : space-between;
     align-items : center;
     padding : 15px;
@@ -138,7 +140,8 @@
 }
 
 #message-history {
-    overflow : scroll;
+    flex-grow: 1;
+    overflow-y : scroll;
 }
 
 .message-history {
@@ -237,6 +240,7 @@
     border-top : 1px solid #ddd;
     background-color : #fff;
     align-items: flex-end;
+    flex-shrink: 0;
 }
 
 #message-input {

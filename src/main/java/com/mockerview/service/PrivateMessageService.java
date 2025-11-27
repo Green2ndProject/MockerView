@@ -15,8 +15,10 @@ import com.mockerview.dto.PrivateMessageRequest;
 import com.mockerview.dto.PrivateMessageResponse;
 import com.mockerview.entity.PrivateMessage;
 import com.mockerview.entity.PrivateMessageStatus;
+import com.mockerview.entity.User;
 import com.mockerview.repository.PrivateMessageRepository;
 import com.mockerview.repository.PrivateMessageStatusRepository;
+import com.mockerview.repository.UserRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class PrivateMessageService {
     private final SimpMessagingTemplate messagingTemplate;
     private final PrivateMessageRepository privateMessageRepository;
     private final PrivateMessageStatusRepository messageStatusRepository; 
+    private final UserRepository userRepository;
     
     public void saveAndSend(String senderUsername, PrivateMessageRequest request){
 
@@ -94,10 +97,15 @@ public class PrivateMessageService {
                 userA, userB  // Receiver = userA, Sender = userB
             );
 
+        User partner = userRepository.findByUsername(userB).orElse(null);
+
+        String partnerName = partner.getName();
+        
         return messages.stream()
                 .map(message -> PrivateMessageResponse.builder()
                                 .senderUsername(message.getSenderUsername())
                                 .receiverUsername(message.getReceiverUsername())
+                                .receiverName(partnerName)
                                 .content(message.getContent())
                                 .sentAt(message.getSentAt())
                                 .build())
