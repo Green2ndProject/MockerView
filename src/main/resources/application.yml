@@ -195,8 +195,8 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
 agora:
-  app-id: ${AGORA_APP_ID:dummy}
-  app-certificate: ${AGORA_APP_CERTIFICATE:}
+  app-id: 1f1255ab0cc84d84892039382f886cf6
+  app-certificate: 0381f7103e854cb6a88f876555a90edf
 
 ---
 spring:

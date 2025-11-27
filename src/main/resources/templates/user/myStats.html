@@ -195,7 +195,7 @@
 
       .accuracy-bar {
         height: 100%;
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        background: #667eea;
         border-radius: 8px;
       }
 
@@ -211,6 +211,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         gap: 20px;
+        margin-bottom: 20px;
       }
 
       .achievements-container {
@@ -355,6 +356,149 @@
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
       }
 
+      .feedbacks-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        margin-bottom: 20px;
+      }
+
+      .feedbacks-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .feedbacks-title {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #1a1a1a;
+      }
+
+      .feedbacks-count {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 400;
+      }
+
+      .feedback-card {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-left: 3px solid #667eea;
+      }
+
+      .feedback-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .feedback-interviewer {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .feedback-date {
+        font-size: 0.6875rem;
+        color: #9ca3af;
+      }
+
+      .feedback-rating {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+
+      .feedback-rating-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+      }
+
+      .feedback-rating-stars {
+        color: #f59e0b;
+        font-size: 0.875rem;
+      }
+
+      .feedback-rating-value {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .feedback-content {
+        display: grid;
+        gap: 10px;
+      }
+
+      .feedback-item {
+        background: white;
+        padding: 10px 12px;
+        border-radius: 6px;
+      }
+
+      .feedback-item-label {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+      }
+
+      .feedback-item-text {
+        font-size: 0.75rem;
+        color: #374151;
+        line-height: 1.5;
+      }
+
+      .feedback-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #9ca3af;
+      }
+
+      .feedback-empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 8px;
+      }
+
+      .feedback-empty-text {
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+
+      .feedback-empty-sub {
+        font-size: 0.75rem;
+        margin-top: 4px;
+      }
+
+      .feedback-toggle {
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .feedback-toggle-icon {
+        transition: transform 0.2s;
+      }
+
+      .feedback-toggle-icon.expanded {
+        transform: rotate(180deg);
+      }
+
+      .feedback-details {
+        display: none;
+      }
+
+      .feedback-details.show {
+        display: block;
+      }
+
       @media (max-width: 1200px) {
         .analysis-grid {
           grid-template-columns: repeat(2, 1fr);
@@ -400,12 +544,14 @@
         .accuracy-container,
         .achievements-container,
         .ranking-container,
-        .activity-chart-container {
+        .activity-chart-container,
+        .feedbacks-section {
           padding: 12px;
         }
         .chart-header,
         .achievements-header,
-        .ranking-title {
+        .ranking-title,
+        .feedbacks-title {
           font-size: 0.8125rem;
         }
         .achievements-grid {
@@ -424,6 +570,9 @@
         .filter-btn {
           padding: 4px 8px;
           font-size: 0.6875rem;
+        }
+        .feedback-content {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -514,11 +663,11 @@
             <div class="analysis-subtitle">성장 추이</div>
           </div>
         </a>
-        <a th:href="${mbtiType != null && mbtiType != 'N/A'} ? @{/analysis/mbti/detail(type=${mbtiType})} : @{/analysis/mbti-result}" class="analysis-card">
+        <a th:href="${mbtiType != null && mbtiType != 'N/A' && mbtiType != '미분석'} ? @{/analysis/mbti/detail(type=${mbtiType})} : @{/analysis/mbti-result}" class="analysis-card">
           <div class="analysis-icon">🧠</div>
           <div class="analysis-content">
             <div class="analysis-title">면접 MBTI</div>
-            <div class="analysis-subtitle" th:text="${mbtiType != null && mbtiType != 'N/A'} ? ${mbtiType} + ' 상세보기' : '성향 분석'">CLDS 상세보기</div>
+            <div class="analysis-subtitle" th:text="${mbtiType != null && mbtiType != 'N/A' && mbtiType != '미분석'} ? ${mbtiType} + ' 상세보기' : '성향 분석'">성향 분석</div>
           </div>
         </a>
         <a href="/analysis/voice-result" class="analysis-card">
@@ -535,6 +684,62 @@
             <div class="analysis-subtitle">비언어 소통</div>
           </div>
         </a>
+      </div>
+
+      <div class="feedbacks-section">
+        <div class="feedbacks-header">
+          <h2 class="feedbacks-title">📝 면접관 피드백 <span class="feedbacks-count" th:text="'(' + ${receivedFeedbacks != null ? receivedFeedbacks.size() : 0} + '개)'"></span></h2>
+        </div>
+        
+        <div th:if="${receivedFeedbacks != null && !receivedFeedbacks.isEmpty()}">
+          <div th:each="feedback, stat : ${receivedFeedbacks}" class="feedback-card" th:if="${stat.index < 5}">
+            <div class="feedback-card-header">
+              <div>
+                <span class="feedback-interviewer" th:text="${feedback.interviewerName} + ' 면접관'">면접관</span>
+              </div>
+              <span class="feedback-date" th:text="${#temporals.format(feedback.createdAt, 'yyyy.MM.dd HH:mm')}">날짜</span>
+            </div>
+            
+            <div class="feedback-rating" th:if="${feedback.rating != null}">
+              <span class="feedback-rating-label">평가:</span>
+              <span class="feedback-rating-stars">
+                <span th:each="i : ${#numbers.sequence(1, 5)}" th:text="${i <= feedback.rating} ? '★' : '☆'"></span>
+              </span>
+              <span class="feedback-rating-value" th:text="${feedback.rating} + '/5'"></span>
+            </div>
+            
+            <div class="feedback-toggle" th:onclick="'toggleFeedback(' + ${stat.index} + ')'">
+              <span style="font-size: 0.75rem; color: #667eea;">상세 보기 <span th:id="'toggle-icon-' + ${stat.index}" class="feedback-toggle-icon">▼</span></span>
+            </div>
+            
+            <div th:id="'feedback-details-' + ${stat.index}" class="feedback-details">
+              <div class="feedback-content" style="margin-top: 12px;">
+                <div class="feedback-item" th:if="${feedback.strengths != null && !feedback.strengths.isEmpty()}">
+                  <div class="feedback-item-label">💪 강점</div>
+                  <div class="feedback-item-text" th:text="${feedback.strengths}">강점 내용</div>
+                </div>
+                <div class="feedback-item" th:if="${feedback.weaknesses != null && !feedback.weaknesses.isEmpty()}">
+                  <div class="feedback-item-label">📌 개선점</div>
+                  <div class="feedback-item-text" th:text="${feedback.weaknesses}">개선점 내용</div>
+                </div>
+                <div class="feedback-item" th:if="${feedback.improvements != null && !feedback.improvements.isEmpty()}">
+                  <div class="feedback-item-label">💡 제안</div>
+                  <div class="feedback-item-text" th:text="${feedback.improvements}">제안 내용</div>
+                </div>
+                <div class="feedback-item" th:if="${feedback.notes != null && !feedback.notes.isEmpty()}">
+                  <div class="feedback-item-label">📋 메모</div>
+                  <div class="feedback-item-text" th:text="${feedback.notes}">메모 내용</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div th:if="${receivedFeedbacks == null || receivedFeedbacks.isEmpty()}" class="feedback-empty">
+          <div class="feedback-empty-icon">📭</div>
+          <div class="feedback-empty-text">아직 받은 피드백이 없습니다</div>
+          <div class="feedback-empty-sub">면접을 완료하면 면접관 피드백을 받을 수 있어요</div>
+        </div>
       </div>
 
       <div class="stats-grid">
@@ -717,6 +922,19 @@
           btn.classList.remove("active");
         });
         event.target.classList.add("active");
+      }
+
+      function toggleFeedback(index) {
+        const details = document.getElementById('feedback-details-' + index);
+        const icon = document.getElementById('toggle-icon-' + index);
+        
+        if (details.classList.contains('show')) {
+          details.classList.remove('show');
+          icon.classList.remove('expanded');
+        } else {
+          details.classList.add('show');
+          icon.classList.add('expanded');
+        }
       }
 
       function exportToPDF() {

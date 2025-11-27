@@ -31,4 +31,11 @@ public interface InterviewerNoteRepository extends JpaRepository<InterviewerNote
             "GROUP BY n.interviewee.id, n.interviewee.name " +
             "ORDER BY AVG(n.rating) DESC")
     List<Object[]> findTopIntervieweesByInterviewerId(@Param("interviewerId") Long interviewerId);
+    
+    @Query("SELECT n FROM InterviewerNote n " +
+            "JOIN FETCH n.session " +
+            "JOIN FETCH n.interviewer " +
+            "WHERE n.interviewee.id = :intervieweeId AND n.submitted = true " +
+            "ORDER BY n.createdAt DESC")
+    List<InterviewerNote> findSubmittedFeedbacksForInterviewee(@Param("intervieweeId") Long intervieweeId);
 }

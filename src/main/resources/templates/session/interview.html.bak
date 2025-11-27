@@ -605,20 +605,34 @@
           </div>
         </div>
 
-        <div class="right-panel">
-          <div
-            class="control-panel"
-            th:if="${participantRole.name() == 'HOST' or participantRole.name() == 'REVIEWER'}"
+        <div
+        class="control-panel"
+        th:if="${participantRole.name() == 'STUDENT'}"
+      >
+        <div class="panel-title">💬 답변 작성</div>
+        <button
+          class="btn-action btn-voice"
+          id="voiceAnswerBtn"
+          onclick="toggleVoiceAnswer()"
+        >
+          🎤 음성으로 답변하기
+        </button>
+        <div id="textAnswerFallback" style="display: none; margin-top: 8px;">
+          <textarea
+            id="textAnswerInput"
+            class="form-textarea"
+            placeholder="답변을 입력하세요..."
+            style="min-height: 100px;"
+          ></textarea>
+          <button
+            class="btn-action"
+            style="margin-top: 8px;"
+            onclick="sendTextAnswer()"
           >
-            <div class="panel-title">📝 면접관 컨트롤</div>
-            <button
-              class="btn-action btn-voice"
-              id="voiceQuestionBtn"
-              onclick="toggleVoiceQuestion()"
-            >
-              🎤 음성으로 질문하기
-            </button>
-          </div>
+            📤 답변 전송
+          </button>
+        </div>
+      </div>
 
           <div
             class="control-panel"
@@ -1015,11 +1029,14 @@
           !("webkitSpeechRecognition" in window) &&
           !("SpeechRecognition" in window)
         ) {
-          console.warn("Web Speech API not supported");
+          console.warn("Web Speech API not supported - showing text fallback");
           const voiceQuestionBtn = document.getElementById("voiceQuestionBtn");
           const voiceAnswerBtn = document.getElementById("voiceAnswerBtn");
+          const textAnswerFallback = document.getElementById("textAnswerFallback");
+          
           if (voiceQuestionBtn) voiceQuestionBtn.style.display = "none";
           if (voiceAnswerBtn) voiceAnswerBtn.style.display = "none";
+          if (textAnswerFallback) textAnswerFallback.style.display = "block";
           return;
         }
 
@@ -1122,70 +1139,75 @@
       }
 
       function toggleVoiceQuestion() {
-    const btn = document.getElementById("voiceQuestionBtn");
+        const btn = document.getElementById("voiceQuestionBtn");
 
-    if (!isRecordingQuestion) {
-        finalTranscript = "";
-        interimTranscript = "";
-        isRecordingQuestion = true;
-        isRecordingAnswer = false;
+        if (!isRecordingQuestion) {
+          finalTranscript = "";
+          interimTranscript = "";
+          isRecordingQuestion = true;
+          isRecordingAnswer = false;
 
-        try {
+          try {
             recognition.start();
             btn.textContent = "⏹️ 질문 완료 (전송)";
             btn.classList.add("recording");
             console.log("🎤 질문 녹음 시작");
-        } catch (e) {
+          } catch (e) {
             console.error("Recognition start error:", e);
+          }
+        } else {
+          stopVoiceRecording();
+          btn.textContent = "🎤 음성으로 질문하기";
+          btn.classList.remove("recording");
+          isRecordingQuestion = false;
+
+          if (finalTranscript.trim()) {
+            sendVoiceQuestion();
+          }
+
+          console.log("⏹️ 질문 녹음 중지 및 전송");
         }
-    } else {
-        stopVoiceRecording();
-        btn.textContent = "🎤 음성으로 질문하기";
-        btn.classList.remove("recording");
-        isRecordingQuestion = false;
-
-        setTimeout(() => {
-            if (finalTranscript.trim()) {
-                sendVoiceQuestion();
-            }
-        }, 500);
-
-        console.log("⏹️ 질문 녹음 중지 및 전송");
-    }
-}
+      }
 
       function toggleVoiceAnswer() {
-    const btn = document.getElementById("voiceAnswerBtn");
+        const btn = document.getElementById("voiceAnswerBtn");
 
-    if (!isRecordingAnswer) {
-        finalTranscript = "";
-        interimTranscript = "";
-        isRecordingAnswer = true;
-        isRecordingQuestion = false;
+        if (!isRecordingAnswer) {
+          finalTranscript = "";
+          interimTranscript = "";
+          isRecordingAnswer = true;
+          isRecordingQuestion = false;
 
-        try {
+          try {
             recognition.start();
             btn.textContent = "⏹️ 답변 완료 (전송)";
             btn.classList.add("recording");
             console.log("🎤 답변 녹음 시작");
-        } catch (e) {
+          } catch (e) {
             console.error("Recognition start error:", e);
+          }
+        } else {
+          stopVoiceRecording();
+          btn.textContent = "🎤 음성으로 답변하기";
+          btn.classList.remove("recording");
+          isRecordingAnswer = false;
+
+          if (finalTranscript.trim()) {
+            sendVoiceAnswer();
+          }
+
+          console.log("⏹️ 답변 녹음 중지 및 전송");
         }
-    } else {
-        stopVoiceRecording();
-        btn.textContent = "🎤 음성으로 답변하기";
-        btn.classList.remove("recording");
-        isRecordingAnswer = false;
+      }
 
-        setTimeout(() => {
-            if (finalTranscript.trim()) {
-                sendVoiceAnswer();
-            }
-        }, 500);
-
-        console.log("⏹️ 답변 녹음 중지 및 전송");
-    }
-}
+      function stopVoiceRecording() {
+        if (recognition) {
+          recognition.stop();
+        }
+        if (finalTranscript.trim()) {
+          addPermanentSubtitle(finalTranscript, currentUserName);
+        }
+      }
 
       async function sendVoiceQuestion() {
         const question = finalTranscript.trim();
@@ -2640,6 +2662,38 @@
           alert("녹화 업로드에 실패했습니다: " + error.message);
         }
       }
+
+function sendTextAnswer() {
+  const textarea = document.getElementById("textAnswerInput");
+  const answer = textarea.value.trim();
+
+  if (!answer) {
+    alert("답변을 입력하세요");
+    return;
+  }
+
+  if (!stompClient || !stompClient.connected) {
+    alert("서버 연결이 끊어졌습니다");
+    return;
+  }
+
+  const payload = {
+    sessionId: sessionId,
+    userId: currentUserId,
+    userName: currentUserName || `User ${currentUserId}`,
+    answerText: answer,
+    timestamp: new Date().toISOString(),
+  };
+
+  stompClient.send(
+    `/app/session/${sessionId}/answer`,
+    {},
+    JSON.stringify(payload)
+  );
+
+  textarea.value = "";
+  console.log("📤 텍스트 답변 전송 완료");
+}
 
       function getCookie(name) {
         const value = `; ${document.cookie}`;

@@ -311,11 +311,8 @@ public class SubscriptionService {
             
             session = sessionRepository.saveAndFlush(session);
             
-            session.setAgoraChannel("session_" + session.getId());
-            session = sessionRepository.saveAndFlush(session);
-            
-            log.info("✅ 셀프면접 생성 완료 - sessionId: {}, userId: {}, agoraChannel: {}, used: {}/{}", 
-                session.getId(), userId, session.getAgoraChannel(), sub.getUsedSessions(), sub.getSessionLimit());
+            log.info("✅ 셀프면접 생성 완료 - sessionId: {}, userId: {}, used: {}/{}", 
+                session.getId(), userId, sub.getUsedSessions(), sub.getSessionLimit());
             
             return session;
         }
@@ -359,11 +356,8 @@ public class SubscriptionService {
             
             session = sessionRepository.saveAndFlush(session);
             
-            session.setAgoraChannel("session_" + session.getId());
-            session = sessionRepository.saveAndFlush(session);
-            
-            log.info("✅ 팀 세션 생성 완료 - sessionId: {}, userId: {}, agoraChannel: {}, used: {}/{}", 
-                session.getId(), userId, session.getAgoraChannel(), sub.getUsedSessions(), sub.getSessionLimit());
+            log.info("✅ 팀 세션 생성 완료 - sessionId: {}, userId: {}, used: {}/{}", 
+                session.getId(), userId, sub.getUsedSessions(), sub.getSessionLimit());
             
             return session;
         }

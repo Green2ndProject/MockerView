@@ -1,11 +1,13 @@
 package com.mockerview.controller.web;
 
 import com.mockerview.dto.CustomUserDetails;
+import com.mockerview.dto.InterviewerNoteDTO;
 import com.mockerview.dto.StatisticsDTO;
 import com.mockerview.entity.SelfInterviewReport;
 import com.mockerview.entity.Subscription;
 import com.mockerview.entity.User;
 import com.mockerview.repository.SelfInterviewReportRepository;
+import com.mockerview.service.InterviewerNoteService;
 import com.mockerview.service.SubscriptionService;
 import com.mockerview.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class MyPageController {
     private final UserService userService;
     private final SubscriptionService subscriptionService;
     private final SelfInterviewReportRepository selfInterviewReportRepository;
+    private final InterviewerNoteService interviewerNoteService;
 
     @GetMapping
     public String myPage(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
@@ -133,6 +136,8 @@ public class MyPageController {
             
             long earnedCount = achievements.stream().filter(a -> a.isEarned()).count();
             
+            List<InterviewerNoteDTO> receivedFeedbacks = interviewerNoteService.getSubmittedNotesForInterviewee(user.getId());
+            
             model.addAttribute("user", user);
             model.addAttribute("totalInterviews", stats.getTotalSessions());
             model.addAttribute("averageScore", String.format("%.1f", stats.getAverageScore()));
@@ -158,10 +163,12 @@ public class MyPageController {
             model.addAttribute("scoreChange", null);
             model.addAttribute("highestScoreDate", null);
             model.addAttribute("streakStatus", null);
+            model.addAttribute("receivedFeedbacks", receivedFeedbacks);
             
-            log.info("✅ 통계 페이지 로딩 완료 - 총 세션: {}, 카테고리: {}, 업적: {}/{}, 랭킹: {}위", 
+            log.info("✅ 통계 페이지 로딩 완료 - 총 세션: {}, 카테고리: {}, 업적: {}/{}, 랭킹: {}위, 받은 피드백: {}개", 
                 stats.getTotalSessions(), categoryAccuracyList.size(), earnedCount, achievements.size(),
-                rankings.stream().filter(r -> r.isCurrentUser()).findFirst().map(r -> r.getRank()).orElse(0));
+                rankings.stream().filter(r -> r.isCurrentUser()).findFirst().map(r -> r.getRank()).orElse(0),
+                receivedFeedbacks.size());
             
             return "user/myStats";
         } catch (Exception e) {
@@ -197,6 +204,7 @@ public class MyPageController {
             return "redirect:/auth/mypage";
         }
     }
+
     @GetMapping("/withdraw")
     public String withdrawPage() {
         return "user/withdraw";
