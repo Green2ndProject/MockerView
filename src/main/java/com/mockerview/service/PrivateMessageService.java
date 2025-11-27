@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.mockerview.dto.ConversationSummaryDTO;
@@ -35,6 +36,10 @@ public class PrivateMessageService {
     
     public void saveAndSend(String senderUsername, PrivateMessageRequest request){
 
+        User sender = userRepository.findByUsername(senderUsername)
+            .orElseThrow(() -> new UsernameNotFoundException("Sender not found: " + senderUsername));
+
+        String senderName = sender.getName();    
         String receiverUsername = request.getReceiverUsername();
 
         PrivateMessage message = PrivateMessage.builder()
@@ -45,11 +50,14 @@ public class PrivateMessageService {
 
         privateMessageRepository.save(message);
 
+        restoreConversation(receiverUsername, senderUsername);
+
         PrivateMessageResponse response = PrivateMessageResponse.builder()
                                             .senderUsername(senderUsername)
                                             .receiverUsername(receiverUsername)
                                             .content(request.getContent())
                                             .sentAt(message.getSentAt())
+                                            .senderName(senderName)
                                             .build();
 
         messagingTemplate.convertAndSendToUser(
