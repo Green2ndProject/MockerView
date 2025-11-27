@@ -1139,13 +1139,16 @@
             console.error("Recognition start error:", e);
         }
     } else {
-        stopVoiceRecording();
+        if (recognition) {
+            recognition.stop();
+        }
         btn.textContent = "🎤 음성으로 질문하기";
         btn.classList.remove("recording");
         isRecordingQuestion = false;
 
         setTimeout(() => {
             if (finalTranscript.trim()) {
+                addPermanentSubtitle(finalTranscript, currentUserName);
                 sendVoiceQuestion();
             }
         }, 500);
@@ -1153,7 +1156,6 @@
         console.log("⏹️ 질문 녹음 중지 및 전송");
     }
 }
-
       function toggleVoiceAnswer() {
     const btn = document.getElementById("voiceAnswerBtn");
 
@@ -1172,13 +1174,16 @@
             console.error("Recognition start error:", e);
         }
     } else {
-        stopVoiceRecording();
+        if (recognition) {
+            recognition.stop();
+        }
         btn.textContent = "🎤 음성으로 답변하기";
         btn.classList.remove("recording");
         isRecordingAnswer = false;
 
         setTimeout(() => {
             if (finalTranscript.trim()) {
+                addPermanentSubtitle(finalTranscript, currentUserName);
                 sendVoiceAnswer();
             }
         }, 500);
