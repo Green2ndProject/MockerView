@@ -228,7 +228,6 @@ public class PrivateMessageService {
 
     private ConversationSummaryDTO getSummaryForPartner(String currentUsername, String partnerUsername){
 
-        // 대화상대와 마지막 메시지 조회
         PrivateMessage lastMessage = 
             privateMessageRepository.findFirstBySenderUsernameAndReceiverUsernameOrReceiverUsernameAndSenderUsernameOrderBySentAtDesc(
                 currentUsername, partnerUsername, currentUsername, partnerUsername
@@ -236,8 +235,13 @@ public class PrivateMessageService {
 
         long unreadCount = calculateUnreadCount(currentUsername, partnerUsername);
 
+        String partnerName = userRepository.findByUsername(partnerUsername)
+            .map(User::getName)
+            .orElse(partnerUsername);
+
         return new ConversationSummaryDTO(
             partnerUsername,
+            partnerName,
             lastMessage != null ? lastMessage.getContent() : "",
             lastMessage != null ? lastMessage.getSentAt() : null,
             unreadCount

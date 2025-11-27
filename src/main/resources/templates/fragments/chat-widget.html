@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,43 +9,35 @@
     <span id="unread-badge" class="unread-badge hidden">
         0
     </span>
-
     <input type="hidden" 
        id="current-user-username-data" 
        th:attr="data-username=${#authentication.name}"  
-       sec:athorize="isAuthenticated()"  />
+       sec:authorize="isAuthenticated()" />
 </button>
 
 <div th:fragment="messageWidget" id="chat-widget-container" class="chat-widget-container"> 
-    <div class="chat-sidebar">
+    <div class="chat-sidebar" id="chat-sidebar">
         <div class="search-header">
-            <h3>면접자 검색</h3>
-            <input type="text" id="candidate-search" placeholder ="이름/ID를 입력하세요">
+            <h3>메시지</h3>
+            <input type="text" id="candidate-search" placeholder="이름/ID를 입력하세요">
         </div>
         <ul id="candidate-list" class="candidate-list">
-            <li class="candidate-item">
-                <span class="name"></span>
-                <span class="status online">●</span>
-                <span class="badge">3</span>
-            </li>
         </ul>
     </div>
-    <div class="chat-main">
+    <div class="chat-main" id="chat-main">
         <div class="chat-header" id="chat-header">
-            <h4>[대화 상대를 선택하세요]</h4>
+            <button id="back-btn" class="back-btn" onclick="showChatList()">←</button>
+            <h4 id="chat-partner-name">[대화 상대를 선택하세요]</h4>
             <button id="exitConversation" class="exitConversation hidden">나가기</button>
             <button id="chat-close-x-btn" class="close-x-btn">✖️</button>
         </div>
-
         <div id="message-history" class="message-history">
         </div>
-
         <div class="chat-input-area">
             <textarea id="message-input" placeholder="메시지 입력..."></textarea>
-            <button id="send-btn" class="send-button" disalbed>전송</button>
+            <button id="send-btn" class="send-button" disabled>전송</button>
         </div>
     </div>
-
 </div>
 
 <div th:fragment="toast" id="toast-container" class="toast-container"></div>

@@ -13,8 +13,6 @@
         this.connected = false;
     }
 
-    
-
     async getTokenFromCookie(){
         
         const URI_TOKEN = '/api/auth/gettoken';
@@ -68,8 +66,7 @@
                 console.error('STOMP 클라이언트가 연결되지 않았습니다.');
                 return;
             }
-            // 구독 연결 부분~~~~~~
-            // /user/queue/messages - 메시지 받는 구독
+
             this.stompClient.subscribe('/user/queue/messages', (message) => {
                 console.log('✉️ [PrivateChat] 개인 메시지 수신');
                 const privateMessage = JSON.parse(message.body);
@@ -88,7 +85,7 @@
                     }));
                 }
             });
-            // /user/queue/messagelist-update - 실시간 메시지 목록 업데이트 갱신 구독
+
             this.stompClient.subscribe('/user/queue/messagelist-update', onConversationUpdateReceived);
 
             console.log('✅ [ChatList] 채팅 목록 업데이트 큐 구독 완료');
@@ -97,7 +94,6 @@
 
             console.log('✅ [notification] 메시지 알림 구독 완료');
             
-            // unreadCount 뱃지 업데이트 구독
             this.stompClient.subscribe('/user/queue/total-unread', (message) => {
 
                 const newCount = message.body;
@@ -121,34 +117,14 @@
                 .catch(error => {
                     console.error("초기 전체 읽지 않은 메시지 카운트 로딩 실패:", error);
                 });
-//--------------------------------------------------------------------
-
 
         }, (error)=> {
                 console.error("❌ [PrivateMessage] WebSocket 연결 실패:", error);
                 this.connect = false;
         });
-
-
     }
 
     subscribePrivateQueue(){        
-
-        // this.stompClient.subscribe('/user/queue/messagelist-update', (message) => {
-        //     console.log('✅ [ChatList Update] 채팅 목록 갱신 신호 수신', message.body);
-
-        //     const readerUsername = JSON.parse(message.body);
-
-        //     if(typeof fetchAndRenderPartnerList === 'function'){
-        //         fetchAndRenderPartnerList();
-        //     }else{
-        //         console.error('fetchAndRenderPartnerList 함수가 정의되지 않았습니다.');
-        //     }
-
-        //     //clearLocalUnreadBadge(readerUsername);
-
-        // });
-
     }
 
     sendPrivateMessage(receiverUsername, content){
@@ -167,9 +143,8 @@
 }
 
 window.currentChatPartner = null;
+window.currentPartnerName = null;
 window.privateMessageWsClient = null;
-
-
 
 function handleReceivedMessage(message){
     console.log(`[채팅 위젯] 새 메시지: ${message.senderUsername} -> ${message.content}`);
@@ -177,13 +152,7 @@ function handleReceivedMessage(message){
     if(message.senderUsername === window.currentChatPartner || message.receiverUsername === window.currentChatPartner){
 
         displayMessageInHistory(message);
-    }else{
-        // 현재 열려있는 채팅방이 아니라면, 읽지않은 메시지 수를 업데이트하는 로직
-        // updateUnreadCount();
     }
-
-    //displayMessageInWidget(message.senderUsername, message.content, message.sentAt);
-
 }
 
 async function fetchAndRenderPartnerList(){
@@ -220,27 +189,27 @@ function renderConversationList(partnerList){
         
         const unreadCount = partner.unreadCount;
         const lastContent = partner.lastMessageContent || '대화 시작';
-        const lastTime    = partner.lastMessageSentAt ? new Date(partner.lastMessageSentAt).toLocaleTimeString() : '';
-        const badgeHtml   = unreadCount > 0 
-        ? `<span id="unread-badge-${partner.partnerUsername}" class="badge">${partner.unreadCount}</span>`
-        : '';
+        const lastTime = partner.lastMessageSentAt ? new Date(partner.lastMessageSentAt).toLocaleTimeString() : '';
+        const badgeHtml = unreadCount > 0 
+            ? `<span id="unread-badge-${partner.partnerUsername}" class="badge">${partner.unreadCount}</span>`
+            : '';
+        const displayName = partner.partnerName || partner.partnerUsername;
 
         newHtml += `
-            <li class="candidate-item" onclick="openMessageWindow('${partner.partnerUsername}')">
+            <li class="candidate-item" onclick="openMessageWindow('${partner.partnerUsername}', '${displayName}')">
                 <div class="info-text-area">
-                    <span class="name">${partner.partnerUsername}</span>
+                    <span class="name">${displayName}</span>
                     <span class="last-message-snippet">${lastContent.substring(0,30)}...</span>
                 </div>
                 <div class="status-area">
-                    <span class="message-time">${lastTime}...</span>
+                    <span class="message-time">${lastTime}</span>
                     ${badgeHtml}
                 </div>                
             </li>    
         `;
     });
 
-    listContainer.innerHTML=newHtml;
-
+    listContainer.innerHTML = newHtml;
 }
 
 function onConversationUpdateReceived(payload){
@@ -250,20 +219,11 @@ function onConversationUpdateReceived(payload){
 
 async function fetchMessageHistory(partnerUsername){
 
-    const API_BASE_URL = 'https://mockerview.net';
-    //const API_BASE_URL = 'https://localhost:8080';
-    const API_URL      = `${API_BASE_URL}/api/private/messages/${encodeURIComponent(partnerUsername)}`;
-
-    const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
-
-    if(!token){
-        console.error('❌ 토큰이 없어 메시지 내역을 불러올 수 없습니다.');
-        return;
-    }
+    const API_BASE_URL = window.location.origin;
+    const API_URL = `${API_BASE_URL}/api/private/messages/${encodeURIComponent(partnerUsername)}`;
 
     try {
         const response = await fetch(API_URL, {
-
             method: 'GET',
             credentials: 'include'
         });
@@ -282,10 +242,10 @@ async function fetchMessageHistory(partnerUsername){
     }
 }
 
-async function openMessageWindow(partnerUsername){
+async function openMessageWindow(partnerUsername, partnerName){
 
-    const RESTORE_URL = `https://mockerview.net/api/private/messages/restore/${encodeURIComponent(partnerUsername)}`;
-    //const RESTORE_URL = `https://localhost:8080/api/private/messages/restore/${encodeURIComponent(partnerUsername)}`;
+    const API_BASE_URL = window.location.origin;
+    const RESTORE_URL = `${API_BASE_URL}/api/private/messages/restore/${encodeURIComponent(partnerUsername)}`;
 
     try{
         await fetch(RESTORE_URL, {method: 'POST'});
@@ -296,6 +256,8 @@ async function openMessageWindow(partnerUsername){
 
     const container = document.getElementById('chat-widget-container');
     const toggleBtn = document.getElementById('chat-toggle-btn');
+    const chatSidebar = document.getElementById('chat-sidebar');
+    const chatMain = document.getElementById('chat-main');
 
     if(!container || !toggleBtn){
         console.error("위젯 요소를 찾을 수 없습니다.");
@@ -303,12 +265,19 @@ async function openMessageWindow(partnerUsername){
     }
 
     const chatHeader = document.getElementById('chat-header');
-    const h4 = chatHeader.querySelector('h4');
     const messageHistory = document.getElementById('message-history');
     const sendBtn = document.getElementById('send-btn');
 
     container.classList.add('active');
     toggleBtn.classList.add('hidden-by-widget');
+
+    if(window.innerWidth <= 768) {
+        if(chatSidebar) chatSidebar.classList.add('hidden-mobile');
+        if(chatMain) chatMain.classList.remove('hidden-mobile');
+    }
+
+    const displayName = partnerName || partnerUsername;
+    window.currentPartnerName = displayName;
 
     if(chatHeader){
 
@@ -316,7 +285,7 @@ async function openMessageWindow(partnerUsername){
         const exitBtn = document.getElementById('exitConversation');
 
         if(headerTitle){
-            headerTitle.innerHTML = `${partnerUsername}과 대화중`; 
+            headerTitle.innerHTML = `${displayName}님과 대화중`; 
         }
         
         if(exitBtn){
@@ -341,13 +310,10 @@ async function openMessageWindow(partnerUsername){
         const response = await fetch(`/api/private/messages/read/${partnerUsername}`, {
             method : 'PUT',    
             headers: {'Content-Type' : 'application/json'},
-                   
         });
 
         if(response.ok){
-            
             console.log(`[Read Status] ${partnerUsername}과의 대화를 읽음 처리 완료`);
-
             clearLocalUnreadBadge(partnerUsername);
         }else{
             console.error(`[Read Status] 서버 응답 오류 : `, response.status);
@@ -355,37 +321,62 @@ async function openMessageWindow(partnerUsername){
 
     }catch(error){
         console.error('채팅방 열기 중 오류 발생:', error);
-
         messageHistory.innerHTML = '<div class="error-message">메시지 내역을 불러오는데 실패했습니다.</div>';
     }
-
-    //clearMessageDisplay();
-
-    //messageHistory.forEach(msg => {
-        // ui에 메시지 표시하는 실제 로직
-    //    displayMessageInWidget(msg.senderUsername, msg.content, msg.sentAt);
-    //});
 
     if(!window.privateMessageWsClient.connected){
         window.privateMessageWsClient.connect();
     }
+}
 
+function showChatList() {
+    const chatSidebar = document.getElementById('chat-sidebar');
+    const chatMain = document.getElementById('chat-main');
+    const chatHeader = document.getElementById('chat-header');
+    const exitBtn = document.getElementById('exitConversation');
+    
+    if(chatSidebar) {
+        chatSidebar.classList.remove('hidden-mobile');
+    }
+    if(chatMain && window.innerWidth <= 768) {
+        chatMain.classList.add('hidden-mobile');
+    }
+    
+    window.currentChatPartner = null;
+    window.currentPartnerName = null;
+    
+    if(chatHeader) {
+        chatHeader.removeAttribute('data-partner');
+        const headerTitle = chatHeader.querySelector('h4');
+        if(headerTitle) {
+            headerTitle.innerHTML = '[대화 상대를 선택하세요]';
+        }
+    }
+    if(exitBtn) {
+        exitBtn.classList.add('hidden');
+    }
+    
+    const messageHistory = document.getElementById('message-history');
+    if(messageHistory) {
+        messageHistory.innerHTML = '';
+    }
 }
 
 async function exitConversation(partnerUsername){
 
-    const API_BASE_URL = 'https://mockerview.net';
-    //const API_BASE_URL = 'https://localhost:8080';
+    const API_BASE_URL = window.location.origin;
     const API_URL = `${API_BASE_URL}/api/private/messages/exit/${encodeURIComponent(partnerUsername)}`;
 
     try {
-        
         const response = await fetch(API_URL, {method: 'POST'});
 
         if(response.ok){
-            alert(`${partnerUsername}님과의 대화방을 나갔습니다.`);
-
-            closeChatWidget();
+            alert(`${window.currentPartnerName || partnerUsername}님과의 대화방을 나갔습니다.`);
+            if(window.innerWidth <= 768) {
+                showChatList();
+            } else {
+                closeChatWidget();
+            }
         }else{
             alert('대화방 나가기 실패');
         }
@@ -394,44 +385,53 @@ async function exitConversation(partnerUsername){
         console.error('대화방 나가기중 에러 : ', error);
         alert('서버 연결 오류');
     }
-    
 }
 
 function closeChatWidget(){
-    const widgetContainer = document.getElementById('chat-widget-container');
+    const container = document.getElementById('chat-widget-container');
     const toggleBtn = document.getElementById('chat-toggle-btn');
+    const chatSidebar = document.getElementById('chat-sidebar');
+    const chatMain = document.getElementById('chat-main');
     const chatHeader = document.getElementById('chat-header');
+    const searchInput = document.getElementById('candidate-search');
 
-    window.currentChatPartner = null;
-
-    if(chatHeader && chatHeader.dataset.partner){
-        chatHeader.removeAttribute('data-partner');        
+    if(searchInput && searchInput.value.trim() !== ''){
+        searchInput.value = '';
+        fetchAndRenderPartnerList();
     }
 
+    window.currentChatPartner = null;
+    window.currentPartnerName = null;
+
     if(chatHeader){
+        chatHeader.removeAttribute('data-partner');
         const headerTitle = chatHeader.querySelector('h4');
         if(headerTitle){
-            headerTitle.textContent = '[대화 상태를 선택하세요]';
+            headerTitle.textContent = '[대화 상대를 선택하세요]';
         }
     }
 
     const messageHistory = document.getElementById('message-history');
-
     if(messageHistory){
         messageHistory.innerHTML = '';
     }
 
     const exitBtn = document.getElementById('exitConversation');
-
     if(exitBtn){
         exitBtn.classList.add('hidden');
     }
 
-    if (widgetContainer) {
-        widgetContainer.classList.remove('active');
+    if(container){
+        container.classList.remove('active');
     }
-    if (toggleBtn) {
+    if(toggleBtn){
         toggleBtn.classList.remove('hidden-by-widget');
+    }
+    if(chatSidebar){
+        chatSidebar.classList.remove('hidden-mobile');
+    }
+    if(chatMain){
+        chatMain.classList.remove('hidden-mobile');
     }
 }
 
@@ -442,12 +442,9 @@ function clearLocalUnreadBadge(partnerUsername){
         badgeElement.textContent = '0';
         badgeElement.style.display = 'none';
     }
-
 }
 
 function showToast(title, body, senderUsername){
-    // 메시지 알림 토스트 함수
-
     const toastContainer = document.getElementById('toast-container');
 
     if(!toastContainer){
@@ -459,7 +456,7 @@ function showToast(title, body, senderUsername){
     toast.classList.add('toast-notification');
 
     toast.onclick = () => {
-        openMessageWindow(senderUsername);
+        openMessageWindow(senderUsername, null);
         toast.remove();
     };
 
@@ -476,14 +473,8 @@ function showToast(title, body, senderUsername){
 
     setTimeout(()=> {
         toast.classList.remove('show');
-
-        toast.addEventListener('transitioned', () => toast.remove());
-    }, 2000);
-
-    console.log(`[알림]제목 : ${title}, 내용 : ${body}`)
-   
-    //alert(`[새 메시지] ${title}\n내용: ${body}`);
-
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 3000);
 }
 
 function onNotificationReceived(payload){
@@ -497,7 +488,7 @@ function onNotificationReceived(payload){
     const currentPartner = chatHeader ? chatHeader.dataset.partner : null;
 
     const chatWidgetContainer = document.getElementById('chat-widget-container');
-    const isChatWidgetOpen = chatWidgetContainer && window.getComputedStyle(chatWidgetContainer).display !== 'none';
+    const isChatWidgetOpen = chatWidgetContainer && chatWidgetContainer.classList.contains('active');
 
     if(isChatWidgetOpen && currentPartner === sender){
         console.log('현재 대화중인 상대방의 메시지이므로 알림 스킵');
@@ -505,20 +496,19 @@ function onNotificationReceived(payload){
     }
     
     showToast(`${sender}님에게 새 메시지가 도착했습니다.`, content, sender);
-    
 }
 
 function displayMessageInHistory(message){
 
     const messageHistory = document.getElementById('message-history');
-    const myUsername     = getCurrentUsername();
+    const myUsername = getCurrentUsername();
 
     const isMe = message.senderUsername === myUsername;
 
     const messageElement = document.createElement('div');
     messageElement.className = isMe ? 'message-container sender' : 'message-container receiver';
 
-    const senderName = isMe ? '나' : message.senderName;
+    const senderName = isMe ? '나' : (message.senderName || message.senderUsername);
     const time = new Date(message.sentAt).toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'});
     messageElement.innerHTML = `
         <div class="sender-name">${senderName}</div>
@@ -527,14 +517,12 @@ function displayMessageInHistory(message){
     `
 
     messageHistory.appendChild(messageElement);
-
     messageHistory.scrollTop = messageHistory.scrollHeight;
-
 }
 
 function setupMessageEvents(){
     const sendBtn = document.getElementById('send-btn');
-    const messageInput  = document.getElementById('message-input');
+    const messageInput = document.getElementById('message-input');
 
     const handleSendMessage = () => {
         const content = messageInput.value.trim();
@@ -551,50 +539,19 @@ function setupMessageEvents(){
             };
 
             displayMessageInHistory(sentMessage);
-
             messageInput.value = '';
         }
     };
 
     sendBtn.addEventListener('click', handleSendMessage);
     messageInput.addEventListener('keypress', (e)=>{
-
         if(e.key === 'Enter' && !e.shiftKey){
-
             e.preventDefault();
             handleSendMessage();
         }
     });
 
     sendBtn.disabled = true;
-    
-}
-
-function searchAndDisplayUsers(keyword){
-
-    if(keyword.length < 2){
-        document.getElementById('search-results').innerHTML = '';
-        return;
-    }
-
-    fetch(`/api/users/search?q=${encodeURIComponent(keyword)}`)
-        .then(response => response.json())
-        .then(users => {
-            const resultsContainer = document.getElementById('search-results');
-            resultsContainer.innerHTML = '';
-
-            users.forEach(user => {
-                
-                const userItem = document.createElement('div');
-                userItem.className = 'user-search-item';
-                userItem.innerText = `${user.name} (${user.username})`; 
-
-                userItem.onclick = () => startPrivateChat(user.name, user.username);
-
-                resultsContainer.appendChild(userItem);
-            });
-        })
-        .catch(error => console.error('유저 검색 실패:', error));
 }
 
 function debounce(func, delay){
@@ -607,7 +564,6 @@ function debounce(func, delay){
 
 function setupSearchHandler(){
     const searchInput = document.getElementById('candidate-search');
-
     searchInput.addEventListener('input', debounce(handleSearchInput, 300));
 }
 
@@ -617,22 +573,14 @@ function handleSearchInput(event){
     if(query.length > 1){
         fetchSearchUsers(query);
     }else{
-        const candidateList = document.getElementById('candidate-list');
         fetchAndRenderPartnerList();
     }    
 }
 
 async function fetchSearchUsers(query){
 
-    const API_BASE_URL = 'https://mockerview.net';
-    // const API_BASE_URL = 'https://localhost:8080';
+    const API_BASE_URL = window.location.origin;
     const API_URL = `${API_BASE_URL}/api/users/search?q=${encodeURIComponent(query)}`;
-    const token = PrivateMessageWebsocket.prototype.getTokenFromCookie();
-
-    if(!token){
-        console.error('인증 토큰이 없습니다. 검색 실패');
-        return;
-    }
 
     try {
         const response = await fetch(API_URL, {
@@ -647,13 +595,11 @@ async function fetchSearchUsers(query){
         }
 
         const users = await response.json();
-
         handleSearchResults(users);
 
     }catch(error){
         console.error('사용자 검색 실패', error);
     }
-
 }
 
 function handleSearchResults(users){
@@ -667,7 +613,6 @@ function handleSearchResults(users){
 
     users.forEach(user => {
         const item = createCandidateItem(user);
-        
         candidateList.appendChild(item);
     });
 }
@@ -675,9 +620,9 @@ function handleSearchResults(users){
 function createCandidateItem(user){
 
     const listItem = document.createElement('li');
-
     listItem.className = 'candidate-item';
     listItem.setAttribute('data-username', user.username);
+    listItem.setAttribute('data-name', user.name);
 
     listItem.innerHTML = `
         <span class="name">${user.name} (${user.username})</span>
@@ -685,75 +630,21 @@ function createCandidateItem(user){
     `;
 
     listItem.addEventListener('click', handleCandidateClick);
-
     return listItem;
 }
 
 function handleCandidateClick(event){
 
     const listItem = event.currentTarget;
-
     const targetUsername = listItem.getAttribute('data-username');
+    const targetName = listItem.getAttribute('data-name');
 
     if(targetUsername){
-
-        console.log(`[클릭] ${targetUsername}와의 채팅방을 엽니다.`);
-
+        console.log(`[클릭] ${targetName || targetUsername}와의 채팅방을 엽니다.`);
         window.currentChatPartner = targetUsername;
     }
 
-    openMessageWindow(targetUsername);
-}
-
-
-function startPrivateChat(targetname, targetusername){
-
-    console.log(`💬 ${targetname} (${targetusername})와 대화 시작.`);
-
-    document.getElementById('chat-widget').style.display = 'block';
-
-    window.currentChatPartnerId = targetname;
-    window.currentChatPartnerName = targetusername;
-
-    //    (선택적) 이전에 주고받은 메시지 목록을 서버 REST API로 불러와 표시
-    //    fetch(`/api/messages/${targetUserId}`).then(...)
-}
-
-function resetActivePartnerState(){
-
-    const chatHeader = document.getElementById('chat-header');
-
-    window.currentChatPartner = null;
-
-    if(chatHeader && chatHeader.dataset.partner){
-        chatHeader.removeAttribute('data-partner');
-    }
-
-    if(chatHeader){
-        // chatHeader.innerHTML = '<h4>[대화 상대를 선택하세요]</h4><button id="chat-close-x-btn" class="close-x-btn">✖️</button>';
-        chatHeader.querySelector('h4').textContent = '[대화 상대를 선택하세요]';
-    }
-
-    const messageHistory = document.getElementById('message-history');
-    if(messageHistory){
-        messageHistory.innerHTML = '';
-    }
-}
-
-function closeChatWidget(){
-    const widgetContainer = document.getElementById('chat-widget-container');
-    const searchInput = document.getElementById('candidate-search');
-
-    if(searchInput.value.trim() !== ''){
-        searchInput.value = '';
-        fetchAndRenderPartnerList();
-    }
-
-    resetActivePartnerState();
-
-    if(widgetContainer){
-        widgetContainer.classList.remove('open');
-    }
+    openMessageWindow(targetUsername, targetName);
 }
 
 function setupWidgetToggle(){
@@ -761,15 +652,12 @@ function setupWidgetToggle(){
     const toggleBtn = document.getElementById('chat-toggle-btn');
     const container = document.getElementById('chat-widget-container');
     const closexBtn = document.querySelector('.close-x-btn');
+    const backBtn = document.getElementById('back-btn');
 
     if(!toggleBtn || !container){
         console.error("채팅 위젯의 HTML 요소를 찾을 수 없습니다.");
         return;
     }
-
-    
-    //updateUnreadBadge();
-    //setInterval(updateUnreadBadge, 60000);
 
     toggleBtn.addEventListener('click', ()=>{
 
@@ -780,7 +668,6 @@ function setupWidgetToggle(){
 
             const chatHeader = document.getElementById('chat-header');
             const exitBtn = document.getElementById('exitConversation');
-
             const currentPartner = chatHeader ? chatHeader.dataset.partner : null;
 
             if (exitBtn) {
@@ -793,27 +680,21 @@ function setupWidgetToggle(){
         }else{
             toggleBtn.classList.remove('hidden-by-widget');
         }
-        
     });
 
-    const chatHeader = document.getElementById('chat-header');
-
-    if(chatHeader){
-        chatHeader.addEventListener('click', ()=>{
-            if(container.classList.contains('active')){
-                container.classList.remove('active');
-                toggleBtn.classList.remove('hidden-by-widget');
-            }
+    if(closexBtn){
+        closexBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeChatWidget();
         });
     }
 
-    closexBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        container.classList.remove('active');
-        toggleBtn.classList.remove('hidden-by-widget');
-
-    });
-
+    if(backBtn){
+        backBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showChatList();
+        });
+    }
 }
 
 function updateUnreadBadge(count){
@@ -830,13 +711,11 @@ function updateUnreadBadge(count){
     }
 }
 
-
 function getCurrentUsername(){
 
     const hiddenInputField = document.getElementById('current-user-username-data');
 
     if(hiddenInputField && hiddenInputField.dataset.username){
-
         return hiddenInputField.dataset.username;
     }
 
@@ -845,7 +724,7 @@ function getCurrentUsername(){
 
 document.addEventListener('DOMContentLoaded', ()=>{
       
-    const myUsername = getCurrentUsername(); // 받아와야함
+    const myUsername = getCurrentUsername();
     const closexBtn = document.querySelector('.close-x-btn');
     const exitBtn = document.getElementById('exitConversation');
 
@@ -864,27 +743,19 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
     if(closexBtn){
         closexBtn.addEventListener('click', closeChatWidget);
-
     }
 
     if(myUsername){
         
         window.privateMessageWsClient = new PrivateMessageWebsocket(myUsername, handleReceivedMessage);
-
         window.privateMessageWsClient.connect();
-
         fetchAndRenderPartnerList();
-
         setupSearchHandler();
-
         setupWidgetToggle();
-
         setupMessageEvents();
 
     }else{
-
         console.warn("사용자 정보 없음. 채팅 위젯을 비활성화합니다.");
-
     }
 });
 

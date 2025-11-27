@@ -72,7 +72,6 @@
     background : white;
     z-index    : 1000;
     display    : flex;
-
 }
 
 .chat-widget-container.active {
@@ -116,7 +115,6 @@
     padding : 15px;
     border-bottom: 1px solid #ddd;
     background-color: #fff;
-
 }
 
 .chat-header h4 {
@@ -124,6 +122,10 @@
     font-size : 16px;
     font-weight : 600;
     color : #333;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .close-x-btn {
@@ -137,6 +139,16 @@
 
 .close-x-btn:hover {
     color : #333;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666;
+    padding: 5px 10px 5px 0;
+    display: none;
 }
 
 #message-history {
@@ -205,22 +217,9 @@
     border-radius: 15px 15px 15px 5px; 
 }
 
-/* .message-bubble.receiver {
-    background-color : #e5e5ea;
-    border-radius : 15px 15px 15px 5px;
-    align-self : flex-start;
-} */
-
 .message-container.sender {
     align-items: flex-end; 
 }
-
-/* .message-bubble.sender {
-    background-color : #007aff;
-    color : white;
-    border-radius : 15px 15px 5px 15px;
-    align-self : flex-end;
-} */
 
 .message-container.sender .message-bubble {
     background-color: #007aff;
@@ -333,16 +332,25 @@
     margin-left : 10px;
 }
 
-.message-time {
-    font-size : 11px;
-    color : #999;
-    margin-bottom : 3px;
-}
-
 .status.online {
     color : #4CAF50;
     margin-right : 5px;
     font-size : 10px;
+}
+
+.exitConversation {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.exitConversation:hover {
+    background: #ee5a5a;
 }
 
 .toast-container {
@@ -385,6 +393,84 @@
 .toast-body {
     font-size: 14px;
     color: #e0e0e0;
+}
+
+@media (max-width: 768px) {
+    .chat-widget-container {
+        --open-width: 100%;
+        --open-height: 100%;
+    }
+    
+    .chat-widget-container.active {
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        max-height: 100vh;
+        max-height: 100dvh;
+    }
+    
+    .chat-sidebar {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 10;
+        transition: transform 0.3s ease;
+    }
+    
+    .chat-sidebar.hidden-mobile {
+        transform: translateX(-100%);
+    }
+    
+    .chat-main {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 5;
+    }
+    
+    .chat-main.hidden-mobile {
+        display: none;
+    }
+    
+    .back-btn {
+        display: block;
+    }
+    
+    .chat-header h4 {
+        font-size: 14px;
+    }
+    
+    #message-input {
+        font-size: 16px;
+    }
+    
+    .message-bubble {
+        max-width: 80%;
+    }
+    
+    .search-header h3 {
+        font-size: 16px;
+    }
+    
+    .candidate-item {
+        padding: 15px;
+    }
+    
+    .toast-container {
+        bottom: 80px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .toast-notification {
+        max-width: 100%;
+    }
 }
 </style>
 </head>
