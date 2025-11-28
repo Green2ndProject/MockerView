@@ -42,6 +42,8 @@ public class PrivateMessageService {
         String senderName = sender.getName();    
         String receiverUsername = request.getReceiverUsername();
 
+        ensureStatusExists(senderUsername, receiverUsername);
+
         PrivateMessage message = PrivateMessage.builder()
                                     .senderUsername(senderUsername)
                                     .receiverUsername(request.getReceiverUsername())
@@ -95,6 +97,24 @@ public class PrivateMessageService {
         // 전체 읽지 않은 메시지 카운트 업데이트 푸시
         notifyTotalUnreadCount(receiverUsername);
 
+    }
+
+    @Transactional
+    private void ensureStatusExists(String userA, String userB) {
+
+        messageStatusRepository.findByUserUsernameAndPartnerUsername(userA, userB)
+            .orElseGet(()-> {
+                PrivateMessageStatus status = new PrivateMessageStatus(userA, userB, 0L);
+                status.setIsExited(false);
+                return messageStatusRepository.save(status);
+            });
+
+        messageStatusRepository.findByUserUsernameAndPartnerUsername(userB, userA)
+            .orElseGet(() -> {
+                PrivateMessageStatus status = new PrivateMessageStatus(userB, userA, 0L);
+                status.setIsExited(false);
+                return messageStatusRepository.save(status);
+            });
     }
 
     @Transactional(readOnly = true)
