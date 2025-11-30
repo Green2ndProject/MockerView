@@ -11,7 +11,7 @@ MockerView는 기업과 교육기관을 위한 B2B 우선 AI 면접 플랫폼입
 ### 핵심 가치 제안
 
 **기업/교육기관 (B2B)**
-- 연간 채용 교육비 90% 절감 - AI 비용 200만원 → 20만원 (QuestionPool Learning)
+- 연간 채용 교육비 90% 절감 - AI 비용 2만원 → 2천원 (QuestionPool Learning)
 - 면접관 시간 80% 단축 - 실시간 AI 피드백으로 즉시 평가
 - Admin Dashboard - 50명 동시 세션 관리, 부서별 통계
 - API 연동 - 기존 LMS/HR 시스템 통합
@@ -291,9 +291,6 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ## 주요 의사결정
 
 ### 1. B2B 우선 전략
-- 이유: 기업 고객이 안정적 수익, B2C는 자연 유입
-- 근거: HR Tech 시장 2조원, 연 15% 성장
-- 결과: 부트캠프 3곳 MoU 추진 중
 
 ### 2. QuestionPool Learning
 - 이유: AI 비용 90% 절감 (200만원 → 20만원)
@@ -326,8 +323,8 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 - WebSocket 지연: <100ms
 
 ### 비용 절감
-- 초기 AI 비용: 월 200만원
-- 3개월 후: 월 20만원 (90% 절감)
+- 초기 AI 비용: 월 2만원
+- 3개월 후: 월 2천원 (90% 절감)
 - QuestionPool 적중률: 90%
 
 ---
@@ -352,23 +349,5 @@ MIT License
 
 ---
 
-## 향후 계획
-
-**단기 (3개월)**
-- 파일럿 고객 3곳 확보
-- RabbitMQ 마이그레이션
-- 표정 분석 완성
-
-**중기 (6개월)**
-- Elasticsearch 도입
-- S3로 영상 저장소 이관
-- API 라이선스 판매
-
-**장기 (1년+)**
-- MSA 전환
-- Kubernetes 오케스트레이션
-- 글로벌 진출 (영어/일본어)
-
----
 
 2025 MockerView Team. All rights reserved.
